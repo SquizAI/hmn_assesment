@@ -20,6 +20,7 @@ COPY --from=builder /app/server ./server
 COPY --from=builder /app/src/data ./src/data
 COPY --from=builder /app/src/lib/types.ts ./src/lib/types.ts
 COPY --from=builder /app/tsconfig.json ./tsconfig.json
+COPY --from=builder /app/assessments ./assessments
 
 ENV NODE_ENV=production
 ENV PORT=8080

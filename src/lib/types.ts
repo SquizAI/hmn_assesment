@@ -115,11 +115,48 @@ export type LeaderArchetype =
   | "the_coach"
   | "the_pragmatist";
 
+// --- Assessment Type (for multi-assessment support) ---
+
+export interface AssessmentType {
+  id: string;
+  name: string;
+  description: string;
+  icon?: string;
+  estimatedMinutes: number;
+  status: "draft" | "active" | "archived";
+  phases: { id: string; label: string; order: number }[];
+  sections: { id: string; label: string; phaseId: string; order: number }[];
+  questions: Question[];
+  scoringDimensions: { id: string; label: string; description: string; weight: number }[];
+  interviewSystemPrompt?: string;
+  analysisSystemPrompt?: string;
+  intakeFields?: { field: string; label: string; required: boolean }[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AssessmentSummary {
+  id: string;
+  name: string;
+  description: string;
+  icon?: string;
+  estimatedMinutes: number;
+  questionCount: number;
+  status: "draft" | "active" | "archived";
+}
+
+export interface AdminChatMessage {
+  role: "user" | "assistant";
+  content: string;
+  timestamp: string;
+}
+
 export interface InterviewSession {
   id: string;
   createdAt: string;
   updatedAt: string;
   status: "intake" | "in_progress" | "completed" | "analyzed";
+  assessmentTypeId?: string;
   participant: ParticipantInfo;
   currentQuestionIndex: number;
   currentPhase: CascadePhase;

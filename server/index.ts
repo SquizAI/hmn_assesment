@@ -1,9 +1,12 @@
 import express from "express";
 import cors from "cors";
+import cookieParser from "cookie-parser";
+import jwt from "jsonwebtoken";
 import { readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync } from "fs";
 import { join } from "path";
 import Anthropic from "@anthropic-ai/sdk";
 import dotenv from "dotenv";
+import { TOOL_DEFINITIONS, executeTool } from "./admin-tools.js";
 
 dotenv.config();
 
@@ -17,8 +20,13 @@ const PORT = IS_PROD ? parseInt(process.env.PORT || "8080", 10) : 0;
 const MODEL = "claude-sonnet-4-5-20250929";
 const SESSIONS_DIR = join(process.cwd(), "sessions");
 
-app.use(cors());
+app.use(cors({ origin: true, credentials: true }));
 app.use(express.json({ limit: "50mb" }));
+app.use(cookieParser());
+
+const JWT_SECRET = process.env.JWT_SECRET || "hmn-cascade-admin-secret-change-me";
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "admin";
+const ASSESSMENTS_DIR = join(process.cwd(), "assessments");
 
 // In production, serve the built frontend
 if (IS_PROD) {
@@ -421,7 +429,7 @@ app.get("/api/sessions", (_req, res) => {
 });
 
 app.post("/api/sessions", (req, res) => {
-  const { participant } = req.body;
+  const { participant, assessmentTypeId } = req.body;
   if (!participant?.name || !participant?.company || !participant?.email) {
     res.status(400).json({ error: "name, company, and business email are required" });
     return;
@@ -433,6 +441,7 @@ app.post("/api/sessions", (req, res) => {
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     status: "intake",
+    assessmentTypeId: assessmentTypeId || "ai-readiness",
     participant,
     currentQuestionIndex: 0,
     currentPhase: "profile_baseline",
@@ -1112,11 +1121,198 @@ async function transcribeAudio(audioBuffer: Buffer, mimeType: string) {
 }
 
 // ============================================================
+// ADMIN AUTH
+// ============================================================
+
+function verifyAdminToken(req: express.Request): boolean {
+  const token = (req as unknown as { cookies: Record<string, string> }).cookies?.admin_token;
+  if (!token) return false;
+  try {
+    jwt.verify(token, JWT_SECRET);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function requireAdmin(req: express.Request, res: express.Response, next: express.NextFunction) {
+  if (!verifyAdminToken(req)) {
+    res.status(401).json({ error: "Unauthorized" });
+    return;
+  }
+  next();
+}
+
+app.post("/api/admin/login", (req, res) => {
+  const { password } = req.body;
+  if (password !== ADMIN_PASSWORD) {
+    res.status(401).json({ error: "Invalid password" });
+    return;
+  }
+  const token = jwt.sign({ role: "admin" }, JWT_SECRET, { expiresIn: "24h" });
+  res.cookie("admin_token", token, {
+    httpOnly: true,
+    secure: IS_PROD,
+    sameSite: "lax",
+    maxAge: 24 * 60 * 60 * 1000,
+  });
+  res.json({ ok: true });
+});
+
+app.get("/api/admin/verify", (req, res) => {
+  if (verifyAdminToken(req)) {
+    res.json({ valid: true });
+  } else {
+    res.status(401).json({ valid: false });
+  }
+});
+
+app.post("/api/admin/logout", (_req, res) => {
+  res.clearCookie("admin_token");
+  res.json({ ok: true });
+});
+
+// ============================================================
+// PUBLIC ASSESSMENT LISTING
+// ============================================================
+
+app.get("/api/assessments", (_req, res) => {
+  try {
+    if (!existsSync(ASSESSMENTS_DIR)) {
+      res.json({ assessments: [] });
+      return;
+    }
+    const files = readdirSync(ASSESSMENTS_DIR).filter((f) => f.endsWith(".json"));
+    const assessments = files.map((f) => {
+      const data = JSON.parse(readFileSync(join(ASSESSMENTS_DIR, f), "utf-8"));
+      return {
+        id: data.id,
+        name: data.name,
+        description: data.description,
+        icon: data.icon,
+        estimatedMinutes: data.estimatedMinutes,
+        questionCount: data.questions?.length ?? 0,
+        status: data.status,
+      };
+    }).filter((a) => a.status === "active");
+    res.json({ assessments });
+  } catch (err) {
+    console.error("List assessments error:", err);
+    res.json({ assessments: [] });
+  }
+});
+
+// ============================================================
+// ADMIN CHAT (conversational AI with tool use)
+// ============================================================
+
+const ADMIN_SYSTEM_PROMPT = `You are the HMN Cascade Admin Assistant. You help administrators manage the assessment platform through natural conversation.
+
+CAPABILITIES:
+- Create, modify, duplicate, and archive assessment types
+- Add/edit/remove questions within assessments
+- View session data and participant results
+- Generate analytics and export data
+
+BEHAVIOR:
+- Be conversational and helpful
+- Use markdown formatting (tables, bold, lists) for data display
+- For destructive actions (delete, archive), always confirm before executing
+- Guide admins through complex operations step by step
+- Suggest related actions after completing tasks
+- Keep responses concise but informative
+
+CREATING ASSESSMENTS:
+When asked to create a new assessment, generate a complete config with:
+1. A slug-style id (e.g., "leadership-readiness")
+2. Name, description, icon emoji
+3. Phases and sections appropriate to the topic
+4. 15-30 well-crafted questions with appropriate input types
+5. Scoring dimensions relevant to the assessment topic
+6. Set status to "draft" initially
+
+QUESTION INPUT TYPES:
+- "ai_conversation": Open-ended with AI follow-ups (best for deep exploration)
+- "slider": Numeric scale (needs sliderMin, sliderMax, sliderLabels)
+- "buttons": Single-select from options
+- "multi_select": Multiple select from options
+- "open_text": Free text
+- "voice": Voice input with transcription
+
+Each question needs: id, section, phase, text, inputType, required, scoringDimensions[], weight (0-1), tags[]`;
+
+app.post("/api/admin/chat", requireAdmin, async (req, res) => {
+  try {
+    const { messages } = req.body;
+    if (!messages || !Array.isArray(messages)) {
+      res.status(400).json({ error: "messages array required" });
+      return;
+    }
+
+    const client = getAnthropicClient();
+    const anthropicMessages = messages.map((m: { role: string; content: string }) => ({
+      role: m.role as "user" | "assistant",
+      content: m.content,
+    }));
+
+    // Tool-use loop: call Claude, execute tools, feed results back
+    let response = await client.messages.create({
+      model: MODEL,
+      max_tokens: 4000,
+      system: ADMIN_SYSTEM_PROMPT,
+      tools: TOOL_DEFINITIONS as Anthropic.Messages.Tool[],
+      messages: anthropicMessages,
+    });
+
+    // Loop while Claude wants to use tools
+    const toolMessages = [...anthropicMessages];
+    let maxIterations = 10;
+
+    while (response.stop_reason === "tool_use" && maxIterations-- > 0) {
+      const assistantContent = response.content;
+      toolMessages.push({ role: "assistant" as const, content: assistantContent as unknown as string });
+
+      const toolResults: Array<{ type: "tool_result"; tool_use_id: string; content: string }> = [];
+      for (const block of assistantContent) {
+        if (block.type === "tool_use") {
+          console.log(`Admin tool call: ${block.name}(${JSON.stringify(block.input)})`);
+          const result = executeTool(block.name, block.input as Record<string, unknown>);
+          toolResults.push({
+            type: "tool_result",
+            tool_use_id: block.id,
+            content: JSON.stringify(result, null, 2),
+          });
+        }
+      }
+
+      toolMessages.push({ role: "user" as const, content: toolResults as unknown as string });
+
+      response = await client.messages.create({
+        model: MODEL,
+        max_tokens: 4000,
+        system: ADMIN_SYSTEM_PROMPT,
+        tools: TOOL_DEFINITIONS as Anthropic.Messages.Tool[],
+        messages: toolMessages as Anthropic.Messages.MessageParam[],
+      });
+    }
+
+    // Extract final text response
+    const textBlocks = response.content.filter((b) => b.type === "text");
+    const finalText = textBlocks.map((b) => b.type === "text" ? b.text : "").join("\n");
+
+    res.json({ response: finalText || "I completed the requested action." });
+  } catch (err) {
+    console.error("Admin chat error:", err);
+    res.status(500).json({ error: "Chat failed" });
+  }
+});
+
+// ============================================================
 // SPA FALLBACK (must be after all API routes)
 // ============================================================
 
 if (IS_PROD) {
-  app.get("*", (_req, res) => {
+  app.get("/{*splat}", (_req, res) => {
     res.sendFile(join(process.cwd(), "dist", "index.html"));
   });
 }

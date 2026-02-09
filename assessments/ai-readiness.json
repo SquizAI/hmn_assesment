@@ -1,0 +1,660 @@
+{
+  "id": "ai-readiness",
+  "name": "AI Readiness Assessment",
+  "description": "A diagnostic conversation that uncovers where you are with AI, where the gaps are, and exactly what to do next.",
+  "icon": "\ud83e\udd16",
+  "estimatedMinutes": 25,
+  "status": "active",
+  "phases": [
+    { "id": "profile_baseline", "label": "Profile & Baseline", "order": 0 },
+    { "id": "org_reality", "label": "Organizational Reality", "order": 1 },
+    { "id": "domain_deep_dive", "label": "Domain Deep Dive", "order": 2 },
+    { "id": "strategic_alignment", "label": "Strategic Alignment", "order": 3 }
+  ],
+  "sections": [
+    { "id": "demographics", "label": "About You", "phase": "profile_baseline", "order": 0 },
+    { "id": "context_setting", "label": "Your Story", "phase": "profile_baseline", "order": 1 },
+    { "id": "change_capacity", "label": "Change Readiness", "phase": "profile_baseline", "order": 2 },
+    { "id": "personal_ai_reality", "label": "Your AI Reality", "phase": "profile_baseline", "order": 3 },
+    { "id": "vulnerability", "label": "Private Learning", "phase": "profile_baseline", "order": 4 },
+    { "id": "team_org_reality", "label": "Team & Organization", "phase": "org_reality", "order": 5 },
+    { "id": "business_process", "label": "Business Processes", "phase": "org_reality", "order": 6 },
+    { "id": "domain_specific", "label": "Your Industry", "phase": "domain_deep_dive", "order": 7 },
+    { "id": "customer_support", "label": "Customer Experience", "phase": "domain_deep_dive", "order": 8 },
+    { "id": "strategic_stakes", "label": "Strategic Stakes", "phase": "strategic_alignment", "order": 9 },
+    { "id": "hmn_anchor", "label": "Human Value", "phase": "strategic_alignment", "order": 10 },
+    { "id": "closing", "label": "Reflection", "phase": "strategic_alignment", "order": 11 }
+  ],
+  "questions": [
+    {
+      "id": "demo_role",
+      "section": "demographics",
+      "phase": "profile_baseline",
+      "text": "What is your current role?",
+      "inputType": "buttons",
+      "options": [
+        { "label": "CEO / Founder", "value": "ceo_founder" },
+        { "label": "C-Suite Executive", "value": "c_suite" },
+        { "label": "VP / Director", "value": "vp_director" },
+        { "label": "Manager / Team Lead", "value": "manager" },
+        { "label": "Individual Contributor", "value": "ic" }
+      ],
+      "required": true,
+      "scoringDimensions": [],
+      "weight": 0,
+      "tags": ["demographics", "intake"]
+    },
+    {
+      "id": "demo_industry",
+      "section": "demographics",
+      "phase": "profile_baseline",
+      "text": "What industry are you in?",
+      "inputType": "open_text",
+      "required": true,
+      "scoringDimensions": [],
+      "weight": 0,
+      "tags": ["demographics", "intake"]
+    },
+    {
+      "id": "demo_company",
+      "section": "demographics",
+      "phase": "profile_baseline",
+      "text": "What is your company name?",
+      "inputType": "open_text",
+      "required": true,
+      "scoringDimensions": [],
+      "weight": 0,
+      "tags": ["demographics", "intake"]
+    },
+    {
+      "id": "demo_team_size",
+      "section": "demographics",
+      "phase": "profile_baseline",
+      "text": "How large is your organization?",
+      "inputType": "buttons",
+      "options": [
+        { "label": "1-10", "value": "1-10", "description": "Early stage / solo" },
+        { "label": "11-50", "value": "11-50", "description": "Growing team" },
+        { "label": "51-200", "value": "51-200", "description": "Scaling" },
+        { "label": "201-1000", "value": "201-1000", "description": "Mid-market" },
+        { "label": "1000+", "value": "1000+", "description": "Enterprise" }
+      ],
+      "required": true,
+      "scoringDimensions": [],
+      "weight": 0,
+      "tags": ["demographics", "intake"]
+    },
+    {
+      "id": "demo_direct_reports",
+      "section": "demographics",
+      "phase": "profile_baseline",
+      "text": "How many direct reports do you have?",
+      "inputType": "slider",
+      "sliderMin": 0,
+      "sliderMax": 20,
+      "sliderLabels": { "min": "None", "max": "20+" },
+      "required": true,
+      "scoringDimensions": [],
+      "weight": 0,
+      "tags": ["demographics", "intake"]
+    },
+    {
+      "id": "context_throughline",
+      "section": "context_setting",
+      "phase": "profile_baseline",
+      "text": "When you look back at your career journey, what\u2019s the common thread connecting your roles and decisions? How does that inform how you lead today?",
+      "inputType": "ai_conversation",
+      "required": true,
+      "scoringDimensions": ["strategic_clarity", "change_energy"],
+      "weight": 0.6,
+      "aiFollowUpPrompt": "Listen for identity anchors and leadership philosophy. Probe whether their self-narrative is coherent and whether it naturally includes technology/innovation or treats it as separate. Ask ONE follow-up that connects their past to their current AI challenge.",
+      "tags": ["context", "identity", "leadership"]
+    },
+    {
+      "id": "context_problem_evolution",
+      "section": "context_setting",
+      "phase": "profile_baseline",
+      "text": "What problem did your company originally set out to solve? Now that you\u2019re in it\u2014has the problem turned out to be what you originally thought, or has it morphed into something different?",
+      "inputType": "ai_conversation",
+      "required": true,
+      "scoringDimensions": ["strategic_clarity", "process_readiness"],
+      "weight": 0.5,
+      "aiFollowUpPrompt": "Listen for adaptability signals. Do they see the evolving problem as exciting or overwhelming? Probe for how AI might fit into the evolved problem space.",
+      "tags": ["context", "problem", "adaptability"]
+    },
+    {
+      "id": "change_self_awareness",
+      "section": "change_capacity",
+      "phase": "profile_baseline",
+      "text": "When your organization faces a major change, how do you personally show up? Are you the one pushing forward, holding back, or somewhere in between?",
+      "inputType": "ai_conversation",
+      "required": true,
+      "scoringDimensions": ["change_energy", "ai_awareness"],
+      "weight": 0.7,
+      "aiFollowUpPrompt": "Probe for the gap between how they DESCRIBE their change behavior and what they've ACTUALLY done with AI. If they say they're change leaders, ask for a specific recent example of leading an AI-related change. If they admit hesitation, honor that honesty and explore what's behind it.",
+      "tags": ["change", "self-awareness", "leadership"]
+    },
+    {
+      "id": "change_advice_to_self",
+      "section": "change_capacity",
+      "phase": "profile_baseline",
+      "text": "If you were coaching yourself through AI adoption the way you\u2019d coach a colleague\u2014what advice would you give?",
+      "inputType": "ai_conversation",
+      "required": true,
+      "scoringDimensions": ["change_energy", "ai_awareness", "ai_action"],
+      "weight": 0.6,
+      "aiFollowUpPrompt": "This reveals the gap between knowing and doing. If their advice is sophisticated, ask: 'Is that advice easy to follow when you're living it?' If their advice is generic, probe deeper into what specifically feels hard about AI adoption.",
+      "tags": ["change", "self-coaching", "gap"]
+    },
+    {
+      "id": "ai_actual_usage",
+      "section": "personal_ai_reality",
+      "phase": "profile_baseline",
+      "text": "What AI tools did you personally use this week\u2014not your team, you specifically?",
+      "inputType": "ai_conversation",
+      "required": true,
+      "scoringDimensions": ["ai_action", "ai_awareness"],
+      "weight": 0.9,
+      "aiFollowUpPrompt": "This is the most important reality check. If they give specifics (tool names, use cases), ask about the most sophisticated thing they've done. If vague or none, don't judge\u2014ask what they think is getting in their way. Listen for: tool names, frequency, sophistication level, integration into workflow vs. one-off experiments.",
+      "tags": ["ai", "usage", "reality_check"]
+    },
+    {
+      "id": "ai_failure",
+      "section": "personal_ai_reality",
+      "phase": "profile_baseline",
+      "text": "What AI tool or approach have you tried that completely missed the mark?",
+      "inputType": "ai_conversation",
+      "required": true,
+      "scoringDimensions": ["ai_action", "ai_awareness"],
+      "weight": 0.5,
+      "followUpTrigger": {
+        "condition": "vague_answer",
+        "aiGenerated": true
+      },
+      "aiFollowUpPrompt": "Failures reveal learning patterns. Ask whether the failure was about the tool itself or about it not understanding their specific domain. People who can articulate WHY something failed are closer to success than people who just say 'it didn't work.'",
+      "tags": ["ai", "failure", "learning"]
+    },
+    {
+      "id": "ai_self_rating",
+      "section": "personal_ai_reality",
+      "phase": "profile_baseline",
+      "text": "On a scale of 1-10, where would you honestly place your personal AI capability?",
+      "subtext": "1 = 'I avoid AI entirely' \u2192 10 = 'I'm teaching others and innovating'",
+      "inputType": "slider",
+      "sliderMin": 1,
+      "sliderMax": 10,
+      "sliderLabels": { "min": "Avoid AI", "max": "Teaching & innovating" },
+      "required": true,
+      "scoringDimensions": ["ai_awareness", "ai_action"],
+      "weight": 0.8,
+      "followUpTrigger": {
+        "condition": "always",
+        "aiGenerated": true
+      },
+      "aiFollowUpPrompt": "After they rate themselves, ask: 'What would need to be true for you to move up two points?' Then challenge gently: 'Are you being fully honest with that number, or is there a gap between what you tell yourself and reality?'",
+      "tags": ["ai", "self-assessment", "honesty"]
+    },
+    {
+      "id": "ai_peer_comparison",
+      "section": "personal_ai_reality",
+      "phase": "profile_baseline",
+      "text": "Compared to other leaders in your industry, where would you place your AI fluency?",
+      "inputType": "buttons",
+      "options": [
+        { "label": "Behind most peers", "value": "behind", "description": "Others seem further ahead" },
+        { "label": "About the same", "value": "same", "description": "We're all figuring it out" },
+        { "label": "Ahead of most", "value": "ahead", "description": "I'm further along than most" },
+        { "label": "Not sure", "value": "unsure", "description": "I don't have visibility" }
+      ],
+      "required": true,
+      "scoringDimensions": ["ai_awareness"],
+      "weight": 0.4,
+      "tags": ["ai", "peer_comparison", "awareness"]
+    },
+    {
+      "id": "ai_modeling",
+      "section": "personal_ai_reality",
+      "phase": "profile_baseline",
+      "text": "What AI behaviors would your direct reports say they\u2019ve seen from you in the last two weeks?",
+      "inputType": "ai_conversation",
+      "required": true,
+      "scoringDimensions": ["ai_action", "change_energy", "team_capacity"],
+      "weight": 0.7,
+      "aiFollowUpPrompt": "This reveals the gap between intention and visible action. Follow up with: 'Is that the example you want to be setting for your team on AI?'",
+      "tags": ["ai", "modeling", "leadership"]
+    },
+    {
+      "id": "vuln_private_gap",
+      "section": "vulnerability",
+      "phase": "profile_baseline",
+      "text": "If you could have an AI expert sit with you privately for 2 hours\u2014no team, no board, no judgment\u2014what would you want to learn that you\u2019d be embarrassed to ask publicly?",
+      "inputType": "ai_conversation",
+      "required": true,
+      "scoringDimensions": ["ai_awareness", "change_energy", "investment_readiness"],
+      "weight": 0.9,
+      "aiFollowUpPrompt": "This is the trust moment. Whatever they share, validate it. Don't rush past it. This answer often reveals the REAL starting point for the engagement. If they deflect with humor or generalities, gently push: 'I mean the thing that keeps you up at night about AI\u2014the question you'd feel silly asking in front of your team.'",
+      "tags": ["vulnerability", "trust", "real_needs"]
+    },
+    {
+      "id": "team_ai_capable_pct",
+      "section": "team_org_reality",
+      "phase": "org_reality",
+      "text": "What percentage of your team is genuinely capable with AI right now? Not interested, not dabbling\u2014actually using it independently to improve their work.",
+      "inputType": "slider",
+      "sliderMin": 0,
+      "sliderMax": 100,
+      "sliderLabels": { "min": "0%", "max": "100%" },
+      "required": true,
+      "scoringDimensions": ["team_capacity"],
+      "weight": 0.8,
+      "followUpTrigger": {
+        "condition": "always",
+        "aiGenerated": true
+      },
+      "aiFollowUpPrompt": "After the percentage, ask: 'Is there any AI training or upskilling happening, or is everyone figuring it out on their own?' Low percentage + no training = major selling opportunity for team upskilling.",
+      "tags": ["team", "capability", "reality"]
+    },
+    {
+      "id": "team_hidden_champion",
+      "section": "team_org_reality",
+      "phase": "org_reality",
+      "text": "Who on your team is most likely already experimenting with AI\u2014even unofficially? Have you tapped into that?",
+      "inputType": "ai_conversation",
+      "required": true,
+      "scoringDimensions": ["team_capacity", "change_energy"],
+      "weight": 0.5,
+      "aiFollowUpPrompt": "Hidden champions are your internal allies for adoption. Ask if they've empowered this person or if the experimentation is happening under the radar.",
+      "tags": ["team", "champion", "adoption"]
+    },
+    {
+      "id": "team_shadow_ai",
+      "section": "team_org_reality",
+      "phase": "org_reality",
+      "text": "What AI tools do you suspect your team is using that haven\u2019t been officially vetted? Does that concern you?",
+      "inputType": "ai_conversation",
+      "required": true,
+      "scoringDimensions": ["team_capacity", "process_readiness"],
+      "weight": 0.6,
+      "aiFollowUpPrompt": "Shadow AI reveals both innovation energy AND governance gaps. If they handle sensitive data (customer info, financial, regulatory), probe the compliance risk angle.",
+      "tags": ["team", "shadow_ai", "governance"]
+    },
+    {
+      "id": "team_tech_leadership",
+      "section": "team_org_reality",
+      "phase": "org_reality",
+      "text": "Who makes technology and AI-related decisions in your organization? Is there a dedicated person, or does it fall to whoever has bandwidth?",
+      "inputType": "ai_conversation",
+      "required": true,
+      "scoringDimensions": ["team_capacity", "strategic_clarity", "process_readiness"],
+      "weight": 0.7,
+      "aiFollowUpPrompt": "If tech leadership is fractional, part-time, or the founder themselves, this is a constraint. Ask: 'Is that model a constraint on your AI ambitions, or does it work for your stage?' Listen for whether they've outgrown their current tech leadership setup.",
+      "tags": ["team", "tech_leadership", "structure"]
+    },
+    {
+      "id": "process_documentation",
+      "section": "business_process",
+      "phase": "org_reality",
+      "text": "If you stepped away for a month\u2014how much of how your company actually operates is documented versus exists in people\u2019s heads?",
+      "inputType": "slider",
+      "sliderMin": 0,
+      "sliderMax": 100,
+      "sliderLabels": { "min": "All in heads", "max": "Fully documented" },
+      "required": true,
+      "scoringDimensions": ["process_readiness"],
+      "weight": 0.8,
+      "followUpTrigger": {
+        "condition": "low_score",
+        "threshold": 40,
+        "aiGenerated": true
+      },
+      "aiFollowUpPrompt": "Low documentation = AI can't be trained on your processes. Ask: 'Who holds the most undocumented institutional knowledge? What would happen if they left tomorrow?'",
+      "tags": ["process", "documentation", "risk"]
+    },
+    {
+      "id": "process_bottleneck",
+      "section": "business_process",
+      "phase": "org_reality",
+      "text": "What single process, if it ran 50% faster, would have the biggest impact on your ability to grow?",
+      "inputType": "ai_conversation",
+      "required": true,
+      "scoringDimensions": ["process_readiness", "strategic_clarity"],
+      "weight": 0.9,
+      "aiFollowUpPrompt": "This is gold for service recommendations. Follow up with: 'What's currently slowing it down?' and 'Have you tried to fix it before? What happened?'",
+      "tags": ["process", "bottleneck", "growth"]
+    },
+    {
+      "id": "process_customer_journey",
+      "section": "business_process",
+      "phase": "org_reality",
+      "text": "Walk me through your customer journey from first touch to fully onboarded. Where do customers get stuck? Where does your team spend the most time hand-holding?",
+      "inputType": "ai_conversation",
+      "required": true,
+      "scoringDimensions": ["process_readiness", "team_capacity"],
+      "weight": 0.7,
+      "aiFollowUpPrompt": "Map the friction points. Ask: 'As you scale, which parts of that journey will break first?' This reveals where AI automation has the highest ROI.",
+      "tags": ["process", "customer_journey", "scaling"]
+    },
+    {
+      "id": "process_decision_delays",
+      "section": "business_process",
+      "phase": "org_reality",
+      "text": "What decisions regularly get delayed because you\u2019re waiting on information, analysis, or someone\u2019s availability?",
+      "inputType": "ai_conversation",
+      "required": true,
+      "scoringDimensions": ["process_readiness", "strategic_clarity"],
+      "weight": 0.6,
+      "aiFollowUpPrompt": "Decision latency is invisible cost. Ask: 'What's the cost of those delays? Can you put a number on it\u2014even roughly?'",
+      "tags": ["process", "decisions", "latency"]
+    },
+    {
+      "id": "process_manual_work",
+      "section": "business_process",
+      "phase": "org_reality",
+      "text": "What repetitive tasks are eating your hours that shouldn\u2019t require your level of attention?",
+      "subtext": "Estimate the hours per week if you can.",
+      "inputType": "ai_conversation",
+      "required": true,
+      "scoringDimensions": ["process_readiness", "investment_readiness"],
+      "weight": 0.9,
+      "aiFollowUpPrompt": "This creates the ROI anchor. Push for specific hours: 'Roughly how many hours per week?' Then: 'Why hasn't that been automated or delegated already?' The answer to 'why not' reveals the real blocker.",
+      "tags": ["process", "manual_work", "roi"]
+    },
+    {
+      "id": "process_systems",
+      "section": "business_process",
+      "phase": "org_reality",
+      "text": "How many different tools does your team use daily? How well do they talk to each other?",
+      "inputType": "ai_conversation",
+      "required": true,
+      "scoringDimensions": ["process_readiness", "team_capacity"],
+      "weight": 0.5,
+      "aiFollowUpPrompt": "Data silos kill AI potential. Ask: 'What data currently gets manually moved between systems?' Each manual data transfer is an automation candidate.",
+      "tags": ["process", "systems", "integration"]
+    },
+    {
+      "id": "process_reporting",
+      "section": "business_process",
+      "phase": "org_reality",
+      "text": "When you want to understand how your business is performing, how do you get that picture? How long does it take to get accurate numbers?",
+      "inputType": "ai_conversation",
+      "required": true,
+      "scoringDimensions": ["process_readiness", "strategic_clarity"],
+      "weight": 0.5,
+      "aiFollowUpPrompt": "If getting a performance picture takes more than 5 minutes, there's an AI dashboard opportunity. Ask what metrics matter most and where the data lives.",
+      "tags": ["process", "reporting", "visibility"]
+    },
+    {
+      "id": "process_quality",
+      "section": "business_process",
+      "phase": "org_reality",
+      "text": "Where do mistakes or quality issues most commonly occur in your operation? Do you catch them proactively or when a customer notices?",
+      "inputType": "ai_conversation",
+      "required": true,
+      "scoringDimensions": ["process_readiness"],
+      "weight": 0.5,
+      "aiFollowUpPrompt": "Reactive quality control = AI opportunity for proactive detection. Ask about the cost of quality failures\u2014both direct and reputational.",
+      "tags": ["process", "quality", "errors"]
+    },
+    {
+      "id": "domain_pain_points",
+      "section": "domain_specific",
+      "phase": "domain_deep_dive",
+      "text": "What are the parts of your industry that are still painfully manual or analog, even in 2026?",
+      "inputType": "ai_conversation",
+      "required": true,
+      "scoringDimensions": ["strategic_clarity", "process_readiness"],
+      "weight": 0.7,
+      "aiFollowUpPrompt": "This reveals industry-specific AI opportunities. For each pain point, ask: 'Has anyone in your space tried to solve this with AI? What happened?'",
+      "tags": ["domain", "pain_points", "industry"]
+    },
+    {
+      "id": "domain_regulation",
+      "section": "domain_specific",
+      "phase": "domain_deep_dive",
+      "text": "How does regulation or compliance shape what you can and can\u2019t do with AI in your space?",
+      "inputType": "ai_conversation",
+      "required": true,
+      "scoringDimensions": ["process_readiness", "strategic_clarity"],
+      "weight": 0.6,
+      "aiFollowUpPrompt": "Regulation can be a barrier OR a moat. Ask: 'Does compliance slow you down, or does it actually protect you from competitors who can't navigate it?'",
+      "tags": ["domain", "regulation", "compliance"]
+    },
+    {
+      "id": "domain_market_expansion",
+      "section": "domain_specific",
+      "phase": "domain_deep_dive",
+      "text": "What\u2019s the biggest market expansion opportunity in front of you right now? What would need to change in your operation to capture it?",
+      "inputType": "ai_conversation",
+      "required": true,
+      "scoringDimensions": ["strategic_clarity", "investment_readiness"],
+      "weight": 0.7,
+      "aiFollowUpPrompt": "Tie expansion back to AI: 'Could AI help you capture that opportunity faster? What specific capability would you need?'",
+      "tags": ["domain", "expansion", "growth"]
+    },
+    {
+      "id": "support_challenge",
+      "section": "customer_support",
+      "phase": "domain_deep_dive",
+      "text": "What\u2019s your biggest customer support challenge right now? What percentage of support questions are repetitive?",
+      "inputType": "ai_conversation",
+      "required": true,
+      "scoringDimensions": ["process_readiness", "team_capacity"],
+      "weight": 0.6,
+      "aiFollowUpPrompt": "High repetitive question percentage = immediate AI chatbot/knowledge base opportunity. Ask: 'If AI could handle 80% of those questions accurately, what would that free up for your team?'",
+      "tags": ["support", "scaling", "automation"]
+    },
+    {
+      "id": "support_adoption",
+      "section": "customer_support",
+      "phase": "domain_deep_dive",
+      "text": "What have you learned about how your customers adopt new technology? How would you introduce AI-powered features to them?",
+      "inputType": "ai_conversation",
+      "required": true,
+      "scoringDimensions": ["change_energy", "strategic_clarity"],
+      "weight": 0.5,
+      "aiFollowUpPrompt": "Customer readiness for AI features affects product strategy. Ask about trust dynamics\u2014do their customers trust AI recommendations?",
+      "tags": ["support", "adoption", "customer_trust"]
+    },
+    {
+      "id": "strategic_uncomfortable_truth",
+      "section": "strategic_stakes",
+      "phase": "strategic_alignment",
+      "text": "What\u2019s the uncomfortable truth about your company\u2019s readiness for AI that everyone thinks but no one says out loud?",
+      "inputType": "ai_conversation",
+      "required": true,
+      "scoringDimensions": ["ai_awareness", "change_energy", "strategic_clarity"],
+      "weight": 0.8,
+      "aiFollowUpPrompt": "This is where real talk happens. Sit with whatever they say. Don't rush to solve it. Ask: 'What would it take to address that truth head-on?'",
+      "tags": ["strategic", "honesty", "readiness"]
+    },
+    {
+      "id": "strategic_resistance",
+      "section": "strategic_stakes",
+      "phase": "strategic_alignment",
+      "text": "Where does pushback on AI or new technology come from in your world? Inside your team, from customers, from your industry?",
+      "inputType": "ai_conversation",
+      "required": true,
+      "scoringDimensions": ["change_energy", "team_capacity"],
+      "weight": 0.6,
+      "aiFollowUpPrompt": "Map the resistance landscape. Ask: 'What's driving the pushback? Is it fear, lack of understanding, bad past experiences, or something else?'",
+      "tags": ["strategic", "resistance", "change"]
+    },
+    {
+      "id": "strategic_adoption_urgency",
+      "section": "strategic_stakes",
+      "phase": "strategic_alignment",
+      "text": "Who do you most urgently need to bring along on the AI journey, and what are their resistance points?",
+      "inputType": "ai_conversation",
+      "required": true,
+      "scoringDimensions": ["change_energy", "team_capacity", "strategic_clarity"],
+      "weight": 0.7,
+      "aiFollowUpPrompt": "This identifies the key people who need to be influenced. Ask about specific individuals (without names if they prefer) and what motivates them.",
+      "tags": ["strategic", "adoption", "people"]
+    },
+    {
+      "id": "strategic_bet",
+      "section": "strategic_stakes",
+      "phase": "strategic_alignment",
+      "text": "If you had to bet your company\u2019s future on one AI-driven transformation\u2014something that would fundamentally change your business\u2014what would that bet be?",
+      "inputType": "ai_conversation",
+      "required": true,
+      "scoringDimensions": ["strategic_clarity", "investment_readiness", "ai_awareness"],
+      "weight": 0.9,
+      "aiFollowUpPrompt": "This reveals their AI vision at its boldest. Follow up: 'What would need to be true for that bet to pay off?' and 'What's stopping you from making that bet today?'",
+      "tags": ["strategic", "vision", "transformation"]
+    },
+    {
+      "id": "strategic_investor_proof",
+      "section": "strategic_stakes",
+      "phase": "strategic_alignment",
+      "text": "If your board or investors asked you tomorrow to \u2018prove AI investment is worth it\u2019\u2014what evidence would you show them? What question would you hope they don\u2019t ask?",
+      "inputType": "ai_conversation",
+      "required": true,
+      "scoringDimensions": ["investment_readiness", "strategic_clarity"],
+      "weight": 0.7,
+      "aiFollowUpPrompt": "The 'question they hope isn't asked' reveals the biggest gap. That gap is likely what they need help with most.",
+      "tags": ["strategic", "roi", "accountability"]
+    },
+    {
+      "id": "strategic_unsolvable",
+      "section": "strategic_stakes",
+      "phase": "strategic_alignment",
+      "text": "What problem in your business or industry have you always assumed was unsolvable\u2014that you now wonder if AI might actually crack?",
+      "inputType": "ai_conversation",
+      "required": true,
+      "scoringDimensions": ["ai_awareness", "strategic_clarity"],
+      "weight": 0.6,
+      "aiFollowUpPrompt": "This surfaces ambition and imagination. Ask: 'What makes AI the key to solving it now versus before?'",
+      "tags": ["strategic", "innovation", "possibility"]
+    },
+    {
+      "id": "hmn_human_value",
+      "section": "hmn_anchor",
+      "phase": "strategic_alignment",
+      "text": "As AI handles more analytical and administrative work\u2014what uniquely human value do you bring that becomes MORE important, not less?",
+      "inputType": "ai_conversation",
+      "required": true,
+      "scoringDimensions": ["mission_alignment", "strategic_clarity"],
+      "weight": 0.7,
+      "aiFollowUpPrompt": "This anchors the HMN brand. Ask: 'How are you doubling down on that human value?' This answer often becomes the emotional core of the participant's masterclass experience.",
+      "tags": ["hmn", "human_value", "mission"]
+    },
+    {
+      "id": "hmn_mission_ai",
+      "section": "hmn_anchor",
+      "phase": "strategic_alignment",
+      "text": "Does AI feel like it helps or threatens your core mission? Why?",
+      "inputType": "buttons",
+      "options": [
+        { "label": "Clearly helps", "value": "helps", "description": "AI accelerates our mission" },
+        { "label": "Mostly helps", "value": "mostly_helps", "description": "Benefits outweigh risks" },
+        { "label": "Mixed / Unsure", "value": "mixed", "description": "Both opportunity and threat" },
+        { "label": "Mostly threatens", "value": "threatens", "description": "Risks feel bigger than benefits" }
+      ],
+      "required": true,
+      "scoringDimensions": ["mission_alignment", "change_energy"],
+      "weight": 0.6,
+      "followUpTrigger": {
+        "condition": "always",
+        "aiGenerated": true
+      },
+      "aiFollowUpPrompt": "Whatever they choose, ask them to elaborate. If 'threatens'\u2014dig into the specific fear. If 'helps'\u2014ask how specifically. The nuance matters more than the category.",
+      "tags": ["hmn", "mission", "alignment"]
+    },
+    {
+      "id": "closing_strategic_tactical",
+      "section": "closing",
+      "phase": "strategic_alignment",
+      "text": "When you think about AI for your organization\u2014are you primarily thinking about doing what you already do faster and cheaper, or imagining entirely new ways to serve your customers?",
+      "inputType": "buttons",
+      "options": [
+        { "label": "Faster & cheaper", "value": "tactical", "description": "Optimize existing operations" },
+        { "label": "Mostly optimization", "value": "mostly_tactical", "description": "Some new, mostly better" },
+        { "label": "Balanced mix", "value": "balanced", "description": "Both optimization and innovation" },
+        { "label": "New possibilities", "value": "strategic", "description": "Reimagining what's possible" }
+      ],
+      "required": true,
+      "scoringDimensions": ["strategic_clarity"],
+      "weight": 0.6,
+      "tags": ["closing", "strategy", "vision"]
+    },
+    {
+      "id": "closing_change_energy",
+      "section": "closing",
+      "phase": "strategic_alignment",
+      "text": "How much energy do you personally have right now to drive AI transformation?",
+      "inputType": "slider",
+      "sliderMin": 1,
+      "sliderMax": 10,
+      "sliderLabels": { "min": "Running on empty", "max": "Fully charged" },
+      "required": true,
+      "scoringDimensions": ["change_energy"],
+      "weight": 0.7,
+      "tags": ["closing", "energy", "readiness"]
+    },
+    {
+      "id": "closing_self_coach",
+      "section": "closing",
+      "phase": "strategic_alignment",
+      "text": "Final question: If the best version of yourself were coaching the current version through AI adoption\u2014what would you say?",
+      "inputType": "ai_conversation",
+      "required": true,
+      "scoringDimensions": ["change_energy", "ai_awareness", "strategic_clarity"],
+      "weight": 0.5,
+      "aiFollowUpPrompt": "Let this be reflective. This answer often contains the seed of their transformation narrative. Thank them sincerely for their time and honesty.",
+      "tags": ["closing", "reflection", "self_awareness"]
+    }
+  ],
+  "scoringDimensions": [
+    {
+      "id": "ai_awareness",
+      "label": "AI Awareness",
+      "description": "Understanding of what AI can do and where it applies",
+      "weight": 0.15
+    },
+    {
+      "id": "ai_action",
+      "label": "AI Action",
+      "description": "Actually using AI tools in day-to-day work",
+      "weight": 0.15
+    },
+    {
+      "id": "process_readiness",
+      "label": "Process Readiness",
+      "description": "How well processes are documented, structured, and automatable",
+      "weight": 0.15
+    },
+    {
+      "id": "strategic_clarity",
+      "label": "Strategic Clarity",
+      "description": "Clear vision of where AI fits in business strategy",
+      "weight": 0.15
+    },
+    {
+      "id": "change_energy",
+      "label": "Change Energy",
+      "description": "Personal drive and organizational will to transform",
+      "weight": 0.10
+    },
+    {
+      "id": "team_capacity",
+      "label": "Team Capacity",
+      "description": "Team's ability to adopt and execute AI initiatives",
+      "weight": 0.10
+    },
+    {
+      "id": "mission_alignment",
+      "label": "Mission Alignment",
+      "description": "How well AI adoption aligns with core mission",
+      "weight": 0.10
+    },
+    {
+      "id": "investment_readiness",
+      "label": "Investment Readiness",
+      "description": "Ability to justify and fund AI initiatives",
+      "weight": 0.10
+    }
+  ],
+  "createdAt": "2026-02-09T00:00:00.000Z",
+  "updatedAt": "2026-02-09T00:00:00.000Z"
+}
