@@ -4,6 +4,30 @@ import { API_BASE } from "../lib/api";
 import Button from "../components/ui/Button";
 import type { AssessmentSummary } from "../lib/types";
 
+interface SessionLookup {
+  id: string;
+  status: string;
+  createdAt: string;
+  assessmentTypeId?: string;
+  participantName?: string;
+  participantCompany?: string;
+  score?: number;
+}
+
+const STATUS_LABELS: Record<string, string> = {
+  intake: "Not started",
+  in_progress: "In progress",
+  completed: "Completed",
+  analyzed: "Results ready",
+};
+
+const STATUS_COLORS: Record<string, string> = {
+  intake: "text-gray-400",
+  in_progress: "text-blue-400",
+  completed: "text-green-400",
+  analyzed: "text-purple-400",
+};
+
 export default function HomePage() {
   const navigate = useNavigate();
   const [assessments, setAssessments] = useState<AssessmentSummary[]>([]);
@@ -16,6 +40,13 @@ export default function HomePage() {
   const [email, setEmail] = useState("");
   const [isCreating, setIsCreating] = useState(false);
   const [showForm, setShowForm] = useState(false);
+
+  // Sign-in state
+  const [showSignIn, setShowSignIn] = useState(false);
+  const [signInEmail, setSignInEmail] = useState("");
+  const [signInLoading, setSignInLoading] = useState(false);
+  const [signInSessions, setSignInSessions] = useState<SessionLookup[] | null>(null);
+  const [signInError, setSignInError] = useState("");
 
   useEffect(() => {
     fetch(`${API_BASE}/api/assessments`)
@@ -51,7 +82,41 @@ export default function HomePage() {
     finally { setIsCreating(false); }
   };
 
-  // If only one assessment or none loaded yet, show single-assessment hero
+  const handleSignIn = async () => {
+    if (!signInEmail) return;
+    setSignInLoading(true);
+    setSignInError("");
+    setSignInSessions(null);
+    try {
+      const res = await fetch(`${API_BASE}/api/sessions/lookup?email=${encodeURIComponent(signInEmail)}`);
+      const data = await res.json();
+      if (data.sessions?.length > 0) {
+        setSignInSessions(data.sessions);
+      } else {
+        setSignInError("No assessments found for this email. Start a new one below.");
+      }
+    } catch {
+      setSignInError("Something went wrong. Please try again.");
+    } finally {
+      setSignInLoading(false);
+    }
+  };
+
+  const handleResumeSession = (session: SessionLookup) => {
+    if (session.status === "analyzed" || session.status === "completed") {
+      navigate(`/analysis/${session.id}`);
+    } else if (session.status === "in_progress") {
+      navigate(`/interview/${session.id}`);
+    } else {
+      navigate(`/research/${session.id}`);
+    }
+  };
+
+  const formatDate = (iso: string) => {
+    const d = new Date(iso);
+    return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  };
+
   const showCatalog = assessments.length > 1;
 
   return (
@@ -62,12 +127,86 @@ export default function HomePage() {
             <img src="/hmn_logo.png" alt="HMN" className="h-8 w-auto" />
             <span className="font-semibold text-white/90">Cascade</span>
           </div>
-          <a href="/admin" className="text-white/20 hover:text-white/40 text-xs transition-colors">Admin</a>
+          <div className="flex items-center gap-4">
+            {!showSignIn && !showForm && (
+              <button onClick={() => setShowSignIn(true)} className="text-white/40 hover:text-white/70 text-sm transition-colors">
+                Continue Assessment
+              </button>
+            )}
+            <a href="/admin" className="text-white/20 hover:text-white/40 text-xs transition-colors">Admin</a>
+          </div>
         </div>
       </header>
 
       <main className="flex-1 flex items-center justify-center px-6 py-20">
-        {!showForm ? (
+        {showSignIn ? (
+          /* Sign-in flow */
+          <div className="w-full max-w-md space-y-8">
+            <div className="text-center space-y-2">
+              <h2 className="text-2xl font-semibold text-white">Welcome back</h2>
+              <p className="text-white/30 text-sm">Enter your email to find your assessment.</p>
+            </div>
+
+            {!signInSessions ? (
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm text-white/50 mb-1.5">Business Email</label>
+                  <input
+                    type="email"
+                    value={signInEmail}
+                    onChange={(e) => setSignInEmail(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && handleSignIn()}
+                    placeholder="you@company.com"
+                    autoFocus
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/20 focus:outline-none focus:border-white/30 transition-colors"
+                  />
+                </div>
+                {signInError && <p className="text-yellow-400/80 text-sm text-center">{signInError}</p>}
+                <div className="flex gap-3">
+                  <Button variant="ghost" onClick={() => { setShowSignIn(false); setSignInError(""); setSignInEmail(""); }} className="flex-1">Back</Button>
+                  <Button onClick={handleSignIn} disabled={!signInEmail} loading={signInLoading} className="flex-1">Find My Assessment</Button>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <p className="text-white/40 text-sm text-center">
+                  Found {signInSessions.length} assessment{signInSessions.length !== 1 ? "s" : ""} for <span className="text-white/70">{signInEmail}</span>
+                </p>
+                <div className="space-y-2">
+                  {signInSessions.map((s) => (
+                    <button
+                      key={s.id}
+                      onClick={() => handleResumeSession(s)}
+                      className="w-full text-left bg-white/[0.03] border border-white/10 rounded-xl p-4 hover:bg-white/[0.06] hover:border-white/20 transition-all"
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-white font-medium">{s.participantName}</span>
+                        <span className={`text-xs font-medium ${STATUS_COLORS[s.status] || "text-white/40"}`}>
+                          {STATUS_LABELS[s.status] || s.status}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-white/30">{s.participantCompany} — {formatDate(s.createdAt)}</span>
+                        {s.score != null && (
+                          <span className={`text-xs font-semibold ${s.score >= 70 ? "text-green-400" : s.score >= 45 ? "text-yellow-400" : "text-red-400"}`}>
+                            {s.score}/100
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-xs text-white/20 mt-1">
+                        {s.status === "analyzed" ? "View your results →" : s.status === "completed" ? "View analysis →" : "Continue where you left off →"}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+                <div className="flex gap-3">
+                  <Button variant="ghost" onClick={() => { setSignInSessions(null); setSignInEmail(""); }} className="flex-1">Try Another Email</Button>
+                  <Button variant="secondary" onClick={() => { setShowSignIn(false); setSignInSessions(null); setSignInEmail(""); }} className="flex-1">Start New Assessment</Button>
+                </div>
+              </div>
+            )}
+          </div>
+        ) : !showForm ? (
           showCatalog ? (
             /* Multi-assessment catalog */
             <div className="max-w-3xl w-full space-y-10">
@@ -97,7 +236,7 @@ export default function HomePage() {
               </div>
             </div>
           ) : (
-            /* Single assessment hero (original design) */
+            /* Single assessment hero */
             <div className="max-w-2xl text-center space-y-8">
               <div className="space-y-4">
                 <h1 className="text-5xl font-bold tracking-tight">

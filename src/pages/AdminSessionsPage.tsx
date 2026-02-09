@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from "react";
-import { useRobot } from "../components/admin/RobotToast";
 import StatusBadge from "../components/admin/StatusBadge";
 import SessionDrawer from "../components/admin/SessionDrawer";
 import { fetchSessions, exportSessionsData } from "../lib/admin-api";
@@ -48,8 +47,6 @@ function isWithinDateRange(
 }
 
 export default function AdminSessionsPage() {
-  const robot = useRobot();
-
   const [sessions, setSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -60,17 +57,15 @@ export default function AdminSessionsPage() {
 
   const loadSessions = useCallback(async () => {
     setLoading(true);
-    robot.say("loading");
     try {
       const data = await fetchSessions();
       setSessions(data.sessions);
-      robot.say("success");
     } catch {
       setSessions([]);
     } finally {
       setLoading(false);
     }
-  }, [robot]);
+  }, []);
 
   useEffect(() => {
     loadSessions();
@@ -91,7 +86,6 @@ export default function AdminSessionsPage() {
   });
 
   const handleExport = async (format: "csv" | "json") => {
-    robot.say("action", "WHIRR CLANK... packaging data for export!");
     setExportOpen(false);
     try {
       const data = await exportSessionsData(format);
@@ -112,7 +106,6 @@ export default function AdminSessionsPage() {
   };
 
   const handleRowClick = (id: string) => {
-    robot.say("action");
     setSelectedSessionId(id);
   };
 

@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { useRobot } from "./RobotToast";
 import StatusBadge from "./StatusBadge";
 import { fetchSession, removeSession } from "../../lib/admin-api";
 
@@ -80,16 +79,12 @@ function formatTimestamp(ts: string): string {
 }
 
 export default function SessionDrawer({ sessionId, onClose }: SessionDrawerProps) {
-  const robot = useRobot();
-
   const [session, setSession] = useState<InterviewSession | null>(null);
   const [loading, setLoading] = useState(true);
   const [visible, setVisible] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
 
   useEffect(() => {
-    robot.say("action", "BEEP BOP... pulling up customer file...");
-
     const load = async () => {
       setLoading(true);
       try {
@@ -110,7 +105,7 @@ export default function SessionDrawer({ sessionId, onClose }: SessionDrawerProps
         setVisible(true);
       });
     });
-  }, [sessionId, robot]);
+  }, [sessionId]);
 
   const handleClose = () => {
     setVisible(false);
@@ -123,7 +118,6 @@ export default function SessionDrawer({ sessionId, onClose }: SessionDrawerProps
       return;
     }
 
-    robot.say("action", "KABLAM! Session obliterated!");
     try {
       await removeSession(sessionId);
       handleClose();

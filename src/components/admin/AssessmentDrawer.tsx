@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { useRobot } from "./RobotToast";
 import StatusBadge from "./StatusBadge";
 import { fetchAssessment } from "../../lib/admin-api";
 
@@ -67,7 +66,6 @@ export default function AssessmentDrawer({
   assessmentId,
   onClose,
 }: AssessmentDrawerProps) {
-  const robot = useRobot();
   const [assessment, setAssessment] = useState<AssessmentType | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -77,7 +75,6 @@ export default function AssessmentDrawer({
       try {
         const data = await fetchAssessment(assessmentId);
         setAssessment(data.assessment);
-        robot.say("action", "ZAP ZAP! Assessment matrix loaded!");
       } catch (err) {
         console.error("Failed to fetch assessment:", err);
       } finally {

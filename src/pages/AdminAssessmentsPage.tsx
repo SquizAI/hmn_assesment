@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { useRobot } from "../components/admin/RobotToast";
 import StatusBadge from "../components/admin/StatusBadge";
 import AssessmentDrawer from "../components/admin/AssessmentDrawer";
 import { fetchAssessments, updateAssessmentStatus } from "../lib/admin-api";
@@ -15,7 +14,6 @@ interface Assessment {
 }
 
 export default function AdminAssessmentsPage() {
-  const robot = useRobot();
   const [assessments, setAssessments] = useState<Assessment[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedAssessmentId, setSelectedAssessmentId] = useState<string | null>(null);
@@ -25,7 +23,6 @@ export default function AdminAssessmentsPage() {
     try {
       const data = await fetchAssessments();
       setAssessments(data.assessments);
-      robot.say("success", "ZAP ZAP! Assessment matrix online!");
     } catch (err) {
       console.error("Failed to fetch assessments:", err);
     } finally {
@@ -34,7 +31,6 @@ export default function AdminAssessmentsPage() {
   };
 
   useEffect(() => {
-    robot.say("loading");
     loadAssessments();
   }, []);
 
@@ -47,7 +43,6 @@ export default function AdminAssessmentsPage() {
     try {
       const result = await updateAssessmentStatus(id, newStatus);
       if (result.ok) {
-        robot.say("action");
         await loadAssessments();
       }
     } catch (err) {

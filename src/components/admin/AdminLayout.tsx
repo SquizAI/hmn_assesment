@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { Outlet, useNavigate, useLocation, Link } from "react-router-dom";
 import { API_BASE } from "../../lib/api";
-import { RobotProvider } from "./RobotToast";
 
 const NAV_ITEMS = [
   { path: "/admin/dashboard", label: "Dashboard", icon: "📊" },
@@ -36,7 +35,6 @@ export default function AdminLayout() {
   const currentTitle = NAV_ITEMS.find((n) => location.pathname.startsWith(n.path))?.label || "Admin";
 
   return (
-    <RobotProvider>
       <div className="h-screen flex overflow-hidden">
         {/* Sidebar */}
         <aside className={`${collapsed ? "w-16" : "w-56"} flex-shrink-0 bg-white/[0.02] backdrop-blur-xl border-r border-white/5 flex flex-col transition-all duration-300`}>
@@ -95,6 +93,5 @@ export default function AdminLayout() {
           </main>
         </div>
       </div>
-    </RobotProvider>
   );
 }

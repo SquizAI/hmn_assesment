@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useRobot } from "../components/admin/RobotToast";
 import StatCard from "../components/admin/StatCard";
 import StatusBadge from "../components/admin/StatusBadge";
 import { fetchStats, fetchFunnel, fetchDimensions, fetchSessions } from "../lib/admin-api";
@@ -86,7 +85,6 @@ function scoreBarColor(score: number): string {
 
 export default function AdminDashboardPage() {
   const navigate = useNavigate();
-  const robot = useRobot();
 
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<Stats | null>(null);
@@ -95,8 +93,6 @@ export default function AdminDashboardPage() {
   const [sessions, setSessions] = useState<Session[]>([]);
 
   useEffect(() => {
-    robot.say("loading");
-
     Promise.all([fetchStats(), fetchFunnel(), fetchDimensions(), fetchSessions()])
       .then(([statsData, funnelData, dimensionsData, sessionsData]) => {
         setStats(statsData);
@@ -104,7 +100,6 @@ export default function AdminDashboardPage() {
         setDimensions(dimensionsData.dimensions);
         setSessions(sessionsData.sessions);
         setLoading(false);
-        robot.say("success");
       })
       .catch((err) => {
         console.error("Dashboard load error:", err);

@@ -461,6 +461,35 @@ app.post("/api/sessions", (req, res) => {
   res.status(201).json({ session });
 });
 
+app.get("/api/sessions/lookup", (req, res) => {
+  const email = (req.query.email as string || "").toLowerCase().trim();
+  if (!email) {
+    res.status(400).json({ error: "email query param required" });
+    return;
+  }
+  ensureDir();
+  const files = readdirSync(SESSIONS_DIR).filter((f) => f.endsWith(".json"));
+  const sessions = files
+    .map((f) => JSON.parse(readFileSync(join(SESSIONS_DIR, f), "utf-8")))
+    .filter((s: { participant?: { email?: string } }) =>
+      s.participant?.email?.toLowerCase().trim() === email
+    )
+    .sort(
+      (a: { createdAt: string }, b: { createdAt: string }) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    )
+    .map((s: { id: string; status: string; createdAt: string; assessmentTypeId?: string; participant?: { name?: string; company?: string }; analysis?: { overallReadinessScore?: number } }) => ({
+      id: s.id,
+      status: s.status,
+      createdAt: s.createdAt,
+      assessmentTypeId: s.assessmentTypeId,
+      participantName: s.participant?.name,
+      participantCompany: s.participant?.company,
+      score: s.analysis?.overallReadinessScore,
+    }));
+  res.json({ sessions });
+});
+
 app.get("/api/sessions/:sessionId", (req, res) => {
   const session = loadSession(req.params.sessionId);
   if (!session) {

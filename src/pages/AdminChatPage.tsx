@@ -1,14 +1,12 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { API_BASE } from "../lib/api";
-import { useRobot } from "../components/admin/RobotToast";
 import ChatMessage from "../components/admin/ChatMessage";
 import ChatInput from "../components/admin/ChatInput";
 import type { AdminChatMessage } from "../lib/types";
 
 export default function AdminChatPage() {
   const navigate = useNavigate();
-  const robot = useRobot();
   const [messages, setMessages] = useState<AdminChatMessage[]>([]);
   const [isThinking, setIsThinking] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -26,7 +24,6 @@ export default function AdminChatPage() {
     const newMessages = [...messages, userMsg];
     setMessages(newMessages);
     setIsThinking(true);
-    robot.say("loading", "BZZZT... transmitting to AI brain...");
 
     try {
       const res = await fetch(`${API_BASE}/api/admin/chat`, {
@@ -51,14 +48,12 @@ export default function AdminChatPage() {
         timestamp: new Date().toISOString(),
       };
       setMessages([...newMessages, aiMsg]);
-      robot.say("success", "BLEEP BLOOP! Transmission received!");
     } catch (err) {
       console.error("Chat error:", err);
       setMessages([
         ...newMessages,
         { role: "assistant", content: "Something went wrong. Please try again.", timestamp: new Date().toISOString() },
       ]);
-      robot.say("error");
     } finally {
       setIsThinking(false);
     }
