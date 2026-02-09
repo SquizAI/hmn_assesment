@@ -21,7 +21,7 @@ export default function AdminLoginPage() {
         body: JSON.stringify({ password }),
       });
       if (res.ok) {
-        navigate("/admin/chat");
+        navigate("/admin/dashboard");
       } else {
         const data = await res.json();
         setError(data.error || "Invalid password");

@@ -1,0 +1,75 @@
+import { API_BASE } from "./api";
+
+const adminFetch = async (path: string, options?: RequestInit) => {
+  const res = await fetch(`${API_BASE}${path}`, {
+    ...options,
+    credentials: "include",
+  });
+  if (res.status === 401) {
+    window.location.href = "/admin";
+    throw new Error("Unauthorized");
+  }
+  if (!res.ok) throw new Error(`API error: ${res.status}`);
+  return res;
+};
+
+export async function fetchStats() {
+  const res = await adminFetch("/api/admin/stats");
+  return res.json();
+}
+
+export async function fetchSessions(filters?: { since?: string; status?: string; assessmentTypeId?: string }) {
+  const params = new URLSearchParams();
+  if (filters?.since) params.set("since", filters.since);
+  if (filters?.status) params.set("status", filters.status);
+  if (filters?.assessmentTypeId) params.set("assessmentTypeId", filters.assessmentTypeId);
+  const qs = params.toString();
+  const res = await adminFetch(`/api/admin/sessions${qs ? `?${qs}` : ""}`);
+  return res.json();
+}
+
+export async function fetchSession(id: string) {
+  const res = await adminFetch(`/api/admin/sessions/${id}`);
+  return res.json();
+}
+
+export async function removeSession(id: string) {
+  const res = await adminFetch(`/api/admin/sessions/${id}`, { method: "DELETE" });
+  return res.json();
+}
+
+export async function fetchAssessments() {
+  const res = await adminFetch("/api/admin/assessments");
+  return res.json();
+}
+
+export async function fetchAssessment(id: string) {
+  const res = await adminFetch(`/api/admin/assessments/${id}`);
+  return res.json();
+}
+
+export async function updateAssessmentStatus(id: string, status: string) {
+  const res = await adminFetch(`/api/admin/assessments/${id}/status`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ status }),
+  });
+  return res.json();
+}
+
+export async function fetchFunnel() {
+  const res = await adminFetch("/api/admin/funnel");
+  return res.json();
+}
+
+export async function fetchDimensions(assessmentTypeId?: string) {
+  const qs = assessmentTypeId ? `?assessmentTypeId=${assessmentTypeId}` : "";
+  const res = await adminFetch(`/api/admin/dimensions${qs}`);
+  return res.json();
+}
+
+export async function exportSessionsData(format: "json" | "csv") {
+  const res = await adminFetch(`/api/admin/export?format=${format}`);
+  if (format === "csv") return res.text();
+  return res.json();
+}

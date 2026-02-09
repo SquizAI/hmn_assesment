@@ -6,7 +6,12 @@ import { readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync } from 
 import { join } from "path";
 import Anthropic from "@anthropic-ai/sdk";
 import dotenv from "dotenv";
-import { TOOL_DEFINITIONS, executeTool } from "./admin-tools.js";
+import {
+  TOOL_DEFINITIONS, executeTool,
+  listAssessments, getAssessment, updateAssessment,
+  listSessions, getSession as getAdminSession, deleteSession,
+  exportSessions, getStats, getDimensionAverages, getCompletionFunnel,
+} from "./admin-tools.js";
 
 dotenv.config();
 
@@ -1170,6 +1175,92 @@ app.get("/api/admin/verify", (req, res) => {
 app.post("/api/admin/logout", (_req, res) => {
   res.clearCookie("admin_token");
   res.json({ ok: true });
+});
+
+// ============================================================
+// ADMIN REST API (data endpoints for dashboard)
+// ============================================================
+
+app.get("/api/admin/stats", requireAdmin, (_req, res) => {
+  try { res.json(getStats()); }
+  catch (err) { console.error("Admin stats error:", err); res.status(500).json({ error: "Failed to get stats" }); }
+});
+
+app.get("/api/admin/sessions", requireAdmin, (req, res) => {
+  try {
+    const filters: { since?: string; status?: string; assessmentTypeId?: string } = {};
+    if (req.query.since) filters.since = req.query.since as string;
+    if (req.query.status) filters.status = req.query.status as string;
+    if (req.query.assessmentTypeId) filters.assessmentTypeId = req.query.assessmentTypeId as string;
+    res.json({ sessions: listSessions(Object.keys(filters).length > 0 ? filters : undefined) });
+  } catch (err) { console.error("Admin sessions error:", err); res.status(500).json({ error: "Failed to list sessions" }); }
+});
+
+app.get("/api/admin/sessions/:id", requireAdmin, (req, res) => {
+  try {
+    const session = getAdminSession(String(req.params.id));
+    if (!session) { res.status(404).json({ error: "Session not found" }); return; }
+    res.json({ session });
+  } catch (err) { console.error("Admin session error:", err); res.status(500).json({ error: "Failed to get session" }); }
+});
+
+app.delete("/api/admin/sessions/:id", requireAdmin, (req, res) => {
+  try {
+    const result = deleteSession(String(req.params.id));
+    if (!result.ok) { res.status(404).json({ error: "Session not found" }); return; }
+    res.json({ ok: true });
+  } catch (err) { console.error("Admin delete session error:", err); res.status(500).json({ error: "Failed to delete session" }); }
+});
+
+app.get("/api/admin/assessments", requireAdmin, (_req, res) => {
+  try { res.json({ assessments: listAssessments() }); }
+  catch (err) { console.error("Admin assessments error:", err); res.status(500).json({ error: "Failed to list assessments" }); }
+});
+
+app.get("/api/admin/assessments/:id", requireAdmin, (req, res) => {
+  try {
+    const assessment = getAssessment(String(req.params.id));
+    if (!assessment) { res.status(404).json({ error: "Assessment not found" }); return; }
+    res.json({ assessment });
+  } catch (err) { console.error("Admin assessment error:", err); res.status(500).json({ error: "Failed to get assessment" }); }
+});
+
+app.post("/api/admin/assessments/:id/status", requireAdmin, (req, res) => {
+  try {
+    const { status } = req.body;
+    if (!["draft", "active", "archived"].includes(status)) { res.status(400).json({ error: "Invalid status" }); return; }
+    const result = updateAssessment(String(req.params.id), { status });
+    if (!result.ok) { res.status(404).json({ error: "Assessment not found" }); return; }
+    res.json({ ok: true });
+  } catch (err) { console.error("Admin status update error:", err); res.status(500).json({ error: "Failed to update status" }); }
+});
+
+app.get("/api/admin/funnel", requireAdmin, (_req, res) => {
+  try { res.json({ funnel: getCompletionFunnel() }); }
+  catch (err) { console.error("Admin funnel error:", err); res.status(500).json({ error: "Failed to get funnel" }); }
+});
+
+app.get("/api/admin/dimensions", requireAdmin, (req, res) => {
+  try {
+    const assessmentTypeId = req.query.assessmentTypeId as string | undefined;
+    res.json({ dimensions: getDimensionAverages(assessmentTypeId) });
+  } catch (err) { console.error("Admin dimensions error:", err); res.status(500).json({ error: "Failed to get dimensions" }); }
+});
+
+app.get("/api/admin/export", requireAdmin, (req, res) => {
+  try {
+    const format = (req.query.format as string) || "json";
+    const filters: { since?: string; status?: string; assessmentTypeId?: string } = {};
+    if (req.query.since) filters.since = req.query.since as string;
+    if (req.query.status) filters.status = req.query.status as string;
+    if (req.query.assessmentTypeId) filters.assessmentTypeId = req.query.assessmentTypeId as string;
+    const data = exportSessions(format as "json" | "csv", Object.keys(filters).length > 0 ? filters : undefined);
+    if (format === "csv") {
+      res.setHeader("Content-Type", "text/csv");
+      res.setHeader("Content-Disposition", "attachment; filename=sessions.csv");
+    }
+    res.send(data);
+  } catch (err) { console.error("Admin export error:", err); res.status(500).json({ error: "Failed to export" }); }
 });
 
 // ============================================================
