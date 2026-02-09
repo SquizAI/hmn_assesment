@@ -100,3 +100,40 @@ export async function exportSessionsData(format: "json" | "csv") {
   if (format === "csv") return res.text();
   return res.json();
 }
+
+export async function createAssessmentFromFile(
+  content: string,
+  filename: string,
+): Promise<{ assessment: Record<string, unknown>; message: string }> {
+  const res = await adminFetch("/api/admin/assessments/from-file", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ content, filename }),
+  });
+  return res.json();
+}
+
+export async function chatWithAssessment(
+  assessmentId: string,
+  messages: { role: string; content: string; timestamp: string }[],
+): Promise<{ response: string }> {
+  const res = await adminFetch(`/api/admin/assessments/${assessmentId}/chat`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ messages }),
+  });
+  return res.json();
+}
+
+export async function createPreviewSession(assessmentId: string): Promise<{ session: { id: string } }> {
+  const res = await adminFetch("/api/sessions/preview", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ assessmentTypeId: assessmentId }),
+  });
+  return res.json();
+}
+
+export async function deletePreviewSession(sessionId: string): Promise<void> {
+  await adminFetch(`/api/admin/preview/${sessionId}`, { method: "DELETE" });
+}

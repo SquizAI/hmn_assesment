@@ -2,7 +2,7 @@ import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import jwt from "jsonwebtoken";
-import { readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync } from "fs";
+import { readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync, unlinkSync } from "fs";
 import { join } from "path";
 import Anthropic from "@anthropic-ai/sdk";
 import dotenv from "dotenv";
@@ -1443,6 +1443,213 @@ Export all completed sessions
 - Keep action labels short (under 40 chars) and action-oriented
 - Always include at least 2 suggested actions`;
 
+// ---- File upload → Assessment creation ----
+
+app.post("/api/admin/assessments/from-file", requireAdmin, async (req, res) => {
+  try {
+    const { content, filename } = req.body;
+    if (!content || typeof content !== "string") {
+      res.status(400).json({ error: "content (string) required" });
+      return;
+    }
+
+    const ext = (filename || "file.txt").split(".").pop()?.toLowerCase() || "txt";
+    const client = getAnthropicClient();
+
+    const parsePrompt = `You are an assessment creation assistant. The user has uploaded a file to create an assessment from.
+
+FILE NAME: ${filename || "unknown"}
+FILE TYPE: ${ext}
+
+INSTRUCTIONS:
+Parse the file content and generate a complete HMN Cascade assessment JSON object with this EXACT structure:
+
+{
+  "id": "slug-style-id",
+  "name": "Assessment Name",
+  "description": "Description",
+  "icon": "emoji",
+  "estimatedMinutes": 30,
+  "status": "draft",
+  "phases": [{ "id": "phase_id", "label": "Phase Label", "order": 0 }],
+  "sections": [{ "id": "section_id", "label": "Section Label", "phaseId": "phase_id", "order": 0 }],
+  "questions": [{
+    "id": "q_unique_id",
+    "section": "section_id",
+    "phase": "phase_id",
+    "text": "Question text?",
+    "inputType": "ai_conversation|slider|buttons|multi_select|open_text|voice",
+    "required": true,
+    "scoringDimensions": ["dimension_id"],
+    "weight": 0.5,
+    "tags": ["tag"],
+    "options": [{"label": "Option", "value": "option"}]
+  }],
+  "scoringDimensions": [{ "id": "dim_id", "label": "Dimension", "description": "What it measures", "weight": 0.125 }]
+}
+
+For markdown files: Extract topics, headings, and content to generate relevant questions.
+For JSON files: Try to map the structure directly if it matches, otherwise extract content.
+For text files: Parse the content to identify themes and generate questions.
+
+Generate 15-30 well-crafted questions with varied input types.
+Scoring dimension weights should sum to 1.0.
+Return ONLY the JSON object, no other text.
+
+FILE CONTENT:
+${content.slice(0, 50000)}`;
+
+    const response = await client.messages.create({
+      model: MODEL,
+      max_tokens: 8000,
+      messages: [{ role: "user", content: parsePrompt }],
+    });
+
+    const textBlock = response.content.find((b) => b.type === "text");
+    const responseText = textBlock && textBlock.type === "text" ? textBlock.text : "";
+
+    // Extract JSON from response (might be wrapped in ```json blocks)
+    const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      res.status(422).json({ error: "Could not parse assessment from file content" });
+      return;
+    }
+
+    const assessmentConfig = JSON.parse(jsonMatch[0]);
+    // Ensure required fields
+    if (!assessmentConfig.id) assessmentConfig.id = `file-${Date.now().toString(36)}`;
+    if (!assessmentConfig.status) assessmentConfig.status = "draft";
+    assessmentConfig.createdAt = new Date().toISOString();
+    assessmentConfig.updatedAt = new Date().toISOString();
+
+    const result = createAssessment(assessmentConfig);
+    res.json({ assessment: result, message: `Assessment "${assessmentConfig.name}" created from ${filename || "uploaded file"}` });
+  } catch (err) {
+    console.error("File-to-assessment error:", err);
+    res.status(500).json({ error: "Failed to create assessment from file" });
+  }
+});
+
+// ---- Assessment-scoped chat (conversational editing) ----
+
+const ASSESSMENT_TOOL_NAMES = new Set([
+  "get_assessment", "update_assessment", "add_question",
+  "update_question", "remove_question", "duplicate_assessment", "archive_assessment",
+]);
+
+const ASSESSMENT_TOOLS = TOOL_DEFINITIONS.filter((t) => ASSESSMENT_TOOL_NAMES.has(t.name));
+
+app.post("/api/admin/assessments/:id/chat", requireAdmin, async (req, res) => {
+  try {
+    const assessmentId = sanitizeId(String(req.params.id));
+    const { messages } = req.body;
+    if (!messages || !Array.isArray(messages)) {
+      res.status(400).json({ error: "messages array required" });
+      return;
+    }
+
+    // Load assessment context
+    const assessment = getAssessment(assessmentId);
+    if (!assessment) {
+      res.status(404).json({ error: "Assessment not found" });
+      return;
+    }
+
+    const systemPrompt = `You are editing the assessment "${assessment.name}" (id: ${assessmentId}).
+
+CURRENT ASSESSMENT STATE:
+- Status: ${assessment.status}
+- Questions: ${assessment.questions?.length ?? 0}
+- Phases: ${(assessment.phases || []).map((p: { label: string }) => p.label).join(", ")}
+- Sections: ${(assessment.sections || []).map((s: { label: string }) => s.label).join(", ")}
+- Scoring Dimensions: ${(assessment.scoringDimensions || []).map((d: { label: string }) => d.label).join(", ")}
+
+TOOLS AVAILABLE:
+You can get_assessment, update_assessment, add_question, update_question, remove_question, duplicate_assessment, or archive_assessment.
+Always use assessmentId="${assessmentId}" when calling tools that need it.
+
+BEHAVIOR:
+- Be conversational and helpful
+- Use markdown formatting for clarity
+- For destructive actions, confirm before executing
+- After making changes, briefly summarize what changed
+- Keep responses concise
+
+QUESTION INPUT TYPES:
+- "ai_conversation": Open-ended with AI follow-ups
+- "slider": Numeric scale (needs sliderMin, sliderMax, sliderLabels)
+- "buttons": Single-select from options
+- "multi_select": Multiple select from options
+- "open_text": Free text
+- "voice": Voice input with transcription
+
+Each question needs: id, section, phase, text, inputType, required, scoringDimensions[], weight (0-1), tags[]
+
+RESPONSE FORMAT:
+End with 2-3 suggested follow-up actions:
+\`\`\`actions
+Show all questions
+Update scoring weights
+Add a new question
+\`\`\``;
+
+    const client = getAnthropicClient();
+    const anthropicMessages = messages.map((m: { role: string; content: string }) => ({
+      role: m.role as "user" | "assistant",
+      content: m.content,
+    }));
+
+    let response = await client.messages.create({
+      model: MODEL,
+      max_tokens: 4000,
+      system: systemPrompt,
+      tools: ASSESSMENT_TOOLS as Anthropic.Messages.Tool[],
+      messages: anthropicMessages,
+    });
+
+    const toolMessages = [...anthropicMessages];
+    let maxIterations = 10;
+
+    while (response.stop_reason === "tool_use" && maxIterations-- > 0) {
+      const assistantContent = response.content;
+      toolMessages.push({ role: "assistant" as const, content: assistantContent as unknown as string });
+
+      const toolResults: Array<{ type: "tool_result"; tool_use_id: string; content: string }> = [];
+      for (const block of assistantContent) {
+        if (block.type === "tool_use") {
+          console.log(`Assessment chat tool: ${block.name}(${JSON.stringify(block.input)})`);
+          const result = executeTool(block.name, block.input as Record<string, unknown>);
+          toolResults.push({
+            type: "tool_result",
+            tool_use_id: block.id,
+            content: JSON.stringify(result, null, 2),
+          });
+        }
+      }
+
+      toolMessages.push({ role: "user" as const, content: toolResults as unknown as string });
+
+      response = await client.messages.create({
+        model: MODEL,
+        max_tokens: 4000,
+        system: systemPrompt,
+        tools: ASSESSMENT_TOOLS as Anthropic.Messages.Tool[],
+        messages: toolMessages as Anthropic.Messages.MessageParam[],
+      });
+    }
+
+    const textBlocks = response.content.filter((b) => b.type === "text");
+    const finalText = textBlocks.map((b) => b.type === "text" ? b.text : "").join("\n");
+
+    res.json({ response: finalText || "Done! The assessment has been updated." });
+  } catch (err) {
+    console.error("Assessment chat error:", err);
+    res.status(500).json({ error: "Chat failed" });
+  }
+});
+
+// ---- General admin chat ----
+
 app.post("/api/admin/chat", requireAdmin, async (req, res) => {
   try {
     const { messages } = req.body;
@@ -1506,6 +1713,61 @@ app.post("/api/admin/chat", requireAdmin, async (req, res) => {
   } catch (err) {
     console.error("Admin chat error:", err);
     res.status(500).json({ error: "Chat failed" });
+  }
+});
+
+// ============================================================
+// PREVIEW SESSION ENDPOINTS
+// ============================================================
+
+app.post("/api/sessions/preview", requireAdmin, (req, res) => {
+  const { assessmentTypeId } = req.body;
+  if (!assessmentTypeId) {
+    res.status(400).json({ error: "assessmentTypeId required" });
+    return;
+  }
+
+  const id = `preview_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
+  const session = {
+    id,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    status: "intake",
+    assessmentTypeId: sanitizeId(String(assessmentTypeId)),
+    isPreview: true,
+    participant: {
+      name: "Preview User",
+      role: "Admin Tester",
+      company: "Preview Mode",
+      industry: "Technology",
+      teamSize: "10-50",
+      email: "preview@test.local",
+    },
+    currentQuestionIndex: 0,
+    currentPhase: "profile_baseline",
+    currentSection: "demographics",
+    responses: [],
+    conversationHistory: [],
+    research: null,
+    researchConfirmed: true,
+  };
+
+  saveSession(session);
+  res.status(201).json({ session });
+});
+
+app.delete("/api/admin/preview/:sessionId", requireAdmin, (req, res) => {
+  const id = sanitizeId(String(req.params.sessionId));
+  if (!id.startsWith("preview_")) {
+    res.status(403).json({ error: "Can only delete preview sessions" });
+    return;
+  }
+  const p = sessionPath(id);
+  if (existsSync(p)) {
+    unlinkSync(p);
+    res.json({ ok: true });
+  } else {
+    res.status(404).json({ error: "Preview session not found" });
   }
 });
 
