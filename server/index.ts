@@ -8,7 +8,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import dotenv from "dotenv";
 import {
   TOOL_DEFINITIONS, executeTool,
-  listAssessments, getAssessment, updateAssessment,
+  listAssessments, getAssessment, createAssessment, updateAssessment, duplicateAssessment,
   listSessions, getSession as getAdminSession, deleteSession,
   exportSessions, getStats, getDimensionAverages, getCompletionFunnel,
 } from "./admin-tools.js";
@@ -25,12 +25,20 @@ const PORT = IS_PROD ? parseInt(process.env.PORT || "8080", 10) : 0;
 const MODEL = "claude-sonnet-4-5-20250929";
 const SESSIONS_DIR = join(process.cwd(), "sessions");
 
-app.use(cors({ origin: true, credentials: true }));
+app.use(cors({
+  origin: IS_PROD ? (process.env.CORS_ORIGIN || false) : true,
+  credentials: true,
+}));
 app.use(express.json({ limit: "50mb" }));
 app.use(cookieParser());
 
-const JWT_SECRET = process.env.JWT_SECRET || "hmn-cascade-admin-secret-change-me";
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "admin";
+if (!process.env.JWT_SECRET || !process.env.ADMIN_PASSWORD) {
+  console.error("FATAL: JWT_SECRET and ADMIN_PASSWORD environment variables are required.");
+  process.exit(1);
+}
+
+const JWT_SECRET: string = process.env.JWT_SECRET;
+const ADMIN_PASSWORD: string = process.env.ADMIN_PASSWORD;
 const ASSESSMENTS_DIR = join(process.cwd(), "assessments");
 
 // In production, serve the built frontend
@@ -51,8 +59,12 @@ function getAnthropicClient() {
 
 // --- Session Storage ---
 
+function sanitizeId(id: string): string {
+  return id.replace(/[^a-zA-Z0-9_-]/g, "");
+}
+
 function sessionPath(id: string) {
-  return join(SESSIONS_DIR, `${id}.json`);
+  return join(SESSIONS_DIR, `${sanitizeId(id)}.json`);
 }
 
 function loadSession(id: string) {
@@ -893,7 +905,12 @@ app.post("/api/transcribe/form", express.raw({ type: "*/*", limit: "50mb" }), as
 // --- Deepgram token for client-side WebSocket streaming ---
 
 app.get("/api/deepgram-token", (_req, res) => {
-  res.json({ token: process.env.DEEPGRAM_API_KEY });
+  const key = process.env.DEEPGRAM_API_KEY;
+  if (!key) {
+    res.status(503).json({ error: "Voice transcription is not configured" });
+    return;
+  }
+  res.json({ token: key });
 });
 
 // ============================================================
@@ -1177,12 +1194,33 @@ function requireAdmin(req: express.Request, res: express.Response, next: express
   next();
 }
 
+// Simple in-memory rate limiter for login
+const loginAttempts = new Map<string, { count: number; resetAt: number }>();
+
 app.post("/api/admin/login", (req, res) => {
+  const ip = req.ip || req.socket.remoteAddress || "unknown";
+  const now = Date.now();
+  const entry = loginAttempts.get(ip);
+
+  if (entry && now < entry.resetAt) {
+    if (entry.count >= 5) {
+      res.status(429).json({ error: "Too many login attempts. Try again later." });
+      return;
+    }
+    entry.count++;
+  } else {
+    loginAttempts.set(ip, { count: 1, resetAt: now + 15 * 60 * 1000 });
+  }
+
   const { password } = req.body;
   if (password !== ADMIN_PASSWORD) {
     res.status(401).json({ error: "Invalid password" });
     return;
   }
+
+  // Reset on successful login
+  loginAttempts.delete(ip);
+
   const token = jwt.sign({ role: "admin" }, JWT_SECRET, { expiresIn: "24h" });
   res.cookie("admin_token", token, {
     httpOnly: true,
@@ -1252,6 +1290,35 @@ app.get("/api/admin/assessments/:id", requireAdmin, (req, res) => {
     if (!assessment) { res.status(404).json({ error: "Assessment not found" }); return; }
     res.json({ assessment });
   } catch (err) { console.error("Admin assessment error:", err); res.status(500).json({ error: "Failed to get assessment" }); }
+});
+
+app.post("/api/admin/assessments", requireAdmin, (req, res) => {
+  try {
+    const { config } = req.body;
+    if (!config?.id || !config?.name) { res.status(400).json({ error: "config with id and name required" }); return; }
+    const result = createAssessment(config);
+    res.status(201).json(result);
+  } catch (err) { console.error("Admin create assessment error:", err); res.status(500).json({ error: "Failed to create assessment" }); }
+});
+
+app.put("/api/admin/assessments/:id", requireAdmin, (req, res) => {
+  try {
+    const { changes } = req.body;
+    if (!changes) { res.status(400).json({ error: "changes object required" }); return; }
+    const result = updateAssessment(String(req.params.id), changes);
+    if (!result.ok) { res.status(404).json({ error: "Assessment not found" }); return; }
+    res.json({ ok: true });
+  } catch (err) { console.error("Admin update assessment error:", err); res.status(500).json({ error: "Failed to update assessment" }); }
+});
+
+app.post("/api/admin/assessments/:id/duplicate", requireAdmin, (req, res) => {
+  try {
+    const { newId, newName } = req.body;
+    if (!newId || !newName) { res.status(400).json({ error: "newId and newName required" }); return; }
+    const result = duplicateAssessment(String(req.params.id), newId, newName);
+    if (!result.ok) { res.status(404).json({ error: "Source assessment not found" }); return; }
+    res.status(201).json(result);
+  } catch (err) { console.error("Admin duplicate assessment error:", err); res.status(500).json({ error: "Failed to duplicate assessment" }); }
 });
 
 app.post("/api/admin/assessments/:id/status", requireAdmin, (req, res) => {
@@ -1359,7 +1426,22 @@ QUESTION INPUT TYPES:
 - "open_text": Free text
 - "voice": Voice input with transcription
 
-Each question needs: id, section, phase, text, inputType, required, scoringDimensions[], weight (0-1), tags[]`;
+Each question needs: id, section, phase, text, inputType, required, scoringDimensions[], weight (0-1), tags[]
+
+RESPONSE FORMAT:
+- ALWAYS end your response with 2-4 suggested follow-up actions the admin might want to take next
+- Format them EXACTLY like this at the very end of your response:
+
+\`\`\`actions
+Show me session analytics
+Create a new assessment
+Export all completed sessions
+\`\`\`
+
+- Each line inside the actions block is one clickable action button
+- Make actions contextually relevant to what you just discussed
+- Keep action labels short (under 40 chars) and action-oriented
+- Always include at least 2 suggested actions`;
 
 app.post("/api/admin/chat", requireAdmin, async (req, res) => {
   try {

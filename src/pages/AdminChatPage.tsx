@@ -5,6 +5,15 @@ import ChatMessage from "../components/admin/ChatMessage";
 import ChatInput from "../components/admin/ChatInput";
 import type { AdminChatMessage } from "../lib/types";
 
+const QUICK_ACTIONS = [
+  { label: "List all assessments", icon: "📋" },
+  { label: "Show me session stats", icon: "📊" },
+  { label: "Create a new assessment", icon: "✨" },
+  { label: "Show recent sessions", icon: "👥" },
+  { label: "Export completed sessions", icon: "📤" },
+  { label: "Show dimension averages", icon: "📈" },
+];
+
 export default function AdminChatPage() {
   const navigate = useNavigate();
   const [messages, setMessages] = useState<AdminChatMessage[]>([]);
@@ -25,12 +34,17 @@ export default function AdminChatPage() {
     setMessages(newMessages);
     setIsThinking(true);
 
+    // Truncate to the last 20 messages to prevent unbounded context growth
+    const recentMessages = newMessages.length > 20
+      ? newMessages.slice(-20)
+      : newMessages;
+
     try {
       const res = await fetch(`${API_BASE}/api/admin/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ messages: newMessages }),
+        body: JSON.stringify({ messages: recentMessages }),
       });
 
       if (!res.ok) {
@@ -59,33 +73,33 @@ export default function AdminChatPage() {
     }
   };
 
+  const lastAssistantIdx = messages.reduce((acc, msg, i) => (msg.role === "assistant" ? i : acc), -1);
+
   return (
     <div className="h-full flex flex-col">
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-6 py-6">
         <div className="max-w-3xl mx-auto space-y-4">
           {messages.length === 0 && (
-            <div className="text-center py-20 space-y-6">
-              <div className="text-4xl">🎛️</div>
-              <div className="space-y-2">
-                <h2 className="text-xl font-semibold text-white">AI Assistant</h2>
-                <p className="text-white/40 text-sm max-w-md mx-auto">
-                  Manage assessments, create new ones, view session data, and generate analytics through conversation.
+            <div className="text-center py-16 space-y-8">
+              <div className="space-y-3">
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500/20 to-purple-500/20 border border-white/10">
+                  <span className="text-3xl">🤖</span>
+                </div>
+                <h2 className="text-xl font-semibold text-white">Cascade AI Assistant</h2>
+                <p className="text-white/40 text-sm max-w-md mx-auto leading-relaxed">
+                  Manage assessments, analyze sessions, create new diagnostics, and generate reports — all through conversation.
                 </p>
               </div>
-              <div className="flex flex-wrap gap-2 justify-center max-w-lg mx-auto">
-                {[
-                  "List all assessments",
-                  "Show me session stats",
-                  "Create a new assessment",
-                  "Export completed sessions",
-                ].map((suggestion) => (
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-w-lg mx-auto">
+                {QUICK_ACTIONS.map((action) => (
                   <button
-                    key={suggestion}
-                    onClick={() => handleSend(suggestion)}
-                    className="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white/50 text-sm hover:bg-white/10 hover:text-white/70 transition-all"
+                    key={action.label}
+                    onClick={() => handleSend(action.label)}
+                    className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-white/[0.03] border border-white/10 text-white/50 text-sm hover:bg-white/[0.07] hover:text-white/80 hover:border-white/20 transition-all text-left"
                   >
-                    {suggestion}
+                    <span className="text-base">{action.icon}</span>
+                    <span className="text-xs">{action.label}</span>
                   </button>
                 ))}
               </div>
@@ -93,16 +107,25 @@ export default function AdminChatPage() {
           )}
 
           {messages.map((msg, i) => (
-            <ChatMessage key={i} role={msg.role} content={msg.content} />
+            <ChatMessage
+              key={i}
+              role={msg.role}
+              content={msg.content}
+              onAction={handleSend}
+              isLatest={i === lastAssistantIdx && !isThinking}
+            />
           ))}
 
           {isThinking && (
             <div className="flex justify-start">
-              <div className="bg-white/[0.07] rounded-2xl px-4 py-3 border border-white/10">
-                <div className="flex gap-1.5">
-                  <span className="w-2 h-2 bg-white/40 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
-                  <span className="w-2 h-2 bg-white/40 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
-                  <span className="w-2 h-2 bg-white/40 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+              <div className="bg-white/[0.05] rounded-2xl rounded-bl-md px-5 py-3.5 border border-white/[0.08]">
+                <div className="flex items-center gap-2">
+                  <div className="flex gap-1">
+                    <span className="w-1.5 h-1.5 bg-blue-400/60 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+                    <span className="w-1.5 h-1.5 bg-blue-400/60 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+                    <span className="w-1.5 h-1.5 bg-blue-400/60 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+                  </div>
+                  <span className="text-xs text-white/30 ml-1">Thinking...</span>
                 </div>
               </div>
             </div>
@@ -113,7 +136,7 @@ export default function AdminChatPage() {
       </div>
 
       {/* Input */}
-      <div className="border-t border-white/5 px-6 py-4 flex-shrink-0">
+      <div className="border-t border-white/5 px-6 py-4 shrink-0">
         <div className="max-w-3xl mx-auto">
           <ChatInput onSend={handleSend} disabled={isThinking} />
         </div>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { API_BASE } from "../lib/api";
 import Button from "../components/ui/Button";
 import type { AssessmentSummary } from "../lib/types";
@@ -30,6 +30,7 @@ const STATUS_COLORS: Record<string, string> = {
 
 export default function HomePage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [assessments, setAssessments] = useState<AssessmentSummary[]>([]);
   const [selectedAssessment, setSelectedAssessment] = useState<AssessmentSummary | null>(null);
   const [name, setName] = useState("");
@@ -54,10 +55,19 @@ export default function HomePage() {
       .then((data) => {
         if (data.assessments?.length > 0) {
           setAssessments(data.assessments);
+          // Auto-select assessment from ?assessment=<id> query param (e.g. shared link)
+          const assessmentParam = searchParams.get("assessment");
+          if (assessmentParam) {
+            const match = data.assessments.find((a: AssessmentSummary) => a.id === assessmentParam);
+            if (match) {
+              setSelectedAssessment(match);
+              setShowForm(true);
+            }
+          }
         }
       })
       .catch(() => {});
-  }, []);
+  }, [searchParams]);
 
   const handleSelectAssessment = (a: AssessmentSummary) => {
     setSelectedAssessment(a);

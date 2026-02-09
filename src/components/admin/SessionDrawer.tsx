@@ -53,6 +53,7 @@ interface InterviewSession {
 interface SessionDrawerProps {
   sessionId: string;
   onClose: () => void;
+  onDelete?: () => void;
 }
 
 function scoreColor(score: number): string {
@@ -78,7 +79,7 @@ function formatTimestamp(ts: string): string {
   });
 }
 
-export default function SessionDrawer({ sessionId, onClose }: SessionDrawerProps) {
+export default function SessionDrawer({ sessionId, onClose, onDelete }: SessionDrawerProps) {
   const [session, setSession] = useState<InterviewSession | null>(null);
   const [loading, setLoading] = useState(true);
   const [visible, setVisible] = useState(false);
@@ -107,6 +108,14 @@ export default function SessionDrawer({ sessionId, onClose }: SessionDrawerProps
     });
   }, [sessionId]);
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") handleClose();
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
   const handleClose = () => {
     setVisible(false);
     setTimeout(onClose, 300);
@@ -120,6 +129,7 @@ export default function SessionDrawer({ sessionId, onClose }: SessionDrawerProps
 
     try {
       await removeSession(sessionId);
+      onDelete?.();
       handleClose();
     } catch {
       setDeleteConfirm(false);

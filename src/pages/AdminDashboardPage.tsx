@@ -4,7 +4,8 @@ import StatCard from "../components/admin/StatCard";
 import StatusBadge from "../components/admin/StatusBadge";
 import { fetchStats, fetchFunnel, fetchDimensions, fetchSessions } from "../lib/admin-api";
 
-interface Stats {
+/** Lightweight local type matching the admin stats API response shape. */
+interface DashboardStats {
   totalSessions: number;
   completedSessions: number;
   analyzedSessions: number;
@@ -13,19 +14,22 @@ interface Stats {
   assessmentBreakdown: { assessmentTypeId: string; count: number }[];
 }
 
-interface FunnelStage {
+/** Lightweight local type matching the admin funnel API response shape. */
+interface DashboardFunnelStage {
   stage: "intake" | "in_progress" | "completed" | "analyzed";
   count: number;
   percentage: number;
 }
 
-interface Dimension {
+/** Lightweight local type matching the admin dimensions API response shape. */
+interface DashboardDimension {
   dimension: string;
   average: number;
   count: number;
 }
 
-interface Session {
+/** Lightweight local type matching the admin session summary API response shape. */
+interface DashboardSession {
   id: string;
   participantName: string;
   participantCompany: string;
@@ -87,10 +91,10 @@ export default function AdminDashboardPage() {
   const navigate = useNavigate();
 
   const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState<Stats | null>(null);
-  const [funnel, setFunnel] = useState<FunnelStage[]>([]);
-  const [dimensions, setDimensions] = useState<Dimension[]>([]);
-  const [sessions, setSessions] = useState<Session[]>([]);
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [funnel, setFunnel] = useState<DashboardFunnelStage[]>([]);
+  const [dimensions, setDimensions] = useState<DashboardDimension[]>([]);
+  const [sessions, setSessions] = useState<DashboardSession[]>([]);
 
   useEffect(() => {
     Promise.all([fetchStats(), fetchFunnel(), fetchDimensions(), fetchSessions()])

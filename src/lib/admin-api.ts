@@ -48,6 +48,33 @@ export async function fetchAssessment(id: string) {
   return res.json();
 }
 
+export async function createNewAssessment(config: Record<string, unknown>) {
+  const res = await adminFetch("/api/admin/assessments", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ config }),
+  });
+  return res.json();
+}
+
+export async function updateFullAssessment(id: string, changes: Record<string, unknown>) {
+  const res = await adminFetch(`/api/admin/assessments/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ changes }),
+  });
+  return res.json();
+}
+
+export async function duplicateAssessmentApi(id: string, newId: string, newName: string) {
+  const res = await adminFetch(`/api/admin/assessments/${id}/duplicate`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ newId, newName }),
+  });
+  return res.json();
+}
+
 export async function updateAssessmentStatus(id: string, status: string) {
   const res = await adminFetch(`/api/admin/assessments/${id}/status`, {
     method: "POST",

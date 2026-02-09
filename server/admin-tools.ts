@@ -35,12 +35,16 @@ function ensureSessionsDir(): void {
     mkdirSync(SESSIONS_DIR, { recursive: true });
 }
 
+function sanitizeId(id: string): string {
+  return id.replace(/[^a-zA-Z0-9_-]/g, "");
+}
+
 function assessmentPath(id: string): string {
-  return join(ASSESSMENTS_DIR, `${id}.json`);
+  return join(ASSESSMENTS_DIR, `${sanitizeId(id)}.json`);
 }
 
 function sessionPath(id: string): string {
-  return join(SESSIONS_DIR, `${id}.json`);
+  return join(SESSIONS_DIR, `${sanitizeId(id)}.json`);
 }
 
 function loadAssessmentFile(id: string): AssessmentType | null {
@@ -436,9 +440,17 @@ export function getCompletionFunnel(): {
   const total = sessions.length;
 
   const stages = ["intake", "in_progress", "completed", "analyzed"] as const;
+  const stageIndex: Record<string, number> = {
+    intake: 0,
+    in_progress: 1,
+    completed: 2,
+    analyzed: 3,
+  };
 
+  // Cumulative: count sessions that REACHED each stage (not just currently at it)
   return stages.map((stage) => {
-    const count = sessions.filter((s) => s.status === stage).length;
+    const minIndex = stageIndex[stage];
+    const count = sessions.filter((s) => (stageIndex[s.status] ?? -1) >= minIndex).length;
     return {
       stage,
       count,

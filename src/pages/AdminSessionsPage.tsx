@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import StatusBadge from "../components/admin/StatusBadge";
 import SessionDrawer from "../components/admin/SessionDrawer";
 import { fetchSessions, exportSessionsData } from "../lib/admin-api";
@@ -54,6 +54,19 @@ export default function AdminSessionsPage() {
   const [dateFilter, setDateFilter] = useState("all");
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
   const [exportOpen, setExportOpen] = useState(false);
+
+  const exportRef = useRef<HTMLDivElement>(null);
+
+  // Close export dropdown on outside click
+  useEffect(() => {
+    function handleMouseDown(e: MouseEvent) {
+      if (exportRef.current && !exportRef.current.contains(e.target as Node)) {
+        setExportOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleMouseDown);
+    return () => document.removeEventListener("mousedown", handleMouseDown);
+  }, []);
 
   const loadSessions = useCallback(async () => {
     setLoading(true);
@@ -144,7 +157,7 @@ export default function AdminSessionsPage() {
           <option value="month">This month</option>
         </select>
 
-        <div className="ml-auto relative">
+        <div className="ml-auto relative" ref={exportRef}>
           <button
             onClick={() => setExportOpen(!exportOpen)}
             className="bg-white/[0.05] border border-white/10 rounded-lg px-4 py-2 text-sm text-white hover:bg-white/[0.08] transition-colors"
@@ -239,6 +252,7 @@ export default function AdminSessionsPage() {
         <SessionDrawer
           sessionId={selectedSessionId}
           onClose={() => setSelectedSessionId(null)}
+          onDelete={() => { setSelectedSessionId(null); loadSessions(); }}
         />
       )}
     </div>
