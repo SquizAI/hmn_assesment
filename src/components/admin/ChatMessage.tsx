@@ -1,3 +1,5 @@
+import type { ReactNode, ReactElement } from "react";
+
 interface Props {
   role: "user" | "assistant";
   content: string;
@@ -9,7 +11,7 @@ export default function ChatMessage({ role, content }: Props) {
   // Simple markdown-ish rendering: bold, code, lists, tables
   const renderContent = (text: string) => {
     const lines = text.split("\n");
-    const elements: JSX.Element[] = [];
+    const elements: ReactElement[] = [];
     let inTable = false;
     let tableRows: string[][] = [];
 
@@ -97,8 +99,8 @@ export default function ChatMessage({ role, content }: Props) {
     return elements;
   };
 
-  const formatInline = (text: string): (string | JSX.Element)[] => {
-    const parts: (string | JSX.Element)[] = [];
+  const formatInline = (text: string): ReactNode[] => {
+    const parts: ReactNode[] = [];
     let remaining = text;
     let key = 0;
 
