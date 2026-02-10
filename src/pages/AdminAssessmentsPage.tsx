@@ -5,7 +5,6 @@ import AssessmentDrawer from "../components/admin/AssessmentDrawer";
 import {
   fetchAssessments,
   updateAssessmentStatus,
-  createNewAssessment,
   duplicateAssessmentApi,
 } from "../lib/admin-api";
 
@@ -199,7 +198,6 @@ export default function AdminAssessmentsPage() {
   const [sortDir, setSortDir] = useState<SortDir>("asc");
 
   // ---- Modal state ----
-  const [createModalOpen, setCreateModalOpen] = useState(false);
   const [duplicateTarget, setDuplicateTarget] = useState<Assessment | null>(
     null
   );
@@ -403,21 +401,12 @@ export default function AdminAssessmentsPage() {
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => navigate("/admin/chat")}
-            className="px-4 py-2 text-sm rounded-xl border transition-colors bg-purple-500/10 border-purple-500/20 text-purple-300 hover:bg-purple-500/20 hover:text-purple-200"
-            title="Build assessments with AI — upload files, describe what you need"
-          >
-            AI Builder
-          </button>
-          <button
-            onClick={() => setCreateModalOpen(true)}
-            className="px-4 py-2 text-sm font-medium rounded-xl transition-all bg-white/[0.10] border border-white/15 text-white hover:bg-white/[0.15] hover:border-white/25"
-          >
-            + Create New
-          </button>
-        </div>
+        <button
+          onClick={() => navigate("/admin/builder")}
+          className="px-4 py-2 text-sm font-medium rounded-xl transition-all bg-gradient-to-r from-purple-500/20 to-blue-500/20 border border-purple-500/20 text-purple-200 hover:from-purple-500/30 hover:to-blue-500/30 hover:text-white"
+        >
+          Build Assessment
+        </button>
       </div>
 
       {/* ================================================================== */}
@@ -567,7 +556,7 @@ export default function AdminAssessmentsPage() {
             setStatusFilter("all");
             setSearch("");
           }}
-          onCreate={() => setCreateModalOpen(true)}
+          onCreate={() => navigate("/admin/builder")}
         />
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
@@ -583,12 +572,26 @@ export default function AdminAssessmentsPage() {
                   ${isInFlight ? "opacity-60 pointer-events-none" : ""}
                 `}
               >
-                {/* Top row: icon + status */}
+                {/* Top row: icon + status + edit */}
                 <div className="flex items-start justify-between mb-3">
                   <span className="text-3xl leading-none">
                     {assessment.icon}
                   </span>
-                  <StatusBadge status={assessment.status} />
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/admin/builder/${assessment.id}`);
+                      }}
+                      className="opacity-0 group-hover:opacity-100 p-1 rounded-lg hover:bg-white/10 text-white/30 hover:text-white/60 transition-all"
+                      title="Edit in Builder"
+                    >
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
+                      </svg>
+                    </button>
+                    <StatusBadge status={assessment.status} />
+                  </div>
                 </div>
 
                 {/* Name */}
@@ -717,19 +720,6 @@ export default function AdminAssessmentsPage() {
       )}
 
       {/* ================================================================== */}
-      {/* CREATE MODAL                                                       */}
-      {/* ================================================================== */}
-      {createModalOpen && (
-        <CreateAssessmentModal
-          onClose={() => setCreateModalOpen(false)}
-          onCreated={() => {
-            setCreateModalOpen(false);
-            loadAssessments();
-          }}
-        />
-      )}
-
-      {/* ================================================================== */}
       {/* DUPLICATE MODAL                                                    */}
       {/* ================================================================== */}
       {duplicateTarget && (
@@ -753,155 +743,6 @@ export default function AdminAssessmentsPage() {
         />
       )}
     </div>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Create Assessment Modal
-// ---------------------------------------------------------------------------
-
-function CreateAssessmentModal({
-  onClose,
-  onCreated,
-}: {
-  onClose: () => void;
-  onCreated: () => void;
-}) {
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [icon, setIcon] = useState("📋");
-  const [estimatedMinutes, setEstimatedMinutes] = useState(15);
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const generatedId = useMemo(() => {
-    const slug = slugify(name) || "new-assessment";
-    return `${slug}-${Date.now().toString(36).slice(-4)}`;
-  }, [name]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!name.trim()) {
-      setError("Name is required.");
-      return;
-    }
-
-    setSubmitting(true);
-    setError(null);
-
-    try {
-      await createNewAssessment({
-        id: generatedId,
-        name: name.trim(),
-        description: description.trim(),
-        icon,
-        estimatedMinutes,
-        status: "draft",
-      });
-      onCreated();
-    } catch (err) {
-      console.error("Failed to create assessment:", err);
-      setError("Failed to create assessment. Please try again.");
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  return (
-    <ModalBackdrop onClose={onClose}>
-      <form
-        onSubmit={handleSubmit}
-        className="bg-[#0e0e16] border border-white/10 rounded-2xl p-6 shadow-2xl"
-      >
-        <h2 className="text-lg font-semibold text-white/90 mb-1">
-          Create New Assessment
-        </h2>
-        <p className="text-sm text-white/40 mb-5">
-          Start with the basics. You can add questions and scoring later.
-        </p>
-
-        {error && (
-          <div className="mb-4 px-3 py-2 rounded-lg bg-red-500/10 border border-red-500/25 text-red-400 text-sm">
-            {error}
-          </div>
-        )}
-
-        {/* Icon picker */}
-        <label className="block text-xs text-white/40 mb-1.5">Icon</label>
-        <div className="flex items-center gap-3 mb-4">
-          <span className="text-3xl">{icon}</span>
-          <input
-            type="text"
-            value={icon}
-            onChange={(e) => setIcon(e.target.value)}
-            maxLength={2}
-            className="bg-white/[0.05] border border-white/10 rounded-lg px-3 py-2 text-sm text-white w-16 text-center outline-none focus:border-white/20 transition-colors"
-          />
-          <span className="text-xs text-white/25">Paste an emoji</span>
-        </div>
-
-        {/* Name */}
-        <label className="block text-xs text-white/40 mb-1.5">Name</label>
-        <input
-          type="text"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="e.g. Team Leadership Assessment"
-          autoFocus
-          className="w-full bg-white/[0.05] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/25 outline-none focus:border-white/20 transition-colors mb-1"
-        />
-        <p className="text-[11px] text-white/20 mb-4 font-mono">
-          ID: {generatedId}
-        </p>
-
-        {/* Description */}
-        <label className="block text-xs text-white/40 mb-1.5">
-          Description
-        </label>
-        <textarea
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          placeholder="Briefly describe what this assessment measures..."
-          rows={3}
-          className="w-full bg-white/[0.05] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/25 outline-none focus:border-white/20 transition-colors resize-none mb-4"
-        />
-
-        {/* Estimated time */}
-        <label className="block text-xs text-white/40 mb-1.5">
-          Estimated Duration (minutes)
-        </label>
-        <input
-          type="number"
-          value={estimatedMinutes}
-          onChange={(e) => setEstimatedMinutes(Number(e.target.value))}
-          min={1}
-          max={120}
-          className="w-24 bg-white/[0.05] border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-white/20 transition-colors mb-6"
-        />
-
-        {/* Actions */}
-        <div className="flex items-center justify-end gap-2">
-          <button
-            type="button"
-            onClick={onClose}
-            className="px-4 py-2 text-sm rounded-xl border border-white/10 text-white/50 hover:bg-white/[0.04] transition-colors"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            disabled={submitting || !name.trim()}
-            className={`px-5 py-2 text-sm font-medium rounded-xl border transition-all ${
-              submitting || !name.trim()
-                ? "bg-white/[0.04] border-white/10 text-white/25 cursor-not-allowed"
-                : "bg-white/[0.10] border-white/15 text-white hover:bg-white/[0.15]"
-            }`}
-          >
-            {submitting ? "Creating..." : "Create Draft"}
-          </button>
-        </div>
-      </form>
-    </ModalBackdrop>
   );
 }
 

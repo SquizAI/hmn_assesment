@@ -2,16 +2,20 @@ import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import jwt from "jsonwebtoken";
-import { readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync, unlinkSync } from "fs";
+import { writeFileSync } from "fs";
 import { join } from "path";
 import Anthropic from "@anthropic-ai/sdk";
 import dotenv from "dotenv";
 import {
   TOOL_DEFINITIONS, executeTool,
-  listAssessments, getAssessment, createAssessment, updateAssessment, duplicateAssessment,
-  listSessions, getSession as getAdminSession, deleteSession,
-  exportSessions, getStats, getDimensionAverages, getCompletionFunnel,
+  listAssessmentsAdmin, getAssessmentAdmin, createAssessmentAdmin, updateAssessmentAdmin, duplicateAssessmentAdmin,
+  listSessionsAdmin, getSessionAdmin, deleteSessionAdmin,
+  exportSessionsAdmin, getStatsAdmin, getDimensionAveragesAdmin, getCompletionFunnelAdmin,
 } from "./admin-tools.js";
+import {
+  loadSessionFromDb, saveSessionToDb, deleteSessionFromDb,
+  listAllSessions, listAllAssessments, lookupSessionsByEmail,
+} from "./supabase.js";
 
 dotenv.config();
 
@@ -23,10 +27,26 @@ const app = express();
 const IS_PROD = process.env.NODE_ENV === "production";
 const PORT = IS_PROD ? parseInt(process.env.PORT || "8080", 10) : 0;
 const MODEL = "claude-sonnet-4-5-20250929";
-const SESSIONS_DIR = join(process.cwd(), "sessions");
+
+// --- CORS (supports HumanGlue integration) ---
+const ALLOWED_ORIGINS = [
+  process.env.HUMANGLUE_URL || "https://behmn.com",
+  "https://www.behmn.com",
+  "http://localhost:5040",  // HumanGlue dev
+  "http://localhost:5173",  // Cascade dev
+  "http://localhost:4173",  // Cascade preview
+];
 
 app.use(cors({
-  origin: IS_PROD ? (process.env.CORS_ORIGIN || false) : true,
+  origin: IS_PROD
+    ? (origin, callback) => {
+        if (!origin || ALLOWED_ORIGINS.includes(origin) || process.env.CORS_ORIGIN === origin) {
+          callback(null, true);
+        } else {
+          callback(null, false);
+        }
+      }
+    : true,
   credentials: true,
 }));
 app.use(express.json({ limit: "50mb" }));
@@ -39,7 +59,6 @@ if (!process.env.JWT_SECRET || !process.env.ADMIN_PASSWORD) {
 
 const JWT_SECRET: string = process.env.JWT_SECRET;
 const ADMIN_PASSWORD: string = process.env.ADMIN_PASSWORD;
-const ASSESSMENTS_DIR = join(process.cwd(), "assessments");
 
 // In production, serve the built frontend
 if (IS_PROD) {
@@ -49,34 +68,23 @@ if (IS_PROD) {
 
 // --- Helpers ---
 
-function ensureDir() {
-  if (!existsSync(SESSIONS_DIR)) mkdirSync(SESSIONS_DIR, { recursive: true });
-}
-
 function getAnthropicClient() {
   return new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
 }
-
-// --- Session Storage ---
 
 function sanitizeId(id: string): string {
   return id.replace(/[^a-zA-Z0-9_-]/g, "");
 }
 
-function sessionPath(id: string) {
-  return join(SESSIONS_DIR, `${sanitizeId(id)}.json`);
+// --- Session Storage (Supabase) ---
+
+async function loadSession(id: string) {
+  return loadSessionFromDb(id);
 }
 
-function loadSession(id: string) {
-  const p = sessionPath(id);
-  if (!existsSync(p)) return null;
-  return JSON.parse(readFileSync(p, "utf-8"));
-}
-
-function saveSession(session: Record<string, unknown>) {
-  ensureDir();
+async function saveSession(session: Record<string, unknown>) {
   (session as { updatedAt: string }).updatedAt = new Date().toISOString();
-  writeFileSync(sessionPath(session.id as string), JSON.stringify(session, null, 2));
+  await saveSessionToDb(session as import("../src/lib/types").InterviewSession);
 }
 
 // --- Question Bank ---
@@ -433,89 +441,92 @@ function filterDeducibleQuestions(available: Array<Record<string, unknown>>, ses
 
 // --- Sessions ---
 
-app.get("/api/sessions", (_req, res) => {
-  ensureDir();
-  const files = readdirSync(SESSIONS_DIR).filter((f) => f.endsWith(".json"));
-  const sessions = files
-    .map((f) => JSON.parse(readFileSync(join(SESSIONS_DIR, f), "utf-8")))
-    .sort(
-      (a: { createdAt: string }, b: { createdAt: string }) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    );
-  res.json({ sessions });
+app.get("/api/sessions", async (_req, res) => {
+  try {
+    const sessions = await listAllSessions();
+    res.json({ sessions });
+  } catch (err) {
+    console.error("List sessions error:", err);
+    res.status(500).json({ error: "Failed to list sessions" });
+  }
 });
 
-app.post("/api/sessions", (req, res) => {
-  const { participant, assessmentTypeId } = req.body;
-  if (!participant?.name || !participant?.company || !participant?.email) {
-    res.status(400).json({ error: "name, company, and business email are required" });
-    return;
+app.post("/api/sessions", async (req, res) => {
+  try {
+    const { participant, assessmentTypeId } = req.body;
+    if (!participant?.name || !participant?.company || !participant?.email) {
+      res.status(400).json({ error: "name, company, and business email are required" });
+      return;
+    }
+
+    const id = `hmn_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
+    const session = {
+      id,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      status: "intake",
+      assessmentTypeId: assessmentTypeId || "ai-readiness",
+      participant,
+      currentQuestionIndex: 0,
+      currentPhase: "profile_baseline",
+      currentSection: "demographics",
+      responses: [],
+      conversationHistory: [],
+      research: null,
+      researchConfirmed: false,
+    };
+
+    await saveSession(session);
+    res.status(201).json({ session });
+  } catch (err) {
+    console.error("Create session error:", err);
+    res.status(500).json({ error: "Failed to create session" });
   }
-
-  const id = `hmn_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
-  const session = {
-    id,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    status: "intake",
-    assessmentTypeId: assessmentTypeId || "ai-readiness",
-    participant,
-    currentQuestionIndex: 0,
-    currentPhase: "profile_baseline",
-    currentSection: "demographics",
-    responses: [],
-    conversationHistory: [],
-    research: null,
-    researchConfirmed: false,
-  };
-
-  saveSession(session);
-  res.status(201).json({ session });
 });
 
-app.get("/api/sessions/lookup", (req, res) => {
-  const email = (req.query.email as string || "").toLowerCase().trim();
-  if (!email) {
-    res.status(400).json({ error: "email query param required" });
-    return;
-  }
-  ensureDir();
-  const files = readdirSync(SESSIONS_DIR).filter((f) => f.endsWith(".json"));
-  const sessions = files
-    .map((f) => JSON.parse(readFileSync(join(SESSIONS_DIR, f), "utf-8")))
-    .filter((s: { participant?: { email?: string } }) =>
-      s.participant?.email?.toLowerCase().trim() === email
-    )
-    .sort(
-      (a: { createdAt: string }, b: { createdAt: string }) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    )
-    .map((s: { id: string; status: string; createdAt: string; assessmentTypeId?: string; participant?: { name?: string; company?: string }; analysis?: { overallReadinessScore?: number } }) => ({
+app.get("/api/sessions/lookup", async (req, res) => {
+  try {
+    const email = (req.query.email as string || "").toLowerCase().trim();
+    if (!email) {
+      res.status(400).json({ error: "email query param required" });
+      return;
+    }
+    const rawSessions = await lookupSessionsByEmail(email);
+    const sessions = rawSessions.map((s) => ({
       id: s.id,
       status: s.status,
       createdAt: s.createdAt,
       assessmentTypeId: s.assessmentTypeId,
       participantName: s.participant?.name,
       participantCompany: s.participant?.company,
-      score: s.analysis?.overallReadinessScore,
+      score: (s.analysis as { overallReadinessScore?: number } | undefined)?.overallReadinessScore,
     }));
-  res.json({ sessions });
+    res.json({ sessions });
+  } catch (err) {
+    console.error("Lookup sessions error:", err);
+    res.status(500).json({ error: "Failed to lookup sessions" });
+  }
 });
 
-app.get("/api/sessions/:sessionId", (req, res) => {
-  const session = loadSession(req.params.sessionId);
-  if (!session) {
-    res.status(404).json({ error: "Session not found" });
-    return;
+app.get("/api/sessions/:sessionId", async (req, res) => {
+  try {
+    const session = await loadSession(req.params.sessionId);
+    if (!session) {
+      res.status(404).json({ error: "Session not found" });
+      return;
+    }
+    res.json({ session });
+  } catch (err) {
+    console.error("Get session error:", err);
+    res.status(500).json({ error: "Failed to get session" });
   }
-  res.json({ session });
 });
 
 // --- Research (Firecrawl Deep Diligence) ---
 
 app.post("/api/research/:sessionId", async (req, res) => {
   try {
-    const session = loadSession(req.params.sessionId);
+    const session = await loadSession(req.params.sessionId);
     if (!session) {
       res.status(404).json({ error: "Session not found" });
       return;
@@ -532,7 +543,7 @@ app.post("/api/research/:sessionId", async (req, res) => {
 
     session.research = research;
     session.status = "researched";
-    saveSession(session);
+    await saveSession(session);
 
     res.json({ research });
   } catch (err) {
@@ -541,27 +552,33 @@ app.post("/api/research/:sessionId", async (req, res) => {
   }
 });
 
-app.post("/api/research/:sessionId/confirm", (req, res) => {
-  const session = loadSession(req.params.sessionId);
-  if (!session) {
-    res.status(404).json({ error: "Session not found" });
-    return;
-  }
+app.post("/api/research/:sessionId/confirm", async (req, res) => {
+  try {
+    const session = await loadSession(req.params.sessionId);
+    if (!session) {
+      res.status(404).json({ error: "Session not found" });
+      return;
+    }
 
-  const { confirmed, corrections } = req.body;
-  session.researchConfirmed = confirmed;
-  if (corrections) {
-    session.researchCorrections = corrections;
+    const { confirmed, corrections } = req.body;
+    session.researchConfirmed = confirmed;
+    if (corrections) {
+      session.researchCorrections = corrections;
+    }
+    await saveSession(session);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error("Confirm research error:", err);
+    res.status(500).json({ error: "Failed to confirm research" });
   }
-  saveSession(session);
-  res.json({ ok: true });
 });
 
 // --- Interview Start ---
 
-app.post("/api/interview/start", (req, res) => {
+app.post("/api/interview/start", async (req, res) => {
+  try {
   const { sessionId } = req.body;
-  const session = loadSession(sessionId);
+  const session = await loadSession(sessionId);
   if (!session) {
     res.status(404).json({ error: "Session not found" });
     return;
@@ -595,7 +612,7 @@ app.post("/api/interview/start", (req, res) => {
   session.currentPhase = firstQuestion.phase;
   session.currentSection = firstQuestion.section;
   session.currentQuestionIndex = QUESTION_BANK.findIndex((q) => q.id === firstQuestion.id);
-  saveSession(session);
+  await saveSession(session);
 
   res.json({
     session,
@@ -610,6 +627,10 @@ app.post("/api/interview/start", (req, res) => {
       completedPercentage: Math.round((autoResponses.length / QUESTION_BANK.length) * 100),
     },
   });
+  } catch (err) {
+    console.error("Interview start error:", err);
+    res.status(500).json({ error: "Failed to start interview" });
+  }
 });
 
 // --- Interview Respond ---
@@ -618,7 +639,7 @@ app.post("/api/interview/respond", async (req, res) => {
   try {
     const { sessionId, questionId, answer, conversationHistory } = req.body;
 
-    const session = loadSession(sessionId);
+    const session = await loadSession(sessionId);
     if (!session) {
       res.status(404).json({ error: "Session not found" });
       return;
@@ -710,7 +731,7 @@ app.post("/api/interview/respond", async (req, res) => {
 
     if (remaining.length === 0) {
       session.status = "completed";
-      saveSession(session);
+      await saveSession(session);
       res.json({ type: "complete", session });
       return;
     }
@@ -737,7 +758,7 @@ app.post("/api/interview/respond", async (req, res) => {
     session.currentQuestionIndex = QUESTION_BANK.findIndex((q) => q.id === nextQuestion!.id);
     session.currentPhase = nextQuestion.phase;
     session.currentSection = nextQuestion.section;
-    saveSession(session);
+    await saveSession(session);
 
     // Compute skipped IDs: auto-populated + deducible
     const autoIds = session.responses
@@ -768,7 +789,7 @@ app.post("/api/interview/respond", async (req, res) => {
 app.put("/api/interview/respond", async (req, res) => {
   try {
     const { sessionId, questionId, answer } = req.body;
-    const session = loadSession(sessionId);
+    const session = await loadSession(sessionId);
     if (!session) {
       res.status(404).json({ error: "Session not found" });
       return;
@@ -810,7 +831,7 @@ app.put("/api/interview/respond", async (req, res) => {
       ...(currentQuestion.inputType === "ai_conversation" ? { aiFollowUps: [] } : {}),
     };
 
-    saveSession(session);
+    await saveSession(session);
     res.json({ ok: true, updatedResponse: session.responses[responseIndex] });
   } catch (err) {
     console.error("Update response error:", err);
@@ -820,8 +841,8 @@ app.put("/api/interview/respond", async (req, res) => {
 
 // --- Navigate to previous question (read-only) ---
 
-app.get("/api/interview/:sessionId/response/:questionId", (req, res) => {
-  const session = loadSession(req.params.sessionId);
+app.get("/api/interview/:sessionId/response/:questionId", async (req, res) => {
+  const session = await loadSession(req.params.sessionId);
   if (!session) {
     res.status(404).json({ error: "Session not found" });
     return;
@@ -842,7 +863,7 @@ app.get("/api/interview/:sessionId/response/:questionId", (req, res) => {
 app.post("/api/interview/analyze", async (req, res) => {
   try {
     const { sessionId } = req.body;
-    const session = loadSession(sessionId);
+    const session = await loadSession(sessionId);
     if (!session) {
       res.status(404).json({ error: "Session not found" });
       return;
@@ -856,7 +877,7 @@ app.post("/api/interview/analyze", async (req, res) => {
     const analysis = await runCascadeAnalysis(session);
     session.analysis = analysis;
     session.status = "analyzed";
-    saveSession(session);
+    await saveSession(session);
 
     res.json({ analysis });
   } catch (err) {
@@ -1186,12 +1207,18 @@ function verifyAdminToken(req: express.Request): boolean {
   }
 }
 
+function verifyApiKey(req: express.Request): boolean {
+  const apiKey = req.headers["x-api-key"] as string | undefined;
+  return !!apiKey && apiKey === process.env.CASCADE_API_KEY;
+}
+
 function requireAdmin(req: express.Request, res: express.Response, next: express.NextFunction) {
-  if (!verifyAdminToken(req)) {
-    res.status(401).json({ error: "Unauthorized" });
+  // Accept either cookie-based admin auth OR API key auth (for server-to-server)
+  if (verifyAdminToken(req) || verifyApiKey(req)) {
+    next();
     return;
   }
-  next();
+  res.status(401).json({ error: "Unauthorized" });
 }
 
 // Simple in-memory rate limiter for login
@@ -1248,109 +1275,109 @@ app.post("/api/admin/logout", (_req, res) => {
 // ADMIN REST API (data endpoints for dashboard)
 // ============================================================
 
-app.get("/api/admin/stats", requireAdmin, (_req, res) => {
-  try { res.json(getStats()); }
+app.get("/api/admin/stats", requireAdmin, async (_req, res) => {
+  try { res.json(await getStatsAdmin()); }
   catch (err) { console.error("Admin stats error:", err); res.status(500).json({ error: "Failed to get stats" }); }
 });
 
-app.get("/api/admin/sessions", requireAdmin, (req, res) => {
+app.get("/api/admin/sessions", requireAdmin, async (req, res) => {
   try {
     const filters: { since?: string; status?: string; assessmentTypeId?: string } = {};
     if (req.query.since) filters.since = req.query.since as string;
     if (req.query.status) filters.status = req.query.status as string;
     if (req.query.assessmentTypeId) filters.assessmentTypeId = req.query.assessmentTypeId as string;
-    res.json({ sessions: listSessions(Object.keys(filters).length > 0 ? filters : undefined) });
+    res.json({ sessions: await listSessionsAdmin(Object.keys(filters).length > 0 ? filters : undefined) });
   } catch (err) { console.error("Admin sessions error:", err); res.status(500).json({ error: "Failed to list sessions" }); }
 });
 
-app.get("/api/admin/sessions/:id", requireAdmin, (req, res) => {
+app.get("/api/admin/sessions/:id", requireAdmin, async (req, res) => {
   try {
-    const session = getAdminSession(String(req.params.id));
+    const session = await getSessionAdmin(String(req.params.id));
     if (!session) { res.status(404).json({ error: "Session not found" }); return; }
     res.json({ session });
   } catch (err) { console.error("Admin session error:", err); res.status(500).json({ error: "Failed to get session" }); }
 });
 
-app.delete("/api/admin/sessions/:id", requireAdmin, (req, res) => {
+app.delete("/api/admin/sessions/:id", requireAdmin, async (req, res) => {
   try {
-    const result = deleteSession(String(req.params.id));
+    const result = await deleteSessionAdmin(String(req.params.id));
     if (!result.ok) { res.status(404).json({ error: "Session not found" }); return; }
     res.json({ ok: true });
   } catch (err) { console.error("Admin delete session error:", err); res.status(500).json({ error: "Failed to delete session" }); }
 });
 
-app.get("/api/admin/assessments", requireAdmin, (_req, res) => {
-  try { res.json({ assessments: listAssessments() }); }
+app.get("/api/admin/assessments", requireAdmin, async (_req, res) => {
+  try { res.json({ assessments: await listAssessmentsAdmin() }); }
   catch (err) { console.error("Admin assessments error:", err); res.status(500).json({ error: "Failed to list assessments" }); }
 });
 
-app.get("/api/admin/assessments/:id", requireAdmin, (req, res) => {
+app.get("/api/admin/assessments/:id", requireAdmin, async (req, res) => {
   try {
-    const assessment = getAssessment(String(req.params.id));
+    const assessment = await getAssessmentAdmin(String(req.params.id));
     if (!assessment) { res.status(404).json({ error: "Assessment not found" }); return; }
     res.json({ assessment });
   } catch (err) { console.error("Admin assessment error:", err); res.status(500).json({ error: "Failed to get assessment" }); }
 });
 
-app.post("/api/admin/assessments", requireAdmin, (req, res) => {
+app.post("/api/admin/assessments", requireAdmin, async (req, res) => {
   try {
     const { config } = req.body;
     if (!config?.id || !config?.name) { res.status(400).json({ error: "config with id and name required" }); return; }
-    const result = createAssessment(config);
+    const result = await createAssessmentAdmin(config);
     res.status(201).json(result);
   } catch (err) { console.error("Admin create assessment error:", err); res.status(500).json({ error: "Failed to create assessment" }); }
 });
 
-app.put("/api/admin/assessments/:id", requireAdmin, (req, res) => {
+app.put("/api/admin/assessments/:id", requireAdmin, async (req, res) => {
   try {
     const { changes } = req.body;
     if (!changes) { res.status(400).json({ error: "changes object required" }); return; }
-    const result = updateAssessment(String(req.params.id), changes);
+    const result = await updateAssessmentAdmin(String(req.params.id), changes);
     if (!result.ok) { res.status(404).json({ error: "Assessment not found" }); return; }
     res.json({ ok: true });
   } catch (err) { console.error("Admin update assessment error:", err); res.status(500).json({ error: "Failed to update assessment" }); }
 });
 
-app.post("/api/admin/assessments/:id/duplicate", requireAdmin, (req, res) => {
+app.post("/api/admin/assessments/:id/duplicate", requireAdmin, async (req, res) => {
   try {
     const { newId, newName } = req.body;
     if (!newId || !newName) { res.status(400).json({ error: "newId and newName required" }); return; }
-    const result = duplicateAssessment(String(req.params.id), newId, newName);
+    const result = await duplicateAssessmentAdmin(String(req.params.id), newId, newName);
     if (!result.ok) { res.status(404).json({ error: "Source assessment not found" }); return; }
     res.status(201).json(result);
   } catch (err) { console.error("Admin duplicate assessment error:", err); res.status(500).json({ error: "Failed to duplicate assessment" }); }
 });
 
-app.post("/api/admin/assessments/:id/status", requireAdmin, (req, res) => {
+app.post("/api/admin/assessments/:id/status", requireAdmin, async (req, res) => {
   try {
     const { status } = req.body;
     if (!["draft", "active", "archived"].includes(status)) { res.status(400).json({ error: "Invalid status" }); return; }
-    const result = updateAssessment(String(req.params.id), { status });
+    const result = await updateAssessmentAdmin(String(req.params.id), { status });
     if (!result.ok) { res.status(404).json({ error: "Assessment not found" }); return; }
     res.json({ ok: true });
   } catch (err) { console.error("Admin status update error:", err); res.status(500).json({ error: "Failed to update status" }); }
 });
 
-app.get("/api/admin/funnel", requireAdmin, (_req, res) => {
-  try { res.json({ funnel: getCompletionFunnel() }); }
+app.get("/api/admin/funnel", requireAdmin, async (_req, res) => {
+  try { res.json({ funnel: await getCompletionFunnelAdmin() }); }
   catch (err) { console.error("Admin funnel error:", err); res.status(500).json({ error: "Failed to get funnel" }); }
 });
 
-app.get("/api/admin/dimensions", requireAdmin, (req, res) => {
+app.get("/api/admin/dimensions", requireAdmin, async (req, res) => {
   try {
     const assessmentTypeId = req.query.assessmentTypeId as string | undefined;
-    res.json({ dimensions: getDimensionAverages(assessmentTypeId) });
+    res.json({ dimensions: await getDimensionAveragesAdmin(assessmentTypeId) });
   } catch (err) { console.error("Admin dimensions error:", err); res.status(500).json({ error: "Failed to get dimensions" }); }
 });
 
-app.get("/api/admin/export", requireAdmin, (req, res) => {
+app.get("/api/admin/export", requireAdmin, async (req, res) => {
   try {
     const format = (req.query.format as string) || "json";
     const filters: { since?: string; status?: string; assessmentTypeId?: string } = {};
     if (req.query.since) filters.since = req.query.since as string;
     if (req.query.status) filters.status = req.query.status as string;
     if (req.query.assessmentTypeId) filters.assessmentTypeId = req.query.assessmentTypeId as string;
-    const data = exportSessions(format as "json" | "csv", Object.keys(filters).length > 0 ? filters : undefined);
+    const data = await exportSessionsAdmin(format as "json" | "csv", Object.keys(filters).length > 0 ? filters : undefined);
     if (format === "csv") {
       res.setHeader("Content-Type", "text/csv");
       res.setHeader("Content-Disposition", "attachment; filename=sessions.csv");
@@ -1363,25 +1390,20 @@ app.get("/api/admin/export", requireAdmin, (req, res) => {
 // PUBLIC ASSESSMENT LISTING
 // ============================================================
 
-app.get("/api/assessments", (_req, res) => {
+app.get("/api/assessments", async (_req, res) => {
   try {
-    if (!existsSync(ASSESSMENTS_DIR)) {
-      res.json({ assessments: [] });
-      return;
-    }
-    const files = readdirSync(ASSESSMENTS_DIR).filter((f) => f.endsWith(".json"));
-    const assessments = files.map((f) => {
-      const data = JSON.parse(readFileSync(join(ASSESSMENTS_DIR, f), "utf-8"));
-      return {
-        id: data.id,
-        name: data.name,
-        description: data.description,
-        icon: data.icon,
-        estimatedMinutes: data.estimatedMinutes,
-        questionCount: data.questions?.length ?? 0,
-        status: data.status,
-      };
-    }).filter((a) => a.status === "active");
+    const all = await listAllAssessments();
+    const assessments = all
+      .filter((a) => a.status === "active")
+      .map((a) => ({
+        id: a.id,
+        name: a.name,
+        description: a.description,
+        icon: a.icon,
+        estimatedMinutes: a.estimatedMinutes,
+        questionCount: a.questions?.length ?? 0,
+        status: a.status,
+      }));
     res.json({ assessments });
   } catch (err) {
     console.error("List assessments error:", err);
@@ -1450,7 +1472,40 @@ Preview this assessment
 - Each line inside the actions block is one clickable action button
 - Make actions contextually relevant to what you just discussed
 - Keep action labels short (under 40 chars) and action-oriented
-- Always include at least 2 suggested actions`;
+- Always include at least 2 suggested actions
+
+GUIDED BUILDING PROCESS:
+When building a new assessment, guide the admin through 5 phases in order. You MUST follow this methodology:
+
+**Phase 1 — PURPOSE & CONTEXT** (<!-- PHASE:purpose -->)
+Ask about the assessment's goal, target audience, what competencies it should measure, and estimated duration.
+Don't create the assessment until you have a clear understanding of the purpose.
+
+**Phase 2 — FRAMEWORK & STRUCTURE** (<!-- PHASE:framework -->)
+Design phases (high-level stages), sections (groups within phases), and scoring dimensions.
+Explain WHY each phase/section exists and what it measures.
+Create the assessment at this point using create_assessment with full structure.
+
+**Phase 3 — QUESTION DESIGN** (<!-- PHASE:questions -->)
+Build questions section-by-section. For EVERY question you create:
+> **Why this question**: Explain what competency or behavior it measures and why it matters
+> **Maps to**: List which scoring dimensions it maps to and why
+> **Input type rationale**: Explain why this input type (slider, buttons, ai_conversation, etc.) was chosen
+
+Aim for 40-60% ai_conversation questions for deep exploration. Use sliders for self-assessment, buttons for categorical choices, and multi_select for comprehensive coverage.
+
+**Phase 4 — SCORING & CALIBRATION** (<!-- PHASE:scoring -->)
+Review all question weights and dimension mappings. Show a coverage analysis:
+- Which dimensions have strong coverage vs gaps
+- Whether weights are balanced appropriately
+- Suggest calibration adjustments
+
+**Phase 5 — REVIEW & ACTIVATE** (<!-- PHASE:review -->)
+Summarize the complete assessment. Show stats: total questions, estimated time, dimension coverage.
+Offer to preview or activate the assessment.
+
+IMPORTANT: Include phase markers (<!-- PHASE:xxx -->) in your responses so the UI can track progress.
+Always explain your methodology — the admin should understand WHY you're making each design decision.`;
 
 // ---- Assessment-scoped chat (conversational editing) ----
 
@@ -1471,7 +1526,7 @@ app.post("/api/admin/assessments/:id/chat", requireAdmin, async (req, res) => {
     }
 
     // Load assessment context
-    const assessment = getAssessment(assessmentId);
+    const assessment = await getAssessmentAdmin(assessmentId);
     if (!assessment) {
       res.status(404).json({ error: "Assessment not found" });
       return;
@@ -1540,7 +1595,7 @@ Add a new question
       for (const block of assistantContent) {
         if (block.type === "tool_use") {
           console.log(`Assessment chat tool: ${block.name}(${JSON.stringify(block.input)})`);
-          const result = executeTool(block.name, block.input as Record<string, unknown>);
+          const result = await executeTool(block.name, block.input as Record<string, unknown>);
           toolResults.push({
             type: "tool_result",
             tool_use_id: block.id,
@@ -1620,7 +1675,7 @@ app.post("/api/admin/chat", requireAdmin, async (req, res) => {
       for (const block of assistantContent) {
         if (block.type === "tool_use") {
           console.log(`Admin tool call: ${block.name}(${JSON.stringify(block.input)})`);
-          const result = executeTool(block.name, block.input as Record<string, unknown>);
+          const result = await executeTool(block.name, block.input as Record<string, unknown>);
           toolResults.push({
             type: "tool_result",
             tool_use_id: block.id,
@@ -1655,54 +1710,63 @@ app.post("/api/admin/chat", requireAdmin, async (req, res) => {
 // PREVIEW SESSION ENDPOINTS
 // ============================================================
 
-app.post("/api/sessions/preview", requireAdmin, (req, res) => {
-  const { assessmentTypeId } = req.body;
-  if (!assessmentTypeId) {
-    res.status(400).json({ error: "assessmentTypeId required" });
-    return;
+app.post("/api/sessions/preview", requireAdmin, async (req, res) => {
+  try {
+    const { assessmentTypeId } = req.body;
+    if (!assessmentTypeId) {
+      res.status(400).json({ error: "assessmentTypeId required" });
+      return;
+    }
+
+    const id = `preview_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
+    const session = {
+      id,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      status: "intake",
+      assessmentTypeId: sanitizeId(String(assessmentTypeId)),
+      isPreview: true,
+      participant: {
+        name: "Preview User",
+        role: "Admin Tester",
+        company: "Preview Mode",
+        industry: "Technology",
+        teamSize: "10-50",
+        email: "preview@test.local",
+      },
+      currentQuestionIndex: 0,
+      currentPhase: "profile_baseline",
+      currentSection: "demographics",
+      responses: [],
+      conversationHistory: [],
+      research: null,
+      researchConfirmed: true,
+    };
+
+    await saveSession(session);
+    res.status(201).json({ session });
+  } catch (err) {
+    console.error("Create preview session error:", err);
+    res.status(500).json({ error: "Failed to create preview session" });
   }
-
-  const id = `preview_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
-  const session = {
-    id,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    status: "intake",
-    assessmentTypeId: sanitizeId(String(assessmentTypeId)),
-    isPreview: true,
-    participant: {
-      name: "Preview User",
-      role: "Admin Tester",
-      company: "Preview Mode",
-      industry: "Technology",
-      teamSize: "10-50",
-      email: "preview@test.local",
-    },
-    currentQuestionIndex: 0,
-    currentPhase: "profile_baseline",
-    currentSection: "demographics",
-    responses: [],
-    conversationHistory: [],
-    research: null,
-    researchConfirmed: true,
-  };
-
-  saveSession(session);
-  res.status(201).json({ session });
 });
 
-app.delete("/api/admin/preview/:sessionId", requireAdmin, (req, res) => {
-  const id = sanitizeId(String(req.params.sessionId));
-  if (!id.startsWith("preview_")) {
-    res.status(403).json({ error: "Can only delete preview sessions" });
-    return;
-  }
-  const p = sessionPath(id);
-  if (existsSync(p)) {
-    unlinkSync(p);
-    res.json({ ok: true });
-  } else {
-    res.status(404).json({ error: "Preview session not found" });
+app.delete("/api/admin/preview/:sessionId", requireAdmin, async (req, res) => {
+  try {
+    const id = sanitizeId(String(req.params.sessionId));
+    if (!id.startsWith("preview_")) {
+      res.status(403).json({ error: "Can only delete preview sessions" });
+      return;
+    }
+    const deleted = await deleteSessionFromDb(id);
+    if (deleted) {
+      res.json({ ok: true });
+    } else {
+      res.status(404).json({ error: "Preview session not found" });
+    }
+  } catch (err) {
+    console.error("Delete preview session error:", err);
+    res.status(500).json({ error: "Failed to delete preview session" });
   }
 });
 

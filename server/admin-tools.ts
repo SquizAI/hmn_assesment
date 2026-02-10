@@ -3,74 +3,20 @@
 // ============================================================
 
 import {
-  readFileSync,
-  writeFileSync,
-  existsSync,
-  mkdirSync,
-  readdirSync,
-  unlinkSync,
-} from "fs";
-import { join } from "path";
+  loadAssessment,
+  saveAssessment,
+  listAllAssessments,
+  loadSessionFromDb,
+  deleteSessionFromDb,
+  listSessionsWithResponses,
+  listAllSessions,
+} from "./supabase.js";
 import type {
   AssessmentType,
   AssessmentSummary,
   Question,
   InterviewSession,
 } from "../src/lib/types";
-
-// --- Directory constants ---
-
-const ASSESSMENTS_DIR = join(process.cwd(), "assessments");
-const SESSIONS_DIR = join(process.cwd(), "sessions");
-
-// --- Helpers ---
-
-function ensureAssessmentsDir(): void {
-  if (!existsSync(ASSESSMENTS_DIR))
-    mkdirSync(ASSESSMENTS_DIR, { recursive: true });
-}
-
-function ensureSessionsDir(): void {
-  if (!existsSync(SESSIONS_DIR))
-    mkdirSync(SESSIONS_DIR, { recursive: true });
-}
-
-function sanitizeId(id: string): string {
-  return id.replace(/[^a-zA-Z0-9_-]/g, "");
-}
-
-function assessmentPath(id: string): string {
-  return join(ASSESSMENTS_DIR, `${sanitizeId(id)}.json`);
-}
-
-function sessionPath(id: string): string {
-  return join(SESSIONS_DIR, `${sanitizeId(id)}.json`);
-}
-
-function loadAssessmentFile(id: string): AssessmentType | null {
-  const p = assessmentPath(id);
-  if (!existsSync(p)) return null;
-  return JSON.parse(readFileSync(p, "utf-8")) as AssessmentType;
-}
-
-function saveAssessmentFile(assessment: AssessmentType): void {
-  ensureAssessmentsDir();
-  writeFileSync(assessmentPath(assessment.id), JSON.stringify(assessment, null, 2));
-}
-
-function loadSessionFile(id: string): InterviewSession | null {
-  const p = sessionPath(id);
-  if (!existsSync(p)) return null;
-  return JSON.parse(readFileSync(p, "utf-8")) as InterviewSession;
-}
-
-function loadAllSessions(): InterviewSession[] {
-  ensureSessionsDir();
-  const files = readdirSync(SESSIONS_DIR).filter((f) => f.endsWith(".json"));
-  return files.map((f) =>
-    JSON.parse(readFileSync(join(SESSIONS_DIR, f), "utf-8")) as InterviewSession
-  );
-}
 
 // --- Session Summary type (lightweight view) ---
 
@@ -100,47 +46,41 @@ function toSessionSummary(s: InterviewSession): SessionSummary {
 // ASSESSMENT CRUD
 // ============================================================
 
-export function listAssessments(): AssessmentSummary[] {
-  ensureAssessmentsDir();
-  const files = readdirSync(ASSESSMENTS_DIR).filter((f) => f.endsWith(".json"));
-  return files.map((f) => {
-    const a = JSON.parse(
-      readFileSync(join(ASSESSMENTS_DIR, f), "utf-8")
-    ) as AssessmentType;
-    return {
-      id: a.id,
-      name: a.name,
-      description: a.description,
-      icon: a.icon,
-      estimatedMinutes: a.estimatedMinutes,
-      questionCount: a.questions?.length ?? 0,
-      status: a.status,
-    };
-  });
+export async function listAssessmentsAdmin(): Promise<AssessmentSummary[]> {
+  const assessments = await listAllAssessments();
+  return assessments.map((a) => ({
+    id: a.id,
+    name: a.name,
+    description: a.description,
+    icon: a.icon,
+    estimatedMinutes: a.estimatedMinutes,
+    questionCount: a.questions?.length ?? 0,
+    status: a.status,
+  }));
 }
 
-export function getAssessment(id: string): AssessmentType | null {
-  return loadAssessmentFile(id);
+export async function getAssessmentAdmin(id: string): Promise<AssessmentType | null> {
+  return loadAssessment(id);
 }
 
-export function createAssessment(
+export async function createAssessmentAdmin(
   config: AssessmentType
-): { ok: boolean; id: string } {
+): Promise<{ ok: boolean; id: string }> {
   const now = new Date().toISOString();
   const assessment: AssessmentType = {
     ...config,
     createdAt: now,
     updatedAt: now,
   };
-  saveAssessmentFile(assessment);
+  await saveAssessment(assessment);
   return { ok: true, id: assessment.id };
 }
 
-export function updateAssessment(
+export async function updateAssessmentAdmin(
   id: string,
   changes: Partial<AssessmentType>
-): { ok: boolean } {
-  const existing = loadAssessmentFile(id);
+): Promise<{ ok: boolean }> {
+  const existing = await loadAssessment(id);
   if (!existing) return { ok: false };
 
   const updated: AssessmentType = {
@@ -149,16 +89,16 @@ export function updateAssessment(
     id, // Prevent id from being overwritten
     updatedAt: new Date().toISOString(),
   };
-  saveAssessmentFile(updated);
+  await saveAssessment(updated);
   return { ok: true };
 }
 
-export function duplicateAssessment(
+export async function duplicateAssessmentAdmin(
   sourceId: string,
   newId: string,
   newName: string
-): { ok: boolean; id: string } {
-  const source = loadAssessmentFile(sourceId);
+): Promise<{ ok: boolean; id: string }> {
+  const source = await loadAssessment(sourceId);
   if (!source) return { ok: false, id: "" };
 
   const now = new Date().toISOString();
@@ -170,37 +110,37 @@ export function duplicateAssessment(
     createdAt: now,
     updatedAt: now,
   };
-  saveAssessmentFile(duplicate);
+  await saveAssessment(duplicate);
   return { ok: true, id: newId };
 }
 
-export function archiveAssessment(id: string): { ok: boolean } {
-  return updateAssessment(id, { status: "archived" });
+export async function archiveAssessmentAdmin(id: string): Promise<{ ok: boolean }> {
+  return updateAssessmentAdmin(id, { status: "archived" });
 }
 
 // ============================================================
 // QUESTION MANAGEMENT
 // ============================================================
 
-export function addQuestion(
+export async function addQuestionAdmin(
   assessmentId: string,
   question: Question
-): { ok: boolean } {
-  const assessment = loadAssessmentFile(assessmentId);
+): Promise<{ ok: boolean }> {
+  const assessment = await loadAssessment(assessmentId);
   if (!assessment) return { ok: false };
 
   assessment.questions.push(question);
   assessment.updatedAt = new Date().toISOString();
-  saveAssessmentFile(assessment);
+  await saveAssessment(assessment);
   return { ok: true };
 }
 
-export function updateQuestion(
+export async function updateQuestionAdmin(
   assessmentId: string,
   questionId: string,
   changes: Partial<Question>
-): { ok: boolean } {
-  const assessment = loadAssessmentFile(assessmentId);
+): Promise<{ ok: boolean }> {
+  const assessment = await loadAssessment(assessmentId);
   if (!assessment) return { ok: false };
 
   const idx = assessment.questions.findIndex((q) => q.id === questionId);
@@ -208,15 +148,15 @@ export function updateQuestion(
 
   assessment.questions[idx] = { ...assessment.questions[idx], ...changes };
   assessment.updatedAt = new Date().toISOString();
-  saveAssessmentFile(assessment);
+  await saveAssessment(assessment);
   return { ok: true };
 }
 
-export function removeQuestion(
+export async function removeQuestionAdmin(
   assessmentId: string,
   questionId: string
-): { ok: boolean } {
-  const assessment = loadAssessmentFile(assessmentId);
+): Promise<{ ok: boolean }> {
+  const assessment = await loadAssessment(assessmentId);
   if (!assessment) return { ok: false };
 
   const before = assessment.questions.length;
@@ -225,7 +165,7 @@ export function removeQuestion(
   if (assessment.questions.length === before) return { ok: false };
 
   assessment.updatedAt = new Date().toISOString();
-  saveAssessmentFile(assessment);
+  await saveAssessment(assessment);
   return { ok: true };
 }
 
@@ -233,10 +173,10 @@ export function removeQuestion(
 // SESSION MANAGEMENT
 // ============================================================
 
-export function listSessions(
+export async function listSessionsAdmin(
   filters?: { since?: string; status?: string; assessmentTypeId?: string }
-): SessionSummary[] {
-  const sessions = loadAllSessions();
+): Promise<SessionSummary[]> {
+  const sessions = await listAllSessions();
 
   let filtered = sessions;
 
@@ -265,22 +205,20 @@ export function listSessions(
     .map(toSessionSummary);
 }
 
-export function getSession(id: string): InterviewSession | null {
-  return loadSessionFile(id);
+export async function getSessionAdmin(id: string): Promise<InterviewSession | null> {
+  return loadSessionFromDb(id);
 }
 
-export function deleteSession(id: string): { ok: boolean } {
-  const p = sessionPath(id);
-  if (!existsSync(p)) return { ok: false };
-  unlinkSync(p);
-  return { ok: true };
+export async function deleteSessionAdmin(id: string): Promise<{ ok: boolean }> {
+  const deleted = await deleteSessionFromDb(id);
+  return { ok: deleted };
 }
 
-export function exportSessions(
+export async function exportSessionsAdmin(
   format: "json" | "csv",
   filters?: { since?: string; status?: string; assessmentTypeId?: string }
-): string {
-  const sessions = loadAllSessions();
+): Promise<string> {
+  const sessions = await listSessionsWithResponses();
 
   let filtered = sessions;
 
@@ -354,8 +292,8 @@ interface StatsResult {
   assessmentBreakdown: { assessmentTypeId: string; count: number }[];
 }
 
-export function getStats(): StatsResult {
-  const sessions = loadAllSessions();
+export async function getStatsAdmin(): Promise<StatsResult> {
+  const sessions = await listSessionsWithResponses();
 
   const total = sessions.length;
   const completed = sessions.filter(
@@ -378,7 +316,6 @@ export function getStats(): StatsResult {
       ? Math.round(scores.reduce((sum, s) => sum + s, 0) / scores.length)
       : 0;
 
-  // Assessment type breakdown
   const breakdownMap = new Map<string, number>();
   for (const s of sessions) {
     const typeId = s.assessmentTypeId ?? "default";
@@ -399,10 +336,10 @@ export function getStats(): StatsResult {
   };
 }
 
-export function getDimensionAverages(
+export async function getDimensionAveragesAdmin(
   assessmentTypeId?: string
-): { dimension: string; average: number; count: number }[] {
-  let sessions = loadAllSessions().filter((s) => s.status === "analyzed" && s.analysis);
+): Promise<{ dimension: string; average: number; count: number }[]> {
+  let sessions = (await listSessionsWithResponses()).filter((s) => s.status === "analyzed" && s.analysis);
 
   if (assessmentTypeId) {
     sessions = sessions.filter((s) => s.assessmentTypeId === assessmentTypeId);
@@ -431,12 +368,12 @@ export function getDimensionAverages(
   }));
 }
 
-export function getCompletionFunnel(): {
+export async function getCompletionFunnelAdmin(): Promise<{
   stage: string;
   count: number;
   percentage: number;
-}[] {
-  const sessions = loadAllSessions();
+}[]> {
+  const sessions = await listAllSessions();
   const total = sessions.length;
 
   const stages = ["intake", "in_progress", "completed", "analyzed"] as const;
@@ -447,7 +384,6 @@ export function getCompletionFunnel(): {
     analyzed: 3,
   };
 
-  // Cumulative: count sessions that REACHED each stage (not just currently at it)
   return stages.map((stage) => {
     const minIndex = stageIndex[stage];
     const count = sessions.filter((s) => (stageIndex[s.status] ?? -1) >= minIndex).length;
@@ -481,10 +417,7 @@ export const TOOL_DEFINITIONS = [
     input_schema: {
       type: "object" as const,
       properties: {
-        id: {
-          type: "string",
-          description: "Assessment type ID",
-        },
+        id: { type: "string", description: "Assessment type ID" },
       },
       required: ["id"],
     },
@@ -512,10 +445,7 @@ export const TOOL_DEFINITIONS = [
     input_schema: {
       type: "object" as const,
       properties: {
-        id: {
-          type: "string",
-          description: "Assessment type ID to update",
-        },
+        id: { type: "string", description: "Assessment type ID to update" },
         changes: {
           type: "object",
           description:
@@ -532,33 +462,20 @@ export const TOOL_DEFINITIONS = [
     input_schema: {
       type: "object" as const,
       properties: {
-        sourceId: {
-          type: "string",
-          description: "ID of the assessment to duplicate",
-        },
-        newId: {
-          type: "string",
-          description: "ID for the new duplicated assessment",
-        },
-        newName: {
-          type: "string",
-          description: "Name for the new duplicated assessment",
-        },
+        sourceId: { type: "string", description: "ID of the assessment to duplicate" },
+        newId: { type: "string", description: "ID for the new duplicated assessment" },
+        newName: { type: "string", description: "Name for the new duplicated assessment" },
       },
       required: ["sourceId", "newId", "newName"],
     },
   },
   {
     name: "archive_assessment",
-    description:
-      "Archive an assessment type by setting its status to 'archived'",
+    description: "Archive an assessment type by setting its status to 'archived'",
     input_schema: {
       type: "object" as const,
       properties: {
-        id: {
-          type: "string",
-          description: "Assessment type ID to archive",
-        },
+        id: { type: "string", description: "Assessment type ID to archive" },
       },
       required: ["id"],
     },
@@ -569,10 +486,7 @@ export const TOOL_DEFINITIONS = [
     input_schema: {
       type: "object" as const,
       properties: {
-        assessmentId: {
-          type: "string",
-          description: "Assessment type ID to add the question to",
-        },
+        assessmentId: { type: "string", description: "Assessment type ID to add the question to" },
         question: {
           type: "object",
           description:
@@ -584,24 +498,13 @@ export const TOOL_DEFINITIONS = [
   },
   {
     name: "update_question",
-    description:
-      "Update a specific question within an assessment type. Merges provided fields.",
+    description: "Update a specific question within an assessment type. Merges provided fields.",
     input_schema: {
       type: "object" as const,
       properties: {
-        assessmentId: {
-          type: "string",
-          description: "Assessment type ID containing the question",
-        },
-        questionId: {
-          type: "string",
-          description: "ID of the question to update",
-        },
-        changes: {
-          type: "object",
-          description:
-            "Partial Question fields to merge (e.g. text, weight, inputType)",
-        },
+        assessmentId: { type: "string", description: "Assessment type ID containing the question" },
+        questionId: { type: "string", description: "ID of the question to update" },
+        changes: { type: "object", description: "Partial Question fields to merge (e.g. text, weight, inputType)" },
       },
       required: ["assessmentId", "questionId", "changes"],
     },
@@ -612,55 +515,32 @@ export const TOOL_DEFINITIONS = [
     input_schema: {
       type: "object" as const,
       properties: {
-        assessmentId: {
-          type: "string",
-          description: "Assessment type ID containing the question",
-        },
-        questionId: {
-          type: "string",
-          description: "ID of the question to remove",
-        },
+        assessmentId: { type: "string", description: "Assessment type ID containing the question" },
+        questionId: { type: "string", description: "ID of the question to remove" },
       },
       required: ["assessmentId", "questionId"],
     },
   },
   {
     name: "list_sessions",
-    description:
-      "List interview sessions with optional filters for date, status, and assessment type",
+    description: "List interview sessions with optional filters for date, status, and assessment type",
     input_schema: {
       type: "object" as const,
       properties: {
-        since: {
-          type: "string",
-          description:
-            "ISO date string — only return sessions created on or after this date",
-        },
-        status: {
-          type: "string",
-          description:
-            "Filter by session status: intake, in_progress, completed, or analyzed",
-          enum: ["intake", "in_progress", "completed", "analyzed"],
-        },
-        assessmentTypeId: {
-          type: "string",
-          description: "Filter by assessment type ID",
-        },
+        since: { type: "string", description: "ISO date string — only return sessions created on or after this date" },
+        status: { type: "string", description: "Filter by session status", enum: ["intake", "in_progress", "completed", "analyzed"] },
+        assessmentTypeId: { type: "string", description: "Filter by assessment type ID" },
       },
       required: [] as string[],
     },
   },
   {
     name: "get_session",
-    description:
-      "Get the full details of a specific interview session including all responses and analysis",
+    description: "Get the full details of a specific interview session including all responses and analysis",
     input_schema: {
       type: "object" as const,
       properties: {
-        id: {
-          type: "string",
-          description: "Session ID",
-        },
+        id: { type: "string", description: "Session ID" },
       },
       required: ["id"],
     },
@@ -671,47 +551,28 @@ export const TOOL_DEFINITIONS = [
     input_schema: {
       type: "object" as const,
       properties: {
-        id: {
-          type: "string",
-          description: "Session ID to delete",
-        },
+        id: { type: "string", description: "Session ID to delete" },
       },
       required: ["id"],
     },
   },
   {
     name: "export_sessions",
-    description:
-      "Export interview sessions as JSON or CSV, with optional filters",
+    description: "Export interview sessions as JSON or CSV, with optional filters",
     input_schema: {
       type: "object" as const,
       properties: {
-        format: {
-          type: "string",
-          description: "Export format",
-          enum: ["json", "csv"],
-        },
-        since: {
-          type: "string",
-          description: "ISO date string filter for sessions created on or after",
-        },
-        status: {
-          type: "string",
-          description: "Filter by session status",
-          enum: ["intake", "in_progress", "completed", "analyzed"],
-        },
-        assessmentTypeId: {
-          type: "string",
-          description: "Filter by assessment type ID",
-        },
+        format: { type: "string", description: "Export format", enum: ["json", "csv"] },
+        since: { type: "string", description: "ISO date string filter" },
+        status: { type: "string", description: "Filter by session status", enum: ["intake", "in_progress", "completed", "analyzed"] },
+        assessmentTypeId: { type: "string", description: "Filter by assessment type ID" },
       },
       required: ["format"],
     },
   },
   {
     name: "get_stats",
-    description:
-      "Get aggregate statistics across all sessions: totals, completion rate, average score, and breakdown by assessment type",
+    description: "Get aggregate statistics across all sessions",
     input_schema: {
       type: "object" as const,
       properties: {},
@@ -720,24 +581,18 @@ export const TOOL_DEFINITIONS = [
   },
   {
     name: "get_dimension_averages",
-    description:
-      "Get average scores per scoring dimension across all analyzed sessions, optionally filtered by assessment type",
+    description: "Get average scores per scoring dimension across all analyzed sessions",
     input_schema: {
       type: "object" as const,
       properties: {
-        assessmentTypeId: {
-          type: "string",
-          description:
-            "Optional assessment type ID to filter dimension averages",
-        },
+        assessmentTypeId: { type: "string", description: "Optional assessment type ID to filter" },
       },
       required: [] as string[],
     },
   },
   {
     name: "get_completion_funnel",
-    description:
-      "Get the count and percentage of sessions at each status stage: intake, in_progress, completed, analyzed",
+    description: "Get the count and percentage of sessions at each status stage",
     input_schema: {
       type: "object" as const,
       properties: {},
@@ -747,84 +602,84 @@ export const TOOL_DEFINITIONS = [
 ];
 
 // ============================================================
-// TOOL EXECUTOR
+// TOOL EXECUTOR (async)
 // ============================================================
 
-export function executeTool(
+export async function executeTool(
   name: string,
   args: Record<string, unknown>
-): unknown {
+): Promise<unknown> {
   switch (name) {
     case "list_assessments":
-      return listAssessments();
+      return listAssessmentsAdmin();
 
     case "get_assessment":
-      return getAssessment(args.id as string);
+      return getAssessmentAdmin(args.id as string);
 
     case "create_assessment":
-      return createAssessment(args.config as AssessmentType);
+      return createAssessmentAdmin(args.config as AssessmentType);
 
     case "update_assessment":
-      return updateAssessment(
+      return updateAssessmentAdmin(
         args.id as string,
         args.changes as Partial<AssessmentType>
       );
 
     case "duplicate_assessment":
-      return duplicateAssessment(
+      return duplicateAssessmentAdmin(
         args.sourceId as string,
         args.newId as string,
         args.newName as string
       );
 
     case "archive_assessment":
-      return archiveAssessment(args.id as string);
+      return archiveAssessmentAdmin(args.id as string);
 
     case "add_question":
-      return addQuestion(
+      return addQuestionAdmin(
         args.assessmentId as string,
         args.question as Question
       );
 
     case "update_question":
-      return updateQuestion(
+      return updateQuestionAdmin(
         args.assessmentId as string,
         args.questionId as string,
         args.changes as Partial<Question>
       );
 
     case "remove_question":
-      return removeQuestion(
+      return removeQuestionAdmin(
         args.assessmentId as string,
         args.questionId as string
       );
 
     case "list_sessions":
-      return listSessions(
+      return listSessionsAdmin(
         args as { since?: string; status?: string; assessmentTypeId?: string }
       );
 
     case "get_session":
-      return getSession(args.id as string);
+      return getSessionAdmin(args.id as string);
 
     case "delete_session":
-      return deleteSession(args.id as string);
+      return deleteSessionAdmin(args.id as string);
 
     case "export_sessions":
-      return exportSessions(args.format as "json" | "csv", {
+      return exportSessionsAdmin(args.format as "json" | "csv", {
         since: args.since as string | undefined,
         status: args.status as string | undefined,
         assessmentTypeId: args.assessmentTypeId as string | undefined,
       });
 
     case "get_stats":
-      return getStats();
+      return getStatsAdmin();
 
     case "get_dimension_averages":
-      return getDimensionAverages(args.assessmentTypeId as string | undefined);
+      return getDimensionAveragesAdmin(args.assessmentTypeId as string | undefined);
 
     case "get_completion_funnel":
-      return getCompletionFunnel();
+      return getCompletionFunnelAdmin();
 
     default:
       return { error: `Unknown tool: ${name}` };

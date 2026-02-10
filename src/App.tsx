@@ -9,7 +9,7 @@ import AdminLayout from "./components/admin/AdminLayout";
 import AdminDashboardPage from "./pages/AdminDashboardPage";
 import AdminSessionsPage from "./pages/AdminSessionsPage";
 import AdminAssessmentsPage from "./pages/AdminAssessmentsPage";
-import AdminChatPage from "./pages/AdminChatPage";
+import AssessmentBuilderPage from "./pages/AssessmentBuilderPage";
 import AdminPreviewPage from "./pages/AdminPreviewPage";
 
 
@@ -50,7 +50,8 @@ export default function App() {
           <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
           <Route path="/admin/sessions" element={<AdminSessionsPage />} />
           <Route path="/admin/assessments" element={<AdminAssessmentsPage />} />
-          <Route path="/admin/chat" element={<AdminChatPage />} />
+          <Route path="/admin/builder" element={<AssessmentBuilderPage />} />
+          <Route path="/admin/builder/:id" element={<AssessmentBuilderPage />} />
           <Route path="/admin/preview/:assessmentId" element={<AdminPreviewPage />} />
         </Route>
       </Routes>

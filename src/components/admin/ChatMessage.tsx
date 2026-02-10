@@ -1,10 +1,25 @@
-import type { ReactNode, ReactElement } from "react";
+import { useState, type ReactNode, type ReactElement } from "react";
+import QuestionEditPopover, { type QuestionData } from "./QuestionEditPopover";
 
 interface Props {
   role: "user" | "assistant";
   content: string;
   onAction?: (action: string) => void;
   isLatest?: boolean;
+}
+
+/** Detect whether a table row looks like a question (has a q_ or demo_ ID) */
+function parseQuestionFromRow(cells: string[]): QuestionData | null {
+  if (cells.length < 2) return null;
+  const first = cells[0].trim();
+  if (!/^(q_|demo_|quest_)\w+/.test(first)) return null;
+  return {
+    id: first,
+    text: cells[1]?.trim() || "",
+    inputType: cells.length > 2 ? cells[2]?.trim() : undefined,
+    weight: cells.length > 3 ? cells[3]?.trim() : undefined,
+    section: cells.length > 4 ? cells[4]?.trim() : undefined,
+  };
 }
 
 /** Parse ```actions\n...\n``` block from end of message */
@@ -22,6 +37,7 @@ function extractActions(text: string): { body: string; actions: string[] } {
 export default function ChatMessage({ role, content, onAction, isLatest }: Props) {
   const isUser = role === "user";
   const { body, actions } = isUser ? { body: content, actions: [] } : extractActions(content);
+  const [editingQuestion, setEditingQuestion] = useState<QuestionData | null>(null);
 
   const renderContent = (text: string) => {
     const lines = text.split("\n");
@@ -34,6 +50,10 @@ export default function ChatMessage({ role, content, onAction, isLatest }: Props
 
     const flushTable = () => {
       if (tableRows.length > 0) {
+        // Check if any data rows contain question IDs
+        const dataRows = tableRows.slice(2); // skip header + separator
+        const hasQuestions = dataRows.some((row) => parseQuestionFromRow(row) !== null);
+
         elements.push(
           <div key={`table-${elements.length}`} className="overflow-x-auto my-3">
             <table className="w-full text-sm border-collapse">
@@ -42,18 +62,42 @@ export default function ChatMessage({ role, content, onAction, isLatest }: Props
                   {tableRows[0].map((cell, i) => (
                     <th key={i} className="text-left px-3 py-2 border-b border-white/10 text-white/70 font-semibold text-xs uppercase tracking-wider">{cell.trim()}</th>
                   ))}
+                  {hasQuestions && (
+                    <th className="w-8 border-b border-white/10" />
+                  )}
                 </tr>
               </thead>
               <tbody>
-                {tableRows.slice(2).map((row, i) => (
-                  <tr key={i} className="hover:bg-white/[0.02] transition-colors">
-                    {row.map((cell, j) => (
-                      <td key={j} className="px-3 py-2 border-b border-white/5 text-white/60">{cell.trim()}</td>
-                    ))}
-                  </tr>
-                ))}
+                {dataRows.map((row, i) => {
+                  const question = parseQuestionFromRow(row);
+                  return (
+                    <tr
+                      key={i}
+                      className={`transition-colors ${question ? "hover:bg-purple-500/[0.06] cursor-pointer group" : "hover:bg-white/[0.02]"}`}
+                      onClick={question ? () => setEditingQuestion(question) : undefined}
+                    >
+                      {row.map((cell, j) => (
+                        <td key={j} className={`px-3 py-2 border-b border-white/5 ${question ? "text-white/70 group-hover:text-white/90" : "text-white/60"}`}>
+                          {cell.trim()}
+                        </td>
+                      ))}
+                      {hasQuestions && (
+                        <td className="px-1 py-2 border-b border-white/5">
+                          {question && (
+                            <svg className="w-3.5 h-3.5 text-purple-400/0 group-hover:text-purple-400/60 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
+                            </svg>
+                          )}
+                        </td>
+                      )}
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
+            {hasQuestions && (
+              <p className="text-[10px] text-purple-400/40 mt-1 pl-1">Click a question to edit</p>
+            )}
           </div>
         );
         tableRows = [];
@@ -136,7 +180,7 @@ export default function ChatMessage({ role, content, onAction, isLatest }: Props
       if (line.match(/^[-*•]\s/)) {
         elements.push(
           <div key={i} className="flex gap-2.5 ml-1 py-0.5">
-            <span className="text-blue-400/60 mt-0.5 text-xs">▸</span>
+            <span className="text-blue-400/60 mt-0.5 text-xs">{"\u25B8"}</span>
             <span className="flex-1">{formatInline(line.slice(2))}</span>
           </div>
         );
@@ -232,6 +276,18 @@ export default function ChatMessage({ role, content, onAction, isLatest }: Props
           </>
         )}
       </div>
+
+      {/* Question edit popover */}
+      {editingQuestion && onAction && (
+        <QuestionEditPopover
+          question={editingQuestion}
+          onSave={(cmd) => {
+            onAction(cmd);
+            setEditingQuestion(null);
+          }}
+          onClose={() => setEditingQuestion(null)}
+        />
+      )}
     </div>
   );
 }

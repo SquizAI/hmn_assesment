@@ -1,16 +1,12 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import StatusBadge from "./StatusBadge";
-import ChatMessage from "./ChatMessage";
-import ChatInput from "./ChatInput";
 import {
   fetchAssessment,
   updateFullAssessment,
   updateAssessmentStatus,
   duplicateAssessmentApi,
-  chatWithAssessment,
 } from "../../lib/admin-api";
-import type { AdminChatMessage } from "../../lib/types";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -72,14 +68,13 @@ interface AssessmentDrawerProps {
 /*  Constants                                                          */
 /* ------------------------------------------------------------------ */
 
-type TabId = "overview" | "questions" | "scoring" | "settings" | "ai_edit";
+type TabId = "overview" | "questions" | "scoring" | "settings";
 
 const TABS: { id: TabId; label: string }[] = [
   { id: "overview", label: "Overview" },
   { id: "questions", label: "Questions" },
   { id: "scoring", label: "Scoring" },
   { id: "settings", label: "Settings" },
-  { id: "ai_edit", label: "AI Edit" },
 ];
 
 const INPUT_TYPE_COLORS: Record<string, string> = {
@@ -154,11 +149,6 @@ export default function AssessmentDrawer({
 
   // Archive confirmation
   const [archiveConfirm, setArchiveConfirm] = useState(false);
-
-  // AI Edit chat state
-  const [aiMessages, setAiMessages] = useState<AdminChatMessage[]>([]);
-  const [aiThinking, setAiThinking] = useState(false);
-  const aiBotRef = useRef<HTMLDivElement>(null);
 
   // Navigation
   const navigate = useNavigate();
@@ -278,33 +268,6 @@ export default function AssessmentDrawer({
     }
   };
 
-  /* ---- AI Edit chat ---- */
-
-  useEffect(() => {
-    aiBotRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [aiMessages, aiThinking]);
-
-  const handleAiSend = async (text: string) => {
-    const userMsg: AdminChatMessage = { role: "user", content: text, timestamp: new Date().toISOString() };
-    const newMessages = [...aiMessages, userMsg];
-    setAiMessages(newMessages);
-    setAiThinking(true);
-
-    try {
-      const recent = newMessages.length > 20 ? newMessages.slice(-20) : newMessages;
-      const data = await chatWithAssessment(assessmentId, recent);
-      setAiMessages([...newMessages, { role: "assistant", content: data.response, timestamp: new Date().toISOString() }]);
-      // Refresh assessment data so edits appear in other tabs
-      await loadAssessment();
-    } catch {
-      setAiMessages([...newMessages, { role: "assistant", content: "Something went wrong. Please try again.", timestamp: new Date().toISOString() }]);
-    } finally {
-      setAiThinking(false);
-    }
-  };
-
-  const lastAiAssistantIdx = aiMessages.reduce((acc, msg, i) => (msg.role === "assistant" ? i : acc), -1);
-
   /* ---- Copy ID ---- */
 
   const handleCopyId = (text: string) => {
@@ -395,13 +358,21 @@ export default function AssessmentDrawer({
                     </div>
                   </div>
                 </div>
-                <button
-                  onClick={handleClose}
-                  className="text-white/40 hover:text-white transition-colors text-2xl leading-none p-1 shrink-0 mt-1"
-                  aria-label="Close drawer"
-                >
-                  &times;
-                </button>
+                <div className="flex items-center gap-2 shrink-0 mt-1">
+                  <button
+                    onClick={() => navigate(`/admin/builder/${assessmentId}`)}
+                    className="px-3 py-1.5 text-xs rounded-lg bg-purple-500/10 border border-purple-500/20 text-purple-300 hover:bg-purple-500/20 transition-colors"
+                  >
+                    Open in Builder
+                  </button>
+                  <button
+                    onClick={handleClose}
+                    className="text-white/40 hover:text-white transition-colors text-2xl leading-none p-1"
+                    aria-label="Close drawer"
+                  >
+                    &times;
+                  </button>
+                </div>
               </div>
 
               {/* Tab navigation */}
@@ -1041,81 +1012,6 @@ export default function AssessmentDrawer({
                 </div>
               )}
 
-              {/* ------ AI EDIT TAB ------ */}
-              {activeTab === "ai_edit" && (
-                <div className="flex flex-col h-full -my-6 -mx-6">
-                  {/* Messages area */}
-                  <div className="flex-1 overflow-y-auto px-4 py-4">
-                    <div className="space-y-4">
-                      {aiMessages.length === 0 && (
-                        <div className="text-center py-10 space-y-4">
-                          <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500/20 to-blue-500/20 border border-white/10">
-                            <span className="text-2xl">✨</span>
-                          </div>
-                          <div>
-                            <h3 className="text-sm font-semibold text-white/80">AI Assessment Editor</h3>
-                            <p className="text-xs text-white/40 mt-1 max-w-xs mx-auto leading-relaxed">
-                              Edit this assessment through conversation. Add questions, change weights, update scoring — just describe what you want.
-                            </p>
-                          </div>
-                          <div className="flex flex-wrap gap-2 justify-center max-w-sm mx-auto">
-                            {[
-                              "Show all questions",
-                              "Add a new question",
-                              "Update scoring weights",
-                              "Show assessment summary",
-                            ].map((suggestion) => (
-                              <button
-                                key={suggestion}
-                                onClick={() => handleAiSend(suggestion)}
-                                className="px-3 py-1.5 rounded-lg bg-white/[0.03] border border-white/10 text-white/50 text-xs hover:bg-white/[0.07] hover:text-white/80 transition-all"
-                              >
-                                {suggestion}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {aiMessages.map((msg, i) => (
-                        <ChatMessage
-                          key={i}
-                          role={msg.role}
-                          content={msg.content}
-                          onAction={handleAiSend}
-                          isLatest={i === lastAiAssistantIdx && !aiThinking}
-                        />
-                      ))}
-
-                      {aiThinking && (
-                        <div className="flex justify-start">
-                          <div className="bg-white/[0.05] rounded-2xl rounded-bl-md px-5 py-3.5 border border-white/[0.08]">
-                            <div className="flex items-center gap-2">
-                              <div className="flex gap-1">
-                                <span className="w-1.5 h-1.5 bg-purple-400/60 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
-                                <span className="w-1.5 h-1.5 bg-purple-400/60 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
-                                <span className="w-1.5 h-1.5 bg-purple-400/60 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
-                              </div>
-                              <span className="text-xs text-white/30 ml-1">Editing...</span>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-
-                      <div ref={aiBotRef} />
-                    </div>
-                  </div>
-
-                  {/* Input area */}
-                  <div className="shrink-0 border-t border-white/5 px-4 py-3">
-                    <ChatInput
-                      onSend={handleAiSend}
-                      disabled={aiThinking}
-                      placeholder="Describe changes to this assessment..."
-                    />
-                  </div>
-                </div>
-              )}
             </div>
 
             {/* ============================================================ */}
