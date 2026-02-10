@@ -7,7 +7,6 @@ import {
   updateAssessmentStatus,
   createNewAssessment,
   duplicateAssessmentApi,
-  createAssessmentFromFile,
 } from "../lib/admin-api";
 
 // ---------------------------------------------------------------------------
@@ -209,10 +208,6 @@ export default function AdminAssessmentsPage() {
   const [actionInFlight, setActionInFlight] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
-  // ---- File upload state ----
-  const [uploading, setUploading] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
   // ---- Search input ref ----
   const searchRef = useRef<HTMLInputElement>(null);
 
@@ -234,37 +229,6 @@ export default function AdminAssessmentsPage() {
 
   useEffect(() => {
     loadAssessments();
-  }, [loadAssessments]);
-
-  // ---- File upload handler ----
-  const handleFileUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    // Reset input so same file can be re-uploaded
-    e.target.value = "";
-
-    const allowedExts = ["md", "txt", "json", "csv", "yaml", "yml"];
-    const ext = file.name.split(".").pop()?.toLowerCase() || "";
-    if (!allowedExts.includes(ext)) {
-      alert(`Unsupported file type ".${ext}". Supported: ${allowedExts.join(", ")}`);
-      return;
-    }
-    if (file.size > 500_000) {
-      alert("File too large. Maximum 500KB.");
-      return;
-    }
-
-    setUploading(true);
-    try {
-      const content = await file.text();
-      await createAssessmentFromFile(content, file.name);
-      await loadAssessments();
-    } catch (err) {
-      console.error("File upload failed:", err);
-      alert("Failed to create assessment from file. Please try again.");
-    } finally {
-      setUploading(false);
-    }
   }, [loadAssessments]);
 
   // ---- Keyboard shortcut: Cmd+K or Ctrl+K focuses search ----
@@ -440,25 +404,10 @@ export default function AdminAssessmentsPage() {
         </div>
 
         <div className="flex items-center gap-2">
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".md,.txt,.json,.csv,.yaml,.yml"
-            onChange={handleFileUpload}
-            className="hidden"
-          />
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            disabled={uploading}
-            className="px-4 py-2 text-sm rounded-xl border transition-colors bg-white/[0.04] border-white/10 text-white/50 hover:bg-white/[0.08] hover:text-white/70 disabled:opacity-50"
-            title="Upload MD, TXT, JSON, or CSV file to create an assessment"
-          >
-            {uploading ? "Processing..." : "Upload File"}
-          </button>
           <button
             onClick={() => navigate("/admin/chat")}
-            className="px-4 py-2 text-sm rounded-xl border transition-colors bg-white/[0.04] border-white/10 text-white/50 hover:bg-white/[0.08] hover:text-white/70"
-            title="Ask the AI assistant to build an assessment"
+            className="px-4 py-2 text-sm rounded-xl border transition-colors bg-purple-500/10 border-purple-500/20 text-purple-300 hover:bg-purple-500/20 hover:text-purple-200"
+            title="Build assessments with AI — upload files, describe what you need"
           >
             AI Builder
           </button>

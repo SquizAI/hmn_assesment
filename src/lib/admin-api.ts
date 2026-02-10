@@ -101,14 +101,19 @@ export async function exportSessionsData(format: "json" | "csv") {
   return res.json();
 }
 
-export async function createAssessmentFromFile(
-  content: string,
-  filename: string,
-): Promise<{ assessment: Record<string, unknown>; message: string }> {
-  const res = await adminFetch("/api/admin/assessments/from-file", {
+export interface ChatAttachment {
+  filename: string;
+  content: string;
+}
+
+export async function adminChat(
+  messages: { role: string; content: string; timestamp: string }[],
+  attachments?: ChatAttachment[],
+): Promise<{ response: string }> {
+  const res = await adminFetch("/api/admin/chat", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ content, filename }),
+    body: JSON.stringify({ messages, attachments }),
   });
   return res.json();
 }

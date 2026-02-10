@@ -1393,142 +1393,64 @@ app.get("/api/assessments", (_req, res) => {
 // ADMIN CHAT (conversational AI with tool use)
 // ============================================================
 
-const ADMIN_SYSTEM_PROMPT = `You are the HMN Cascade Admin Assistant. You help administrators manage the assessment platform through natural conversation.
+const ADMIN_SYSTEM_PROMPT = `You are the HMN Cascade Assessment Builder — an expert AI that helps administrators create, edit, and manage assessments through conversation.
+
+PRIMARY PURPOSE: Build high-quality assessments. When the user uploads reference documents (markdown, text, JSON, CSV, etc.), use them as the foundation for building assessments. Extract themes, topics, competencies, and structure from the documents to generate well-crafted assessment configurations.
 
 CAPABILITIES:
-- Create, modify, duplicate, and archive assessment types
-- Add/edit/remove questions within assessments
-- View session data and participant results
-- Generate analytics and export data
+- Create complete assessments from uploaded reference documents or descriptions
+- Modify, duplicate, and archive existing assessments
+- Add/edit/remove questions with proper scoring and input types
+- View session data and generate analytics
+- Export data in various formats
 
-BEHAVIOR:
-- Be conversational and helpful
-- Use markdown formatting (tables, bold, lists) for data display
-- For destructive actions (delete, archive), always confirm before executing
-- Guide admins through complex operations step by step
-- Suggest related actions after completing tasks
-- Keep responses concise but informative
+BUILDING ASSESSMENTS FROM DOCUMENTS:
+When the user uploads files, analyze them thoroughly:
+1. Extract key themes, topics, competencies, and frameworks
+2. Design phases and sections that map to the document structure
+3. Generate 15-30 questions with varied input types
+4. Create scoring dimensions that align with the document's evaluation criteria
+5. Set appropriate weights based on document emphasis
+6. Always ask if the user wants adjustments after the first draft
 
-CREATING ASSESSMENTS:
-When asked to create a new assessment, generate a complete config with:
-1. A slug-style id (e.g., "leadership-readiness")
-2. Name, description, icon emoji
-3. Phases and sections appropriate to the topic
-4. 15-30 well-crafted questions with appropriate input types
-5. Scoring dimensions relevant to the assessment topic
-6. Set status to "draft" initially
+ASSESSMENT STRUCTURE:
+- Phases: High-level stages (e.g., "Profile & Baseline", "Deep Dive", "Strategic Alignment")
+- Sections: Groups within phases (e.g., "About You", "Team Reality", "Industry Context")
+- Questions: Individual items with input types, scoring dimensions, weights
+- Scoring Dimensions: What the assessment measures (weights should sum to 1.0)
 
 QUESTION INPUT TYPES:
-- "ai_conversation": Open-ended with AI follow-ups (best for deep exploration)
+- "ai_conversation": Open-ended with AI follow-ups (best for deep exploration, use for 40-60% of questions)
 - "slider": Numeric scale (needs sliderMin, sliderMax, sliderLabels)
-- "buttons": Single-select from options
-- "multi_select": Multiple select from options
-- "open_text": Free text
+- "buttons": Single-select from options (needs options array)
+- "multi_select": Multiple select from options (needs options array)
+- "open_text": Free text response
 - "voice": Voice input with transcription
 
 Each question needs: id, section, phase, text, inputType, required, scoringDimensions[], weight (0-1), tags[]
+For ai_conversation questions, include aiFollowUpPrompt with guidance for the AI interviewer.
+
+BEHAVIOR:
+- Be conversational and proactive — suggest improvements
+- Use markdown formatting (tables, bold, lists) for data display
+- For destructive actions (delete, archive), always confirm before executing
+- After creating an assessment, offer to refine questions, adjust weights, or preview it
+- Keep responses concise but informative
 
 RESPONSE FORMAT:
-- ALWAYS end your response with 2-4 suggested follow-up actions the admin might want to take next
+- ALWAYS end your response with 2-4 suggested follow-up actions
 - Format them EXACTLY like this at the very end of your response:
 
 \`\`\`actions
-Show me session analytics
-Create a new assessment
-Export all completed sessions
+Refine the questions
+Adjust scoring weights
+Preview this assessment
 \`\`\`
 
 - Each line inside the actions block is one clickable action button
 - Make actions contextually relevant to what you just discussed
 - Keep action labels short (under 40 chars) and action-oriented
 - Always include at least 2 suggested actions`;
-
-// ---- File upload → Assessment creation ----
-
-app.post("/api/admin/assessments/from-file", requireAdmin, async (req, res) => {
-  try {
-    const { content, filename } = req.body;
-    if (!content || typeof content !== "string") {
-      res.status(400).json({ error: "content (string) required" });
-      return;
-    }
-
-    const ext = (filename || "file.txt").split(".").pop()?.toLowerCase() || "txt";
-    const client = getAnthropicClient();
-
-    const parsePrompt = `You are an assessment creation assistant. The user has uploaded a file to create an assessment from.
-
-FILE NAME: ${filename || "unknown"}
-FILE TYPE: ${ext}
-
-INSTRUCTIONS:
-Parse the file content and generate a complete HMN Cascade assessment JSON object with this EXACT structure:
-
-{
-  "id": "slug-style-id",
-  "name": "Assessment Name",
-  "description": "Description",
-  "icon": "emoji",
-  "estimatedMinutes": 30,
-  "status": "draft",
-  "phases": [{ "id": "phase_id", "label": "Phase Label", "order": 0 }],
-  "sections": [{ "id": "section_id", "label": "Section Label", "phaseId": "phase_id", "order": 0 }],
-  "questions": [{
-    "id": "q_unique_id",
-    "section": "section_id",
-    "phase": "phase_id",
-    "text": "Question text?",
-    "inputType": "ai_conversation|slider|buttons|multi_select|open_text|voice",
-    "required": true,
-    "scoringDimensions": ["dimension_id"],
-    "weight": 0.5,
-    "tags": ["tag"],
-    "options": [{"label": "Option", "value": "option"}]
-  }],
-  "scoringDimensions": [{ "id": "dim_id", "label": "Dimension", "description": "What it measures", "weight": 0.125 }]
-}
-
-For markdown files: Extract topics, headings, and content to generate relevant questions.
-For JSON files: Try to map the structure directly if it matches, otherwise extract content.
-For text files: Parse the content to identify themes and generate questions.
-
-Generate 15-30 well-crafted questions with varied input types.
-Scoring dimension weights should sum to 1.0.
-Return ONLY the JSON object, no other text.
-
-FILE CONTENT:
-${content.slice(0, 50000)}`;
-
-    const response = await client.messages.create({
-      model: MODEL,
-      max_tokens: 8000,
-      messages: [{ role: "user", content: parsePrompt }],
-    });
-
-    const textBlock = response.content.find((b) => b.type === "text");
-    const responseText = textBlock && textBlock.type === "text" ? textBlock.text : "";
-
-    // Extract JSON from response (might be wrapped in ```json blocks)
-    const jsonMatch = responseText.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
-      res.status(422).json({ error: "Could not parse assessment from file content" });
-      return;
-    }
-
-    const assessmentConfig = JSON.parse(jsonMatch[0]);
-    // Ensure required fields
-    if (!assessmentConfig.id) assessmentConfig.id = `file-${Date.now().toString(36)}`;
-    if (!assessmentConfig.status) assessmentConfig.status = "draft";
-    assessmentConfig.createdAt = new Date().toISOString();
-    assessmentConfig.updatedAt = new Date().toISOString();
-
-    const result = createAssessment(assessmentConfig);
-    res.json({ assessment: result, message: `Assessment "${assessmentConfig.name}" created from ${filename || "uploaded file"}` });
-  } catch (err) {
-    console.error("File-to-assessment error:", err);
-    res.status(500).json({ error: "Failed to create assessment from file" });
-  }
-});
 
 // ---- Assessment-scoped chat (conversational editing) ----
 
@@ -1652,10 +1574,23 @@ Add a new question
 
 app.post("/api/admin/chat", requireAdmin, async (req, res) => {
   try {
-    const { messages } = req.body;
+    const { messages, attachments } = req.body;
     if (!messages || !Array.isArray(messages)) {
       res.status(400).json({ error: "messages array required" });
       return;
+    }
+
+    // Build system prompt with optional file attachments
+    let systemPrompt = ADMIN_SYSTEM_PROMPT;
+    if (attachments && Array.isArray(attachments) && attachments.length > 0) {
+      const fileContextParts = attachments
+        .filter((a: { filename?: string; content?: string }) => a.filename && a.content)
+        .map((a: { filename: string; content: string }) =>
+          `--- ${a.filename} ---\n${a.content.slice(0, 50000)}\n--- end ${a.filename} ---`
+        );
+      if (fileContextParts.length > 0) {
+        systemPrompt += `\n\nREFERENCE DOCUMENTS:\nThe user has uploaded the following files as context for building assessments. Use these as the primary source material.\n\n${fileContextParts.join("\n\n")}`;
+      }
     }
 
     const client = getAnthropicClient();
@@ -1667,8 +1602,8 @@ app.post("/api/admin/chat", requireAdmin, async (req, res) => {
     // Tool-use loop: call Claude, execute tools, feed results back
     let response = await client.messages.create({
       model: MODEL,
-      max_tokens: 4000,
-      system: ADMIN_SYSTEM_PROMPT,
+      max_tokens: 8000,
+      system: systemPrompt,
       tools: TOOL_DEFINITIONS as Anthropic.Messages.Tool[],
       messages: anthropicMessages,
     });
@@ -1698,8 +1633,8 @@ app.post("/api/admin/chat", requireAdmin, async (req, res) => {
 
       response = await client.messages.create({
         model: MODEL,
-        max_tokens: 4000,
-        system: ADMIN_SYSTEM_PROMPT,
+        max_tokens: 8000,
+        system: systemPrompt,
         tools: TOOL_DEFINITIONS as Anthropic.Messages.Tool[],
         messages: toolMessages as Anthropic.Messages.MessageParam[],
       });
