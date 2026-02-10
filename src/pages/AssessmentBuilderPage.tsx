@@ -2,11 +2,12 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import ChatMessage from "../components/admin/ChatMessage";
 import ChatInput from "../components/admin/ChatInput";
+import ToolActivity from "../components/admin/ToolActivity";
 import ProcessMap, { inferPhase, type BuilderPhase } from "../components/admin/ProcessMap";
 import LivePreview from "../components/admin/LivePreview";
-import { adminChat, chatWithAssessment, fetchAssessment, fetchAssessments } from "../lib/admin-api";
+import { adminChatStream, chatWithAssessmentStream, fetchAssessment, fetchAssessments } from "../lib/admin-api";
 import type { ChatAttachment } from "../lib/admin-api";
-import type { AdminChatMessage, AssessmentType } from "../lib/types";
+import type { AdminChatMessage, AssessmentType, ToolEvent, ToolCallRecord } from "../lib/types";
 
 // ============================================================
 // Constants
@@ -43,6 +44,7 @@ export default function AssessmentBuilderPage() {
   const [currentPhase, setCurrentPhase] = useState<BuilderPhase>("purpose");
   const [messages, setMessages] = useState<AdminChatMessage[]>([]);
   const [isThinking, setIsThinking] = useState(false);
+  const [toolEvents, setToolEvents] = useState<ToolEvent[]>([]);
 
   // --- UI state ---
   const [isFullscreen, setIsFullscreen] = useState(() => {
@@ -216,24 +218,28 @@ export default function AssessmentBuilderPage() {
     const newMessages = [...messages, userMsg];
     setMessages(newMessages);
     setIsThinking(true);
+    setToolEvents([]);
 
     const recentMessages = newMessages.length > 20 ? newMessages.slice(-20) : newMessages;
 
+    const onEvent = (event: ToolEvent) => {
+      setToolEvents((prev) => [...prev, event]);
+    };
+
     try {
-      let data: { response: string };
+      let result: { text: string; toolCalls: ToolCallRecord[] };
 
       if (assessmentId) {
-        // Assessment-scoped chat (Phases 2-5)
-        data = await chatWithAssessment(assessmentId, recentMessages);
+        result = await chatWithAssessmentStream(assessmentId, recentMessages, onEvent);
       } else {
-        // General chat (Phase 1: Purpose)
-        data = await adminChat(recentMessages, attachments.length > 0 ? attachments : undefined);
+        result = await adminChatStream(recentMessages, onEvent, attachments.length > 0 ? attachments : undefined);
       }
 
       const aiMsg: AdminChatMessage = {
         role: "assistant",
-        content: data.response,
+        content: result.text,
         timestamp: new Date().toISOString(),
+        toolCalls: result.toolCalls.length > 0 ? result.toolCalls : undefined,
       };
       setMessages([...newMessages, aiMsg]);
 
@@ -247,7 +253,6 @@ export default function AssessmentBuilderPage() {
 
       // Refresh assessment data for live preview
       if (assessmentId) {
-        // Small delay to let DB operations complete
         setTimeout(() => refreshAssessment(), 500);
       }
     } catch (err) {
@@ -262,6 +267,7 @@ export default function AssessmentBuilderPage() {
       ]);
     } finally {
       setIsThinking(false);
+      setToolEvents([]);
     }
   };
 
@@ -470,24 +476,12 @@ export default function AssessmentBuilderPage() {
                   content={msg.content}
                   onAction={handleSend}
                   isLatest={i === lastAssistantIdx && !isThinking}
+                  toolCalls={msg.toolCalls}
                 />
               ))}
 
-              {/* Thinking indicator */}
-              {isThinking && (
-                <div className="flex justify-start">
-                  <div className="bg-white/[0.05] rounded-2xl rounded-bl-md px-5 py-3.5 border border-white/[0.08]">
-                    <div className="flex items-center gap-2">
-                      <div className="flex gap-1">
-                        <span className="w-1.5 h-1.5 bg-purple-400/60 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
-                        <span className="w-1.5 h-1.5 bg-purple-400/60 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
-                        <span className="w-1.5 h-1.5 bg-purple-400/60 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
-                      </div>
-                      <span className="text-xs text-white/30 ml-1">Building...</span>
-                    </div>
-                  </div>
-                </div>
-              )}
+              {/* Tool activity / thinking indicator */}
+              {isThinking && <ToolActivity events={toolEvents} />}
 
               <div ref={bottomRef} />
             </div>

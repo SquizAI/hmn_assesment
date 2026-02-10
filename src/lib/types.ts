@@ -145,10 +145,25 @@ export interface AssessmentSummary {
   status: "draft" | "active" | "archived";
 }
 
+export interface ToolCallRecord {
+  name: string;
+  displayName: string;
+  success: boolean;
+  summary: string;
+}
+
+export type ToolEvent =
+  | { type: "thinking"; message: string }
+  | { type: "tool_start"; name: string; displayName: string }
+  | { type: "tool_result"; name: string; success: boolean; summary: string }
+  | { type: "response"; text: string }
+  | { type: "done" };
+
 export interface AdminChatMessage {
   role: "user" | "assistant";
   content: string;
   timestamp: string;
+  toolCalls?: ToolCallRecord[];
 }
 
 export interface InterviewSession {

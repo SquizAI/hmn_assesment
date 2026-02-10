@@ -130,6 +130,111 @@ export async function chatWithAssessment(
   return res.json();
 }
 
+// --- SSE Streaming chat functions ---
+
+import type { ToolEvent, ToolCallRecord } from "./types";
+
+function parseSSE(
+  reader: ReadableStreamDefaultReader<Uint8Array>,
+  onEvent: (event: ToolEvent) => void,
+): Promise<{ text: string; toolCalls: ToolCallRecord[] }> {
+  const decoder = new TextDecoder();
+  let buffer = "";
+  let responseText = "";
+  let toolCalls: ToolCallRecord[] = [];
+
+  return new Promise((resolve, reject) => {
+    function pump(): void {
+      reader.read().then(({ done, value }) => {
+        if (done) {
+          resolve({ text: responseText, toolCalls });
+          return;
+        }
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() || "";
+
+        let currentEvent = "";
+        for (const line of lines) {
+          if (line.startsWith("event: ")) {
+            currentEvent = line.slice(7).trim();
+          } else if (line.startsWith("data: ")) {
+            const dataStr = line.slice(6);
+            try {
+              const data = JSON.parse(dataStr);
+
+              if (currentEvent === "thinking") {
+                onEvent({ type: "thinking", message: data.message });
+              } else if (currentEvent === "tool_start") {
+                onEvent({ type: "tool_start", name: data.name, displayName: data.displayName });
+              } else if (currentEvent === "tool_result") {
+                onEvent({ type: "tool_result", name: data.name, success: data.success, summary: data.summary });
+              } else if (currentEvent === "response") {
+                responseText = data.text;
+                toolCalls = data.toolCalls || [];
+                onEvent({ type: "response", text: data.text });
+              } else if (currentEvent === "done") {
+                onEvent({ type: "done" });
+              }
+            } catch {
+              // skip malformed events
+            }
+            currentEvent = "";
+          }
+        }
+
+        pump();
+      }).catch(reject);
+    }
+    pump();
+  });
+}
+
+export async function adminChatStream(
+  messages: { role: string; content: string; timestamp: string }[],
+  onEvent: (event: ToolEvent) => void,
+  attachments?: ChatAttachment[],
+): Promise<{ text: string; toolCalls: ToolCallRecord[] }> {
+  const res = await fetch(`${API_BASE}/api/admin/chat`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify({ messages, attachments }),
+  });
+
+  if (res.status === 401) {
+    window.location.href = "/admin";
+    throw new Error("Unauthorized");
+  }
+  if (!res.ok) throw new Error(`API error: ${res.status}`);
+  if (!res.body) throw new Error("No response body");
+
+  return parseSSE(res.body.getReader(), onEvent);
+}
+
+export async function chatWithAssessmentStream(
+  assessmentId: string,
+  messages: { role: string; content: string; timestamp: string }[],
+  onEvent: (event: ToolEvent) => void,
+): Promise<{ text: string; toolCalls: ToolCallRecord[] }> {
+  const res = await fetch(`${API_BASE}/api/admin/assessments/${assessmentId}/chat`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify({ messages }),
+  });
+
+  if (res.status === 401) {
+    window.location.href = "/admin";
+    throw new Error("Unauthorized");
+  }
+  if (!res.ok) throw new Error(`API error: ${res.status}`);
+  if (!res.body) throw new Error("No response body");
+
+  return parseSSE(res.body.getReader(), onEvent);
+}
+
 export async function createPreviewSession(assessmentId: string): Promise<{ session: { id: string } }> {
   const res = await adminFetch("/api/sessions/preview", {
     method: "POST",

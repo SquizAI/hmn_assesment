@@ -1507,6 +1507,155 @@ Offer to preview or activate the assessment.
 IMPORTANT: Include phase markers (<!-- PHASE:xxx -->) in your responses so the UI can track progress.
 Always explain your methodology — the admin should understand WHY you're making each design decision.`;
 
+// ---- Tool display names for SSE streaming ----
+
+const TOOL_DISPLAY_NAMES: Record<string, string> = {
+  create_assessment: "Creating assessment",
+  update_assessment: "Updating assessment",
+  add_question: "Adding question",
+  update_question: "Updating question",
+  remove_question: "Removing question",
+  list_assessments: "Listing assessments",
+  get_assessment: "Reading assessment data",
+  duplicate_assessment: "Duplicating assessment",
+  archive_assessment: "Archiving assessment",
+  list_sessions: "Loading sessions",
+  get_session: "Loading session details",
+  delete_session: "Deleting session",
+  get_stats: "Gathering statistics",
+  export_sessions: "Exporting data",
+  get_dimension_averages: "Analyzing dimensions",
+  get_completion_funnel: "Analyzing completion funnel",
+};
+
+function getToolDisplayName(name: string, input: Record<string, unknown>): string {
+  const base = TOOL_DISPLAY_NAMES[name] || name;
+  // Add context from input
+  if (name === "create_assessment" && input.name) return `${base} "${input.name}"`;
+  if (name === "add_question" && input.text) {
+    const text = String(input.text);
+    return `${base}: "${text.length > 50 ? text.slice(0, 50) + "..." : text}"`;
+  }
+  if (name === "update_question" && input.questionId) return `${base} ${input.questionId}`;
+  if (name === "update_assessment" && input.changes) return `${base} configuration`;
+  return base;
+}
+
+function getToolSummary(name: string, input: Record<string, unknown>, result: unknown, success: boolean): string {
+  if (!success) return `Failed: ${name}`;
+  switch (name) {
+    case "create_assessment": return `Created "${input.name || "assessment"}"`;
+    case "add_question": return `Added question "${String(input.text || "").slice(0, 40)}${String(input.text || "").length > 40 ? "..." : ""}"`;
+    case "update_question": return `Updated question ${input.questionId}`;
+    case "update_assessment": return "Updated assessment configuration";
+    case "remove_question": return `Removed question ${input.questionId}`;
+    case "get_assessment": return "Loaded assessment data";
+    case "list_assessments": return "Retrieved assessments list";
+    case "duplicate_assessment": return `Duplicated to "${input.newName || input.newId}"`;
+    case "archive_assessment": return "Archived assessment";
+    default: return `Completed ${TOOL_DISPLAY_NAMES[name] || name}`;
+  }
+}
+
+type SSEWriter = {
+  sendEvent: (event: string, data: Record<string, unknown>) => void;
+  end: () => void;
+};
+
+function initSSE(res: import("express").Response): SSEWriter {
+  res.setHeader("Content-Type", "text/event-stream");
+  res.setHeader("Cache-Control", "no-cache");
+  res.setHeader("Connection", "keep-alive");
+  res.setHeader("X-Accel-Buffering", "no"); // Disable nginx buffering
+  res.flushHeaders();
+  return {
+    sendEvent(event: string, data: Record<string, unknown>) {
+      res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
+    },
+    end() {
+      res.write("event: done\ndata: {}\n\n");
+      res.end();
+    },
+  };
+}
+
+async function runToolLoop(
+  client: Anthropic,
+  systemPrompt: string,
+  anthropicMessages: Anthropic.Messages.MessageParam[],
+  tools: Anthropic.Messages.Tool[],
+  maxTokens: number,
+  sse: SSEWriter,
+): Promise<{ finalText: string; toolCalls: { name: string; displayName: string; success: boolean; summary: string }[] }> {
+  const allToolCalls: { name: string; displayName: string; success: boolean; summary: string }[] = [];
+
+  sse.sendEvent("thinking", { message: "Analyzing your request..." });
+
+  let response = await client.messages.create({
+    model: MODEL,
+    max_tokens: maxTokens,
+    system: systemPrompt,
+    tools,
+    messages: anthropicMessages,
+  });
+
+  const toolMessages = [...anthropicMessages];
+  let maxIterations = 10;
+
+  while (response.stop_reason === "tool_use" && maxIterations-- > 0) {
+    const assistantContent = response.content;
+    toolMessages.push({ role: "assistant" as const, content: assistantContent as unknown as string });
+
+    const toolResults: Array<{ type: "tool_result"; tool_use_id: string; content: string }> = [];
+    for (const block of assistantContent) {
+      if (block.type === "tool_use") {
+        const input = block.input as Record<string, unknown>;
+        const displayName = getToolDisplayName(block.name, input);
+
+        sse.sendEvent("tool_start", { name: block.name, displayName });
+
+        console.log(`Tool call: ${block.name}(${JSON.stringify(input)})`);
+        let result: unknown;
+        let success = true;
+        try {
+          result = await executeTool(block.name, input);
+        } catch (err) {
+          result = { error: String(err) };
+          success = false;
+        }
+
+        const summary = getToolSummary(block.name, input, result, success);
+        allToolCalls.push({ name: block.name, displayName, success, summary });
+
+        sse.sendEvent("tool_result", { name: block.name, success, summary });
+
+        toolResults.push({
+          type: "tool_result",
+          tool_use_id: block.id,
+          content: JSON.stringify(result, null, 2),
+        });
+      }
+    }
+
+    toolMessages.push({ role: "user" as const, content: toolResults as unknown as string });
+
+    sse.sendEvent("thinking", { message: "Processing results..." });
+
+    response = await client.messages.create({
+      model: MODEL,
+      max_tokens: maxTokens,
+      system: systemPrompt,
+      tools,
+      messages: toolMessages as Anthropic.Messages.MessageParam[],
+    });
+  }
+
+  const textBlocks = response.content.filter((b) => b.type === "text");
+  const finalText = textBlocks.map((b) => b.type === "text" ? b.text : "").join("\n");
+
+  return { finalText, toolCalls: allToolCalls };
+}
+
 // ---- Assessment-scoped chat (conversational editing) ----
 
 const ASSESSMENT_TOOL_NAMES = new Set([
@@ -1576,52 +1725,23 @@ Add a new question
       content: m.content,
     }));
 
-    let response = await client.messages.create({
-      model: MODEL,
-      max_tokens: 4000,
-      system: systemPrompt,
-      tools: ASSESSMENT_TOOLS as Anthropic.Messages.Tool[],
-      messages: anthropicMessages,
-    });
+    const sse = initSSE(res);
+    const { finalText, toolCalls } = await runToolLoop(
+      client, systemPrompt, anthropicMessages,
+      ASSESSMENT_TOOLS as Anthropic.Messages.Tool[], 4000, sse,
+    );
 
-    const toolMessages = [...anthropicMessages];
-    let maxIterations = 10;
-
-    while (response.stop_reason === "tool_use" && maxIterations-- > 0) {
-      const assistantContent = response.content;
-      toolMessages.push({ role: "assistant" as const, content: assistantContent as unknown as string });
-
-      const toolResults: Array<{ type: "tool_result"; tool_use_id: string; content: string }> = [];
-      for (const block of assistantContent) {
-        if (block.type === "tool_use") {
-          console.log(`Assessment chat tool: ${block.name}(${JSON.stringify(block.input)})`);
-          const result = await executeTool(block.name, block.input as Record<string, unknown>);
-          toolResults.push({
-            type: "tool_result",
-            tool_use_id: block.id,
-            content: JSON.stringify(result, null, 2),
-          });
-        }
-      }
-
-      toolMessages.push({ role: "user" as const, content: toolResults as unknown as string });
-
-      response = await client.messages.create({
-        model: MODEL,
-        max_tokens: 4000,
-        system: systemPrompt,
-        tools: ASSESSMENT_TOOLS as Anthropic.Messages.Tool[],
-        messages: toolMessages as Anthropic.Messages.MessageParam[],
-      });
-    }
-
-    const textBlocks = response.content.filter((b) => b.type === "text");
-    const finalText = textBlocks.map((b) => b.type === "text" ? b.text : "").join("\n");
-
-    res.json({ response: finalText || "Done! The assessment has been updated." });
+    sse.sendEvent("response", { text: finalText || "Done! The assessment has been updated.", toolCalls });
+    sse.end();
   } catch (err) {
     console.error("Assessment chat error:", err);
-    res.status(500).json({ error: "Chat failed" });
+    // If headers already sent (SSE started), we can't send JSON error
+    if (!res.headersSent) {
+      res.status(500).json({ error: "Chat failed" });
+    } else {
+      res.write(`event: error\ndata: ${JSON.stringify({ error: "Chat failed" })}\n\n`);
+      res.end();
+    }
   }
 });
 
@@ -1654,55 +1774,22 @@ app.post("/api/admin/chat", requireAdmin, async (req, res) => {
       content: m.content,
     }));
 
-    // Tool-use loop: call Claude, execute tools, feed results back
-    let response = await client.messages.create({
-      model: MODEL,
-      max_tokens: 8000,
-      system: systemPrompt,
-      tools: TOOL_DEFINITIONS as Anthropic.Messages.Tool[],
-      messages: anthropicMessages,
-    });
+    const sse = initSSE(res);
+    const { finalText, toolCalls } = await runToolLoop(
+      client, systemPrompt, anthropicMessages,
+      TOOL_DEFINITIONS as Anthropic.Messages.Tool[], 8000, sse,
+    );
 
-    // Loop while Claude wants to use tools
-    const toolMessages = [...anthropicMessages];
-    let maxIterations = 10;
-
-    while (response.stop_reason === "tool_use" && maxIterations-- > 0) {
-      const assistantContent = response.content;
-      toolMessages.push({ role: "assistant" as const, content: assistantContent as unknown as string });
-
-      const toolResults: Array<{ type: "tool_result"; tool_use_id: string; content: string }> = [];
-      for (const block of assistantContent) {
-        if (block.type === "tool_use") {
-          console.log(`Admin tool call: ${block.name}(${JSON.stringify(block.input)})`);
-          const result = await executeTool(block.name, block.input as Record<string, unknown>);
-          toolResults.push({
-            type: "tool_result",
-            tool_use_id: block.id,
-            content: JSON.stringify(result, null, 2),
-          });
-        }
-      }
-
-      toolMessages.push({ role: "user" as const, content: toolResults as unknown as string });
-
-      response = await client.messages.create({
-        model: MODEL,
-        max_tokens: 8000,
-        system: systemPrompt,
-        tools: TOOL_DEFINITIONS as Anthropic.Messages.Tool[],
-        messages: toolMessages as Anthropic.Messages.MessageParam[],
-      });
-    }
-
-    // Extract final text response
-    const textBlocks = response.content.filter((b) => b.type === "text");
-    const finalText = textBlocks.map((b) => b.type === "text" ? b.text : "").join("\n");
-
-    res.json({ response: finalText || "I completed the requested action." });
+    sse.sendEvent("response", { text: finalText || "I completed the requested action.", toolCalls });
+    sse.end();
   } catch (err) {
     console.error("Admin chat error:", err);
-    res.status(500).json({ error: "Chat failed" });
+    if (!res.headersSent) {
+      res.status(500).json({ error: "Chat failed" });
+    } else {
+      res.write(`event: error\ndata: ${JSON.stringify({ error: "Chat failed" })}\n\n`);
+      res.end();
+    }
   }
 });
 
