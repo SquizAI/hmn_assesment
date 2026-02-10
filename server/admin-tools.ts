@@ -28,6 +28,26 @@ interface SessionSummary {
   createdAt: string;
   assessmentTypeId?: string;
   responseCount: number;
+  hasResearch: boolean;
+}
+
+export interface CompanySummary {
+  company: string;
+  participantCount: number;
+  sessionCount: number;
+  completedCount: number;
+  analyzedCount: number;
+  averageScore: number | null;
+  completionRate: number;
+  lastActivity: string;
+  industries: string[];
+  hasResearch: boolean;
+}
+
+export interface CompanyDetail extends CompanySummary {
+  sessions: SessionSummary[];
+  dimensionAverages: { dimension: string; average: number; count: number }[];
+  researchData: Record<string, unknown> | null;
 }
 
 function toSessionSummary(s: InterviewSession): SessionSummary {
@@ -39,6 +59,7 @@ function toSessionSummary(s: InterviewSession): SessionSummary {
     createdAt: s.createdAt,
     assessmentTypeId: s.assessmentTypeId,
     responseCount: s.responses?.length ?? 0,
+    hasResearch: !!(s as unknown as Record<string, unknown>).research,
   };
 }
 
@@ -277,6 +298,192 @@ function csvEscape(value: string): string {
     return `"${value.replace(/"/g, '""')}"`;
   }
   return value;
+}
+
+// ============================================================
+// COMPANY AGGREGATION
+// ============================================================
+
+export async function listCompaniesAdmin(): Promise<CompanySummary[]> {
+  const sessions = await listSessionsWithResponses();
+
+  // Group sessions by company
+  const companyMap = new Map<string, InterviewSession[]>();
+  for (const s of sessions) {
+    const company = (s.participant?.company ?? "").trim() || "(No Company)";
+    const existing = companyMap.get(company) ?? [];
+    existing.push(s);
+    companyMap.set(company, existing);
+  }
+
+  const result: CompanySummary[] = [];
+  for (const [company, companySessions] of companyMap) {
+    // Unique participants by email or name
+    const participantSet = new Set<string>();
+    const industrySet = new Set<string>();
+    let hasResearch = false;
+
+    for (const s of companySessions) {
+      const key = s.participant?.email || s.participant?.name || s.id;
+      participantSet.add(key);
+      if (s.participant?.industry) industrySet.add(s.participant.industry);
+      if ((s as unknown as Record<string, unknown>).research) hasResearch = true;
+    }
+
+    const completedSessions = companySessions.filter(
+      (s) => s.status === "completed" || s.status === "analyzed"
+    );
+    const analyzedSessions = companySessions.filter((s) => s.status === "analyzed");
+
+    // Average score from analysis.overallReadinessScore
+    const scores = companySessions
+      .filter((s) => s.analysis)
+      .map((s) => {
+        const analysis = s.analysis as
+          | { overallReadinessScore?: number }
+          | undefined;
+        return analysis?.overallReadinessScore ?? null;
+      })
+      .filter((score): score is number => score !== null);
+
+    const averageScore =
+      scores.length > 0
+        ? Math.round(scores.reduce((sum, sc) => sum + sc, 0) / scores.length)
+        : null;
+
+    // Last activity
+    const lastActivity = companySessions
+      .map((s) => s.updatedAt || s.createdAt)
+      .sort((a, b) => new Date(b).getTime() - new Date(a).getTime())[0];
+
+    result.push({
+      company,
+      participantCount: participantSet.size,
+      sessionCount: companySessions.length,
+      completedCount: completedSessions.length,
+      analyzedCount: analyzedSessions.length,
+      averageScore,
+      completionRate:
+        companySessions.length > 0
+          ? Math.round((completedSessions.length / companySessions.length) * 100)
+          : 0,
+      lastActivity,
+      industries: Array.from(industrySet),
+      hasResearch,
+    });
+  }
+
+  // Sort by lastActivity descending
+  result.sort(
+    (a, b) =>
+      new Date(b.lastActivity).getTime() - new Date(a.lastActivity).getTime()
+  );
+
+  return result;
+}
+
+export async function getCompanyDetailAdmin(
+  companyName: string
+): Promise<CompanyDetail | null> {
+  const sessions = await listSessionsWithResponses();
+
+  // Filter sessions by company name match
+  const companySessions = sessions.filter((s) => {
+    const company = (s.participant?.company ?? "").trim() || "(No Company)";
+    return company === companyName;
+  });
+
+  if (companySessions.length === 0) return null;
+
+  // Build session summaries
+  const sessionSummaries = companySessions.map(toSessionSummary);
+
+  // Unique participants
+  const participantSet = new Set<string>();
+  const industrySet = new Set<string>();
+  let hasResearch = false;
+  let researchData: Record<string, unknown> | null = null;
+
+  for (const s of companySessions) {
+    const key = s.participant?.email || s.participant?.name || s.id;
+    participantSet.add(key);
+    if (s.participant?.industry) industrySet.add(s.participant.industry);
+    if ((s as unknown as Record<string, unknown>).research) {
+      hasResearch = true;
+      if (!researchData) {
+        researchData = (s as unknown as Record<string, unknown>).research as Record<string, unknown>;
+      }
+    }
+  }
+
+  const completedSessions = companySessions.filter(
+    (s) => s.status === "completed" || s.status === "analyzed"
+  );
+  const analyzedSessions = companySessions.filter((s) => s.status === "analyzed");
+
+  // Average score
+  const scores = companySessions
+    .filter((s) => s.analysis)
+    .map((s) => {
+      const analysis = s.analysis as
+        | { overallReadinessScore?: number }
+        | undefined;
+      return analysis?.overallReadinessScore ?? null;
+    })
+    .filter((score): score is number => score !== null);
+
+  const averageScore =
+    scores.length > 0
+      ? Math.round(scores.reduce((sum, sc) => sum + sc, 0) / scores.length)
+      : null;
+
+  // Last activity
+  const lastActivity = companySessions
+    .map((s) => s.updatedAt || s.createdAt)
+    .sort((a, b) => new Date(b).getTime() - new Date(a).getTime())[0];
+
+  // Build dimension averages from analyzed sessions
+  const dimensionMap = new Map<string, { total: number; count: number }>();
+  for (const s of analyzedSessions) {
+    const analysis = s.analysis as
+      | { dimensionScores?: { dimension: string; score: number }[] }
+      | undefined;
+    if (!analysis?.dimensionScores) continue;
+
+    for (const ds of analysis.dimensionScores) {
+      const existing = dimensionMap.get(ds.dimension) ?? { total: 0, count: 0 };
+      existing.total += ds.score;
+      existing.count += 1;
+      dimensionMap.set(ds.dimension, existing);
+    }
+  }
+
+  const dimensionAverages = Array.from(dimensionMap.entries()).map(
+    ([dimension, data]) => ({
+      dimension,
+      average: Math.round(data.total / data.count),
+      count: data.count,
+    })
+  );
+
+  return {
+    company: companyName,
+    participantCount: participantSet.size,
+    sessionCount: companySessions.length,
+    completedCount: completedSessions.length,
+    analyzedCount: analyzedSessions.length,
+    averageScore,
+    completionRate:
+      companySessions.length > 0
+        ? Math.round((completedSessions.length / companySessions.length) * 100)
+        : 0,
+    lastActivity,
+    industries: Array.from(industrySet),
+    hasResearch,
+    sessions: sessionSummaries,
+    dimensionAverages,
+    researchData,
+  };
 }
 
 // ============================================================

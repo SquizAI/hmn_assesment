@@ -235,6 +235,25 @@ export async function chatWithAssessmentStream(
   return parseSSE(res.body.getReader(), onEvent);
 }
 
+// --- Company CRM API ---
+
+export async function fetchCompanies() {
+  const res = await adminFetch("/api/admin/companies");
+  return res.json();
+}
+
+export async function fetchCompanyDetail(companyName: string) {
+  const res = await adminFetch(`/api/admin/companies/${encodeURIComponent(companyName)}`);
+  return res.json();
+}
+
+export async function triggerResearch(sessionId: string) {
+  const res = await adminFetch(`/api/admin/sessions/${sessionId}/research`, {
+    method: "POST",
+  });
+  return res.json();
+}
+
 export async function createPreviewSession(assessmentId: string): Promise<{ session: { id: string } }> {
   const res = await adminFetch("/api/sessions/preview", {
     method: "POST",

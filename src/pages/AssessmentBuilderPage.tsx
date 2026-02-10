@@ -3,8 +3,9 @@ import { useNavigate, useParams } from "react-router-dom";
 import ChatMessage from "../components/admin/ChatMessage";
 import ChatInput from "../components/admin/ChatInput";
 import ToolActivity from "../components/admin/ToolActivity";
-import ProcessMap, { inferPhase, type BuilderPhase } from "../components/admin/ProcessMap";
-import LivePreview from "../components/admin/LivePreview";
+import WorkflowCanvas from "../components/workflow/WorkflowCanvas";
+import { inferPhase } from "../components/admin/ProcessMap";
+import type { BuilderPhase } from "../lib/graph-layout";
 import { adminChatStream, chatWithAssessmentStream, fetchAssessment, fetchAssessments } from "../lib/admin-api";
 import type { ChatAttachment } from "../lib/admin-api";
 import type { AdminChatMessage, AssessmentType, ToolEvent, ToolCallRecord } from "../lib/types";
@@ -52,7 +53,6 @@ export default function AssessmentBuilderPage() {
   });
   const [attachments, setAttachments] = useState<ChatAttachment[]>([]);
   const [isDragging, setIsDragging] = useState(false);
-  const [rightPanelCollapsed, setRightPanelCollapsed] = useState(false);
 
   // --- Refs ---
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -326,15 +326,6 @@ export default function AssessmentBuilderPage() {
         </div>
 
         <div className="flex items-center gap-2">
-          {/* Toggle right panel */}
-          <button
-            onClick={() => setRightPanelCollapsed((c) => !c)}
-            className="p-2 rounded-lg bg-white/[0.03] hover:bg-white/[0.06] border border-white/[0.06] text-white/30 hover:text-white/60 transition-all text-xs"
-            title={rightPanelCollapsed ? "Show preview" : "Hide preview"}
-          >
-            {rightPanelCollapsed ? "Show Preview" : "Hide Preview"}
-          </button>
-
           {/* Fullscreen toggle */}
           <button
             onClick={() => setIsFullscreen((f) => !f)}
@@ -354,19 +345,19 @@ export default function AssessmentBuilderPage() {
         </div>
       </div>
 
-      {/* 3-Panel Body */}
+      {/* 2-Panel Body: Workflow Canvas + Chat */}
       <div className="flex-1 flex min-h-0">
-        {/* Left: Process Map */}
-        <div className="w-[220px] shrink-0 border-r border-white/[0.06] overflow-y-auto">
-          <ProcessMap
-            currentPhase={currentPhase}
+        {/* Left: Workflow Canvas */}
+        <div className="flex-1 min-w-0 relative">
+          <WorkflowCanvas
             assessment={assessment}
+            currentPhase={currentPhase}
             onPhaseClick={handlePhaseClick}
           />
         </div>
 
-        {/* Center: AI Conversation */}
-        <div className="flex-1 flex flex-col min-w-0 relative">
+        {/* Right: AI Conversation */}
+        <div className="w-[420px] shrink-0 border-l border-white/[0.06] flex flex-col min-w-0 relative">
           {/* Drag overlay */}
           {isDragging && (
             <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm border-2 border-dashed border-purple-400/50 rounded-xl pointer-events-none">
@@ -553,15 +544,6 @@ export default function AssessmentBuilderPage() {
           </div>
         </div>
 
-        {/* Right: Live Preview */}
-        {!rightPanelCollapsed && (
-          <div className="w-[340px] shrink-0 border-l border-white/[0.06] overflow-y-auto">
-            <LivePreview
-              assessment={assessment}
-              currentPhase={currentPhase}
-            />
-          </div>
-        )}
       </div>
     </div>
   );

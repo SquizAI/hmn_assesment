@@ -11,6 +11,7 @@ import {
   listAssessmentsAdmin, getAssessmentAdmin, createAssessmentAdmin, updateAssessmentAdmin, duplicateAssessmentAdmin,
   listSessionsAdmin, getSessionAdmin, deleteSessionAdmin,
   exportSessionsAdmin, getStatsAdmin, getDimensionAveragesAdmin, getCompletionFunnelAdmin,
+  listCompaniesAdmin, getCompanyDetailAdmin,
 } from "./admin-tools.js";
 import {
   loadSessionFromDb, saveSessionToDb, deleteSessionFromDb,
@@ -1368,6 +1369,50 @@ app.get("/api/admin/dimensions", requireAdmin, async (req, res) => {
     const assessmentTypeId = req.query.assessmentTypeId as string | undefined;
     res.json({ dimensions: await getDimensionAveragesAdmin(assessmentTypeId) });
   } catch (err) { console.error("Admin dimensions error:", err); res.status(500).json({ error: "Failed to get dimensions" }); }
+});
+
+// Company CRM endpoints
+app.get("/api/admin/companies", requireAdmin, async (_req, res) => {
+  try {
+    const companies = await listCompaniesAdmin();
+    res.json({ companies });
+  } catch (err) {
+    console.error("Admin companies error:", err);
+    res.status(500).json({ error: "Failed to list companies" });
+  }
+});
+
+app.get("/api/admin/companies/:company", requireAdmin, async (req, res) => {
+  try {
+    const companyName = decodeURIComponent(String(req.params.company));
+    const detail = await getCompanyDetailAdmin(companyName);
+    if (!detail) { res.status(404).json({ error: "Company not found" }); return; }
+    res.json({ company: detail });
+  } catch (err) {
+    console.error("Admin company detail error:", err);
+    res.status(500).json({ error: "Failed to get company detail" });
+  }
+});
+
+app.post("/api/admin/sessions/:id/research", requireAdmin, async (req, res) => {
+  try {
+    const sessionId = sanitizeId(String(req.params.id));
+    const session = await getSessionAdmin(sessionId);
+    if (!session) { res.status(404).json({ error: "Session not found" }); return; }
+    // If already researched, return cached
+    if ((session as unknown as Record<string, unknown>).research) {
+      res.json({ research: (session as unknown as Record<string, unknown>).research });
+      return;
+    }
+    // Trigger research
+    const research = await researchPerson(session as unknown as Record<string, unknown>);
+    (session as unknown as Record<string, unknown>).research = research;
+    await saveSession(session as unknown as Record<string, unknown>);
+    res.json({ research });
+  } catch (err) {
+    console.error("Admin trigger research error:", err);
+    res.status(500).json({ error: "Research failed" });
+  }
 });
 
 app.get("/api/admin/export", requireAdmin, async (req, res) => {

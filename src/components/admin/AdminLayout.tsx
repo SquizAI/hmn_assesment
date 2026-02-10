@@ -5,8 +5,9 @@ import { API_BASE } from "../../lib/api";
 const NAV_ITEMS = [
   { path: "/admin/dashboard", label: "Dashboard", icon: "📊" },
   { path: "/admin/sessions", label: "Sessions", icon: "👥" },
+  { path: "/admin/companies", label: "Companies", icon: "🏢" },
   { path: "/admin/assessments", label: "Assessments", icon: "📋" },
-  { path: "/admin/chat", label: "AI Assistant", icon: "🤖" },
+  { path: "/admin/builder", label: "Builder", icon: "🏗" },
 ];
 
 export default function AdminLayout() {

@@ -11,6 +11,8 @@ import AdminSessionsPage from "./pages/AdminSessionsPage";
 import AdminAssessmentsPage from "./pages/AdminAssessmentsPage";
 import AssessmentBuilderPage from "./pages/AssessmentBuilderPage";
 import AdminPreviewPage from "./pages/AdminPreviewPage";
+import AdminCompaniesPage from "./pages/AdminCompaniesPage";
+import AdminCompanyDetailPage from "./pages/AdminCompanyDetailPage";
 
 
 class AdminErrorBoundary extends Component<{ children: React.ReactNode }, { hasError: boolean }> {
@@ -50,6 +52,8 @@ export default function App() {
           <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
           <Route path="/admin/sessions" element={<AdminSessionsPage />} />
           <Route path="/admin/assessments" element={<AdminAssessmentsPage />} />
+          <Route path="/admin/companies" element={<AdminCompaniesPage />} />
+          <Route path="/admin/companies/:company" element={<AdminCompanyDetailPage />} />
           <Route path="/admin/builder" element={<AssessmentBuilderPage />} />
           <Route path="/admin/builder/:id" element={<AssessmentBuilderPage />} />
           <Route path="/admin/preview/:assessmentId" element={<AdminPreviewPage />} />

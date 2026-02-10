@@ -14,9 +14,11 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.74.0",
+    "@dagrejs/dagre": "^2.0.4",
     "@supabase/supabase-js": "^2.95.3",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
+    "@xyflow/react": "^12.10.0",
     "concurrently": "^9.2.1",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",

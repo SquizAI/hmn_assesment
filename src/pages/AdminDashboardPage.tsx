@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import StatCard from "../components/admin/StatCard";
 import StatusBadge from "../components/admin/StatusBadge";
-import { fetchStats, fetchFunnel, fetchDimensions, fetchSessions } from "../lib/admin-api";
+import { fetchStats, fetchFunnel, fetchDimensions, fetchSessions, fetchCompanies } from "../lib/admin-api";
 
 /** Lightweight local type matching the admin stats API response shape. */
 interface DashboardStats {
@@ -37,6 +37,16 @@ interface DashboardSession {
   createdAt: string;
   assessmentTypeId: string;
   responseCount: number;
+}
+
+interface DashboardCompany {
+  company: string;
+  sessionCount: number;
+  participantCount: number;
+  averageScore: number | null;
+  completionRate: number;
+  lastActivity: string;
+  hasResearch: boolean;
 }
 
 const FUNNEL_COLORS: Record<string, string> = {
@@ -95,14 +105,16 @@ export default function AdminDashboardPage() {
   const [funnel, setFunnel] = useState<DashboardFunnelStage[]>([]);
   const [dimensions, setDimensions] = useState<DashboardDimension[]>([]);
   const [sessions, setSessions] = useState<DashboardSession[]>([]);
+  const [companies, setCompanies] = useState<DashboardCompany[]>([]);
 
   useEffect(() => {
-    Promise.all([fetchStats(), fetchFunnel(), fetchDimensions(), fetchSessions()])
-      .then(([statsData, funnelData, dimensionsData, sessionsData]) => {
+    Promise.all([fetchStats(), fetchFunnel(), fetchDimensions(), fetchSessions(), fetchCompanies()])
+      .then(([statsData, funnelData, dimensionsData, sessionsData, companiesData]) => {
         setStats(statsData);
         setFunnel(funnelData.funnel);
         setDimensions(dimensionsData.dimensions);
         setSessions(sessionsData.sessions);
+        setCompanies(companiesData.companies || []);
         setLoading(false);
       })
       .catch((err) => {
@@ -211,32 +223,52 @@ export default function AdminDashboardPage() {
           )}
         </div>
 
-        {/* Recent Sessions */}
+        {/* Top Companies */}
         <div className="bg-white/[0.03] rounded-2xl border border-white/10 p-6">
-          <h2 className="text-sm font-semibold text-white/60 uppercase tracking-wider mb-4">
-            Recent Sessions
-          </h2>
-          {sessions.length === 0 ? (
-            <div className="text-center py-8 text-white/30">No sessions yet</div>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-sm font-semibold text-white/60 uppercase tracking-wider">
+              Top Companies
+            </h2>
+            <button
+              onClick={() => navigate("/admin/companies")}
+              className="text-xs text-blue-400/60 hover:text-blue-400 transition-colors"
+            >
+              View all
+            </button>
+          </div>
+          {companies.length === 0 ? (
+            <div className="text-center py-8 text-white/30">No companies yet</div>
           ) : (
             <div className="space-y-2">
-              {sessions.slice(0, 10).map((session) => (
+              {companies.slice(0, 8).map((company) => (
                 <div
-                  key={session.id}
-                  onClick={() => navigate("/admin/sessions")}
+                  key={company.company}
+                  onClick={() => navigate(`/admin/companies/${encodeURIComponent(company.company)}`)}
                   className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-white/5 cursor-pointer transition-colors"
                 >
-                  <div className="flex-1 min-w-0">
-                    <span className="text-sm font-medium text-white/80 truncate block">
-                      {session.participantName}
-                    </span>
-                    <span className="text-xs text-white/40 truncate block">
-                      {session.participantCompany}
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500/15 to-blue-500/15 border border-white/10 flex items-center justify-center flex-shrink-0">
+                    <span className="text-xs font-bold text-white/50">
+                      {company.company.charAt(0).toUpperCase()}
                     </span>
                   </div>
-                  <StatusBadge status={session.status} />
-                  <span className="text-xs text-white/30 flex-shrink-0 w-16 text-right">
-                    {relativeDate(session.createdAt)}
+                  <div className="flex-1 min-w-0">
+                    <span className="text-sm font-medium text-white/80 truncate block">
+                      {company.company}
+                    </span>
+                    <span className="text-xs text-white/30">
+                      {company.sessionCount} session{company.sessionCount !== 1 ? "s" : ""} · {company.participantCount} people
+                    </span>
+                  </div>
+                  {company.averageScore !== null && (
+                    <span className={`text-sm font-semibold tabular-nums ${scoreColor(company.averageScore) === "green" ? "text-green-400" : scoreColor(company.averageScore) === "yellow" ? "text-yellow-400" : "text-red-400"}`}>
+                      {company.averageScore}
+                    </span>
+                  )}
+                  {company.hasResearch && (
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 flex-shrink-0" />
+                  )}
+                  <span className="text-xs text-white/20 flex-shrink-0 w-14 text-right">
+                    {relativeDate(company.lastActivity)}
                   </span>
                 </div>
               ))}

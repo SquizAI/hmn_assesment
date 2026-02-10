@@ -297,8 +297,9 @@ function dbRowToSession(
       timestamp: (m.created_at as string) || new Date().toISOString(),
       questionId: (m.question_id as string) || undefined,
     })),
-    research: null,
-    researchConfirmed: false,
+    research: (row.research as Record<string, unknown>) || null,
+    researchConfirmed: (row.research_confirmed as boolean) || false,
+    researchCorrections: (row.research_corrections as Record<string, string>) || null,
   } as InterviewSession;
 
   if (analysisRow) {
@@ -322,6 +323,9 @@ function sessionToDbRow(s: InterviewSession): Record<string, unknown> {
     completed_at: (s.status === "completed" || s.status === "analyzed") ? new Date().toISOString() : null,
     analyzed_at: s.status === "analyzed" ? new Date().toISOString() : null,
     updated_at: new Date().toISOString(),
+    research: (s as unknown as Record<string, unknown>).research || null,
+    research_confirmed: (s as unknown as Record<string, unknown>).researchConfirmed || false,
+    research_corrections: (s as unknown as Record<string, unknown>).researchCorrections || null,
   };
 }
 

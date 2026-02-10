@@ -159,6 +159,30 @@ export type ToolEvent =
   | { type: "response"; text: string }
   | { type: "done" };
 
+export interface ResearchData {
+  status: "found" | "no_results" | "error";
+  personProfile?: {
+    bio?: string;
+    knownRoles?: string[];
+    linkedinSummary?: string;
+    notableAchievements?: string[];
+    publicPresence?: "low" | "medium" | "high";
+  };
+  companyProfile?: {
+    description?: string;
+    founded?: string;
+    size?: string;
+    funding?: string;
+    products?: string[];
+    recentNews?: string[];
+  };
+  keyInsights?: string[];
+  interviewAngles?: string[];
+  confidenceLevel?: "low" | "medium" | "high";
+  sources?: { url: string; title: string }[];
+  rawResultCount?: number;
+}
+
 export interface AdminChatMessage {
   role: "user" | "assistant";
   content: string;
