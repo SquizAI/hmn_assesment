@@ -23,6 +23,7 @@ import type {
   Question,
   InterviewSession,
 } from "../src/lib/types";
+import { sendInvitationEmail, sendBatchInvitationEmails, isEmailEnabled } from "./email.js";
 
 // --- Session Summary type (lightweight view) ---
 
@@ -958,6 +959,130 @@ export const TOOL_DEFINITIONS = [
       required: [] as string[],
     },
   },
+
+  // --- Invitation Tools ---
+  {
+    name: "list_invitations",
+    description: "List all invitations with optional filters for status and assessment type",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        status: { type: "string", description: "Filter by invitation status", enum: ["sent", "opened", "started", "completed"] },
+        assessmentId: { type: "string", description: "Filter by assessment type ID" },
+      },
+      required: [] as string[],
+    },
+  },
+  {
+    name: "create_invitation",
+    description: "Create a single invitation and send the email. Requires assessmentId and participant info (name, email, company, role).",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        assessmentId: { type: "string", description: "Assessment type ID for this invitation" },
+        participant: {
+          type: "object",
+          description: "Participant details: name, email, company, role, industry, teamSize",
+          properties: {
+            name: { type: "string" },
+            email: { type: "string" },
+            company: { type: "string" },
+            role: { type: "string" },
+            industry: { type: "string" },
+            teamSize: { type: "string" },
+          },
+          required: ["name", "email"],
+        },
+        note: { type: "string", description: "Optional personal note included in the invitation email" },
+        sendEmail: { type: "boolean", description: "Whether to send the invitation email (default: true)" },
+      },
+      required: ["assessmentId", "participant"],
+    },
+  },
+  {
+    name: "batch_create_invitations",
+    description: "Create multiple invitations at once from a list of participants and send emails. Use when the user provides CSV data or a list of people.",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        assessmentId: { type: "string", description: "Assessment type ID for all invitations" },
+        participants: {
+          type: "array",
+          description: "Array of participant objects, each with name, email, company, role, industry, teamSize",
+          items: {
+            type: "object",
+            properties: {
+              name: { type: "string" },
+              email: { type: "string" },
+              company: { type: "string" },
+              role: { type: "string" },
+              industry: { type: "string" },
+              teamSize: { type: "string" },
+            },
+            required: ["name", "email"],
+          },
+        },
+        note: { type: "string", description: "Optional note included in all invitation emails" },
+        sendEmail: { type: "boolean", description: "Whether to send invitation emails (default: true)" },
+      },
+      required: ["assessmentId", "participants"],
+    },
+  },
+  {
+    name: "get_invitation",
+    description: "Get full details of a specific invitation by its ID",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        id: { type: "string", description: "Invitation ID" },
+      },
+      required: ["id"],
+    },
+  },
+  {
+    name: "delete_invitation",
+    description: "Permanently delete an invitation by its ID",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        id: { type: "string", description: "Invitation ID to delete" },
+      },
+      required: ["id"],
+    },
+  },
+
+  // --- Company Tools ---
+  {
+    name: "list_companies",
+    description: "List all companies with their participant counts, session counts, completion rates, and average scores",
+    input_schema: {
+      type: "object" as const,
+      properties: {},
+      required: [] as string[],
+    },
+  },
+  {
+    name: "get_company_detail",
+    description: "Get detailed information about a specific company including all sessions, dimension averages, and research data",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        companyName: { type: "string", description: "Exact company name to look up" },
+      },
+      required: ["companyName"],
+    },
+  },
+  {
+    name: "lookup_company_logo",
+    description: "Look up a company logo URL from their domain. Uses Clearbit Logo API. Extract domain from email addresses (e.g., user@acme.com → acme.com).",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        domain: { type: "string", description: "Company domain (e.g., 'acme.com', 'lvng.ai')" },
+      },
+      required: ["domain"],
+    },
+  },
 ];
 
 // ============================================================
@@ -1039,6 +1164,110 @@ export async function executeTool(
 
     case "get_completion_funnel":
       return getCompletionFunnelAdmin();
+
+    // --- Invitation tools ---
+
+    case "list_invitations":
+      return listInvitationsAdmin(
+        args as { status?: string; assessmentId?: string }
+      );
+
+    case "create_invitation": {
+      const result = await createInvitationAdmin({
+        assessmentId: args.assessmentId as string,
+        participant: args.participant as {
+          name: string;
+          email: string;
+          company?: string;
+          role?: string;
+          industry?: string;
+          teamSize?: string;
+        },
+        note: args.note as string | undefined,
+      });
+      // Auto-send email unless explicitly disabled
+      if (result.ok && args.sendEmail !== false) {
+        // Look up the assessment name for the email
+        const assessments = await listAllAssessments();
+        const assessmentName =
+          assessments.find((a) => a.id === (args.assessmentId as string))?.name ||
+          (args.assessmentId as string);
+        const emailResult = await sendInvitationEmail({
+          to: result.invitation.participant.email,
+          participantName: result.invitation.participant.name,
+          assessmentName,
+          inviteToken: result.invitation.token,
+          note: args.note as string | undefined,
+        });
+        return { ...result, emailSent: emailResult.ok, emailError: emailResult.error };
+      }
+      return result;
+    }
+
+    case "batch_create_invitations": {
+      const participants = args.participants as Array<{
+        name: string;
+        email: string;
+        company?: string;
+        role?: string;
+        industry?: string;
+        teamSize?: string;
+      }>;
+      const items = participants.map((p) => ({
+        assessmentId: args.assessmentId as string,
+        participant: p,
+        note: args.note as string | undefined,
+      }));
+      const batchResult = await batchCreateInvitationsAdmin(items);
+
+      // Auto-send emails unless explicitly disabled
+      if (args.sendEmail !== false && batchResult.invitations.length > 0) {
+        const assessments = await listAllAssessments();
+        const assessmentName =
+          assessments.find((a) => a.id === (args.assessmentId as string))?.name ||
+          (args.assessmentId as string);
+        const emailPayloads = batchResult.invitations.map((inv) => ({
+          to: inv.participant.email,
+          participantName: inv.participant.name,
+          assessmentName,
+          inviteToken: inv.token,
+          note: args.note as string | undefined,
+        }));
+        const emailResults = await sendBatchInvitationEmails(emailPayloads);
+        return {
+          ...batchResult,
+          emailsSent: emailResults.sent,
+          emailsFailed: emailResults.failed,
+          emailErrors: emailResults.errors,
+        };
+      }
+      return batchResult;
+    }
+
+    case "get_invitation":
+      return getInvitationAdmin(args.id as string);
+
+    case "delete_invitation":
+      return deleteInvitationAdmin(args.id as string);
+
+    // --- Company tools ---
+
+    case "list_companies":
+      return listCompaniesAdmin();
+
+    case "get_company_detail":
+      return getCompanyDetailAdmin(args.companyName as string);
+
+    case "lookup_company_logo": {
+      const domain = args.domain as string;
+      const logoUrl = `https://logo.clearbit.com/${domain}`;
+      try {
+        const checkRes = await fetch(logoUrl, { method: "HEAD" });
+        return { domain, logoUrl: checkRes.ok ? logoUrl : null, found: checkRes.ok };
+      } catch {
+        return { domain, logoUrl: null, found: false };
+      }
+    }
 
     default:
       return { error: `Unknown tool: ${name}` };

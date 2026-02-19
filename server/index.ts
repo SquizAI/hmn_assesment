@@ -1802,16 +1802,35 @@ app.get("/api/assessments/:id", async (req, res) => {
 // ADMIN CHAT (conversational AI with tool use)
 // ============================================================
 
-const ADMIN_SYSTEM_PROMPT = `You are the HMN Cascade Assessment Builder — an expert AI that helps administrators create, edit, and manage assessments through conversation.
+const ADMIN_SYSTEM_PROMPT = `You are the HMN Cascade Admin Assistant — an expert AI that helps administrators manage the entire assessment platform through conversation.
 
-PRIMARY PURPOSE: Build high-quality assessments. When the user uploads reference documents (markdown, text, JSON, CSV, etc.), use them as the foundation for building assessments. Extract themes, topics, competencies, and structure from the documents to generate well-crafted assessment configurations.
+PRIMARY CAPABILITIES:
+- **Assessments**: Create, edit, duplicate, and manage assessments from documents or descriptions
+- **Invitations**: Create and send invitations (single or batch from CSV/pasted data), track status
+- **Companies**: Look up companies, view session data, fetch company logos
+- **Sessions**: View, analyze, export interview sessions and analytics
+- **Data**: Export data, generate reports, view stats and completion funnels
 
-CAPABILITIES:
-- Create complete assessments from uploaded reference documents or descriptions
-- Modify, duplicate, and archive existing assessments
-- Add/edit/remove questions with proper scoring and input types
-- View session data and generate analytics
-- Export data in various formats
+INVITATION MANAGEMENT:
+- When the user provides a list of people (CSV, plain text, or pasted data), parse it and use batch_create_invitations to create and send emails
+- Always confirm the assessment type before creating invitations — use list_assessments to show available options
+- After creating invitations, report: invitations created, emails sent, any failures
+- For a single person, use create_invitation. For multiple people, use batch_create_invitations.
+- Emails are sent automatically unless the user says otherwise
+
+COMPANY ENRICHMENT:
+- When creating invitations or looking up companies, use lookup_company_logo to fetch their logo from their domain
+- Extract domain from email addresses (e.g., matty@lvng.ai → lvng.ai, alex@behmn.com → behmn.com)
+- Include logo URLs in your responses when available
+
+ASSESSMENT BUILDING:
+When the user uploads files or asks to build an assessment, analyze them thoroughly:
+1. Extract key themes, topics, competencies, and frameworks
+2. Design phases and sections that map to the document structure
+3. Generate 15-30 questions with varied input types
+4. Create scoring dimensions that align with the document's evaluation criteria
+5. Set appropriate weights based on document emphasis
+6. Always ask if the user wants adjustments after the first draft
 
 BUILDING ASSESSMENTS FROM DOCUMENTS:
 When the user uploads files, analyze them thoroughly:
@@ -1913,6 +1932,14 @@ const TOOL_DISPLAY_NAMES: Record<string, string> = {
   export_sessions: "Exporting data",
   get_dimension_averages: "Analyzing dimensions",
   get_completion_funnel: "Analyzing completion funnel",
+  list_invitations: "Loading invitations",
+  create_invitation: "Creating invitation",
+  batch_create_invitations: "Creating invitations",
+  get_invitation: "Loading invitation",
+  delete_invitation: "Deleting invitation",
+  list_companies: "Loading companies",
+  get_company_detail: "Loading company details",
+  lookup_company_logo: "Looking up company logo",
 };
 
 function getToolDisplayName(name: string, input: Record<string, unknown>): string {
@@ -1925,6 +1952,16 @@ function getToolDisplayName(name: string, input: Record<string, unknown>): strin
   }
   if (name === "update_question" && input.questionId) return `${base} ${input.questionId}`;
   if (name === "update_assessment" && input.changes) return `${base} configuration`;
+  if (name === "create_invitation" && input.participant) {
+    const p = input.participant as Record<string, string>;
+    return `${base} for ${p.name || p.email || "participant"}`;
+  }
+  if (name === "batch_create_invitations" && input.participants) {
+    const count = (input.participants as unknown[]).length;
+    return `${base} (${count} people)`;
+  }
+  if (name === "get_company_detail" && input.companyName) return `${base} for ${input.companyName}`;
+  if (name === "lookup_company_logo" && input.domain) return `${base} for ${input.domain}`;
   return base;
 }
 
@@ -1940,6 +1977,23 @@ function getToolSummary(name: string, input: Record<string, unknown>, result: un
     case "list_assessments": return "Retrieved assessments list";
     case "duplicate_assessment": return `Duplicated to "${input.newName || input.newId}"`;
     case "archive_assessment": return "Archived assessment";
+    case "list_invitations": return "Retrieved invitations list";
+    case "create_invitation": {
+      const p = input.participant as Record<string, string> | undefined;
+      return `Created invitation for ${p?.name || p?.email || "participant"}`;
+    }
+    case "batch_create_invitations": {
+      const r = result as { invitations?: unknown[] } | undefined;
+      return `Created ${r?.invitations?.length || 0} invitations`;
+    }
+    case "get_invitation": return "Loaded invitation details";
+    case "delete_invitation": return "Deleted invitation";
+    case "list_companies": return "Retrieved companies list";
+    case "get_company_detail": return `Loaded details for ${input.companyName || "company"}`;
+    case "lookup_company_logo": {
+      const lr = result as { found?: boolean } | undefined;
+      return lr?.found ? `Found logo for ${input.domain}` : `No logo found for ${input.domain}`;
+    }
     default: return `Completed ${TOOL_DISPLAY_NAMES[name] || name}`;
   }
 }

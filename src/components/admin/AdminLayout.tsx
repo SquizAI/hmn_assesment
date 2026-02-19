@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Outlet, useNavigate, useLocation, Link } from "react-router-dom";
 import { API_BASE } from "../../lib/api";
+import AdminChatDrawer from "./AdminChatDrawer";
 
 const NAV_ITEMS = [
   { path: "/admin/dashboard", label: "Dashboard", icon: "📊" },
@@ -17,6 +18,7 @@ export default function AdminLayout() {
   const [authenticated, setAuthenticated] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
 
   useEffect(() => {
     fetch(`${API_BASE}/api/admin/verify`, { credentials: "include" })
@@ -55,15 +57,15 @@ export default function AdminLayout() {
       {/* Sidebar — hidden on mobile, slide-in when mobileOpen */}
       <aside
         className={`
-          fixed inset-y-0 left-0 z-50 w-56 bg-[#0a0a12] border-r border-white/5 flex flex-col transition-transform duration-300
+          fixed inset-y-0 left-0 z-50 bg-[#0a0a12] border-r border-white/5 flex flex-col transition-all duration-300
           md:static md:translate-x-0 md:z-auto
-          ${collapsed ? "md:w-16" : "md:w-56"}
-          ${mobileOpen ? "translate-x-0" : "-translate-x-full"}
+          ${collapsed ? "md:w-16 w-56" : "md:w-56 w-56"}
+          ${mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
         `}
       >
         {/* Logo area */}
         <div className="p-4 border-b border-white/5 flex items-center gap-3">
-          <img src="/hmn_logo.png" alt="HMN" className="h-7 w-auto flex-shrink-0" />
+          <img src="/hmn_logo.png" alt="HMN" className="h-7 w-auto shrink-0" />
           {!collapsed && <span className="font-semibold text-white/90 text-sm">Cascade Admin</span>}
         </div>
 
@@ -81,7 +83,7 @@ export default function AdminLayout() {
                     : "text-white/40 hover:text-white/70 hover:bg-white/5"
                 }`}
               >
-                <span className="text-lg flex-shrink-0">{item.icon}</span>
+                <span className="text-lg shrink-0">{item.icon}</span>
                 {!collapsed && <span>{item.label}</span>}
               </Link>
             );
@@ -102,7 +104,7 @@ export default function AdminLayout() {
       {/* Main area */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Header */}
-        <header className="flex-shrink-0 border-b border-white/5 px-4 md:px-6 py-3 flex items-center justify-between bg-white/[0.01]">
+        <header className="shrink-0 border-b border-white/5 px-4 md:px-6 py-3 flex items-center justify-between bg-white/[0.01]">
           <div className="flex items-center gap-3">
             {/* Mobile hamburger */}
             <button
@@ -126,6 +128,34 @@ export default function AdminLayout() {
           <Outlet />
         </main>
       </div>
+
+      {/* Floating AI Chat button */}
+      <button
+        onClick={() => setChatOpen((o) => !o)}
+        className={`
+          fixed bottom-6 right-6 z-30 w-14 h-14 rounded-full
+          bg-gradient-to-br from-purple-600 to-blue-600
+          text-white shadow-lg shadow-purple-900/30
+          hover:shadow-xl hover:shadow-purple-900/40 hover:scale-105
+          active:scale-95 transition-all duration-200
+          flex items-center justify-center
+          ${chatOpen ? "ring-2 ring-purple-400/50 ring-offset-2 ring-offset-[#0a0a12]" : ""}
+        `}
+        title="AI Assistant"
+      >
+        {chatOpen ? (
+          <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        ) : (
+          <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456z" />
+          </svg>
+        )}
+      </button>
+
+      {/* AI Chat Drawer */}
+      <AdminChatDrawer open={chatOpen} onClose={() => setChatOpen(false)} />
     </div>
   );
 }
