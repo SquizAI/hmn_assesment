@@ -401,3 +401,160 @@ function analysisToDbRow(sessionId: string, a: Record<string, unknown>): Record<
     completed_at: a.completedAt || new Date().toISOString(),
   };
 }
+
+// ============================================================
+// INVITATION HELPERS
+// ============================================================
+
+export interface Invitation {
+  id: string;
+  token: string;
+  assessmentId: string;
+  participant: {
+    name: string;
+    email: string;
+    company?: string;
+    role?: string;
+    industry?: string;
+    teamSize?: string;
+  };
+  status: "sent" | "opened" | "started" | "completed";
+  sessionId: string | null;
+  note: string | null;
+  createdAt: string;
+  updatedAt: string;
+  openedAt: string | null;
+  startedAt: string | null;
+  completedAt: string | null;
+}
+
+export function generateInviteToken(): string {
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
+  let token = "";
+  for (let i = 0; i < 16; i++) {
+    token += chars[Math.floor(Math.random() * chars.length)];
+  }
+  return token;
+}
+
+function dbRowToInvitation(row: Record<string, unknown>): Invitation {
+  return {
+    id: row.id as string,
+    token: row.token as string,
+    assessmentId: row.assessment_id as string,
+    participant: {
+      name: row.participant_name as string,
+      email: row.participant_email as string,
+      company: (row.participant_company as string) || undefined,
+      role: (row.participant_role as string) || undefined,
+      industry: (row.participant_industry as string) || undefined,
+      teamSize: (row.participant_team_size as string) || undefined,
+    },
+    status: (row.status as Invitation["status"]) || "sent",
+    sessionId: (row.session_id as string) || null,
+    note: (row.note as string) || null,
+    createdAt: (row.created_at as string) || new Date().toISOString(),
+    updatedAt: (row.updated_at as string) || new Date().toISOString(),
+    openedAt: (row.opened_at as string) || null,
+    startedAt: (row.started_at as string) || null,
+    completedAt: (row.completed_at as string) || null,
+  };
+}
+
+function invitationToDbRow(inv: Invitation): Record<string, unknown> {
+  return {
+    id: inv.id,
+    token: inv.token,
+    assessment_id: inv.assessmentId,
+    participant_name: inv.participant.name,
+    participant_email: inv.participant.email,
+    participant_company: inv.participant.company || null,
+    participant_role: inv.participant.role || null,
+    participant_industry: inv.participant.industry || null,
+    participant_team_size: inv.participant.teamSize || null,
+    status: inv.status,
+    session_id: inv.sessionId,
+    note: inv.note,
+    updated_at: new Date().toISOString(),
+  };
+}
+
+export async function saveInvitation(invitation: Invitation): Promise<void> {
+  const row = invitationToDbRow(invitation);
+  const { error } = await getSupabase()
+    .from("cascade_invitations")
+    .upsert(row, { onConflict: "id" });
+
+  if (error) throw new Error(`Failed to save invitation: ${error.message}`);
+}
+
+export async function loadInvitationByToken(token: string): Promise<Invitation | null> {
+  const { data, error } = await getSupabase()
+    .from("cascade_invitations")
+    .select("*")
+    .eq("token", token)
+    .single();
+
+  if (error || !data) return null;
+  return dbRowToInvitation(data);
+}
+
+export async function loadInvitationById(id: string): Promise<Invitation | null> {
+  const { data, error } = await getSupabase()
+    .from("cascade_invitations")
+    .select("*")
+    .eq("id", id)
+    .single();
+
+  if (error || !data) return null;
+  return dbRowToInvitation(data);
+}
+
+export async function listAllInvitations(): Promise<Invitation[]> {
+  const { data, error } = await getSupabase()
+    .from("cascade_invitations")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  if (error || !data) return [];
+  return data.map(dbRowToInvitation);
+}
+
+export async function updateInvitationStatus(
+  token: string,
+  status: Invitation["status"],
+  extraFields?: Record<string, unknown>,
+): Promise<void> {
+  const updates: Record<string, unknown> = {
+    status,
+    updated_at: new Date().toISOString(),
+    ...extraFields,
+  };
+
+  const { error } = await getSupabase()
+    .from("cascade_invitations")
+    .update(updates)
+    .eq("token", token);
+
+  if (error) throw new Error(`Failed to update invitation: ${error.message}`);
+}
+
+export async function deleteInvitationFromDb(id: string): Promise<boolean> {
+  const { error } = await getSupabase()
+    .from("cascade_invitations")
+    .delete()
+    .eq("id", id);
+
+  return !error;
+}
+
+export async function findInvitationBySessionId(sessionId: string): Promise<Invitation | null> {
+  const { data, error } = await getSupabase()
+    .from("cascade_invitations")
+    .select("*")
+    .eq("session_id", sessionId)
+    .single();
+
+  if (error || !data) return null;
+  return dbRowToInvitation(data);
+}

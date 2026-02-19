@@ -266,3 +266,62 @@ export async function createPreviewSession(assessmentId: string): Promise<{ sess
 export async function deletePreviewSession(sessionId: string): Promise<void> {
   await adminFetch(`/api/admin/preview/${sessionId}`, { method: "DELETE" });
 }
+
+// --- Invitations API ---
+
+export async function fetchInvitations(filters?: {
+  status?: string;
+  assessmentId?: string;
+}) {
+  const params = new URLSearchParams();
+  if (filters?.status) params.set("status", filters.status);
+  if (filters?.assessmentId) params.set("assessmentId", filters.assessmentId);
+  const qs = params.toString();
+  const res = await adminFetch(`/api/admin/invitations${qs ? `?${qs}` : ""}`);
+  return res.json();
+}
+
+export async function createInvitation(data: {
+  assessmentId: string;
+  participant: {
+    name: string;
+    email: string;
+    company?: string;
+    role?: string;
+    industry?: string;
+    teamSize?: string;
+  };
+  note?: string;
+}) {
+  const res = await adminFetch("/api/admin/invitations", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+}
+
+export async function batchCreateInvitations(invitations: Array<{
+  assessmentId: string;
+  participant: {
+    name: string;
+    email: string;
+    company?: string;
+    role?: string;
+    industry?: string;
+    teamSize?: string;
+  };
+  note?: string;
+}>) {
+  const res = await adminFetch("/api/admin/invitations/batch", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ invitations }),
+  });
+  return res.json();
+}
+
+export async function removeInvitation(id: string) {
+  const res = await adminFetch(`/api/admin/invitations/${id}`, { method: "DELETE" });
+  return res.json();
+}

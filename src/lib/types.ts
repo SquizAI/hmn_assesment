@@ -290,3 +290,23 @@ export interface DeepDiveTrigger {
   priority: number;
   suggestedQuestions: string[];
 }
+
+// --- Invitations ---
+
+export type InvitationStatus = "sent" | "opened" | "started" | "completed";
+
+export interface InvitationSummary {
+  id: string;
+  token: string;
+  assessmentId: string;
+  assessmentName: string;
+  participantName: string;
+  participantEmail: string;
+  participantCompany: string;
+  status: InvitationStatus;
+  sessionId: string | null;
+  createdAt: string;
+  openedAt: string | null;
+  startedAt: string | null;
+  completedAt: string | null;
+}

@@ -6,6 +6,9 @@ const STATUS_STYLES: Record<string, string> = {
   draft: "bg-yellow-500/20 text-yellow-300 border-yellow-500/30",
   active: "bg-green-500/20 text-green-300 border-green-500/30",
   archived: "bg-gray-500/20 text-gray-400 border-gray-500/30",
+  sent: "bg-sky-500/20 text-sky-300 border-sky-500/30",
+  opened: "bg-amber-500/20 text-amber-300 border-amber-500/30",
+  started: "bg-indigo-500/20 text-indigo-300 border-indigo-500/30",
 };
 
 const STATUS_LABELS: Record<string, string> = {
@@ -16,6 +19,9 @@ const STATUS_LABELS: Record<string, string> = {
   draft: "Draft",
   active: "Active",
   archived: "Archived",
+  sent: "Sent",
+  opened: "Opened",
+  started: "Started",
 };
 
 export default function StatusBadge({ status }: { status: string }) {

@@ -10,6 +10,12 @@ import {
   deleteSessionFromDb,
   listSessionsWithResponses,
   listAllSessions,
+  generateInviteToken,
+  saveInvitation,
+  loadInvitationById,
+  listAllInvitations,
+  deleteInvitationFromDb,
+  type Invitation,
 } from "./supabase.js";
 import type {
   AssessmentType,
@@ -600,6 +606,145 @@ export async function getCompletionFunnelAdmin(): Promise<{
       percentage: total > 0 ? Math.round((count / total) * 100) : 0,
     };
   });
+}
+
+// ============================================================
+// INVITATION MANAGEMENT
+// ============================================================
+
+export interface InvitationSummary {
+  id: string;
+  token: string;
+  assessmentId: string;
+  assessmentName: string;
+  participantName: string;
+  participantEmail: string;
+  participantCompany: string;
+  status: Invitation["status"];
+  sessionId: string | null;
+  createdAt: string;
+  openedAt: string | null;
+  startedAt: string | null;
+  completedAt: string | null;
+}
+
+export async function listInvitationsAdmin(filters?: {
+  status?: string;
+  assessmentId?: string;
+}): Promise<InvitationSummary[]> {
+  const [invitations, assessments] = await Promise.all([
+    listAllInvitations(),
+    listAllAssessments(),
+  ]);
+
+  const nameMap = new Map(assessments.map((a) => [a.id, a.name]));
+
+  let filtered = invitations;
+  if (filters?.status) filtered = filtered.filter((i) => i.status === filters.status);
+  if (filters?.assessmentId) filtered = filtered.filter((i) => i.assessmentId === filters.assessmentId);
+
+  return filtered.map((inv) => ({
+    id: inv.id,
+    token: inv.token,
+    assessmentId: inv.assessmentId,
+    assessmentName: nameMap.get(inv.assessmentId) || inv.assessmentId,
+    participantName: inv.participant.name,
+    participantEmail: inv.participant.email,
+    participantCompany: inv.participant.company || "",
+    status: inv.status,
+    sessionId: inv.sessionId,
+    createdAt: inv.createdAt,
+    openedAt: inv.openedAt,
+    startedAt: inv.startedAt,
+    completedAt: inv.completedAt,
+  }));
+}
+
+export async function createInvitationAdmin(data: {
+  assessmentId: string;
+  participant: {
+    name: string;
+    email: string;
+    company?: string;
+    role?: string;
+    industry?: string;
+    teamSize?: string;
+  };
+  note?: string;
+}): Promise<{ ok: boolean; invitation: Invitation }> {
+  const token = generateInviteToken();
+  const now = new Date().toISOString();
+
+  const invitation: Invitation = {
+    id: token, // Use token as id for simplicity; Supabase will generate UUID
+    token,
+    assessmentId: data.assessmentId,
+    participant: data.participant,
+    status: "sent",
+    sessionId: null,
+    note: data.note || null,
+    createdAt: now,
+    updatedAt: now,
+    openedAt: null,
+    startedAt: null,
+    completedAt: null,
+  };
+
+  // Let Supabase generate the UUID id
+  const row = {
+    token: invitation.token,
+    assessment_id: invitation.assessmentId,
+    participant_name: invitation.participant.name,
+    participant_email: invitation.participant.email,
+    participant_company: invitation.participant.company || null,
+    participant_role: invitation.participant.role || null,
+    participant_industry: invitation.participant.industry || null,
+    participant_team_size: invitation.participant.teamSize || null,
+    status: "sent",
+    note: invitation.note,
+  };
+
+  const { getSupabase } = await import("./supabase.js");
+  const { data: inserted, error } = await getSupabase()
+    .from("cascade_invitations")
+    .insert(row)
+    .select()
+    .single();
+
+  if (error) throw new Error(`Failed to create invitation: ${error.message}`);
+
+  // Return with the DB-generated id
+  invitation.id = inserted.id;
+  return { ok: true, invitation };
+}
+
+export async function batchCreateInvitationsAdmin(items: Array<{
+  assessmentId: string;
+  participant: {
+    name: string;
+    email: string;
+    company?: string;
+    role?: string;
+    industry?: string;
+    teamSize?: string;
+  };
+  note?: string;
+}>): Promise<{ ok: boolean; invitations: Invitation[] }> {
+  const results: Invitation[] = [];
+  for (const item of items) {
+    const { invitation } = await createInvitationAdmin(item);
+    results.push(invitation);
+  }
+  return { ok: true, invitations: results };
+}
+
+export async function getInvitationAdmin(id: string): Promise<Invitation | null> {
+  return loadInvitationById(id);
+}
+
+export async function deleteInvitationAdmin(id: string): Promise<{ ok: boolean }> {
+  const success = await deleteInvitationFromDb(id);
+  return { ok: success };
 }
 
 // ============================================================

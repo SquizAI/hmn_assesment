@@ -42,6 +42,11 @@ export default function HomePage() {
   const [isCreating, setIsCreating] = useState(false);
   const [showForm, setShowForm] = useState(false);
 
+  // Invite state
+  const [inviteToken, setInviteToken] = useState<string | null>(null);
+  const [inviteLoading, setInviteLoading] = useState(false);
+  const [inviteError, setInviteError] = useState("");
+
   // Sign-in state
   const [showSignIn, setShowSignIn] = useState(false);
   const [signInEmail, setSignInEmail] = useState("");
@@ -69,6 +74,48 @@ export default function HomePage() {
       .catch(() => {});
   }, [searchParams]);
 
+  // Invite token detection
+  useEffect(() => {
+    const token = searchParams.get("invite");
+    if (!token) return;
+
+    setInviteToken(token);
+    setInviteLoading(true);
+
+    fetch(`${API_BASE}/api/invitations/lookup?token=${encodeURIComponent(token)}`)
+      .then((r) => {
+        if (!r.ok) throw new Error("Invalid invitation");
+        return r.json();
+      })
+      .then((data) => {
+        // Pre-fill form fields
+        const p = data.invitation.participant;
+        setName(p.name || "");
+        setEmail(p.email || "");
+        if (p.company) setCompany(p.company);
+        if (p.role) setRole(p.role);
+        if (p.industry) setIndustry(p.industry);
+        if (p.teamSize) setTeamSize(p.teamSize);
+
+        // Auto-select assessment
+        if (data.assessment) setSelectedAssessment(data.assessment);
+
+        // Jump to form
+        setShowForm(true);
+
+        // Handle already-used invitation
+        if (data.invitation.sessionId) {
+          setInviteError("already_used");
+        }
+      })
+      .catch(() => {
+        setInviteError("This invitation link is invalid or has expired.");
+      })
+      .finally(() => {
+        setInviteLoading(false);
+      });
+  }, [searchParams]);
+
   const handleSelectAssessment = (a: AssessmentSummary) => {
     setSelectedAssessment(a);
     setShowForm(true);
@@ -84,6 +131,7 @@ export default function HomePage() {
         body: JSON.stringify({
           participant: { name, role, company, industry, teamSize, email },
           assessmentTypeId: selectedAssessment?.id || "ai-readiness",
+          inviteToken: inviteToken || undefined,
         }),
       });
       const data = await res.json();
@@ -149,7 +197,34 @@ export default function HomePage() {
       </header>
 
       <main className="flex-1 flex items-center justify-center px-6 py-20">
-        {showSignIn ? (
+        {inviteLoading ? (
+          /* Invite loading state */
+          <div className="w-full max-w-md text-center space-y-4">
+            <div className="animate-spin w-8 h-8 border-2 border-white/20 border-t-white/60 rounded-full mx-auto" />
+            <p className="text-white/40 text-sm">Loading your invitation...</p>
+          </div>
+        ) : inviteError && inviteError !== "already_used" ? (
+          /* Invite error state (invalid/expired) */
+          <div className="w-full max-w-md text-center space-y-6">
+            <div className="space-y-2">
+              <h2 className="text-2xl font-semibold text-white">Invitation Not Found</h2>
+              <p className="text-white/40 text-sm">{inviteError}</p>
+            </div>
+            <Button onClick={() => { setInviteError(""); setInviteToken(null); }}>Browse Assessments</Button>
+          </div>
+        ) : inviteError === "already_used" ? (
+          /* Invite already used state */
+          <div className="w-full max-w-md text-center space-y-6">
+            <div className="space-y-2">
+              <h2 className="text-2xl font-semibold text-white">Invitation Already Used</h2>
+              <p className="text-white/40 text-sm">This invitation has already been used to start an assessment.</p>
+            </div>
+            <div className="flex gap-3 justify-center">
+              <Button variant="ghost" onClick={() => { setInviteError(""); setInviteToken(null); }}>Start Fresh</Button>
+              <Button onClick={() => setShowSignIn(true)}>Find My Assessment</Button>
+            </div>
+          </div>
+        ) : showSignIn ? (
           /* Sign-in flow */
           <div className="w-full max-w-md space-y-8">
             <div className="text-center space-y-2">
@@ -270,11 +345,11 @@ export default function HomePage() {
           /* Intake form */
           <div className="w-full max-w-md space-y-8">
             <div className="text-center space-y-2">
-              <h2 className="text-2xl font-semibold text-white">Let's get started</h2>
+              <h2 className="text-2xl font-semibold text-white">{inviteToken ? "You've been invited" : "Let's get started"}</h2>
               {selectedAssessment && (
                 <p className="text-white/40 text-sm">{selectedAssessment.icon} {selectedAssessment.name}</p>
               )}
-              <p className="text-white/30 text-xs">Tell us a bit about yourself first.</p>
+              <p className="text-white/30 text-xs">{inviteToken ? "Please confirm your details and begin." : "Tell us a bit about yourself first."}</p>
             </div>
             <div className="space-y-4">
               {([
@@ -294,7 +369,7 @@ export default function HomePage() {
             </div>
             <div className="flex gap-3">
               <Button variant="ghost" onClick={() => setShowForm(false)} className="flex-1">Back</Button>
-              <Button onClick={handleStart} disabled={!name || !company || !email} loading={isCreating} className="flex-1">Start Interview</Button>
+              <Button onClick={handleStart} disabled={!name || !company || !email} loading={isCreating} className="flex-1">{inviteToken ? "Confirm & Start" : "Start Interview"}</Button>
             </div>
           </div>
         )}

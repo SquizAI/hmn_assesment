@@ -12,10 +12,14 @@ import {
   listSessionsAdmin, getSessionAdmin, deleteSessionAdmin,
   exportSessionsAdmin, getStatsAdmin, getDimensionAveragesAdmin, getCompletionFunnelAdmin,
   listCompaniesAdmin, getCompanyDetailAdmin,
+  listInvitationsAdmin, createInvitationAdmin, batchCreateInvitationsAdmin,
+  getInvitationAdmin, deleteInvitationAdmin,
 } from "./admin-tools.js";
 import {
   loadSessionFromDb, saveSessionToDb, deleteSessionFromDb,
   listAllSessions, listAllAssessments, lookupSessionsByEmail,
+  loadInvitationByToken, updateInvitationStatus, findInvitationBySessionId,
+  loadAssessment,
 } from "./supabase.js";
 
 dotenv.config();
@@ -440,6 +444,49 @@ function filterDeducibleQuestions(available: Array<Record<string, unknown>>, ses
 // ROUTES
 // ============================================================
 
+// --- Invitation Lookup (public) ---
+
+app.get("/api/invitations/lookup", async (req, res) => {
+  try {
+    const token = (req.query.token as string || "").trim();
+    if (!token) {
+      res.status(400).json({ error: "token query param required" });
+      return;
+    }
+
+    const invitation = await loadInvitationByToken(token);
+    if (!invitation) {
+      res.status(404).json({ error: "Invitation not found" });
+      return;
+    }
+
+    // Transition sent -> opened
+    if (invitation.status === "sent") {
+      await updateInvitationStatus(token, "opened", {
+        opened_at: new Date().toISOString(),
+      });
+      invitation.status = "opened";
+    }
+
+    // Load assessment summary
+    const assessment = await loadAssessment(invitation.assessmentId);
+    const assessmentSummary = assessment ? {
+      id: assessment.id,
+      name: assessment.name,
+      description: assessment.description,
+      icon: assessment.icon,
+      estimatedMinutes: assessment.estimatedMinutes,
+      questionCount: assessment.questions?.length || 0,
+      status: assessment.status,
+    } : null;
+
+    res.json({ invitation, assessment: assessmentSummary });
+  } catch (err) {
+    console.error("Invitation lookup error:", err);
+    res.status(500).json({ error: "Failed to lookup invitation" });
+  }
+});
+
 // --- Sessions ---
 
 app.get("/api/sessions", async (_req, res) => {
@@ -454,10 +501,24 @@ app.get("/api/sessions", async (_req, res) => {
 
 app.post("/api/sessions", async (req, res) => {
   try {
-    const { participant, assessmentTypeId } = req.body;
+    const { participant, assessmentTypeId, inviteToken } = req.body;
     if (!participant?.name || !participant?.company || !participant?.email) {
       res.status(400).json({ error: "name, company, and business email are required" });
       return;
+    }
+
+    // Validate invite token if provided
+    let invitation = null;
+    if (inviteToken) {
+      invitation = await loadInvitationByToken(inviteToken);
+      if (!invitation) {
+        res.status(400).json({ error: "Invalid invitation token" });
+        return;
+      }
+      if (invitation.sessionId) {
+        res.status(400).json({ error: "This invitation has already been used", sessionId: invitation.sessionId });
+        return;
+      }
     }
 
     const id = `hmn_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
@@ -478,6 +539,15 @@ app.post("/api/sessions", async (req, res) => {
     };
 
     await saveSession(session);
+
+    // Link invitation to session
+    if (invitation) {
+      await updateInvitationStatus(inviteToken, "started", {
+        session_id: id,
+        started_at: new Date().toISOString(),
+      });
+    }
+
     res.status(201).json({ session });
   } catch (err) {
     console.error("Create session error:", err);
@@ -879,6 +949,18 @@ app.post("/api/interview/analyze", async (req, res) => {
     session.analysis = analysis;
     session.status = "analyzed";
     await saveSession(session);
+
+    // Update linked invitation to completed
+    try {
+      const linkedInvitation = await findInvitationBySessionId(sessionId);
+      if (linkedInvitation) {
+        await updateInvitationStatus(linkedInvitation.token, "completed", {
+          completed_at: new Date().toISOString(),
+        });
+      }
+    } catch (invErr) {
+      console.error("Failed to update invitation status:", invErr);
+    }
 
     res.json({ analysis });
   } catch (err) {
@@ -1412,6 +1494,75 @@ app.post("/api/admin/sessions/:id/research", requireAdmin, async (req, res) => {
   } catch (err) {
     console.error("Admin trigger research error:", err);
     res.status(500).json({ error: "Research failed" });
+  }
+});
+
+// ============================================================
+// ADMIN INVITATION ENDPOINTS
+// ============================================================
+
+app.get("/api/admin/invitations", requireAdmin, async (req, res) => {
+  try {
+    const filters: { status?: string; assessmentId?: string } = {};
+    if (req.query.status) filters.status = req.query.status as string;
+    if (req.query.assessmentId) filters.assessmentId = req.query.assessmentId as string;
+    const invitations = await listInvitationsAdmin(filters);
+    res.json({ invitations });
+  } catch (err) {
+    console.error("Admin invitations error:", err);
+    res.status(500).json({ error: "Failed to list invitations" });
+  }
+});
+
+app.post("/api/admin/invitations", requireAdmin, async (req, res) => {
+  try {
+    const { assessmentId, participant, note } = req.body;
+    if (!assessmentId || !participant?.name || !participant?.email) {
+      res.status(400).json({ error: "assessmentId, participant.name, and participant.email are required" });
+      return;
+    }
+    const result = await createInvitationAdmin({ assessmentId, participant, note });
+    res.status(201).json(result);
+  } catch (err) {
+    console.error("Admin create invitation error:", err);
+    res.status(500).json({ error: "Failed to create invitation" });
+  }
+});
+
+app.post("/api/admin/invitations/batch", requireAdmin, async (req, res) => {
+  try {
+    const { invitations } = req.body;
+    if (!Array.isArray(invitations) || invitations.length === 0) {
+      res.status(400).json({ error: "invitations array required" });
+      return;
+    }
+    const result = await batchCreateInvitationsAdmin(invitations);
+    res.status(201).json(result);
+  } catch (err) {
+    console.error("Admin batch invitations error:", err);
+    res.status(500).json({ error: "Failed to create invitations" });
+  }
+});
+
+app.get("/api/admin/invitations/:id", requireAdmin, async (req, res) => {
+  try {
+    const invitation = await getInvitationAdmin(String(req.params.id));
+    if (!invitation) { res.status(404).json({ error: "Invitation not found" }); return; }
+    res.json({ invitation });
+  } catch (err) {
+    console.error("Admin get invitation error:", err);
+    res.status(500).json({ error: "Failed to get invitation" });
+  }
+});
+
+app.delete("/api/admin/invitations/:id", requireAdmin, async (req, res) => {
+  try {
+    const result = await deleteInvitationAdmin(String(req.params.id));
+    if (!result.ok) { res.status(404).json({ error: "Invitation not found" }); return; }
+    res.json({ ok: true });
+  } catch (err) {
+    console.error("Admin delete invitation error:", err);
+    res.status(500).json({ error: "Failed to delete invitation" });
   }
 });
 

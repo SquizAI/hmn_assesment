@@ -5,6 +5,7 @@ import { API_BASE } from "../../lib/api";
 const NAV_ITEMS = [
   { path: "/admin/dashboard", label: "Dashboard", icon: "📊" },
   { path: "/admin/sessions", label: "Sessions", icon: "👥" },
+  { path: "/admin/invitations", label: "Invitations", icon: "✉️" },
   { path: "/admin/companies", label: "Companies", icon: "🏢" },
   { path: "/admin/assessments", label: "Assessments", icon: "📋" },
   { path: "/admin/builder", label: "Builder", icon: "🏗" },
