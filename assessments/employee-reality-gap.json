@@ -1,0 +1,396 @@
+{
+  "id": "employee-reality-gap",
+  "name": "Reality Gap Assessment — Employee Edition",
+  "description": "A confidential conversation that surfaces the truth about AI adoption from the people doing the actual work. Based on the GLUE Transformation Model.",
+  "icon": "🔍",
+  "estimatedMinutes": 35,
+  "status": "active",
+  "interviewSystemPrompt": "You are conducting a Reality Gap Assessment — a confidential employee interview that surfaces the truth about AI adoption from the people doing the actual work.\n\nFRAMEWORK: GLUE Transformation Model\n- Grow: Individual capability & confidence development\n- Leverage: AI tool mastery & value creation\n- Unite: Social learning & organizational alignment\n- Evolve: Follow-through, human value, and execution\n\nYOUR APPROACH:\n- Warm, non-judgmental, genuinely curious — this is NOT a performance review\n- Use Warren Berger's Beautiful Question methodology (Why → What If → How)\n- Follow psychological safety progression (safe → challenging → truth-telling)\n- Listen for: specificity vs vagueness, contradictions, emotional charge\n- Sit in silence after hard questions — don't rescue the answer\n- Surface shadow AI, hidden champions, workarounds, and say-do gaps\n- Reference the participant's company naturally in your questions\n- Capture verbatim language when possible — especially emotionally loaded phrases\n- Ask ONE follow-up at a time, dig deeper based on what they actually said\n- Keep responses concise (2-3 sentences before your follow-up)\n- When this topic feels complete (usually 2-3 exchanges), say: [QUESTION_COMPLETE]\n- Never break character. You are a human interviewer.\n- CRITICAL: Do NOT include internal annotations, bracketed notes, markdown formatting, or meta-commentary in your responses. No **[capturing: ...]**, no **[RED FLAG: ...]**, no *emphasis* markers. Write in plain conversational English exactly as a real human interviewer would speak aloud. Your internal observations should be kept internal — only your spoken words to the participant should appear in the response.\n\nRED FLAGS TO NOTE (keep these observations INTERNAL — never show them to the participant):\n- Rehearsed or overly polished corporate language\n- Long pauses or visible discomfort on specific questions\n- Contradictions between earlier and later answers\n- Repeated deflection to 'time' as the only barrier\n- Emotional shifts (energy drop, frustration, resignation)\n\nQUANTITATIVE DATA TO CAPTURE:\n- Self-rated AI capability (1-10)\n- Team capability estimate (percentage)\n- Productivity impact (percentage increase or decrease)\n- AI sentiment orientation (Empowerment ↔ Threat spectrum)\n- Client delivery confidence (1-10)\n- Change energy level (1-10)",
+  "analysisSystemPrompt": "You are an expert analyst for the Reality Gap Assessment — Employee Edition. Analyze employee interview responses to score individuals and surface organizational patterns.\n\nSCORING DIMENSIONS (score each 0-100):\n1. Individual AI Capability — Personal skill level, tool usage depth, self-directed adoption\n2. Tool Proficiency & Depth — Sophistication of AI tool usage, workflow integration, tool chaining\n3. Learning Engagement — Self-directed learning, curiosity, time invested, learning pathways\n4. Leadership Modeling (Observed) — How well managers/leaders visibly model AI behavior\n5. Organizational Support — Training provided, time allocated, resources available, culture\n6. Change Energy & Sentiment — Personal energy for AI transformation, optimism vs fatigue\n\nSCORING GUIDELINES:\n- 0-20: Critical gap. No evidence of capability or support.\n- 21-40: Early stage. Awareness but minimal action or investment.\n- 41-60: Developing. Some evidence, inconsistent application.\n- 61-80: Capable. Clear evidence, growing sophistication.\n- 81-100: Advanced. Strong evidence, teaching others, systematic.\n\nEMPLOYEE ARCHETYPES (assign best fit):\n- the_builder: Creates tools, automates workflows, integrates systems, teaches others. Scores 8-10 on self-rating with evidence to support it. Multiple tools in sophisticated chains. Proactively shares discoveries.\n- the_proficient_user: Multi-tool, strategic judgment about when to use which tool, quality-focused not just speed. Scores 6.5-7.5. Approaching or aspiring to build. Strong peer networks.\n- the_competent_consumer: Uses AI effectively for their role with measurable productivity gains, but not building or automating. Scores 4-6. Tool-directed not workflow-directed.\n- the_early_stage: Learning fundamentals, needs structured support and permission. Scores 1-4. Basic ChatGPT usage at most. May be anxious or overwhelmed.\n\nGAP PATTERNS TO DETECT:\n- self_assessment_gap: Self-rating vs demonstrated capability (the most valuable diagnostic signal)\n- say_do_gap: Leadership words vs observed behavior from employee's vantage point\n- time_allocation_gap: Allocated learning time vs actual time spent\n- capability_support_gap: Employee capability vs organizational support provided\n- energy_follow_through_gap: Change energy vs execution follow-through on initiatives\n- peer_knowledge_gap: Individual capability vs team capability estimate\n- sharing_barrier_gap: Innovations discovered but not shared (and why)\n\nCRITICAL ANALYSIS INSTRUCTIONS:\n- Compare self-rated capability (Q1) against tool specificity (Q8), productivity evidence (Q10), and behavioral examples throughout. The gap between self-perception and evidence is the MOST VALUABLE diagnostic signal.\n- People who haven't seen sophisticated AI use tend to overrate themselves. People who have tend to underrate. This is an information problem, not a personality trait.\n- Track who employees go to for AI help — this maps informal knowledge networks.\n- Track who is keeping innovations to themselves and why — this reveals cultural barriers.\n- Note whether learning happens informally (TikTok, YouTube, personal accounts) vs formally (company training, allocated time).\n\nPOST-INTERVIEW SYNTHESIS:\n1. What did this person reveal that leadership likely cannot see?\n2. Where is the say-do gap most visible from their vantage point?\n3. Who are the hidden champions they identified?\n4. What root cause(s) did they surface or reinforce?\n5. What was the single most valuable insight from this conversation?\n\nFor each dimension provide:\n- Score (0-100)\n- Confidence (0-1, based on how much evidence you have)\n- Key evidence (specific quotes or data points)\n- Flags (red flags, green lights, contradictions)\n\nAlso identify:\n- Overall readiness score (weighted average)\n- Employee archetype (best fit from defined archetypes)\n- Gap patterns (where scores diverge significantly)\n- Contradictions (where answers conflict with each other)\n\nBe honest and direct. Don't inflate scores. The goal is accurate diagnosis, not flattery.",
+  "phases": [
+    { "id": "grow", "label": "Grow", "order": 0 },
+    { "id": "leverage", "label": "Leverage", "order": 1 },
+    { "id": "unite", "label": "Unite", "order": 2 },
+    { "id": "evolve", "label": "Evolve", "order": 3 }
+  ],
+  "sections": [
+    { "id": "opening", "label": "Opening Context", "phaseId": "grow", "order": 0 },
+    { "id": "self_capability", "label": "Self Assessment", "phaseId": "grow", "order": 1 },
+    { "id": "learning_reality", "label": "Learning Reality", "phaseId": "grow", "order": 2 },
+    { "id": "tool_proficiency", "label": "Tool Proficiency", "phaseId": "leverage", "order": 3 },
+    { "id": "productivity", "label": "Productivity & Innovation", "phaseId": "leverage", "order": 4 },
+    { "id": "leadership_behavior", "label": "Leadership Behavior", "phaseId": "unite", "order": 5 },
+    { "id": "accountability", "label": "Accountability & Safety", "phaseId": "unite", "order": 6 },
+    { "id": "human_value", "label": "Human Value & Truth", "phaseId": "evolve", "order": 7 }
+  ],
+  "questions": [
+    {
+      "id": "emp_opening_followthrough",
+      "section": "opening",
+      "phase": "grow",
+      "text": "Before we dive into AI specifically — when [Company] says it's going to launch a new change initiative, whether it's organizational, technology, or cultural, how often does it actually follow through? What's your honest experience?",
+      "subtext": "This helps us understand the organizational context for change.",
+      "inputType": "ai_conversation",
+      "required": true,
+      "scoringDimensions": ["change_energy", "org_support"],
+      "weight": 0.5,
+      "aiFollowUpPrompt": "This intentionally surfaces organizational trust and follow-through early while signaling that honest, solutions-oriented answers are welcome. After their answer, ask: 'What would make change stickier and more transformative here, in your opinion?' Then transition: 'Now let's talk about what's actually happening with AI here...'",
+      "tags": ["opening", "change_readiness", "trust", "follow_through"]
+    },
+    {
+      "id": "emp_q1_self_rating",
+      "section": "self_capability",
+      "phase": "grow",
+      "text": "On a scale of 1 to 10, how would you rate your own AI capability for your role — where 1 is 'I avoid it entirely' and 10 is 'I'm teaching others and innovating'?",
+      "subtext": "1 = Avoid AI entirely → 10 = Teaching others & innovating",
+      "inputType": "slider",
+      "sliderMin": 1,
+      "sliderMax": 10,
+      "sliderLabels": { "min": "Avoid AI", "max": "Teaching & innovating" },
+      "required": true,
+      "followUpTrigger": {
+        "condition": "always",
+        "aiGenerated": true
+      },
+      "scoringDimensions": ["individual_capability"],
+      "weight": 0.9,
+      "aiFollowUpPrompt": "After they rate themselves, ask: 'Walk me through why you chose that number.' Then: 'What would need to happen for you to move up two points on that scale?' This is the anchor metric — everything else in the interview will be compared against this self-assessment. Listen carefully for whether the justification matches the number.",
+      "tags": ["self_assessment", "capability", "anchor_metric"]
+    },
+    {
+      "id": "emp_q2_barrier",
+      "section": "self_capability",
+      "phase": "grow",
+      "text": "Think about where you are with AI versus where you'd like to be. What's the biggest thing getting in the way?",
+      "inputType": "buttons",
+      "options": ["Not enough time", "Don't know where to start", "No training or support", "Fear of doing it wrong", "Don't see the relevance", "No clear expectations"],
+      "required": true,
+      "scoringDimensions": ["individual_capability", "org_support"],
+      "weight": 0.8,
+      "aiFollowUpPrompt": "Sit in silence after asking. Don't rescue the answer. After their response, ask: 'If you could have an AI expert sit with you for 2 hours to teach you one thing about AI — with no one else watching — what would you want to learn?' The private framing removes social pressure and reveals the REAL starting point. Listen for whether the barrier is personal (time, fear, knowledge) or organizational (no training, no support, no permission).",
+      "tags": ["barriers", "root_cause", "private_needs"]
+    },
+    {
+      "id": "emp_q3_team_capability",
+      "section": "self_capability",
+      "phase": "grow",
+      "text": "Thinking about your immediate team, what percentage are genuinely capable with AI — meaning they can use it independently to improve their work? Not dabbling, but actually capable.",
+      "inputType": "slider",
+      "sliderMin": 0,
+      "sliderMax": 100,
+      "sliderLabels": { "min": "0%", "max": "100%" },
+      "required": true,
+      "followUpTrigger": {
+        "condition": "always",
+        "aiGenerated": true
+      },
+      "scoringDimensions": ["team_capacity", "individual_capability"],
+      "weight": 0.8,
+      "aiFollowUpPrompt": "After the percentage, ask two critical follow-ups: 1) 'Who would you go to if you needed real AI help?' and 2) 'What makes that person different?' These map the informal knowledge network and identify hidden champions. If they can't name anyone, that's a significant signal about organizational isolation.",
+      "tags": ["team_capability", "peer_network", "hidden_champions"]
+    },
+    {
+      "id": "emp_q4_learning_orientation",
+      "section": "learning_reality",
+      "phase": "grow",
+      "text": "Outside of work requirements, what have you been curious or motivated to learn recently? When was the last time you deep-dived into learning something new — AI or otherwise?",
+      "inputType": "ai_conversation",
+      "required": true,
+      "scoringDimensions": ["learning_engagement", "individual_capability"],
+      "weight": 0.5,
+      "aiFollowUpPrompt": "This identifies natural learners and intrinsic motivation. People who are learning things outside AI still have the learning muscle — they just haven't applied it to AI yet. Listen for curiosity signals vs. complacency signals. If they mention learning AI things on their own time, that's a green light for self-directed development.",
+      "tags": ["learning", "curiosity", "intrinsic_motivation"]
+    },
+    {
+      "id": "emp_q5_time_resources",
+      "section": "learning_reality",
+      "phase": "grow",
+      "text": "How much time are you officially allocated to learn AI tools? And how much time do you actually spend?",
+      "inputType": "ai_conversation",
+      "required": true,
+      "scoringDimensions": ["org_support", "learning_engagement"],
+      "weight": 0.7,
+      "aiFollowUpPrompt": "Probe the gap between allocated and actual: 'Why the difference?' Then: 'When you do spend time learning AI, is that seen as real work here — or something extra on top of your job?' This exposes whether the organization actually supports learning or just talks about it. If official allocation is zero but people are learning on their own time, that's a major organizational gap to flag.",
+      "tags": ["time_allocation", "org_support", "learning_reality"]
+    },
+    {
+      "id": "emp_q6_learning_resources",
+      "section": "learning_reality",
+      "phase": "grow",
+      "text": "When you need to figure out how to do something new with AI, where do you actually go? Select all that apply.",
+      "inputType": "multi_select",
+      "options": ["YouTube / video tutorials", "Social media (TikTok, Twitter/X, Reddit)", "Ask a colleague", "Company-provided training", "ChatGPT / the AI tool itself", "Google search / articles", "I wait to be shown", "I don't learn AI tools"],
+      "required": true,
+      "scoringDimensions": ["learning_engagement", "org_support"],
+      "weight": 0.5,
+      "aiFollowUpPrompt": "Listen for the learning pathway: YouTube, TikTok, Reddit, colleagues, formal training, or nothing. Follow up: 'Are there any official resources or training here that are genuinely useful? What's missing?' If their learning pathway is entirely informal/external, the organization is failing to provide structured support. Note whether they learn socially (from peers) or in isolation.",
+      "tags": ["learning_pathways", "training", "resources"]
+    },
+    {
+      "id": "emp_q7_sentiment",
+      "section": "learning_reality",
+      "phase": "grow",
+      "text": "How do you personally feel about AI in your work right now?",
+      "subtext": "Pick the one that best describes where you are today.",
+      "inputType": "buttons",
+      "options": ["Empowering — I can do more", "Cautiously optimistic", "Neutral / mixed feelings", "Anxious — worried about my role", "Resistant — I don't see the value"],
+      "required": true,
+      "scoringDimensions": ["change_energy", "individual_capability"],
+      "weight": 0.6,
+      "aiFollowUpPrompt": "After their sentiment answer, ask: 'How does leadership frame AI here — experiment and explore, or use it or else? How does that framing affect your motivation?' This surfaces whether leadership framing is driving adoption or creating resistance. The emotional disposition toward AI is a leading indicator of adoption speed. Empowered employees adopt faster; anxious employees need safety before speed.",
+      "tags": ["sentiment", "emotion", "leadership_framing"]
+    },
+    {
+      "id": "emp_q8_tool_proficiency",
+      "section": "tool_proficiency",
+      "phase": "leverage",
+      "text": "Walk me through the AI tools you actually use in your day-to-day work — approved or not. For each one, what's the most sophisticated thing you've done with it?",
+      "inputType": "ai_conversation",
+      "required": true,
+      "scoringDimensions": ["tool_proficiency", "individual_capability"],
+      "weight": 0.9,
+      "aiFollowUpPrompt": "This is the deepest capability probe. Use three follow-up angles:\n1. 'How do you handle it when AI gives you something wrong or off-target?' — reveals iteration sophistication\n2. 'Have you integrated AI into a broader workflow or chained tools together?' — reveals pipeline thinking\n3. 'What's something you can do with this tool that most people here probably can't?' — reveals differentiation\n\nListen for: tool names (specificity), frequency of use, sophistication level (basic queries vs. multi-step workflows vs. custom agents), and whether usage is integrated into daily work vs. occasional experiments. Shadow AI tools (unapproved) are especially valuable data.",
+      "tags": ["tools", "shadow_ai", "proficiency", "workflow"]
+    },
+    {
+      "id": "emp_q9_hidden_innovation",
+      "section": "tool_proficiency",
+      "phase": "leverage",
+      "text": "Is there anything you've built or figured out with AI that you haven't shared with anyone here?",
+      "inputType": "ai_conversation",
+      "required": true,
+      "scoringDimensions": ["tool_proficiency", "org_support"],
+      "weight": 0.7,
+      "aiFollowUpPrompt": "If yes: 'What keeps you from sharing it?' — this reveals cultural barriers (fear of looking weird, no forum to share, concern about job security, no recognition for sharing). If no: 'Are others keeping AI innovations to themselves? Why do you think that is?' Hidden innovation signals both individual capability AND organizational dysfunction. A culture where people hide their best work is a culture with a sharing problem.",
+      "tags": ["hidden_innovation", "sharing_barriers", "culture"]
+    },
+    {
+      "id": "emp_q10_productivity",
+      "section": "productivity",
+      "phase": "leverage",
+      "text": "If you had to quantify it, how much more productive are you with AI compared to before? Give me a percentage and a concrete example.",
+      "inputType": "ai_conversation",
+      "required": true,
+      "scoringDimensions": ["individual_capability", "tool_proficiency"],
+      "weight": 0.8,
+      "aiFollowUpPrompt": "Push for specifics: a real example with a real number. Then ask the inverse: 'Have there been times when AI actually made you less productive? When?' The negative cases are as revealing as the positive ones. Cross-reference this percentage against their self-rating (Q1) — a person rating themselves 8/10 but citing 15% productivity gain has a self-assessment gap. A person rating 5/10 but citing 100% gain may be underselling themselves.",
+      "tags": ["productivity", "quantification", "roi"]
+    },
+    {
+      "id": "emp_q11_client_credibility",
+      "section": "productivity",
+      "phase": "leverage",
+      "text": "When [Company] pitches AI capabilities to clients, how confident are you — 1 to 10 — that we can actually deliver what we promise?",
+      "subtext": "1 = Not confident at all → 10 = Completely confident",
+      "inputType": "slider",
+      "sliderMin": 1,
+      "sliderMax": 10,
+      "sliderLabels": { "min": "Not confident", "max": "Fully confident" },
+      "required": true,
+      "followUpTrigger": {
+        "condition": "always",
+        "aiGenerated": true
+      },
+      "scoringDimensions": ["org_support", "tool_proficiency"],
+      "weight": 0.6,
+      "aiFollowUpPrompt": "If low (1-5): 'Tell me about a time that felt uncomfortable — where you felt we were promising more than we could deliver.' If high (6-10): 'What gives you that confidence? Give me a real example.' If they say 'I don't know about this part' — that itself is data. It means the execution layer is disconnected from the sales layer. Capture the gap between what's sold and what's built.",
+      "tags": ["credibility", "client_delivery", "say_do_gap"]
+    },
+    {
+      "id": "emp_q12_manager_modeling",
+      "section": "leadership_behavior",
+      "phase": "unite",
+      "text": "How does your direct manager actually use AI? What have you personally seen them do with it in the last two weeks?",
+      "inputType": "ai_conversation",
+      "required": true,
+      "scoringDimensions": ["leadership_modeling", "org_support"],
+      "weight": 0.8,
+      "aiFollowUpPrompt": "The two-week timeframe forces specificity — they can't hide behind generalities. If they can describe specific behaviors, that's a green light. If they go vague ('I think they use it') or blank ('I haven't really seen anything'), that's a modeling gap. Follow up if vague: 'Have you ever seen them use AI in meetings or in their own work?' Leaders who don't visibly use AI can't credibly ask others to adopt it.",
+      "tags": ["manager_behavior", "modeling", "leadership"]
+    },
+    {
+      "id": "emp_q13_say_do_gap",
+      "section": "leadership_behavior",
+      "phase": "unite",
+      "text": "When senior leaders talk about AI, does their behavior match their words? Give me a specific example — either way.",
+      "inputType": "ai_conversation",
+      "required": true,
+      "scoringDimensions": ["leadership_modeling", "org_support", "change_energy"],
+      "weight": 0.9,
+      "aiFollowUpPrompt": "This is pressure data — it creates accountability. Probe both directions:\n- 'If there's a gap, how does that affect how seriously people take AI adoption?'\n- 'What do leaders not see or hear about this that they probably should?'\nCapture specific behavioral examples, not opinions. 'They bought us the tools when we asked' is behavioral. 'They're supportive' is an opinion. Push for the former.",
+      "tags": ["say_do_gap", "leadership_credibility", "accountability"]
+    },
+    {
+      "id": "emp_q14_expectations",
+      "section": "accountability",
+      "phase": "unite",
+      "text": "What exactly is expected of you regarding AI adoption? Is that written down somewhere, or more informal?",
+      "inputType": "ai_conversation",
+      "required": true,
+      "scoringDimensions": ["org_support", "leadership_modeling"],
+      "weight": 0.6,
+      "aiFollowUpPrompt": "Follow up: 'If I asked your manager what good AI adoption looks like for your role, what would they say? Would you agree?' This reveals clarity (or ambiguity) of expectations by role. If expectations aren't written or communicated, people are guessing at what 'good' looks like — and that ambiguity breeds both anxiety and inaction.",
+      "tags": ["expectations", "clarity", "role_definition"]
+    },
+    {
+      "id": "emp_q15_accountability",
+      "section": "accountability",
+      "phase": "unite",
+      "text": "What actually happens here if someone refuses to learn or use AI tools — real consequences, not policy?",
+      "inputType": "ai_conversation",
+      "required": true,
+      "scoringDimensions": ["org_support", "change_energy"],
+      "weight": 0.7,
+      "aiFollowUpPrompt": "Probe two levels:\n1. 'Have you seen that happen?' — moves from hypothetical to specific\n2. 'Have you ever held back from trying something with AI because you were worried about how it would look if it didn't work?' — tests psychological safety for experimentation\nIf there are no real consequences for non-adoption, the 'use it or else' messaging rings hollow. If there are no safe ways to fail, innovation is suppressed.",
+      "tags": ["accountability", "consequences", "psychological_safety"]
+    },
+    {
+      "id": "emp_q16_rewards",
+      "section": "accountability",
+      "phase": "unite",
+      "text": "What actually happens if someone becomes an AI power user here? Select all that apply.",
+      "inputType": "multi_select",
+      "options": ["Public recognition", "Promotion or career growth", "More work dumped on them", "Peer respect", "Nothing happens", "Negative attention / tall poppy"],
+      "required": true,
+      "scoringDimensions": ["org_support", "change_energy"],
+      "weight": 0.6,
+      "aiFollowUpPrompt": "Follow up: 'Is AI mastery a career accelerator here — or irrelevant?' This is the inverse of Q15. Together they map the full incentive landscape: consequences for non-adoption AND rewards for excellence. If the answer to both is 'nothing,' the organization is running on intrinsic motivation alone — which is fragile and unsustainable.",
+      "tags": ["rewards", "recognition", "career_incentives"]
+    },
+    {
+      "id": "emp_q17_pace_safety",
+      "section": "accountability",
+      "phase": "unite",
+      "text": "How does the pace of change at [Company] feel to you right now?",
+      "subtext": "Pick the word that best captures how it feels day-to-day.",
+      "inputType": "buttons",
+      "options": ["Energizing", "Manageable", "Overwhelming", "Exhausting"],
+      "required": true,
+      "scoringDimensions": ["change_energy", "org_support"],
+      "weight": 0.6,
+      "aiFollowUpPrompt": "Branch based on response:\n- If overwhelming/exhausting: 'What would need to slow down — or change — for this to feel sustainable?'\n- If energizing/manageable: 'What's making it work for you? Is that experience shared by others on your team?'\nThis assesses change velocity and organizational fatigue. People who are overwhelmed cannot absorb new tools — they need relief before they can learn.",
+      "tags": ["pace_of_change", "overwhelm", "sustainability"]
+    },
+    {
+      "id": "emp_q18_human_value",
+      "section": "human_value",
+      "phase": "evolve",
+      "text": "As AI handles more routine and analytical work, what uniquely human value does [Company] bring that becomes more important?",
+      "inputType": "ai_conversation",
+      "required": true,
+      "scoringDimensions": ["change_energy", "individual_capability"],
+      "weight": 0.6,
+      "aiFollowUpPrompt": "After the organizational answer, make it personal: 'What about you personally — what do you feel you contribute that AI can't? Does the company invest in that?' This surfaces human value differentiation and future identity. People who can articulate their unique human value are less threatened by AI. People who can't may need help redefining their professional identity.",
+      "tags": ["human_value", "identity", "differentiation"]
+    },
+    {
+      "id": "emp_q19_followthrough",
+      "section": "human_value",
+      "phase": "evolve",
+      "text": "Think about AI tools or initiatives introduced here in the last year. Which ones are still actively used — and which quietly died? Do you see a pattern?",
+      "inputType": "ai_conversation",
+      "required": true,
+      "scoringDimensions": ["org_support", "change_energy"],
+      "weight": 0.7,
+      "aiFollowUpPrompt": "Follow up: 'If one AI initiative actually made it from announcement to full adoption, what would have to be different for that to happen?' This identifies follow-through patterns and execution failure modes. The pattern of what dies reveals the organizational immune system — what the company says yes to but then rejects in practice. Capture specific tool/initiative names and what happened to them.",
+      "tags": ["follow_through", "execution", "initiative_patterns"]
+    },
+    {
+      "id": "emp_q20_blocker",
+      "section": "human_value",
+      "phase": "evolve",
+      "text": "If you had to name the single biggest thing preventing this organization from successfully transforming with AI, what would it be?",
+      "inputType": "ai_conversation",
+      "required": true,
+      "scoringDimensions": ["org_support", "change_energy", "leadership_modeling"],
+      "weight": 0.9,
+      "aiFollowUpPrompt": "Follow up: 'How would you fix that?' This forces prioritization of the single biggest transformation blocker. The 'how would you fix it' follow-up reveals whether they've thought about solutions or are just voicing complaints. Employees who offer specific fixes are potential change agents. Employees who can only identify problems need a different kind of support.",
+      "tags": ["blocker", "root_cause", "prioritization"]
+    },
+    {
+      "id": "emp_q21_change_energy",
+      "section": "human_value",
+      "phase": "evolve",
+      "text": "On a scale of 1 to 10, how much energy do you have for another transformation initiative here? What's driving that number?",
+      "subtext": "1 = Running on empty → 10 = Fully charged",
+      "inputType": "slider",
+      "sliderMin": 1,
+      "sliderMax": 10,
+      "sliderLabels": { "min": "Running on empty", "max": "Fully charged" },
+      "required": true,
+      "followUpTrigger": {
+        "condition": "low_score",
+        "threshold": 5,
+        "aiGenerated": true
+      },
+      "scoringDimensions": ["change_energy"],
+      "weight": 0.7,
+      "aiFollowUpPrompt": "If low (1-5): 'What would restore your energy?' This reveals whether the fatigue is about AI specifically or organizational change fatigue generally. If high (6-10), acknowledge it: 'That's encouraging — what's sustaining that energy?' Cross-reference with Q1 self-rating: high capability + low energy = burnout risk. Low capability + high energy = ready for training.",
+      "tags": ["energy", "readiness", "burnout"]
+    },
+    {
+      "id": "emp_q22_uncomfortable_truth",
+      "section": "human_value",
+      "phase": "evolve",
+      "text": "What's the uncomfortable truth about AI at [Company] that everyone knows but no one says out loud?",
+      "inputType": "ai_conversation",
+      "required": true,
+      "scoringDimensions": ["org_support", "leadership_modeling", "change_energy"],
+      "weight": 0.9,
+      "aiFollowUpPrompt": "Pause. Let silence work. Do NOT rush to fill the gap. This is the most important question in the assessment — it surfaces the collective 'unsayable' truth. Whatever they share, sit with it. Don't validate, don't minimize, don't try to solve it. Just listen and ask: 'Is that something you've talked about with colleagues, or is it more of an unspoken understanding?' The answer reveals whether the truth is shared privately or truly suppressed.",
+      "tags": ["uncomfortable_truth", "culture", "unsayable"]
+    },
+    {
+      "id": "emp_q23_message_to_leadership",
+      "section": "human_value",
+      "phase": "evolve",
+      "text": "If you could say one thing directly to leadership about AI transformation here — knowing they'd actually hear it — what would you say?",
+      "inputType": "ai_conversation",
+      "required": true,
+      "scoringDimensions": ["change_energy", "org_support", "leadership_modeling"],
+      "weight": 0.8,
+      "aiFollowUpPrompt": "This captures quotable, aggregatable employee voice. After their message, close with: 'Who else outside the leadership team should we talk to who really understands what's happening with AI here?' This final question maps the network and identifies additional hidden champions or truth-tellers. Thank them sincerely for their time and honesty.",
+      "tags": ["leadership_message", "employee_voice", "closing"]
+    }
+  ],
+  "scoringDimensions": [
+    {
+      "id": "individual_capability",
+      "label": "Individual AI Capability",
+      "description": "Personal skill level, tool usage depth, and self-directed adoption",
+      "weight": 0.20
+    },
+    {
+      "id": "tool_proficiency",
+      "label": "Tool Proficiency & Depth",
+      "description": "Sophistication of AI tool usage, workflow integration, and tool chaining",
+      "weight": 0.20
+    },
+    {
+      "id": "learning_engagement",
+      "label": "Learning Engagement",
+      "description": "Self-directed learning, curiosity, time invested, and learning pathways used",
+      "weight": 0.15
+    },
+    {
+      "id": "leadership_modeling",
+      "label": "Leadership Modeling",
+      "description": "How well managers and leaders visibly model AI behavior from employee's vantage point",
+      "weight": 0.15
+    },
+    {
+      "id": "org_support",
+      "label": "Organizational Support",
+      "description": "Training provided, time allocated, resources available, and supportive culture",
+      "weight": 0.15
+    },
+    {
+      "id": "change_energy",
+      "label": "Change Energy & Sentiment",
+      "description": "Personal energy for AI transformation, optimism vs fatigue, willingness to engage",
+      "weight": 0.15
+    }
+  ],
+  "createdAt": "2026-02-18T00:00:00.000Z",
+  "updatedAt": "2026-02-18T00:00:00.000Z"
+}

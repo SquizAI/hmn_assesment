@@ -21,8 +21,19 @@ import {
   loadInvitationByToken, loadInvitationById, updateInvitationStatus, findInvitationBySessionId,
   loadAssessment,
 } from "./supabase.js";
+import { isEmailEnabled, sendInvitationEmail, sendBatchInvitationEmails } from "./email.js";
 
 dotenv.config();
+
+// Helper: look up assessment name by ID
+async function getAssessmentName(assessmentId: string): Promise<string> {
+  try {
+    const assessment = await loadAssessment(assessmentId);
+    return assessment?.name || "AI Readiness Assessment";
+  } catch {
+    return "AI Readiness Assessment";
+  }
+}
 
 // ============================================================
 // HMN CASCADE - Express API Server
@@ -797,7 +808,11 @@ app.post("/api/interview/respond", async (req, res) => {
       const aiResponse = await generateFollowUp(session, currentQuestion, history, assessment);
 
       const isComplete = aiResponse.includes("[QUESTION_COMPLETE]");
-      const cleanResponse = aiResponse.replace("[QUESTION_COMPLETE]", "").trim();
+      // Strip [QUESTION_COMPLETE] marker and internal annotations like **[capturing: ...]** or **[RED FLAG: ...]**
+      const cleanResponse = aiResponse
+        .replace("[QUESTION_COMPLETE]", "")
+        .replace(/\*\*\[.*?\]\*\*\s*/g, "")
+        .trim();
 
       if (!isComplete) {
         history.push({
@@ -874,7 +889,7 @@ app.post("/api/interview/respond", async (req, res) => {
     const questionsForAI = smartRemaining.length > 0 ? smartRemaining : remaining;
 
     // AI-powered question selection (with deduction context)
-    let nextQuestion;
+    let nextQuestion: Record<string, unknown> | undefined;
     try {
       const selection = await selectNextQuestion(questionsForAI, session);
       const selected = getQuestionFromBank(bankQuestions, selection.questionId) || getQuestionById(selection.questionId);
@@ -995,7 +1010,9 @@ app.get("/api/interview/:sessionId/response/:questionId", async (req, res) => {
     res.status(404).json({ error: "Response not found" });
     return;
   }
-  const question = getQuestionById(req.params.questionId);
+  // Load assessment-specific question bank
+  const { questions: bankQuestions } = await getAssessmentQuestionBank(session);
+  const question = getQuestionFromBank(bankQuestions, req.params.questionId) || getQuestionById(req.params.questionId);
   res.json({ response, question });
 });
 
@@ -1015,7 +1032,9 @@ app.post("/api/interview/analyze", async (req, res) => {
       return;
     }
 
-    const analysis = await runCascadeAnalysis(session);
+    // Load assessment-specific config for analysis prompt
+    const { assessment } = await getAssessmentQuestionBank(session);
+    const analysis = await runCascadeAnalysis(session, assessment);
     session.analysis = analysis;
     session.status = "analyzed";
     await saveSession(session);
@@ -1142,7 +1161,8 @@ async function generateFollowUp(
 - Listen for specificity vs. vagueness, contradictions, emotional charge
 - Keep responses concise (2-3 sentences before your follow-up)
 - When this topic feels complete (usually 2-3 exchanges), say: [QUESTION_COMPLETE]
-- Never break character. You are a human interviewer.`;
+- Never break character. You are a human interviewer.
+- CRITICAL: Do NOT include internal annotations, bracketed notes, markdown formatting, or meta-commentary in your responses (e.g. no **[capturing: ...]**, no **[RED FLAG: ...]**, no *emphasis*). Write in plain conversational English as a real human interviewer would speak.`;
 
   const systemPrompt = `${assessmentInterviewPrompt || `You are an expert interviewer for HMN (Human Machine Network), conducting an AI readiness assessment.`}
 
@@ -1261,7 +1281,7 @@ Return ONLY valid JSON: {"questionId": "id", "reason": "why this question next",
   }
 }
 
-async function runCascadeAnalysis(session: Record<string, unknown>) {
+async function runCascadeAnalysis(session: Record<string, unknown>, assessment?: Record<string, unknown> | null) {
   const client = getAnthropicClient();
   const participant = session.participant as { name: string; role: string; company: string; industry: string; teamSize: string };
   const responses = session.responses as Array<{
@@ -1279,10 +1299,10 @@ async function runCascadeAnalysis(session: Record<string, unknown>) {
     return `[${r.questionId}] Q: ${r.questionText}\nA: ${answerText}\nConfidence: spec=${r.confidenceIndicators.specificity.toFixed(2)}, emo=${r.confidenceIndicators.emotionalCharge.toFixed(2)}, cons=${r.confidenceIndicators.consistency.toFixed(2)}`;
   }).join("\n\n---\n\n");
 
-  const response = await client.messages.create({
-    model: MODEL,
-    max_tokens: 4000,
-    system: `You are an expert AI readiness analyst for HMN. Analyze the interview and return comprehensive JSON.
+  // Use assessment-specific analysis prompt if available, otherwise default
+  const assessmentAnalysisPrompt = assessment?.analysisSystemPrompt as string | undefined;
+
+  const defaultAnalysisPrompt = `You are an expert AI readiness analyst for HMN. Analyze the interview and return comprehensive JSON.
 
 PARTICIPANT: ${participant.name}, ${participant.role} at ${participant.company} (${participant.industry}, team: ${participant.teamSize})
 ${researchContext}
@@ -1303,7 +1323,21 @@ Return ONLY valid JSON:
   "serviceRecommendations": [{"tier": 1|2|3, "service": "...", "description": "...", "estimatedValue": "$X-$Y", "urgency": "immediate|near_term|strategic", "matchedGaps": [], "confidence": <0-1>}],
   "prioritizedActions": [{"rank": 1, "action": "...", "rationale": "...", "timeframe": "...", "estimatedImpact": "low|medium|high|transformative"}],
   "triggeredDeepDives": [{"module": "shadow_workflow|decision_latency|adoption_archaeology|competitive_pressure|team_assessment", "reason": "...", "priority": <1-5>, "suggestedQuestions": ["..."]}]
-}`,
+}`;
+
+  const systemPrompt = assessmentAnalysisPrompt
+    ? `${assessmentAnalysisPrompt}
+
+PARTICIPANT: ${participant.name}, ${participant.role} at ${participant.company} (${participant.industry}, team: ${participant.teamSize})
+${researchContext}
+
+Return ONLY valid JSON with: overallReadinessScore, dimensionScores, archetype, archetypeConfidence, archetypeDescription, gaps, redFlags, greenLights, contradictions, executiveSummary, detailedNarrative, serviceRecommendations, prioritizedActions, triggeredDeepDives.`
+    : defaultAnalysisPrompt;
+
+  const response = await client.messages.create({
+    model: MODEL,
+    max_tokens: 4000,
+    system: systemPrompt,
     messages: [{ role: "user", content: `Analyze:\n\n${allResponses}` }],
   });
 
@@ -1592,13 +1626,26 @@ app.get("/api/admin/invitations", requireAdmin, async (req, res) => {
 
 app.post("/api/admin/invitations", requireAdmin, async (req, res) => {
   try {
-    const { assessmentId, participant, note } = req.body;
+    const { assessmentId, participant, note, sendEmail } = req.body;
     if (!assessmentId || !participant?.name || !participant?.email) {
       res.status(400).json({ error: "assessmentId, participant.name, and participant.email are required" });
       return;
     }
     const result = await createInvitationAdmin({ assessmentId, participant, note });
-    res.status(201).json(result);
+
+    let emailResult: { ok: boolean; error?: string } | undefined;
+    if (sendEmail && isEmailEnabled()) {
+      const assessmentName = await getAssessmentName(assessmentId);
+      emailResult = await sendInvitationEmail({
+        to: participant.email,
+        participantName: participant.name,
+        assessmentName,
+        inviteToken: result.invitation.token,
+        note,
+      });
+    }
+
+    res.status(201).json({ ...result, emailSent: emailResult?.ok ?? false });
   } catch (err) {
     console.error("Admin create invitation error:", err);
     res.status(500).json({ error: "Failed to create invitation" });
@@ -1607,13 +1654,28 @@ app.post("/api/admin/invitations", requireAdmin, async (req, res) => {
 
 app.post("/api/admin/invitations/batch", requireAdmin, async (req, res) => {
   try {
-    const { invitations } = req.body;
+    const { invitations, sendEmail } = req.body;
     if (!Array.isArray(invitations) || invitations.length === 0) {
       res.status(400).json({ error: "invitations array required" });
       return;
     }
     const result = await batchCreateInvitationsAdmin(invitations);
-    res.status(201).json(result);
+
+    let emailSummary: { sent: number; failed: number; errors: Array<{ email: string; error: string }> } | undefined;
+    if (sendEmail && isEmailEnabled() && result.invitations.length > 0) {
+      const assessmentName = await getAssessmentName(invitations[0].assessmentId);
+      emailSummary = await sendBatchInvitationEmails(
+        result.invitations.map((inv: any, i: number) => ({
+          to: invitations[i].participant.email,
+          participantName: invitations[i].participant.name,
+          assessmentName,
+          inviteToken: inv.token,
+          note: invitations[i].note,
+        }))
+      );
+    }
+
+    res.status(201).json({ ...result, emailSummary });
   } catch (err) {
     console.error("Admin batch invitations error:", err);
     res.status(500).json({ error: "Failed to create invitations" });
@@ -1646,13 +1708,28 @@ app.post("/api/admin/invitations/:id/resend", requireAdmin, async (req, res) => 
   try {
     const inv = await loadInvitationById(String(req.params.id));
     if (!inv) { res.status(404).json({ error: "Invitation not found" }); return; }
-    // Reset status to sent so it appears fresh in the admin panel
+
+    let emailResult: { ok: boolean; error?: string } = { ok: false, error: "Email not configured" };
+    if (isEmailEnabled()) {
+      const assessmentName = await getAssessmentName(inv.assessmentId);
+      emailResult = await sendInvitationEmail({
+        to: inv.participant.email,
+        participantName: inv.participant.name,
+        assessmentName,
+        inviteToken: inv.token,
+      });
+    }
+
     await updateInvitationStatus(inv.token, "sent");
-    res.json({ ok: true, token: inv.token });
+    res.json({ ok: true, token: inv.token, emailSent: emailResult.ok, emailError: emailResult.error });
   } catch (err) {
     console.error("Admin resend invitation error:", err);
     res.status(500).json({ error: "Failed to resend invitation" });
   }
+});
+
+app.get("/api/admin/email-status", requireAdmin, async (_req, res) => {
+  res.json({ enabled: isEmailEnabled(), provider: "resend" });
 });
 
 app.get("/api/admin/export", requireAdmin, async (req, res) => {
@@ -1693,6 +1770,31 @@ app.get("/api/assessments", async (_req, res) => {
   } catch (err) {
     console.error("List assessments error:", err);
     res.json({ assessments: [] });
+  }
+});
+
+app.get("/api/assessments/:id", async (req, res) => {
+  try {
+    const assessment = await loadAssessment(req.params.id);
+    if (!assessment) {
+      res.status(404).json({ error: "Assessment not found" });
+      return;
+    }
+    res.json({
+      id: assessment.id,
+      name: assessment.name,
+      description: assessment.description,
+      icon: assessment.icon,
+      estimatedMinutes: assessment.estimatedMinutes,
+      questionCount: assessment.questions?.length || 0,
+      status: assessment.status,
+      phases: assessment.phases,
+      sections: assessment.sections,
+      scoringDimensions: assessment.scoringDimensions,
+    });
+  } catch (err) {
+    console.error("Get assessment error:", err);
+    res.status(500).json({ error: "Failed to get assessment" });
   }
 });
 

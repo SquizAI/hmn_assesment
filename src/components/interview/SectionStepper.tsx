@@ -1,11 +1,10 @@
 import { useState } from "react";
-import type { CascadePhase, CascadeSection } from "../../lib/types";
-import { PHASE_ORDER, PHASE_LABELS, SECTION_ORDER, SECTION_LABELS, QUESTION_BANK } from "../../data/question-bank";
+import { PHASE_ORDER as DEFAULT_PHASE_ORDER, PHASE_LABELS as DEFAULT_PHASE_LABELS, SECTION_ORDER as DEFAULT_SECTION_ORDER, SECTION_LABELS as DEFAULT_SECTION_LABELS, QUESTION_BANK as DEFAULT_QUESTION_BANK } from "../../data/question-bank";
 
 export interface SectionProgress {
-  section: CascadeSection;
+  section: string;
   label: string;
-  phase: CascadePhase;
+  phase: string;
   status: "completed" | "in_progress" | "upcoming" | "skipped";
   answeredCount: number;
   totalCount: number;
@@ -23,19 +22,37 @@ interface Props {
   sections: SectionProgress[];
   answeredQuestions: AnsweredQuestion[];
   onQuestionClick: (questionId: string) => void;
-  currentSection: CascadeSection;
+  currentSection: string;
+  questionBank?: Array<{ id: string; section: string; phase: string; text: string }>;
+  phaseOrder?: string[];
+  phaseLabels?: Record<string, string>;
+}
+
+export interface ComputeSectionProgressOptions {
+  questionBank?: Array<{ id: string; section: string; phase: string }>;
+  sectionOrder?: string[];
+  sectionLabels?: Record<string, string>;
+}
+
+function formatLabel(id: string): string {
+  return id.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
 export function computeSectionProgress(
   answeredQuestions: AnsweredQuestion[],
-  currentSection: CascadeSection,
+  currentSection: string,
   skippedQuestionIds: string[],
+  options?: ComputeSectionProgressOptions,
 ): SectionProgress[] {
+  const questionBank = options?.questionBank || DEFAULT_QUESTION_BANK;
+  const sectionOrder = options?.sectionOrder || DEFAULT_SECTION_ORDER;
+  const sectionLabels = options?.sectionLabels || (DEFAULT_SECTION_LABELS as Record<string, string>);
+
   const answeredIds = new Set(answeredQuestions.map((q) => q.questionId));
   const skippedIds = new Set(skippedQuestionIds);
 
-  return SECTION_ORDER.map((section) => {
-    const sectionQuestions = QUESTION_BANK.filter((q) => q.section === section);
+  return sectionOrder.map((section) => {
+    const sectionQuestions = questionBank.filter((q) => q.section === section);
     const activeQuestions = sectionQuestions.filter((q) => !skippedIds.has(q.id));
     const answered = activeQuestions.filter((q) => answeredIds.has(q.id));
 
@@ -52,7 +69,7 @@ export function computeSectionProgress(
 
     return {
       section,
-      label: SECTION_LABELS[section],
+      label: sectionLabels[section] || formatLabel(section),
       phase: sectionQuestions[0]?.phase ?? "profile_baseline",
       status,
       answeredCount: answered.length,
@@ -62,15 +79,19 @@ export function computeSectionProgress(
   });
 }
 
-export default function SectionStepper({ sections, answeredQuestions, onQuestionClick, currentSection }: Props) {
-  const [expandedSection, setExpandedSection] = useState<CascadeSection | null>(null);
+export default function SectionStepper({ sections, answeredQuestions, onQuestionClick, currentSection, questionBank, phaseOrder, phaseLabels }: Props) {
+  const [expandedSection, setExpandedSection] = useState<string | null>(null);
 
   const answeredMap = new Map(answeredQuestions.map((q) => [q.questionId, q]));
 
+  const effectivePhaseOrder = phaseOrder || DEFAULT_PHASE_ORDER;
+  const effectivePhaseLabels = phaseLabels || (DEFAULT_PHASE_LABELS as Record<string, string>);
+  const effectiveQuestionBank = questionBank || DEFAULT_QUESTION_BANK;
+
   // Group sections by phase
-  const phases = PHASE_ORDER.map((phase) => ({
+  const phases = effectivePhaseOrder.map((phase) => ({
     phase,
-    label: PHASE_LABELS[phase],
+    label: effectivePhaseLabels[phase] || formatLabel(phase),
     sections: sections.filter((s) => s.phase === phase),
   }));
 
@@ -139,7 +160,7 @@ export default function SectionStepper({ sections, answeredQuestions, onQuestion
       {expandedSection && (() => {
         const sp = sections.find((s) => s.section === expandedSection);
         if (!sp) return null;
-        const sectionQuestions = QUESTION_BANK.filter((q) => q.section === expandedSection);
+        const sectionQuestions = effectiveQuestionBank.filter((q) => q.section === expandedSection);
 
         return (
           <div className="bg-white/5 border border-white/10 rounded-xl p-3 space-y-1.5 animate-in fade-in duration-200">

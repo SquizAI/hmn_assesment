@@ -729,13 +729,20 @@ export async function batchCreateInvitationsAdmin(items: Array<{
     teamSize?: string;
   };
   note?: string;
-}>): Promise<{ ok: boolean; invitations: Invitation[] }> {
+}>): Promise<{ ok: boolean; invitations: Invitation[]; errors: Array<{ index: number; email: string; error: string }> }> {
   const results: Invitation[] = [];
-  for (const item of items) {
-    const { invitation } = await createInvitationAdmin(item);
-    results.push(invitation);
+  const errors: Array<{ index: number; email: string; error: string }> = [];
+  for (let i = 0; i < items.length; i++) {
+    try {
+      const { invitation } = await createInvitationAdmin(items[i]);
+      results.push(invitation);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Unknown error";
+      console.error(`Failed to create invitation for ${items[i].participant.email}:`, message);
+      errors.push({ index: i, email: items[i].participant.email, error: message });
+    }
   }
-  return { ok: true, invitations: results };
+  return { ok: errors.length === 0, invitations: results, errors };
 }
 
 export async function getInvitationAdmin(id: string): Promise<Invitation | null> {

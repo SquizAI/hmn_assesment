@@ -234,18 +234,20 @@ export async function lookupSessionsByEmail(email: string): Promise<InterviewSes
 // ============================================================
 
 function dbRowToAssessment(row: Record<string, unknown>): AssessmentType {
+  const settings = (row.settings || {}) as Record<string, unknown>;
   return {
     id: row.id as string,
     name: row.name as string,
     description: (row.description as string) || "",
-    icon: ((row.settings as Record<string, unknown>)?.icon as string) || "",
-    estimatedMinutes: ((row.settings as Record<string, unknown>)?.estimatedMinutes as number) || 30,
+    icon: (settings.icon as string) || "",
+    estimatedMinutes: (settings.estimatedMinutes as number) || 30,
     status: (row.status as AssessmentType["status"]) || "draft",
     phases: (row.phases as AssessmentType["phases"]) || [],
     sections: (row.sections as AssessmentType["sections"]) || [],
     questions: (row.questions as Question[]) || [],
     scoringDimensions: (row.scoring_dimensions as AssessmentType["scoringDimensions"]) || [],
-    systemPromptOverride: (row.system_prompt_override as string) || undefined,
+    interviewSystemPrompt: (settings.interviewSystemPrompt as string) || undefined,
+    analysisSystemPrompt: (settings.analysisSystemPrompt as string) || undefined,
     createdAt: (row.created_at as string) || new Date().toISOString(),
     updatedAt: (row.updated_at as string) || new Date().toISOString(),
   };
@@ -262,10 +264,11 @@ function assessmentToDbRow(a: AssessmentType): Record<string, unknown> {
     sections: a.sections || [],
     questions: a.questions || [],
     scoring_dimensions: a.scoringDimensions || [],
-    system_prompt_override: a.systemPromptOverride || null,
     settings: {
       icon: a.icon || "",
       estimatedMinutes: a.estimatedMinutes || 30,
+      interviewSystemPrompt: a.interviewSystemPrompt || null,
+      analysisSystemPrompt: a.analysisSystemPrompt || null,
     },
     updated_at: new Date().toISOString(),
   };

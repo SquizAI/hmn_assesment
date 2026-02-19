@@ -6,8 +6,10 @@ import {
   removeInvitation,
   resendInvitation,
   fetchAssessments,
+  checkEmailStatus,
 } from "../lib/admin-api";
 import type { InvitationSummary, AssessmentSummary } from "../lib/types";
+import CsvUploadModal from "../components/admin/CsvUploadModal";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -126,6 +128,13 @@ export default function AdminInvitationsPage() {
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
 
+  // ---- CSV modal state ----
+  const [showCsvModal, setShowCsvModal] = useState(false);
+
+  // ---- Email state ----
+  const [emailEnabled, setEmailEnabled] = useState(false);
+  const [sendEmailOnCreate, setSendEmailOnCreate] = useState(false);
+
   // ---- Copy link feedback ----
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
@@ -161,6 +170,7 @@ export default function AdminInvitationsPage() {
   useEffect(() => {
     loadInvitations();
     loadAssessments();
+    checkEmailStatus().then((s) => setEmailEnabled(s.enabled)).catch(() => {});
   }, [loadInvitations, loadAssessments]);
 
   // ---- Auto-dismiss toast ----
@@ -244,9 +254,10 @@ export default function AdminInvitationsPage() {
   const handleResend = useCallback(
     async (inv: InvitationSummary) => {
       try {
-        await resendInvitation(inv.id);
+        const result = await resendInvitation(inv.id);
         await copyToClipboard(buildInviteLink(inv.token));
-        setToast("Link copied — invitation reset to Sent.");
+        const emailMsg = result.emailSent ? " Email resent!" : "";
+        setToast(`Link copied — invitation reset to Sent.${emailMsg}`);
         await loadInvitations();
       } catch {
         // resend failed silently
@@ -287,6 +298,7 @@ export default function AdminInvitationsPage() {
             ...(form.teamSize.trim() && { teamSize: form.teamSize.trim() }),
           },
           ...(form.note.trim() && { note: form.note.trim() }),
+          sendEmail: sendEmailOnCreate && emailEnabled,
         });
 
         if (result.ok && result.invitation) {
@@ -294,7 +306,9 @@ export default function AdminInvitationsPage() {
           await copyToClipboard(link);
           setShowCreateModal(false);
           setForm(EMPTY_FORM);
-          setToast("Invitation created — link copied to clipboard!");
+          setSendEmailOnCreate(false);
+          const emailMsg = result.emailSent ? " Email sent!" : "";
+          setToast(`Invitation created — link copied to clipboard!${emailMsg}`);
           await loadInvitations();
         } else {
           setCreateError("Failed to create invitation. Please try again.");
@@ -383,7 +397,13 @@ export default function AdminInvitationsPage() {
           ))}
         </select>
 
-        <div className="sm:ml-auto">
+        <div className="sm:ml-auto flex items-center gap-2">
+          <button
+            onClick={() => setShowCsvModal(true)}
+            className="px-4 py-2 text-sm font-medium rounded-xl transition-all border border-white/15 text-white/60 hover:bg-white/[0.06] hover:text-white/80"
+          >
+            Bulk Import
+          </button>
           <button
             onClick={openCreateModal}
             className="px-4 py-2 text-sm font-medium rounded-xl transition-all bg-gradient-to-r from-purple-500/20 to-blue-500/20 border border-purple-500/20 text-purple-200 hover:from-purple-500/30 hover:to-blue-500/30 hover:text-white"
@@ -629,6 +649,22 @@ export default function AdminInvitationsPage() {
               className="w-full bg-white/[0.05] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/20 outline-none focus:border-white/20 transition-colors mb-6 resize-none"
             />
 
+            {/* Email toggle */}
+            {emailEnabled && (
+              <label className="flex items-center gap-2.5 mb-6 px-3 py-2.5 rounded-xl bg-white/[0.03] border border-white/5 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={sendEmailOnCreate}
+                  onChange={(e) => setSendEmailOnCreate(e.target.checked)}
+                  className="w-4 h-4 rounded border-white/20 bg-white/5 text-purple-500 focus:ring-purple-500/30"
+                />
+                <div>
+                  <span className="text-sm text-white/70">Send invitation email</span>
+                  <p className="text-xs text-white/30">The participant will receive an email with their unique link</p>
+                </div>
+              </label>
+            )}
+
             {/* Actions */}
             <div className="flex items-center justify-end gap-2">
               <button
@@ -647,7 +683,7 @@ export default function AdminInvitationsPage() {
                     : "bg-white/[0.10] border-white/15 text-white hover:bg-white/[0.15]"
                 }`}
               >
-                {creating ? "Creating..." : "Create & Copy Link"}
+                {creating ? "Creating..." : sendEmailOnCreate ? "Create & Send Email" : "Create & Copy Link"}
               </button>
             </div>
           </form>
@@ -690,6 +726,17 @@ export default function AdminInvitationsPage() {
             </div>
           </div>
         </ModalBackdrop>
+      )}
+
+      {/* ================================================================== */}
+      {/* CSV UPLOAD MODAL                                                   */}
+      {/* ================================================================== */}
+      {showCsvModal && (
+        <CsvUploadModal
+          assessments={activeAssessments}
+          onClose={() => setShowCsvModal(false)}
+          onComplete={() => loadInvitations()}
+        />
       )}
 
       {/* ================================================================== */}

@@ -5,9 +5,11 @@ interface VoiceRecorderProps {
   onTranscription: (text: string) => void;
   onPartialTranscription?: (text: string) => void;
   onRecordingStateChange?: (isRecording: boolean) => void;
+  hideIdleStatus?: boolean;
+  hideTranscriptionPreview?: boolean;
 }
 
-export default function VoiceRecorder({ onTranscription, onPartialTranscription, onRecordingStateChange }: VoiceRecorderProps) {
+export default function VoiceRecorder({ onTranscription, onPartialTranscription, onRecordingStateChange, hideIdleStatus, hideTranscriptionPreview }: VoiceRecorderProps) {
   const [isRecording, setIsRecording] = useState(false);
   const [isTranscribing, setIsTranscribing] = useState(false);
   const [duration, setDuration] = useState(0);
@@ -263,24 +265,26 @@ export default function VoiceRecorder({ onTranscription, onPartialTranscription,
       </button>
 
       {/* Status */}
-      <div className="text-center">
-        {isTranscribing ? (
-          <p className="text-white/60 text-sm">Finalizing transcription...</p>
-        ) : isRecording ? (
-          <>
-            <p className="text-red-400 text-sm font-medium">Recording {fmt(duration)}</p>
-            <p className="text-white/40 text-xs mt-1">Tap or press Space to stop</p>
-          </>
-        ) : (
-          <>
-            <p className="text-white/50 text-sm font-medium">Tap or press Space to speak</p>
-            <p className="text-white/30 text-xs mt-1">Live transcription as you talk</p>
-          </>
-        )}
-      </div>
+      {(isTranscribing || isRecording || !hideIdleStatus) && (
+        <div className="text-center">
+          {isTranscribing ? (
+            <p className="text-white/60 text-sm">Finalizing transcription...</p>
+          ) : isRecording ? (
+            <>
+              <p className="text-red-400 text-sm font-medium">Recording {fmt(duration)}</p>
+              <p className="text-white/40 text-xs mt-1">Tap or press Space to stop</p>
+            </>
+          ) : (
+            <>
+              <p className="text-white/50 text-sm font-medium">Tap or press Space to speak</p>
+              <p className="text-white/30 text-xs mt-1">Live transcription as you talk</p>
+            </>
+          )}
+        </div>
+      )}
 
       {/* Live Transcription Preview */}
-      {(finalText || partialText) && (
+      {!hideTranscriptionPreview && (finalText || partialText) && (
         <div className="w-full max-w-sm bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm">
           <p className="text-white/30 text-xs mb-1 uppercase tracking-wider">Live transcription</p>
           <p className="text-white/80 leading-relaxed">

@@ -1,18 +1,25 @@
 import { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import type { Question, ConversationMessage, CascadePhase, CascadeSection } from "../lib/types";
+import type { Question, ConversationMessage } from "../lib/types";
 import { API_BASE } from "../lib/api";
 import { createPreviewSession, deletePreviewSession } from "../lib/admin-api";
 import QuestionCard from "../components/interview/QuestionCard";
 import ProgressBar from "../components/interview/ProgressBar";
 import SectionStepper, { computeSectionProgress } from "../components/interview/SectionStepper";
+import type { ComputeSectionProgressOptions } from "../components/interview/SectionStepper";
 
 interface Progress {
   questionNumber: number;
   totalQuestions: number;
-  phase: CascadePhase;
-  section: CascadeSection;
+  phase: string;
+  section: string;
   completedPercentage: number;
+}
+
+interface AssessmentMeta {
+  questions: Array<{ id: string; section: string; phase: string; text: string }>;
+  sections: Array<{ id: string; label: string; phaseId: string; order: number }> | null;
+  phases: Array<{ id: string; label: string; order: number }> | null;
 }
 
 interface AnsweredQuestion {
@@ -41,6 +48,9 @@ export default function AdminPreviewPage() {
   const [mode, setMode] = useState<PreviewMode>("manual");
   const [analysisResult, setAnalysisResult] = useState<Record<string, unknown> | null>(null);
 
+  // Dynamic assessment metadata
+  const [assessmentMeta, setAssessmentMeta] = useState<AssessmentMeta | null>(null);
+
   // Create preview session and start interview
   useEffect(() => {
     if (!assessmentId) return;
@@ -61,6 +71,16 @@ export default function AdminPreviewPage() {
         const data = await res.json();
         setCurrentQuestion(data.currentQuestion);
         setProgress({ ...data.progress, completedPercentage: 0 });
+
+        // Store assessment metadata for dynamic question banks
+        if (data.assessmentQuestions) {
+          setAssessmentMeta({
+            questions: data.assessmentQuestions,
+            sections: data.assessmentSections || null,
+            phases: data.assessmentPhases || null,
+          });
+        }
+
         if (data.skippedQuestionIds) setSkippedQuestionIds(data.skippedQuestionIds);
         if (data.autoPopulatedResponses) {
           setAnsweredQuestions(data.autoPopulatedResponses.map((r: { questionId: string; questionText: string; answer: unknown; inputType: string }) => ({
@@ -76,9 +96,28 @@ export default function AdminPreviewPage() {
     })();
   }, [assessmentId]);
 
+  // Build dynamic section progress options from assessment metadata
+  const sectionProgressOptions = useMemo((): ComputeSectionProgressOptions | undefined => {
+    if (!assessmentMeta?.sections || !assessmentMeta?.phases) return undefined;
+    const sectionOrder = [...assessmentMeta.sections].sort((a: { order: number }, b: { order: number }) => a.order - b.order).map((s: { id: string }) => s.id);
+    const sectionLabels: Record<string, string> = {};
+    assessmentMeta.sections.forEach((s: { id: string; label: string }) => { sectionLabels[s.id] = s.label; });
+    return { questionBank: assessmentMeta.questions, sectionOrder, sectionLabels };
+  }, [assessmentMeta]);
+
+  const phaseProps = useMemo(() => {
+    if (!assessmentMeta?.phases || !assessmentMeta?.sections) return {};
+    const phaseOrder = [...assessmentMeta.phases].sort((a: { order: number }, b: { order: number }) => a.order - b.order).map((p: { id: string }) => p.id);
+    const phaseLabels: Record<string, string> = {};
+    assessmentMeta.phases.forEach((p: { id: string; label: string }) => { phaseLabels[p.id] = p.label; });
+    const sectionLabels: Record<string, string> = {};
+    assessmentMeta.sections.forEach((s: { id: string; label: string }) => { sectionLabels[s.id] = s.label; });
+    return { phaseOrder, phaseLabels, sectionLabels, questionBank: assessmentMeta.questions };
+  }, [assessmentMeta]);
+
   const sectionProgress = useMemo(() =>
-    computeSectionProgress(answeredQuestions, progress?.section || "demographics", skippedQuestionIds),
-    [answeredQuestions, progress?.section, skippedQuestionIds]
+    computeSectionProgress(answeredQuestions, progress?.section || "demographics", skippedQuestionIds, sectionProgressOptions),
+    [answeredQuestions, progress?.section, skippedQuestionIds, sectionProgressOptions]
   );
 
   const visibleAnswered = useMemo(() =>
@@ -339,6 +378,9 @@ export default function AdminPreviewPage() {
             answeredQuestions={answeredQuestions}
             onQuestionClick={() => {}}
             currentSection={progress?.section || "demographics"}
+            questionBank={phaseProps.questionBank}
+            phaseOrder={phaseProps.phaseOrder}
+            phaseLabels={phaseProps.phaseLabels}
           />
           {progress && (
             <ProgressBar
@@ -347,6 +389,8 @@ export default function AdminPreviewPage() {
               phase={progress.phase}
               section={progress.section}
               completedPercentage={progress.completedPercentage}
+              phaseLabels={phaseProps.phaseLabels}
+              sectionLabels={phaseProps.sectionLabels}
             />
           )}
         </div>

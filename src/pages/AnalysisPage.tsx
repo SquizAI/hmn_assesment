@@ -1,14 +1,19 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import type { CascadeAnalysis, DimensionScore, GapAnalysis, ServiceRecommendation, DeepDiveTrigger, ScoringDimension } from "../lib/types";
+import type { CascadeAnalysis, DimensionScore, GapAnalysis, ServiceRecommendation, DeepDiveTrigger } from "../lib/types";
 import { API_BASE } from "../lib/api";
 import Button from "../components/ui/Button";
 
-const DIM_LABELS: Record<ScoringDimension, string> = {
+// Default labels for the ai-readiness assessment
+const DEFAULT_DIM_LABELS: Record<string, string> = {
   ai_awareness: "AI Awareness", ai_action: "AI Action", process_readiness: "Process Readiness",
   strategic_clarity: "Strategic Clarity", change_energy: "Change Energy", team_capacity: "Team Capacity",
   mission_alignment: "Mission Alignment", investment_readiness: "Investment Readiness",
 };
+
+function formatDimLabel(id: string): string {
+  return id.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+}
 
 export default function AnalysisPage() {
   const { sessionId } = useParams<{ sessionId: string }>();
@@ -16,13 +21,35 @@ export default function AnalysisPage() {
   const [analysis, setAnalysis] = useState<CascadeAnalysis | null>(null);
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(true);
+  const [dimLabels, setDimLabels] = useState<Record<string, string>>(DEFAULT_DIM_LABELS);
 
   useEffect(() => {
     (async () => {
       try {
         const res = await fetch(`${API_BASE}/api/sessions/${sessionId}`);
         const data = await res.json();
-        if (data.session?.analysis) { setAnalysis(data.session.analysis); setName(data.session.participant?.name || ""); }
+        if (data.session?.analysis) {
+          setAnalysis(data.session.analysis);
+          setName(data.session.participant?.name || "");
+
+          // Load assessment-specific dimension labels if available
+          const assessmentId = data.session.assessmentTypeId;
+          if (assessmentId && assessmentId !== "ai-readiness") {
+            try {
+              const assessmentRes = await fetch(`${API_BASE}/api/assessments/${assessmentId}`);
+              if (assessmentRes.ok) {
+                const assessmentData = await assessmentRes.json();
+                if (assessmentData.scoringDimensions?.length) {
+                  const labels: Record<string, string> = {};
+                  assessmentData.scoringDimensions.forEach((d: { id: string; label: string }) => {
+                    labels[d.id] = d.label;
+                  });
+                  setDimLabels(labels);
+                }
+              }
+            } catch { /* fall back to default labels */ }
+          }
+        }
       } catch (e) { console.error(e); }
       finally { setLoading(false); }
     })();
@@ -67,7 +94,7 @@ export default function AnalysisPage() {
               const c = s.score >= 70 ? "bg-green-500" : s.score >= 45 ? "bg-yellow-500" : "bg-red-500";
               return (
                 <div key={s.dimension} className="bg-white/5 border border-white/10 rounded-xl p-4 space-y-3">
-                  <div className="flex items-center justify-between"><span className="text-sm font-medium text-white">{DIM_LABELS[s.dimension]}</span><div className="flex items-center gap-2"><span className="text-lg font-bold text-white">{s.score}</span><span className="text-xs text-white/30">/ 100</span></div></div>
+                  <div className="flex items-center justify-between"><span className="text-sm font-medium text-white">{dimLabels[s.dimension] || formatDimLabel(s.dimension)}</span><div className="flex items-center gap-2"><span className="text-lg font-bold text-white">{s.score}</span><span className="text-xs text-white/30">/ 100</span></div></div>
                   <div className="h-2 w-full bg-white/10 rounded-full overflow-hidden"><div className={`h-full rounded-full ${c} transition-all duration-1000`} style={{ width: `${s.score}%` }} /></div>
                   {s.evidence.length > 0 && <p className="text-xs text-white/40 italic truncate">&ldquo;{s.evidence[0]}&rdquo;</p>}
                 </div>
@@ -87,7 +114,7 @@ export default function AnalysisPage() {
                 return (
                   <div key={i} className="bg-orange-500/5 border border-orange-500/20 rounded-xl p-5 space-y-3">
                     <div className="flex items-center justify-between"><span className="text-sm font-medium text-orange-300 capitalize">{g.pattern.replace(/_/g, " ")}</span><span className="text-xs text-orange-300/60">Severity: {g.severity}</span></div>
-                    <div className="flex items-center gap-4 text-sm"><span className="text-white/60">{DIM_LABELS[g.dimension1]}: <strong className="text-white">{s1?.score ?? "?"}</strong></span><span className="text-white/20">vs</span><span className="text-white/60">{DIM_LABELS[g.dimension2]}: <strong className="text-white">{s2?.score ?? "?"}</strong></span></div>
+                    <div className="flex items-center gap-4 text-sm"><span className="text-white/60">{dimLabels[g.dimension1] || formatDimLabel(g.dimension1)}: <strong className="text-white">{s1?.score ?? "?"}</strong></span><span className="text-white/20">vs</span><span className="text-white/60">{dimLabels[g.dimension2] || formatDimLabel(g.dimension2)}: <strong className="text-white">{s2?.score ?? "?"}</strong></span></div>
                     <p className="text-sm text-white/50">{g.description}</p>
                     <p className="text-xs text-orange-300/80 font-medium">{g.serviceRecommendation}</p>
                   </div>

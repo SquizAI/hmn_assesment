@@ -1,13 +1,11 @@
-import type { CascadePhase, CascadeSection } from "../../lib/types";
-
-const PHASE_LABELS: Record<CascadePhase, string> = {
+const DEFAULT_PHASE_LABELS: Record<string, string> = {
   profile_baseline: "Profile & Baseline",
   org_reality: "Organizational Reality",
   domain_deep_dive: "Domain Deep Dive",
   strategic_alignment: "Strategic Alignment",
 };
 
-const SECTION_LABELS: Record<CascadeSection, string> = {
+const DEFAULT_SECTION_LABELS: Record<string, string> = {
   demographics: "About You",
   context_setting: "Your Story",
   change_capacity: "Change Readiness",
@@ -22,22 +20,31 @@ const SECTION_LABELS: Record<CascadeSection, string> = {
   closing: "Reflection",
 };
 
+function formatLabel(id: string): string {
+  return id.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
 interface Props {
   questionNumber: number;
   totalQuestions: number;
-  phase: CascadePhase;
-  section: CascadeSection;
+  phase: string;
+  section: string;
   completedPercentage: number;
+  phaseLabels?: Record<string, string>;
+  sectionLabels?: Record<string, string>;
 }
 
-export default function ProgressBar({ questionNumber, totalQuestions, phase, section, completedPercentage }: Props) {
+export default function ProgressBar({ questionNumber, totalQuestions, phase, section, completedPercentage, phaseLabels, sectionLabels }: Props) {
+  const pLabels = phaseLabels || DEFAULT_PHASE_LABELS;
+  const sLabels = sectionLabels || DEFAULT_SECTION_LABELS;
+
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <div>
-          <span className="text-xs font-medium text-white/40 uppercase tracking-wider">{PHASE_LABELS[phase]}</span>
+          <span className="text-xs font-medium text-white/40 uppercase tracking-wider">{pLabels[phase] || formatLabel(phase)}</span>
           <span className="text-white/20 mx-2">/</span>
-          <span className="text-xs text-white/60">{SECTION_LABELS[section]}</span>
+          <span className="text-xs text-white/60">{sLabels[section] || formatLabel(section)}</span>
         </div>
         <span className="text-xs text-white/40">{questionNumber} of {totalQuestions}</span>
       </div>

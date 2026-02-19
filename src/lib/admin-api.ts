@@ -292,6 +292,7 @@ export async function createInvitation(data: {
     teamSize?: string;
   };
   note?: string;
+  sendEmail?: boolean;
 }) {
   const res = await adminFetch("/api/admin/invitations", {
     method: "POST",
@@ -312,11 +313,11 @@ export async function batchCreateInvitations(invitations: Array<{
     teamSize?: string;
   };
   note?: string;
-}>) {
+}>, sendEmail?: boolean) {
   const res = await adminFetch("/api/admin/invitations/batch", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ invitations }),
+    body: JSON.stringify({ invitations, sendEmail }),
   });
   return res.json();
 }
@@ -328,5 +329,10 @@ export async function removeInvitation(id: string) {
 
 export async function resendInvitation(id: string) {
   const res = await adminFetch(`/api/admin/invitations/${id}/resend`, { method: "POST" });
+  return res.json();
+}
+
+export async function checkEmailStatus(): Promise<{ enabled: boolean; provider: string }> {
+  const res = await adminFetch("/api/admin/email-status");
   return res.json();
 }

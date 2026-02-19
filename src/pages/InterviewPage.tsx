@@ -1,18 +1,19 @@
 import { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import type { Question, ConversationMessage, CascadePhase, CascadeSection } from "../lib/types";
+import type { Question, ConversationMessage } from "../lib/types";
 import { API_BASE } from "../lib/api";
 import { QUESTION_BANK } from "../data/question-bank";
 import QuestionCard from "../components/interview/QuestionCard";
 import ProgressBar from "../components/interview/ProgressBar";
 import SectionStepper, { computeSectionProgress } from "../components/interview/SectionStepper";
+import type { ComputeSectionProgressOptions } from "../components/interview/SectionStepper";
 import Button from "../components/ui/Button";
 
 interface Progress {
   questionNumber: number;
   totalQuestions: number;
-  phase: CascadePhase;
-  section: CascadeSection;
+  phase: string;
+  section: string;
   completedPercentage: number;
 }
 
@@ -21,6 +22,12 @@ interface AnsweredQuestion {
   questionText: string;
   answer: unknown;
   inputType: string;
+}
+
+interface AssessmentMeta {
+  questions: Array<{ id: string; section: string; phase: string; text: string }>;
+  sections: Array<{ id: string; label: string; phaseId: string; order: number }> | null;
+  phases: Array<{ id: string; label: string; order: number }> | null;
 }
 
 export default function InterviewPage() {
@@ -35,6 +42,16 @@ export default function InterviewPage() {
   const [error, setError] = useState<string | null>(null);
   const [answeredQuestions, setAnsweredQuestions] = useState<AnsweredQuestion[]>([]);
   const [skippedQuestionIds, setSkippedQuestionIds] = useState<string[]>([]);
+
+  // Dynamic assessment metadata (populated from server for non-default assessments)
+  const [assessmentMeta, setAssessmentMeta] = useState<AssessmentMeta | null>(null);
+
+  // Scroll to top when a new question loads
+  useEffect(() => {
+    if (currentQuestion) {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }, [currentQuestion?.id]);
 
   // Edit mode state
   const [editingQuestion, setEditingQuestion] = useState<{
@@ -57,6 +74,15 @@ export default function InterviewPage() {
         setCurrentQuestion(data.currentQuestion);
         setProgress({ ...data.progress, completedPercentage: 0 });
 
+        // Store assessment metadata for dynamic question banks
+        if (data.assessmentQuestions) {
+          setAssessmentMeta({
+            questions: data.assessmentQuestions,
+            sections: data.assessmentSections || null,
+            phases: data.assessmentPhases || null,
+          });
+        }
+
         // Capture skipped + auto-populated for section progress
         if (data.skippedQuestionIds) setSkippedQuestionIds(data.skippedQuestionIds);
         if (data.autoPopulatedResponses) {
@@ -72,14 +98,43 @@ export default function InterviewPage() {
     })();
   }, [sessionId]);
 
+  // Build dynamic section progress options from assessment metadata
+  const sectionProgressOptions = useMemo((): ComputeSectionProgressOptions | undefined => {
+    if (!assessmentMeta?.sections || !assessmentMeta?.phases) return undefined; // Use defaults
+
+    const sectionOrder = [...assessmentMeta.sections].sort((a: { order: number }, b: { order: number }) => a.order - b.order).map((s: { id: string }) => s.id);
+    const sectionLabels: Record<string, string> = {};
+    assessmentMeta.sections.forEach((s: { id: string; label: string }) => { sectionLabels[s.id] = s.label; });
+
+    return {
+      questionBank: assessmentMeta.questions,
+      sectionOrder,
+      sectionLabels,
+    };
+  }, [assessmentMeta]);
+
+  // Phase metadata for child components
+  const phaseProps = useMemo(() => {
+    if (!assessmentMeta?.phases || !assessmentMeta?.sections) return {};
+
+    const phaseOrder = [...assessmentMeta.phases].sort((a: { order: number }, b: { order: number }) => a.order - b.order).map((p: { id: string }) => p.id);
+    const phaseLabels: Record<string, string> = {};
+    assessmentMeta.phases.forEach((p: { id: string; label: string }) => { phaseLabels[p.id] = p.label; });
+    const sectionLabels: Record<string, string> = {};
+    assessmentMeta.sections.forEach((s: { id: string; label: string }) => { sectionLabels[s.id] = s.label; });
+
+    return { phaseOrder, phaseLabels, sectionLabels, questionBank: assessmentMeta.questions };
+  }, [assessmentMeta]);
+
   // Compute section progress
   const sectionProgress = useMemo(() =>
     computeSectionProgress(
       answeredQuestions,
       progress?.section || "demographics",
       skippedQuestionIds,
+      sectionProgressOptions,
     ),
-    [answeredQuestions, progress?.section, skippedQuestionIds]
+    [answeredQuestions, progress?.section, skippedQuestionIds, sectionProgressOptions]
   );
 
   // Non-skipped answered questions (for pills display)
@@ -121,8 +176,9 @@ export default function InterviewPage() {
     const answered = answeredQuestions.find((q) => q.questionId === questionId);
     if (!answered) return;
 
-    // Find the full Question object from the bank
-    const fullQuestion = QUESTION_BANK.find((q) => q.id === questionId);
+    // Find the full Question object — check dynamic assessment bank first, then static
+    const dynamicBank = assessmentMeta?.questions;
+    const fullQuestion = (dynamicBank?.find((q: { id: string }) => q.id === questionId) || QUESTION_BANK.find((q) => q.id === questionId)) as Question | undefined;
     if (!fullQuestion) return;
 
     // Save current position
@@ -165,6 +221,36 @@ export default function InterviewPage() {
     if (savedProgress) setProgress(savedProgress);
     setSavedCurrentQuestion(null);
     setSavedProgress(null);
+  };
+
+  // --- Back / Skip from QuestionCard ---
+
+  const handleGoBack = () => {
+    if (visibleAnswered.length === 0) return;
+    const lastAnswered = visibleAnswered[visibleAnswered.length - 1];
+    handleNavigateBack(lastAnswered.questionId);
+  };
+
+  const handleSkip = async () => {
+    if (!currentQuestion) return;
+    setIsSubmitting(true);
+    try {
+      const res = await fetch(`${API_BASE}/api/interview/respond`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionId, questionId: currentQuestion.id, answer: "[SKIPPED]" }),
+      });
+      const data = await res.json();
+      if (data.type === "follow_up") return;
+
+      // Track as skipped
+      setSkippedQuestionIds((prev) => [...prev, currentQuestion.id]);
+
+      if (data.type === "complete") setIsComplete(true);
+      else if (data.type === "next_question") { setCurrentQuestion(data.currentQuestion); setProgress(data.progress); }
+      if (data.skippedQuestionIds) setSkippedQuestionIds(data.skippedQuestionIds);
+    } catch { setError("Something went wrong."); }
+    finally { setIsSubmitting(false); }
   };
 
   const handleAnalyze = async () => {
@@ -221,6 +307,9 @@ export default function InterviewPage() {
             answeredQuestions={answeredQuestions}
             onQuestionClick={handleNavigateBack}
             currentSection={progress?.section || "demographics"}
+            questionBank={phaseProps.questionBank}
+            phaseOrder={phaseProps.phaseOrder}
+            phaseLabels={phaseProps.phaseLabels}
           />
           {/* Current progress bar */}
           {progress && (
@@ -230,6 +319,8 @@ export default function InterviewPage() {
               phase={progress.phase}
               section={progress.section}
               completedPercentage={progress.completedPercentage}
+              phaseLabels={phaseProps.phaseLabels}
+              sectionLabels={phaseProps.sectionLabels}
             />
           )}
         </div>
@@ -282,7 +373,7 @@ export default function InterviewPage() {
         </div>
       )}
 
-      <main className="flex-1 flex items-center justify-center px-6 py-12">
+      <main className="flex-1 px-6 pt-6 pb-12">
         {editingQuestion ? (
           <QuestionCard
             key={`edit-${editingQuestion.question.id}`}
@@ -302,6 +393,9 @@ export default function InterviewPage() {
               sessionId={sessionId}
               onSubmit={handleSubmit}
               isSubmitting={isSubmitting}
+              onBack={handleGoBack}
+              onSkip={handleSkip}
+              canGoBack={visibleAnswered.length > 0}
             />
           )
         )}

@@ -25,3 +25,4 @@ sessions/
 *.njsproj
 *.sln
 *.sw?
+app-spec.yaml
