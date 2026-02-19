@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import StatusBadge from "../components/admin/StatusBadge";
+import AddCompanyModal from "../components/admin/AddCompanyModal";
 import { fetchCompanies } from "../lib/admin-api";
 
 interface CompanySummary {
@@ -40,8 +41,10 @@ export default function AdminCompaniesPage() {
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState<"activity" | "sessions" | "score">("activity");
   const [expandedCompany, setExpandedCompany] = useState<string | null>(null);
+  const [showAddModal, setShowAddModal] = useState(false);
 
-  useEffect(() => {
+  const loadCompanies = useCallback(() => {
+    setLoading(true);
     fetchCompanies()
       .then((data) => {
         setCompanies(data.companies || []);
@@ -49,6 +52,10 @@ export default function AdminCompaniesPage() {
       })
       .catch(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    loadCompanies();
+  }, [loadCompanies]);
 
   const filtered = companies
     .filter((c) => {
@@ -81,6 +88,15 @@ export default function AdminCompaniesPage() {
           <h2 className="text-lg font-semibold text-white/90">Companies</h2>
           <p className="text-sm text-white/40">{companies.length} companies across all sessions</p>
         </div>
+        <button
+          onClick={() => setShowAddModal(true)}
+          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-purple-500/20 border border-purple-500/30 text-purple-300 text-sm font-medium hover:bg-purple-500/30 transition-all"
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+          </svg>
+          <span className="hidden sm:inline">New Company</span>
+        </button>
       </div>
 
       {/* Filters */}
@@ -195,6 +211,13 @@ export default function AdminCompaniesPage() {
           ))}
         </div>
       )}
+
+      {/* Add Company Modal */}
+      <AddCompanyModal
+        open={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        onCreated={loadCompanies}
+      />
     </div>
   );
 }

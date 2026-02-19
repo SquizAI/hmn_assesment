@@ -2,37 +2,20 @@ import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { API_BASE } from "../lib/api";
 import Button from "../components/ui/Button";
-import type { AssessmentSummary } from "../lib/types";
-
-interface SessionLookup {
-  id: string;
-  status: string;
-  createdAt: string;
-  assessmentTypeId?: string;
-  participantName?: string;
-  participantCompany?: string;
-  score?: number;
-}
-
-const STATUS_LABELS: Record<string, string> = {
-  intake: "Not started",
-  in_progress: "In progress",
-  completed: "Completed",
-  analyzed: "Results ready",
-};
-
-const STATUS_COLORS: Record<string, string> = {
-  intake: "text-gray-400",
-  in_progress: "text-blue-400",
-  completed: "text-green-400",
-  analyzed: "text-purple-400",
-};
 
 export default function HomePage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const [assessments, setAssessments] = useState<AssessmentSummary[]>([]);
-  const [selectedAssessment, setSelectedAssessment] = useState<AssessmentSummary | null>(null);
+
+  // Invite flow state
+  const [inviteToken, setInviteToken] = useState<string | null>(null);
+  const [inviteLoading, setInviteLoading] = useState(false);
+  const [inviteError, setInviteError] = useState("");
+
+  // Intake form state (only shown when invite token is valid)
+  const [showForm, setShowForm] = useState(false);
+  const [assessmentName, setAssessmentName] = useState("");
+  const [assessmentId, setAssessmentId] = useState("");
   const [name, setName] = useState("");
   const [role, setRole] = useState("");
   const [company, setCompany] = useState("");
@@ -40,41 +23,18 @@ export default function HomePage() {
   const [teamSize, setTeamSize] = useState("");
   const [email, setEmail] = useState("");
   const [isCreating, setIsCreating] = useState(false);
-  const [showForm, setShowForm] = useState(false);
 
-  // Invite state
-  const [inviteToken, setInviteToken] = useState<string | null>(null);
-  const [inviteLoading, setInviteLoading] = useState(false);
-  const [inviteError, setInviteError] = useState("");
-
-  // Sign-in state
+  // Sign-in state (resume existing assessment)
   const [showSignIn, setShowSignIn] = useState(false);
   const [signInEmail, setSignInEmail] = useState("");
   const [signInLoading, setSignInLoading] = useState(false);
-  const [signInSessions, setSignInSessions] = useState<SessionLookup[] | null>(null);
+  const [signInSessions, setSignInSessions] = useState<Array<{
+    id: string; status: string; createdAt: string;
+    participantName?: string; participantCompany?: string; score?: number;
+  }> | null>(null);
   const [signInError, setSignInError] = useState("");
 
-  useEffect(() => {
-    fetch(`${API_BASE}/api/assessments`)
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.assessments?.length > 0) {
-          setAssessments(data.assessments);
-          // Auto-select assessment from ?assessment=<id> query param (e.g. shared link)
-          const assessmentParam = searchParams.get("assessment");
-          if (assessmentParam) {
-            const match = data.assessments.find((a: AssessmentSummary) => a.id === assessmentParam);
-            if (match) {
-              setSelectedAssessment(match);
-              setShowForm(true);
-            }
-          }
-        }
-      })
-      .catch(() => {});
-  }, [searchParams]);
-
-  // Invite token detection
+  // Detect invite token in URL
   useEffect(() => {
     const token = searchParams.get("invite");
     if (!token) return;
@@ -88,7 +48,6 @@ export default function HomePage() {
         return r.json();
       })
       .then((data) => {
-        // Pre-fill form fields
         const p = data.invitation.participant;
         setName(p.name || "");
         setEmail(p.email || "");
@@ -96,14 +55,12 @@ export default function HomePage() {
         if (p.role) setRole(p.role);
         if (p.industry) setIndustry(p.industry);
         if (p.teamSize) setTeamSize(p.teamSize);
-
-        // Auto-select assessment
-        if (data.assessment) setSelectedAssessment(data.assessment);
-
-        // Jump to form
+        if (data.assessment) {
+          setAssessmentName(data.assessment.name || "");
+          setAssessmentId(data.assessment.id || "");
+        }
         setShowForm(true);
 
-        // Handle already-used invitation
         if (data.invitation.sessionId) {
           setInviteError("already_used");
         }
@@ -116,13 +73,8 @@ export default function HomePage() {
       });
   }, [searchParams]);
 
-  const handleSelectAssessment = (a: AssessmentSummary) => {
-    setSelectedAssessment(a);
-    setShowForm(true);
-  };
-
   const handleStart = async () => {
-    if (!name || !company || !email) return;
+    if (!name || !company || !email || !inviteToken) return;
     setIsCreating(true);
     try {
       const res = await fetch(`${API_BASE}/api/sessions`, {
@@ -130,14 +82,17 @@ export default function HomePage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           participant: { name, role, company, industry, teamSize, email },
-          assessmentTypeId: selectedAssessment?.id || "ai-readiness",
-          inviteToken: inviteToken || undefined,
+          assessmentTypeId: assessmentId || "ai-readiness",
+          inviteToken,
         }),
       });
       const data = await res.json();
       if (data.session?.id) navigate(`/research/${data.session.id}`);
-    } catch (err) { console.error(err); }
-    finally { setIsCreating(false); }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsCreating(false);
+    }
   };
 
   const handleSignIn = async () => {
@@ -151,7 +106,7 @@ export default function HomePage() {
       if (data.sessions?.length > 0) {
         setSignInSessions(data.sessions);
       } else {
-        setSignInError("No assessments found for this email. Start a new one below.");
+        setSignInError("No assessments found for this email.");
       }
     } catch {
       setSignInError("Something went wrong. Please try again.");
@@ -160,7 +115,7 @@ export default function HomePage() {
     }
   };
 
-  const handleResumeSession = (session: SessionLookup) => {
+  const handleResumeSession = (session: { id: string; status: string }) => {
     if (session.status === "analyzed" || session.status === "completed") {
       navigate(`/analysis/${session.id}`);
     } else if (session.status === "in_progress") {
@@ -175,65 +130,86 @@ export default function HomePage() {
     return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
   };
 
-  const showCatalog = assessments.length > 1;
+  const STATUS_LABELS: Record<string, string> = {
+    intake: "Not started",
+    in_progress: "In progress",
+    completed: "Completed",
+    analyzed: "Results ready",
+  };
+
+  const STATUS_COLORS: Record<string, string> = {
+    intake: "text-gray-400",
+    in_progress: "text-blue-400",
+    completed: "text-green-400",
+    analyzed: "text-purple-400",
+  };
+
+  // ─── Render ────────────────────────────────────────────────
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-[#0a0a0f]">
+      {/* Header */}
       <header className="border-b border-white/5 px-4 sm:px-6 py-4">
         <div className="max-w-5xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             <img src="/hmn_logo.png" alt="HMN" className="h-8 w-auto" />
             <span className="font-semibold text-white/90">Cascade</span>
           </div>
-          <div className="flex items-center gap-3 sm:gap-4">
-            {!showSignIn && !showForm && (
-              <button onClick={() => setShowSignIn(true)} className="text-white/40 hover:text-white/70 text-sm transition-colors flex items-center gap-1.5">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:hidden" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v3.586L7.707 9.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 10.586V7z" clipRule="evenodd" /></svg>
-                <span className="hidden sm:inline">Continue Assessment</span>
-                <span className="sm:hidden">Continue</span>
-              </button>
-            )}
-            <a href="/admin" className="text-white/20 hover:text-white/40 text-xs transition-colors">Admin</a>
-          </div>
+          {!inviteToken && !showSignIn && (
+            <button
+              onClick={() => setShowSignIn(true)}
+              className="text-white/30 hover:text-white/50 text-sm transition-colors"
+            >
+              Continue Assessment
+            </button>
+          )}
         </div>
       </header>
 
       <main className="flex-1 flex items-center justify-center px-4 sm:px-6 py-12 sm:py-20">
+        {/* ── Loading invite ── */}
         {inviteLoading ? (
-          /* Invite loading state */
           <div className="w-full max-w-md text-center space-y-4">
             <div className="animate-spin w-8 h-8 border-2 border-white/20 border-t-white/60 rounded-full mx-auto" />
             <p className="text-white/40 text-sm">Loading your invitation...</p>
           </div>
+
+        /* ── Invalid invite ── */
         ) : inviteError && inviteError !== "already_used" ? (
-          /* Invite error state (invalid/expired) */
           <div className="w-full max-w-md text-center space-y-6">
             <div className="space-y-2">
               <h2 className="text-2xl font-semibold text-white">Invitation Not Found</h2>
               <p className="text-white/40 text-sm">{inviteError}</p>
             </div>
-            <Button onClick={() => { setInviteError(""); setInviteToken(null); }}>Browse Assessments</Button>
+            <Button variant="ghost" onClick={() => { setInviteError(""); setInviteToken(null); }}>
+              Return Home
+            </Button>
           </div>
+
+        /* ── Already-used invite ── */
         ) : inviteError === "already_used" ? (
-          /* Invite already used state */
           <div className="w-full max-w-md text-center space-y-6">
             <div className="space-y-2">
               <h2 className="text-2xl font-semibold text-white">Invitation Already Used</h2>
               <p className="text-white/40 text-sm">This invitation has already been used to start an assessment.</p>
             </div>
             <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 justify-center">
-              <Button variant="ghost" onClick={() => { setInviteError(""); setInviteToken(null); }}>Start Fresh</Button>
-              <Button onClick={() => setShowSignIn(true)}>Find My Assessment</Button>
+              <Button variant="ghost" onClick={() => { setInviteError(""); setInviteToken(null); }}>
+                Return Home
+              </Button>
+              <Button onClick={() => { setInviteError(""); setShowSignIn(true); }}>
+                Find My Assessment
+              </Button>
             </div>
           </div>
+
+        /* ── Sign-in / resume flow ── */
         ) : showSignIn ? (
-          /* Sign-in flow */
           <div className="w-full max-w-md space-y-8">
             <div className="text-center space-y-2">
               <h2 className="text-2xl font-semibold text-white">Welcome back</h2>
               <p className="text-white/30 text-sm">Enter your email to find your assessment.</p>
             </div>
-
             {!signInSessions ? (
               <div className="space-y-4">
                 <div>
@@ -249,9 +225,9 @@ export default function HomePage() {
                   />
                 </div>
                 {signInError && <p className="text-yellow-400/80 text-sm text-center">{signInError}</p>}
-                <div className="flex gap-2 sm:gap-3">
-                  <Button variant="ghost" onClick={() => { setShowSignIn(false); setSignInError(""); setSignInEmail(""); }} className="flex-1 min-w-0">Back</Button>
-                  <Button onClick={handleSignIn} disabled={!signInEmail} loading={signInLoading} className="flex-1 min-w-0">Find My Assessment</Button>
+                <div className="flex gap-3">
+                  <Button variant="ghost" onClick={() => { setShowSignIn(false); setSignInError(""); setSignInEmail(""); }} className="flex-1">Back</Button>
+                  <Button onClick={handleSignIn} disabled={!signInEmail} loading={signInLoading} className="flex-1">Find My Assessment</Button>
                 </div>
               </div>
             ) : (
@@ -281,77 +257,27 @@ export default function HomePage() {
                         )}
                       </div>
                       <div className="text-xs text-white/20 mt-1">
-                        {s.status === "analyzed" ? "View your results →" : s.status === "completed" ? "View analysis →" : "Continue where you left off →"}
+                        {s.status === "analyzed" ? "View your results" : s.status === "completed" ? "View analysis" : "Continue where you left off"}
                       </div>
                     </button>
                   ))}
                 </div>
-                <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
-                  <Button variant="ghost" onClick={() => { setSignInSessions(null); setSignInEmail(""); }} className="flex-1 min-w-0">Try Another Email</Button>
-                  <Button variant="secondary" onClick={() => { setShowSignIn(false); setSignInSessions(null); setSignInEmail(""); }} className="flex-1 min-w-0">Start New Assessment</Button>
-                </div>
+                <Button variant="ghost" onClick={() => { setSignInSessions(null); setSignInEmail(""); }} className="w-full">
+                  Try Another Email
+                </Button>
               </div>
             )}
           </div>
-        ) : !showForm ? (
-          showCatalog ? (
-            /* Multi-assessment catalog */
-            <div className="max-w-3xl w-full space-y-10">
-              <div className="text-center space-y-3">
-                <h1 className="text-2xl sm:text-4xl font-bold tracking-tight">
-                  <span className="bg-gradient-to-r from-white via-white to-white/60 bg-clip-text text-transparent">HMN Cascade</span>{" "}
-                  <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">Assessments</span>
-                </h1>
-                <p className="text-white/40 max-w-md mx-auto">Choose the right diagnostic for your needs.</p>
-              </div>
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                {assessments.map((a) => (
-                  <button
-                    key={a.id}
-                    onClick={() => handleSelectAssessment(a)}
-                    className="text-left bg-white/[0.03] border border-white/10 rounded-2xl p-4 sm:p-6 hover:bg-white/[0.06] hover:border-white/20 transition-all group"
-                  >
-                    <div className="flex items-start justify-between mb-3">
-                      <span className="text-2xl">{a.icon || "📋"}</span>
-                      <span className="text-xs text-white/30 bg-white/5 px-2 py-0.5 rounded-full">{a.estimatedMinutes} min</span>
-                    </div>
-                    <h3 className="text-lg font-semibold text-white mb-1 group-hover:text-white/90">{a.name}</h3>
-                    <p className="text-sm text-white/40 mb-3 line-clamp-2">{a.description}</p>
-                    <div className="text-xs text-white/30">{a.questionCount} questions</div>
-                  </button>
-                ))}
-              </div>
-            </div>
-          ) : (
-            /* Single assessment hero */
-            <div className="max-w-2xl text-center space-y-8">
-              <div className="space-y-4">
-                <h1 className="text-3xl sm:text-5xl font-bold tracking-tight">
-                  <span className="bg-gradient-to-r from-white via-white to-white/60 bg-clip-text text-transparent">AI Readiness</span><br />
-                  <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">Assessment</span>
-                </h1>
-                <p className="text-base sm:text-lg text-white/50 max-w-md mx-auto">A diagnostic conversation that uncovers where you are with AI, where the gaps are, and exactly what to do next.</p>
-              </div>
-              <div className="grid grid-cols-3 gap-2 sm:gap-4 max-w-lg mx-auto">
-                {[{ label: "25 min", sub: "conversation" }, { label: "8", sub: "dimensions scored" }, { label: "Custom", sub: "action plan" }].map((s, i) => (
-                  <div key={i} className="bg-white/5 rounded-xl p-2.5 sm:p-4 border border-white/5">
-                    <div className="text-base sm:text-xl font-semibold text-white">{s.label}</div>
-                    <div className="text-[10px] sm:text-xs text-white/40">{s.sub}</div>
-                  </div>
-                ))}
-              </div>
-              <Button onClick={() => { setSelectedAssessment(assessments[0] || null); setShowForm(true); }} size="lg">Begin Assessment</Button>
-            </div>
-          )
-        ) : (
-          /* Intake form */
+
+        /* ── Intake form (invite accepted) ── */
+        ) : showForm && inviteToken ? (
           <div className="w-full max-w-md space-y-6 sm:space-y-8">
             <div className="text-center space-y-2">
-              <h2 className="text-2xl font-semibold text-white">{inviteToken ? "You've been invited" : "Let's get started"}</h2>
-              {selectedAssessment && (
-                <p className="text-white/40 text-sm">{selectedAssessment.icon} {selectedAssessment.name}</p>
+              <h2 className="text-2xl font-semibold text-white">You've been invited</h2>
+              {assessmentName && (
+                <p className="text-white/40 text-sm">{assessmentName}</p>
               )}
-              <p className="text-white/30 text-xs">{inviteToken ? "Please confirm your details and begin." : "Tell us a bit about yourself first."}</p>
+              <p className="text-white/30 text-xs">Please confirm your details and begin.</p>
             </div>
             <div className="space-y-4">
               {([
@@ -363,22 +289,77 @@ export default function HomePage() {
                 { label: "Business Email", value: email, set: setEmail, ph: "you@company.com", req: true },
               ] as const).map((f) => (
                 <div key={f.label}>
-                  <label className="block text-sm text-white/50 mb-1.5">{f.label} {"req" in f && f.req && <span className="text-red-400">*</span>}</label>
-                  <input type={f.label.includes("Email") ? "email" : "text"} value={f.value} onChange={(e) => f.set(e.target.value)} placeholder={f.ph}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/20 focus:outline-none focus:border-white/30 transition-colors" />
+                  <label className="block text-sm text-white/50 mb-1.5">
+                    {f.label} {"req" in f && f.req && <span className="text-red-400">*</span>}
+                  </label>
+                  <input
+                    type={f.label.includes("Email") ? "email" : "text"}
+                    value={f.value}
+                    onChange={(e) => f.set(e.target.value)}
+                    placeholder={f.ph}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/20 focus:outline-none focus:border-white/30 transition-colors"
+                  />
                 </div>
               ))}
             </div>
-            <div className="flex gap-2 sm:gap-3">
-              <Button variant="ghost" onClick={() => setShowForm(false)} className="flex-1 min-w-0">Back</Button>
-              <Button onClick={handleStart} disabled={!name || !company || !email} loading={isCreating} className="flex-1 min-w-0">{inviteToken ? "Confirm & Start" : "Start Interview"}</Button>
+            <Button
+              onClick={handleStart}
+              disabled={!name || !company || !email}
+              loading={isCreating}
+              className="w-full"
+              size="lg"
+            >
+              Confirm & Start Assessment
+            </Button>
+          </div>
+
+        /* ── Default landing page (no invite) ── */
+        ) : (
+          <div className="max-w-2xl text-center space-y-10">
+            <div className="space-y-6">
+              <div className="flex justify-center">
+                <img src="/hmn_logo.png" alt="HMN" className="h-16 w-auto opacity-80" />
+              </div>
+              <div className="space-y-3">
+                <h1 className="text-3xl sm:text-5xl font-bold tracking-tight">
+                  <span className="bg-gradient-to-r from-white via-white to-white/60 bg-clip-text text-transparent">
+                    Cascade Assessments
+                  </span>
+                </h1>
+                <p className="text-base sm:text-lg text-white/40 max-w-md mx-auto leading-relaxed">
+                  AI-powered diagnostic assessments for organizations navigating the future of work.
+                </p>
+              </div>
             </div>
+
+            <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-6 sm:p-8 max-w-sm mx-auto">
+              <div className="space-y-3">
+                <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center mx-auto">
+                  <svg className="w-5 h-5 text-white/40" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+                  </svg>
+                </div>
+                <h3 className="text-sm font-medium text-white/70">Invitation Required</h3>
+                <p className="text-xs text-white/30 leading-relaxed">
+                  Assessments are available by invitation only. Check your email for an invitation link from your organization.
+                </p>
+              </div>
+            </div>
+
+            <button
+              onClick={() => setShowSignIn(true)}
+              className="text-white/30 hover:text-white/50 text-sm transition-colors"
+            >
+              Already started? Continue your assessment
+            </button>
           </div>
         )}
       </main>
 
       <footer className="border-t border-white/5 px-4 sm:px-6 py-4">
-        <div className="max-w-5xl mx-auto text-center text-xs text-white/20">HMN Cascade Assessment System</div>
+        <div className="max-w-5xl mx-auto text-center text-xs text-white/20">
+          beHMN Assessment Platform
+        </div>
       </footer>
     </div>
   );

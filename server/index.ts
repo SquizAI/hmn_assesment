@@ -544,7 +544,7 @@ app.get("/api/invitations/lookup", async (req, res) => {
 
 // --- Sessions ---
 
-app.get("/api/sessions", async (_req, res) => {
+app.get("/api/sessions", requireAdmin, async (_req, res) => {
   try {
     const sessions = await listAllSessions();
     res.json({ sessions });
@@ -562,18 +562,21 @@ app.post("/api/sessions", async (req, res) => {
       return;
     }
 
-    // Validate invite token if provided
+    // Require invite token — no self-service sign-ups
+    if (!inviteToken) {
+      res.status(403).json({ error: "An invitation is required to start an assessment" });
+      return;
+    }
+
     let invitation = null;
-    if (inviteToken) {
-      invitation = await loadInvitationByToken(inviteToken);
-      if (!invitation) {
-        res.status(400).json({ error: "Invalid invitation token" });
-        return;
-      }
-      if (invitation.sessionId) {
-        res.status(400).json({ error: "This invitation has already been used", sessionId: invitation.sessionId });
-        return;
-      }
+    invitation = await loadInvitationByToken(inviteToken);
+    if (!invitation) {
+      res.status(400).json({ error: "Invalid invitation token" });
+      return;
+    }
+    if (invitation.sessionId) {
+      res.status(400).json({ error: "This invitation has already been used", sessionId: invitation.sessionId });
+      return;
     }
 
     const id = `hmn_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
@@ -1749,10 +1752,10 @@ app.get("/api/admin/export", requireAdmin, async (req, res) => {
 });
 
 // ============================================================
-// PUBLIC ASSESSMENT LISTING
+// ASSESSMENT LISTING (admin only — public access via invitations)
 // ============================================================
 
-app.get("/api/assessments", async (_req, res) => {
+app.get("/api/assessments", requireAdmin, async (_req, res) => {
   try {
     const all = await listAllAssessments();
     const assessments = all
@@ -1773,9 +1776,9 @@ app.get("/api/assessments", async (_req, res) => {
   }
 });
 
-app.get("/api/assessments/:id", async (req, res) => {
+app.get("/api/assessments/:id", requireAdmin, async (req, res) => {
   try {
-    const assessment = await loadAssessment(req.params.id);
+    const assessment = await loadAssessment(req.params.id as string);
     if (!assessment) {
       res.status(404).json({ error: "Assessment not found" });
       return;

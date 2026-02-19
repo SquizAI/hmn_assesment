@@ -210,27 +210,32 @@ export default function AdminChatDrawer({ open, onClose }: Props) {
 
   return (
     <>
-      {/* Backdrop */}
+      {/* Mobile backdrop only */}
       {open && (
         <div
-          className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm md:bg-transparent md:backdrop-blur-none md:pointer-events-none"
+          className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm md:hidden"
           onClick={onClose}
         />
       )}
 
-      {/* Drawer */}
+      {/* Drawer — mobile: fixed overlay, desktop: inline flex item that pushes content */}
       <div
         className={`
-          fixed top-0 right-0 z-50 h-full w-full sm:w-[440px] bg-[#0c0c16] border-l border-white/[0.06]
-          flex flex-col shadow-2xl shadow-black/40
-          transition-transform duration-300 ease-in-out
-          ${open ? "translate-x-0" : "translate-x-full"}
+          fixed top-0 right-0 z-50 h-full w-full sm:w-[440px]
+          md:static md:z-auto md:h-auto md:w-auto
+          ${open ? "md:min-w-[440px] md:max-w-[440px]" : "md:min-w-0 md:max-w-0"}
+          transition-all duration-300 ease-in-out
+          ${open ? "translate-x-0" : "translate-x-full md:translate-x-0"}
+          md:overflow-hidden
         `}
-        onDragEnter={handleDragEnter}
-        onDragLeave={handleDragLeave}
-        onDragOver={handleDragOver}
-        onDrop={handleDrop}
       >
+        <div
+          className="h-full w-full sm:w-[440px] md:w-[440px] bg-[#0c0c16] border-l border-white/[0.06] flex flex-col shadow-2xl shadow-black/40 md:shadow-none"
+          onDragEnter={handleDragEnter}
+          onDragLeave={handleDragLeave}
+          onDragOver={handleDragOver}
+          onDrop={handleDrop}
+        >
         {/* Header */}
         <div className="shrink-0 flex items-center justify-between px-4 py-3 border-b border-white/[0.06]">
           <div className="flex items-center gap-2.5">
@@ -388,6 +393,7 @@ export default function AdminChatDrawer({ open, onClose }: Props) {
             onChange={handleFileInput}
             className="hidden"
           />
+        </div>
         </div>
       </div>
     </>
