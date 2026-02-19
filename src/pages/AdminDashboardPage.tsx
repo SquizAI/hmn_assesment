@@ -125,16 +125,16 @@ export default function AdminDashboardPage() {
 
   if (loading) {
     return (
-      <div className="px-6 py-6 flex items-center justify-center h-full">
+      <div className="px-4 md:px-6 py-4 md:py-6 flex items-center justify-center h-full">
         <span className="text-white/30">Loading...</span>
       </div>
     );
   }
 
   return (
-    <div className="px-6 py-6 space-y-6">
+    <div className="px-4 md:px-6 py-4 md:py-6 space-y-4 md:space-y-6">
       {/* Stat Cards Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
         <StatCard
           label="Total Sessions"
           value={stats?.totalSessions ?? 0}
@@ -168,23 +168,23 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* Completion Funnel */}
-      <div className="bg-white/[0.03] rounded-2xl border border-white/10 p-6">
-        <h2 className="text-sm font-semibold text-white/60 uppercase tracking-wider mb-4">
+      <div className="bg-white/[0.03] rounded-2xl border border-white/10 p-4 md:p-6">
+        <h2 className="text-xs md:text-sm font-semibold text-white/60 uppercase tracking-wider mb-3 md:mb-4">
           Completion Funnel
         </h2>
         <div className="space-y-3">
           {funnel.map((stage) => (
-            <div key={stage.stage} className="flex items-center gap-3">
-              <span className="w-28 text-sm text-white/50 flex-shrink-0">
+            <div key={stage.stage} className="flex items-center gap-2 md:gap-3">
+              <span className="w-20 md:w-28 text-xs md:text-sm text-white/50 flex-shrink-0">
                 {FUNNEL_LABELS[stage.stage] || stage.stage}
               </span>
-              <div className="flex-1 bg-white/5 rounded-lg h-8 overflow-hidden">
+              <div className="flex-1 bg-white/5 rounded-lg h-6 md:h-8 overflow-hidden">
                 <div
                   className={`h-full rounded-lg bg-gradient-to-r ${FUNNEL_COLORS[stage.stage] || "from-gray-500 to-gray-600"}`}
                   style={{ width: `${stage.percentage}%`, minWidth: "2px" }}
                 />
               </div>
-              <span className="text-sm text-white/40 tabular-nums flex-shrink-0 w-24 text-right">
+              <span className="text-xs md:text-sm text-white/40 tabular-nums flex-shrink-0 w-16 md:w-24 text-right">
                 {stage.count} ({stage.percentage}%)
               </span>
             </div>
@@ -193,10 +193,10 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* Two-column grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
         {/* Dimension Averages */}
-        <div className="bg-white/[0.03] rounded-2xl border border-white/10 p-6">
-          <h2 className="text-sm font-semibold text-white/60 uppercase tracking-wider mb-4">
+        <div className="bg-white/[0.03] rounded-2xl border border-white/10 p-4 md:p-6">
+          <h2 className="text-xs md:text-sm font-semibold text-white/60 uppercase tracking-wider mb-3 md:mb-4">
             Dimension Averages
           </h2>
           {dimensions.length === 0 ? (
@@ -204,14 +204,14 @@ export default function AdminDashboardPage() {
           ) : (
             <div className="space-y-3">
               {dimensions.map((dim) => (
-                <div key={dim.dimension} className="flex items-center gap-3">
-                  <span className="w-36 text-sm text-white/50 flex-shrink-0 truncate">
+                <div key={dim.dimension} className="flex items-center gap-2 md:gap-3">
+                  <span className="w-24 md:w-36 text-xs md:text-sm text-white/50 flex-shrink-0 truncate">
                     {humanize(dim.dimension)}
                   </span>
-                  <span className="text-sm font-medium text-white/70 tabular-nums w-8 text-right flex-shrink-0">
+                  <span className="text-xs md:text-sm font-medium text-white/70 tabular-nums w-7 md:w-8 text-right flex-shrink-0">
                     {Math.round(dim.average)}
                   </span>
-                  <div className="flex-1 bg-white/5 rounded-lg h-5 overflow-hidden">
+                  <div className="flex-1 bg-white/5 rounded-lg h-4 md:h-5 overflow-hidden">
                     <div
                       className={`h-full rounded-lg bg-gradient-to-r ${scoreBarColor(dim.average)}`}
                       style={{ width: `${dim.average}%`, minWidth: "2px" }}
@@ -224,9 +224,9 @@ export default function AdminDashboardPage() {
         </div>
 
         {/* Top Companies */}
-        <div className="bg-white/[0.03] rounded-2xl border border-white/10 p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-sm font-semibold text-white/60 uppercase tracking-wider">
+        <div className="bg-white/[0.03] rounded-2xl border border-white/10 p-4 md:p-6">
+          <div className="flex items-center justify-between mb-3 md:mb-4">
+            <h2 className="text-xs md:text-sm font-semibold text-white/60 uppercase tracking-wider">
               Top Companies
             </h2>
             <button
@@ -244,30 +244,30 @@ export default function AdminDashboardPage() {
                 <div
                   key={company.company}
                   onClick={() => navigate(`/admin/companies/${encodeURIComponent(company.company)}`)}
-                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-white/5 cursor-pointer transition-colors"
+                  className="flex items-center gap-2 md:gap-3 px-2 md:px-3 py-2 md:py-2.5 rounded-xl hover:bg-white/5 cursor-pointer transition-colors"
                 >
-                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500/15 to-blue-500/15 border border-white/10 flex items-center justify-center flex-shrink-0">
+                  <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-gradient-to-br from-purple-500/15 to-blue-500/15 border border-white/10 flex items-center justify-center shrink-0">
                     <span className="text-xs font-bold text-white/50">
                       {company.company.charAt(0).toUpperCase()}
                     </span>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <span className="text-sm font-medium text-white/80 truncate block">
+                    <span className="text-xs md:text-sm font-medium text-white/80 truncate block">
                       {company.company}
                     </span>
-                    <span className="text-xs text-white/30">
+                    <span className="text-[10px] md:text-xs text-white/30">
                       {company.sessionCount} session{company.sessionCount !== 1 ? "s" : ""} · {company.participantCount} people
                     </span>
                   </div>
                   {company.averageScore !== null && (
-                    <span className={`text-sm font-semibold tabular-nums ${scoreColor(company.averageScore) === "green" ? "text-green-400" : scoreColor(company.averageScore) === "yellow" ? "text-yellow-400" : "text-red-400"}`}>
+                    <span className={`text-xs md:text-sm font-semibold tabular-nums ${scoreColor(company.averageScore) === "green" ? "text-green-400" : scoreColor(company.averageScore) === "yellow" ? "text-yellow-400" : "text-red-400"}`}>
                       {company.averageScore}
                     </span>
                   )}
                   {company.hasResearch && (
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 flex-shrink-0" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
                   )}
-                  <span className="text-xs text-white/20 flex-shrink-0 w-14 text-right">
+                  <span className="text-[10px] md:text-xs text-white/20 shrink-0 w-12 md:w-14 text-right">
                     {relativeDate(company.lastActivity)}
                   </span>
                 </div>

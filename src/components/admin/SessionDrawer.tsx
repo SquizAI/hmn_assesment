@@ -170,12 +170,12 @@ export default function SessionDrawer({ sessionId, onClose, onDelete }: SessionD
 
       {/* Drawer Panel */}
       <div
-        className={`absolute right-0 top-0 h-full w-full max-w-lg bg-[#0a0a0f] border-l border-white/10 flex flex-col transition-transform duration-300 ease-in-out ${
+        className={`absolute right-0 top-0 h-full w-full sm:max-w-lg bg-[#0a0a0f] border-l border-white/10 flex flex-col transition-transform duration-300 ease-in-out ${
           visible ? "translate-x-0" : "translate-x-full"
         }`}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 shrink-0">
+        <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-white/10 shrink-0">
           <h2 className="text-lg font-semibold text-white">Session Details</h2>
           <button
             onClick={handleClose}
@@ -187,7 +187,7 @@ export default function SessionDrawer({ sessionId, onClose, onDelete }: SessionD
 
         {/* Tabs */}
         {!loading && session && (
-          <div className="flex border-b border-white/[0.06] px-6 shrink-0">
+          <div className="flex border-b border-white/[0.06] px-4 sm:px-6 shrink-0">
             {TABS.map((tab) => (
               <button
                 key={tab.id}
@@ -219,7 +219,7 @@ export default function SessionDrawer({ sessionId, onClose, onDelete }: SessionD
           ) : !session ? (
             <div className="text-center text-white/30 py-24">Session not found</div>
           ) : (
-            <div className="px-6 py-6 space-y-6">
+            <div className="px-4 sm:px-6 py-6 space-y-6">
               {/* Details Tab */}
               {activeTab === "details" && (
                 <>

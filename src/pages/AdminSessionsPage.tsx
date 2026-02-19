@@ -123,49 +123,51 @@ export default function AdminSessionsPage() {
   };
 
   return (
-    <div className="px-6 py-6">
+    <div className="px-4 md:px-6 py-6">
       {/* Filter Bar */}
-      <div className="flex items-center gap-3 mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center flex-wrap gap-2 sm:gap-3 mb-6">
         <input
           type="text"
           placeholder="Search by name or company..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="bg-white/[0.05] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/30 outline-none focus:border-white/20 transition-colors"
+          className="w-full sm:w-auto bg-white/[0.05] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/30 outline-none focus:border-white/20 transition-colors"
         />
 
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          className="bg-white/[0.05] border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-white/20 transition-colors appearance-none cursor-pointer"
-        >
-          <option value="all">All</option>
-          <option value="intake">Intake</option>
-          <option value="in_progress">In Progress</option>
-          <option value="completed">Completed</option>
-          <option value="analyzed">Analyzed</option>
-        </select>
+        <div className="flex gap-2 sm:gap-3">
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="flex-1 sm:flex-none bg-white/[0.05] border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-white/20 transition-colors appearance-none cursor-pointer"
+          >
+            <option value="all">All</option>
+            <option value="intake">Intake</option>
+            <option value="in_progress">In Progress</option>
+            <option value="completed">Completed</option>
+            <option value="analyzed">Analyzed</option>
+          </select>
 
-        <select
-          value={dateFilter}
-          onChange={(e) => setDateFilter(e.target.value)}
-          className="bg-white/[0.05] border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-white/20 transition-colors appearance-none cursor-pointer"
-        >
-          <option value="all">All time</option>
-          <option value="today">Today</option>
-          <option value="week">This week</option>
-          <option value="month">This month</option>
-        </select>
+          <select
+            value={dateFilter}
+            onChange={(e) => setDateFilter(e.target.value)}
+            className="flex-1 sm:flex-none bg-white/[0.05] border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-white/20 transition-colors appearance-none cursor-pointer"
+          >
+            <option value="all">All time</option>
+            <option value="today">Today</option>
+            <option value="week">This week</option>
+            <option value="month">This month</option>
+          </select>
+        </div>
 
-        <div className="ml-auto relative" ref={exportRef}>
+        <div className="sm:ml-auto relative" ref={exportRef}>
           <button
             onClick={() => setExportOpen(!exportOpen)}
-            className="bg-white/[0.05] border border-white/10 rounded-lg px-4 py-2 text-sm text-white hover:bg-white/[0.08] transition-colors"
+            className="w-full sm:w-auto bg-white/[0.05] border border-white/10 rounded-lg px-4 py-2 text-sm text-white hover:bg-white/[0.08] transition-colors"
           >
             Export
           </button>
           {exportOpen && (
-            <div className="absolute right-0 top-full mt-1 bg-[#12121a] border border-white/10 rounded-lg overflow-hidden shadow-xl z-20">
+            <div className="absolute right-0 sm:right-0 left-0 sm:left-auto top-full mt-1 bg-[#12121a] border border-white/10 rounded-lg overflow-hidden shadow-xl z-20 sm:min-w-[120px]">
               <button
                 onClick={() => handleExport("csv")}
                 className="block w-full text-left px-4 py-2 text-sm text-white hover:bg-white/[0.06] transition-colors"
@@ -185,66 +187,68 @@ export default function AdminSessionsPage() {
 
       {/* Sessions Table */}
       <div className="bg-white/[0.03] rounded-2xl border border-white/10 overflow-hidden">
-        <table className="w-full">
-          <thead>
-            <tr className="bg-white/[0.02]">
-              <th className="text-left text-xs text-white/40 uppercase tracking-wider px-4 py-3">
-                Name
-              </th>
-              <th className="text-left text-xs text-white/40 uppercase tracking-wider px-4 py-3">
-                Company
-              </th>
-              <th className="text-left text-xs text-white/40 uppercase tracking-wider px-4 py-3">
-                Status
-              </th>
-              <th className="text-left text-xs text-white/40 uppercase tracking-wider px-4 py-3">
-                Responses
-              </th>
-              <th className="text-left text-xs text-white/40 uppercase tracking-wider px-4 py-3">
-                Date
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
-              <tr>
-                <td colSpan={5} className="text-center text-white/30 py-12">
-                  Loading sessions...
-                </td>
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="bg-white/[0.02]">
+                <th className="text-left text-xs text-white/40 uppercase tracking-wider px-4 py-3">
+                  Name
+                </th>
+                <th className="hidden sm:table-cell text-left text-xs text-white/40 uppercase tracking-wider px-4 py-3">
+                  Company
+                </th>
+                <th className="text-left text-xs text-white/40 uppercase tracking-wider px-4 py-3">
+                  Status
+                </th>
+                <th className="hidden sm:table-cell text-left text-xs text-white/40 uppercase tracking-wider px-4 py-3">
+                  Responses
+                </th>
+                <th className="hidden sm:table-cell text-left text-xs text-white/40 uppercase tracking-wider px-4 py-3">
+                  Date
+                </th>
               </tr>
-            ) : filteredSessions.length === 0 ? (
-              <tr>
-                <td colSpan={5} className="text-center text-white/30 py-12">
-                  No sessions found
-                </td>
-              </tr>
-            ) : (
-              filteredSessions.map((session) => (
-                <tr
-                  key={session.id}
-                  onClick={() => handleRowClick(session.id)}
-                  className="hover:bg-white/[0.04] cursor-pointer transition-colors border-t border-white/5"
-                >
-                  <td className="px-4 py-3 font-medium text-white">
-                    {session.participantName}
-                  </td>
-                  <td className="px-4 py-3 text-white/50">
-                    {session.participantCompany}
-                  </td>
-                  <td className="px-4 py-3">
-                    <StatusBadge status={session.status} />
-                  </td>
-                  <td className="px-4 py-3 text-white/40">
-                    {session.responseCount}
-                  </td>
-                  <td className="px-4 py-3 text-white/30">
-                    {formatDate(session.createdAt)}
+            </thead>
+            <tbody>
+              {loading ? (
+                <tr>
+                  <td colSpan={5} className="text-center text-white/30 py-12">
+                    Loading sessions...
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ) : filteredSessions.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="text-center text-white/30 py-12">
+                    No sessions found
+                  </td>
+                </tr>
+              ) : (
+                filteredSessions.map((session) => (
+                  <tr
+                    key={session.id}
+                    onClick={() => handleRowClick(session.id)}
+                    className="hover:bg-white/[0.04] cursor-pointer transition-colors border-t border-white/5"
+                  >
+                    <td className="px-4 py-3 font-medium text-white">
+                      {session.participantName}
+                    </td>
+                    <td className="hidden sm:table-cell px-4 py-3 text-white/50">
+                      {session.participantCompany}
+                    </td>
+                    <td className="px-4 py-3">
+                      <StatusBadge status={session.status} />
+                    </td>
+                    <td className="hidden sm:table-cell px-4 py-3 text-white/40">
+                      {session.responseCount}
+                    </td>
+                    <td className="hidden sm:table-cell px-4 py-3 text-white/30">
+                      {formatDate(session.createdAt)}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* Session Drawer */}

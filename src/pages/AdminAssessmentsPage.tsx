@@ -363,7 +363,7 @@ export default function AdminAssessmentsPage() {
   // ---- Render: Loading ----
   if (loading) {
     return (
-      <div className="px-6 py-6 flex flex-col items-center justify-center min-h-[500px] gap-3">
+      <div className="px-4 md:px-6 py-6 flex flex-col items-center justify-center min-h-[500px] gap-3">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white/40" />
         <span className="text-white/30 text-sm">Loading assessments...</span>
       </div>
@@ -373,7 +373,7 @@ export default function AdminAssessmentsPage() {
   // ---- Render: Error ----
   if (error && assessments.length === 0) {
     return (
-      <div className="px-6 py-6 flex flex-col items-center justify-center min-h-[500px] gap-4">
+      <div className="px-4 md:px-6 py-6 flex flex-col items-center justify-center min-h-[500px] gap-4">
         <div className="text-4xl opacity-30">⚠</div>
         <p className="text-white/50 text-sm">{error}</p>
         <button
@@ -387,13 +387,13 @@ export default function AdminAssessmentsPage() {
   }
 
   return (
-    <div className="px-6 py-6 space-y-6">
+    <div className="px-4 md:px-6 py-6 space-y-6">
       {/* ================================================================== */}
       {/* HEADER ROW                                                         */}
       {/* ================================================================== */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white/90 tracking-tight">
+          <h1 className="text-xl md:text-2xl font-bold text-white/90 tracking-tight">
             Assessments
           </h1>
           <p className="text-sm text-white/40 mt-0.5">
@@ -403,7 +403,7 @@ export default function AdminAssessmentsPage() {
 
         <button
           onClick={() => navigate("/admin/builder")}
-          className="px-4 py-2 text-sm font-medium rounded-xl transition-all bg-gradient-to-r from-purple-500/20 to-blue-500/20 border border-purple-500/20 text-purple-200 hover:from-purple-500/30 hover:to-blue-500/30 hover:text-white"
+          className="w-full sm:w-auto px-4 py-2 text-sm font-medium rounded-xl transition-all bg-gradient-to-r from-purple-500/20 to-blue-500/20 border border-purple-500/20 text-purple-200 hover:from-purple-500/30 hover:to-blue-500/30 hover:text-white"
         >
           Build Assessment
         </button>
@@ -414,7 +414,7 @@ export default function AdminAssessmentsPage() {
       {/* ================================================================== */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         {/* Status tabs */}
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 overflow-x-auto">
           {(["all", "active", "draft", "archived"] as StatusFilter[]).map(
             (tab) => (
               <FilterTab
@@ -429,7 +429,7 @@ export default function AdminAssessmentsPage() {
         </div>
 
         {/* Search + Sort */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center flex-wrap gap-2">
           <div className="relative">
             <input
               ref={searchRef}
@@ -437,7 +437,7 @@ export default function AdminAssessmentsPage() {
               placeholder="Search assessments..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="bg-white/[0.05] border border-white/10 rounded-lg pl-9 pr-3 py-2 text-sm text-white placeholder-white/30 outline-none focus:border-white/20 transition-colors w-56"
+              className="bg-white/[0.05] border border-white/10 rounded-lg pl-9 pr-3 py-2 text-sm text-white placeholder-white/30 outline-none focus:border-white/20 transition-colors w-full sm:w-56"
             />
             {/* Search icon */}
             <svg
@@ -516,7 +516,7 @@ export default function AdminAssessmentsPage() {
           <p className="text-xs text-white/30 uppercase tracking-wider">
             Total
           </p>
-          <p className="text-xl font-semibold text-white/90 mt-1 tabular-nums">
+          <p className="text-lg md:text-xl font-semibold text-white/90 mt-1 tabular-nums">
             {counts.all}
           </p>
         </div>
@@ -524,7 +524,7 @@ export default function AdminAssessmentsPage() {
           <p className="text-xs text-green-400/60 uppercase tracking-wider">
             Active
           </p>
-          <p className="text-xl font-semibold text-green-400 mt-1 tabular-nums">
+          <p className="text-lg md:text-xl font-semibold text-green-400 mt-1 tabular-nums">
             {counts.active}
           </p>
         </div>
@@ -532,7 +532,7 @@ export default function AdminAssessmentsPage() {
           <p className="text-xs text-yellow-400/60 uppercase tracking-wider">
             Draft
           </p>
-          <p className="text-xl font-semibold text-yellow-400 mt-1 tabular-nums">
+          <p className="text-lg md:text-xl font-semibold text-yellow-400 mt-1 tabular-nums">
             {counts.draft}
           </p>
         </div>
@@ -540,7 +540,7 @@ export default function AdminAssessmentsPage() {
           <p className="text-xs text-white/25 uppercase tracking-wider">
             Archived
           </p>
-          <p className="text-xl font-semibold text-white/40 mt-1 tabular-nums">
+          <p className="text-lg md:text-xl font-semibold text-white/40 mt-1 tabular-nums">
             {counts.archived}
           </p>
         </div>
@@ -559,7 +559,7 @@ export default function AdminAssessmentsPage() {
           onCreate={() => navigate("/admin/builder")}
         />
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((assessment) => {
             const isInFlight = actionInFlight === assessment.id;
             return (
@@ -595,7 +595,7 @@ export default function AdminAssessmentsPage() {
                 </div>
 
                 {/* Name */}
-                <h3 className="text-base font-semibold text-white/90 leading-snug">
+                <h3 className="text-sm md:text-base font-semibold text-white/90 leading-snug">
                   {assessment.name}
                 </h3>
 
@@ -647,7 +647,7 @@ export default function AdminAssessmentsPage() {
                 <div className="border-t border-white/[0.06] mt-4 pt-3" />
 
                 {/* Quick actions */}
-                <div className="flex items-center gap-2 flex-wrap">
+                <div className="flex items-center gap-1.5 flex-wrap">
                   {assessment.status === "draft" && (
                     <QuickAction
                       label="Activate"

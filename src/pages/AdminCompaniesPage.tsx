@@ -67,14 +67,14 @@ export default function AdminCompaniesPage() {
 
   if (loading) {
     return (
-      <div className="px-6 py-6 flex items-center justify-center h-full">
+      <div className="px-4 md:px-6 py-4 md:py-6 flex items-center justify-center h-full">
         <span className="text-white/30">Loading companies...</span>
       </div>
     );
   }
 
   return (
-    <div className="px-6 py-6 space-y-6">
+    <div className="px-4 md:px-6 py-4 md:py-6 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -84,13 +84,13 @@ export default function AdminCompaniesPage() {
       </div>
 
       {/* Filters */}
-      <div className="flex items-center gap-3">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
         <input
           type="text"
           placeholder="Search companies or industries..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="bg-white/[0.05] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/30 outline-none focus:border-white/20 transition-colors w-72"
+          className="bg-white/[0.05] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/30 outline-none focus:border-white/20 transition-colors w-full sm:w-72"
         />
         <select
           value={sortBy}
@@ -116,7 +116,7 @@ export default function AdminCompaniesPage() {
               {/* Company Header */}
               <div
                 onClick={() => setExpandedCompany(expandedCompany === company.company ? null : company.company)}
-                className="flex items-center gap-4 px-5 py-4 cursor-pointer hover:bg-white/[0.02] transition-colors"
+                className="flex flex-wrap items-center gap-3 md:gap-4 px-4 md:px-5 py-3 md:py-4 cursor-pointer hover:bg-white/[0.02] transition-colors"
               >
                 {/* Company icon */}
                 <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500/20 to-blue-500/20 border border-white/10 flex items-center justify-center flex-shrink-0">
@@ -143,7 +143,7 @@ export default function AdminCompaniesPage() {
                 </div>
 
                 {/* Stats */}
-                <div className="flex items-center gap-6 flex-shrink-0">
+                <div className="flex items-center gap-3 md:gap-6 flex-shrink-0 flex-wrap">
                   <div className="text-center">
                     <span className="text-lg font-semibold text-white/80">{company.sessionCount}</span>
                     <p className="text-[10px] text-white/30">Sessions</p>

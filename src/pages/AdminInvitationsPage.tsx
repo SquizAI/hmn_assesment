@@ -75,7 +75,7 @@ function ModalBackdrop({
         className="absolute inset-0 bg-black/60 backdrop-blur-sm"
         onClick={onClose}
       />
-      <div className="relative z-10 w-full max-w-lg mx-4">{children}</div>
+      <div className="relative z-10 w-full max-w-lg mx-3 sm:mx-4">{children}</div>
     </div>
   );
 }
@@ -327,18 +327,18 @@ export default function AdminInvitationsPage() {
   // ---- Render: Loading ----
   if (loading) {
     return (
-      <div className="px-6 py-6 flex items-center justify-center min-h-[500px]">
+      <div className="px-4 md:px-6 py-6 flex items-center justify-center min-h-[500px]">
         <span className="text-white/30 text-sm">Loading...</span>
       </div>
     );
   }
 
   return (
-    <div className="px-6 py-6 space-y-6">
+    <div className="px-4 md:px-6 py-4 md:py-6 space-y-4 md:space-y-6">
       {/* ================================================================== */}
       {/* STATS ROW                                                          */}
       {/* ================================================================== */}
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 md:gap-3">
         <StatPill label="Total" count={counts.total} colorClass="text-white/30" />
         <StatPill label="Sent" count={counts.sent} colorClass="text-sky-400/60" />
         <StatPill label="Opened" count={counts.opened} colorClass="text-amber-400/60" />
@@ -396,26 +396,26 @@ export default function AdminInvitationsPage() {
       {/* ================================================================== */}
       {/* INVITATIONS TABLE                                                  */}
       {/* ================================================================== */}
-      <div className="bg-white/[0.03] rounded-2xl border border-white/10 overflow-hidden">
-        <table className="w-full">
+      <div className="bg-white/[0.03] rounded-2xl border border-white/10 overflow-x-auto">
+        <table className="w-full min-w-0">
           <thead>
             <tr className="bg-white/[0.02]">
-              <th className="text-left text-xs text-white/40 uppercase tracking-wider px-4 py-3">
+              <th className="text-left text-xs text-white/40 uppercase tracking-wider px-3 md:px-4 py-3">
                 Participant
               </th>
-              <th className="text-left text-xs text-white/40 uppercase tracking-wider px-4 py-3">
+              <th className="text-left text-xs text-white/40 uppercase tracking-wider px-3 md:px-4 py-3 hidden sm:table-cell">
                 Email
               </th>
-              <th className="text-left text-xs text-white/40 uppercase tracking-wider px-4 py-3">
+              <th className="text-left text-xs text-white/40 uppercase tracking-wider px-3 md:px-4 py-3 hidden md:table-cell">
                 Assessment
               </th>
-              <th className="text-left text-xs text-white/40 uppercase tracking-wider px-4 py-3">
+              <th className="text-left text-xs text-white/40 uppercase tracking-wider px-3 md:px-4 py-3">
                 Status
               </th>
-              <th className="text-left text-xs text-white/40 uppercase tracking-wider px-4 py-3">
+              <th className="text-left text-xs text-white/40 uppercase tracking-wider px-3 md:px-4 py-3 hidden sm:table-cell">
                 Created
               </th>
-              <th className="text-left text-xs text-white/40 uppercase tracking-wider px-4 py-3">
+              <th className="text-left text-xs text-white/40 uppercase tracking-wider px-3 md:px-4 py-3">
                 Actions
               </th>
             </tr>
@@ -423,7 +423,7 @@ export default function AdminInvitationsPage() {
           <tbody>
             {filtered.length === 0 ? (
               <tr>
-                <td colSpan={6} className="text-center text-white/30 py-12">
+                <td colSpan={3} className="text-center text-white/30 py-12">
                   {invitations.length === 0
                     ? "No invitations yet \u2014 create one to get started."
                     : "No invitations match your filters."}
@@ -435,8 +435,8 @@ export default function AdminInvitationsPage() {
                   key={inv.id}
                   className="hover:bg-white/[0.04] cursor-pointer transition-colors border-t border-white/5"
                 >
-                  <td className="px-4 py-3">
-                    <div className="font-medium text-white">
+                  <td className="px-3 md:px-4 py-3">
+                    <div className="font-medium text-white text-sm">
                       {inv.participantName}
                     </div>
                     {inv.participantCompany && (
@@ -444,29 +444,33 @@ export default function AdminInvitationsPage() {
                         {inv.participantCompany}
                       </div>
                     )}
+                    {/* Show email on mobile under name */}
+                    <div className="text-xs text-white/30 mt-0.5 sm:hidden">
+                      {inv.participantEmail}
+                    </div>
                   </td>
-                  <td className="px-4 py-3 text-white/50 text-sm">
+                  <td className="px-3 md:px-4 py-3 text-white/50 text-sm hidden sm:table-cell">
                     {inv.participantEmail}
                   </td>
-                  <td className="px-4 py-3 text-white/50 text-sm">
+                  <td className="px-3 md:px-4 py-3 text-white/50 text-sm hidden md:table-cell">
                     {inv.assessmentName}
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-3 md:px-4 py-3">
                     <StatusBadge status={inv.status} />
                   </td>
-                  <td className="px-4 py-3 text-white/30 text-sm">
+                  <td className="px-3 md:px-4 py-3 text-white/30 text-sm hidden sm:table-cell">
                     {formatDate(inv.createdAt)}
                   </td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-2">
+                  <td className="px-3 md:px-4 py-3">
+                    <div className="flex items-center gap-1.5 md:gap-2 flex-wrap">
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           handleCopyLink(inv);
                         }}
-                        className="px-2.5 py-1 text-xs rounded-lg border transition-colors bg-white/[0.04] border-white/10 text-white/40 hover:bg-white/[0.08] hover:text-white/60"
+                        className="px-2 md:px-2.5 py-1 text-xs rounded-lg border transition-colors bg-white/[0.04] border-white/10 text-white/40 hover:bg-white/[0.08] hover:text-white/60"
                       >
-                        {copiedId === inv.id ? "Copied!" : "Copy Link"}
+                        {copiedId === inv.id ? "Copied!" : "Copy"}
                       </button>
                       {inv.status !== "sent" && (
                         <button

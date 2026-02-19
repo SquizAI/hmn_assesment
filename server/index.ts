@@ -107,6 +107,50 @@ function getQuestionById(id: string) {
   return QUESTION_BANK.find((q) => q.id === id);
 }
 
+// --- Dynamic Assessment Loading (multi-assessment support) ---
+
+interface AssessmentQuestionBank {
+  questions: Array<Record<string, unknown>>;
+  sectionOrder: string[];
+  assessment: Record<string, unknown> | null;
+}
+
+async function getAssessmentQuestionBank(session: Record<string, unknown>): Promise<AssessmentQuestionBank> {
+  const assessmentTypeId = (session.assessmentTypeId as string) || "ai-readiness";
+
+  // For the default ai-readiness assessment, use the static question bank (backwards compatible)
+  if (assessmentTypeId === "ai-readiness") {
+    return { questions: QUESTION_BANK, sectionOrder: SECTION_ORDER, assessment: null };
+  }
+
+  // For other assessments, try to load from Supabase
+  try {
+    const assessment = await loadAssessment(assessmentTypeId);
+    if (assessment?.questions?.length) {
+      const sections = (assessment.sections || []) as Array<{ id: string; order: number }>;
+      const sectionOrder = sections
+        .sort((a, b) => a.order - b.order)
+        .map((s) => s.id);
+      // Cast questions to Record<string, unknown>[] for compatibility with existing code
+      const questions = (assessment.questions as unknown) as Array<Record<string, unknown>>;
+      return { questions, sectionOrder, assessment: assessment as unknown as Record<string, unknown> };
+    }
+  } catch (err) {
+    console.error(`Failed to load assessment ${assessmentTypeId} from Supabase, falling back to static:`, err);
+  }
+
+  // Fallback to static question bank
+  return { questions: QUESTION_BANK, sectionOrder: SECTION_ORDER, assessment: null };
+}
+
+function getQuestionFromBank(bank: Array<Record<string, unknown>>, id: string) {
+  return bank.find((q) => q.id === id);
+}
+
+function substituteCompanyName(text: string, company: string): string {
+  return text.replace(/\[Company\]/g, company);
+}
+
 // ============================================================
 // FIRECRAWL RESEARCH
 // ============================================================
@@ -655,13 +699,16 @@ app.post("/api/interview/start", async (req, res) => {
     return;
   }
 
+  // Load assessment-specific question bank (dynamic for non-default assessments)
+  const { questions: bankQuestions, assessment } = await getAssessmentQuestionBank(session);
+
   // Auto-populate demographics from intake + research (skip redundant questions)
   const autoResponses = autoPopulateDemographics(session);
   session.responses = [...autoResponses];
   const answeredIds = new Set(autoResponses.map((r) => r.questionId as string));
 
   // Find first non-auto-populated, non-deducible question
-  const remaining = QUESTION_BANK.filter((q) => !answeredIds.has(q.id as string));
+  const remaining = bankQuestions.filter((q) => !answeredIds.has(q.id as string));
   const smartRemaining = filterDeducibleQuestions(remaining, session);
   const filteredOutIds = remaining.filter((q) => !smartRemaining.some((sq) => sq.id === q.id)).map((q) => q.id as string);
   const firstQuestion = (smartRemaining.length > 0 ? smartRemaining : remaining)[0];
@@ -669,6 +716,12 @@ app.post("/api/interview/start", async (req, res) => {
   if (!firstQuestion) {
     res.status(500).json({ error: "No questions found" });
     return;
+  }
+
+  // Apply [Company] substitution for employee assessments
+  const companyName = (session.participant as { company?: string })?.company || "";
+  if (companyName && firstQuestion.text) {
+    firstQuestion.text = substituteCompanyName(firstQuestion.text as string, companyName);
   }
 
   // Compute skipped question IDs (auto-populated + deducible)
@@ -682,7 +735,7 @@ app.post("/api/interview/start", async (req, res) => {
   session.status = "in_progress";
   session.currentPhase = firstQuestion.phase;
   session.currentSection = firstQuestion.section;
-  session.currentQuestionIndex = QUESTION_BANK.findIndex((q) => q.id === firstQuestion.id);
+  session.currentQuestionIndex = bankQuestions.findIndex((q) => q.id === firstQuestion.id);
   await saveSession(session);
 
   res.json({
@@ -690,12 +743,17 @@ app.post("/api/interview/start", async (req, res) => {
     currentQuestion: firstQuestion,
     skippedQuestionIds,
     autoPopulatedResponses: autoResponses,
+    // Include assessment metadata so frontend can render dynamic sections/phases
+    assessmentQuestions: bankQuestions,
+    assessmentSections: assessment?.sections || null,
+    assessmentPhases: assessment?.phases || null,
+    assessmentScoringDimensions: assessment?.scoringDimensions || null,
     progress: {
       questionNumber: autoResponses.length + 1,
-      totalQuestions: QUESTION_BANK.length,
+      totalQuestions: bankQuestions.length,
       phase: firstQuestion.phase,
       section: firstQuestion.section,
-      completedPercentage: Math.round((autoResponses.length / QUESTION_BANK.length) * 100),
+      completedPercentage: Math.round((autoResponses.length / bankQuestions.length) * 100),
     },
   });
   } catch (err) {
@@ -716,7 +774,10 @@ app.post("/api/interview/respond", async (req, res) => {
       return;
     }
 
-    const currentQuestion = getQuestionById(questionId);
+    // Load assessment-specific question bank
+    const { questions: bankQuestions, assessment } = await getAssessmentQuestionBank(session);
+
+    const currentQuestion = getQuestionFromBank(bankQuestions, questionId) || getQuestionById(questionId);
     if (!currentQuestion) {
       res.status(404).json({ error: "Question not found" });
       return;
@@ -733,7 +794,7 @@ app.post("/api/interview/respond", async (req, res) => {
         questionId,
       });
 
-      const aiResponse = await generateFollowUp(session, currentQuestion, history);
+      const aiResponse = await generateFollowUp(session, currentQuestion, history, assessment);
 
       const isComplete = aiResponse.includes("[QUESTION_COMPLETE]");
       const cleanResponse = aiResponse.replace("[QUESTION_COMPLETE]", "").trim();
@@ -798,7 +859,7 @@ app.post("/api/interview/respond", async (req, res) => {
 
     // --- Next Question ---
     const answeredIds = new Set(session.responses.map((r: { questionId: string }) => r.questionId));
-    const remaining = QUESTION_BANK.filter((q) => !answeredIds.has(q.id as string));
+    const remaining = bankQuestions.filter((q) => !answeredIds.has(q.id as string));
 
     if (remaining.length === 0) {
       session.status = "completed";
@@ -816,7 +877,7 @@ app.post("/api/interview/respond", async (req, res) => {
     let nextQuestion;
     try {
       const selection = await selectNextQuestion(questionsForAI, session);
-      const selected = getQuestionById(selection.questionId);
+      const selected = getQuestionFromBank(bankQuestions, selection.questionId) || getQuestionById(selection.questionId);
       if (selected) {
         nextQuestion = { ...selected, text: selection.adaptedText || selected.text };
       }
@@ -826,7 +887,13 @@ app.post("/api/interview/respond", async (req, res) => {
 
     if (!nextQuestion) nextQuestion = remaining[0];
 
-    session.currentQuestionIndex = QUESTION_BANK.findIndex((q) => q.id === nextQuestion!.id);
+    // Apply [Company] substitution
+    const companyName = (session.participant as { company?: string })?.company || "";
+    if (companyName && nextQuestion.text) {
+      nextQuestion = { ...nextQuestion, text: substituteCompanyName(nextQuestion.text as string, companyName) };
+    }
+
+    session.currentQuestionIndex = bankQuestions.findIndex((q) => q.id === nextQuestion!.id);
     session.currentPhase = nextQuestion.phase;
     session.currentSection = nextQuestion.section;
     await saveSession(session);
@@ -843,10 +910,10 @@ app.post("/api/interview/respond", async (req, res) => {
       skippedQuestionIds: respondSkippedIds,
       progress: {
         questionNumber: session.responses.length + 1,
-        totalQuestions: QUESTION_BANK.length,
+        totalQuestions: bankQuestions.length,
         phase: nextQuestion.phase,
         section: nextQuestion.section,
-        completedPercentage: Math.round((session.responses.length / QUESTION_BANK.length) * 100),
+        completedPercentage: Math.round((session.responses.length / bankQuestions.length) * 100),
       },
     });
   } catch (err) {
@@ -874,7 +941,10 @@ app.put("/api/interview/respond", async (req, res) => {
       return;
     }
 
-    const currentQuestion = getQuestionById(questionId);
+    // Load assessment-specific question bank
+    const { questions: bankQuestions } = await getAssessmentQuestionBank(session);
+
+    const currentQuestion = getQuestionFromBank(bankQuestions, questionId) || getQuestionById(questionId);
     if (!currentQuestion) {
       res.status(404).json({ error: "Question not found" });
       return;
@@ -1048,7 +1118,8 @@ function getResearchContext(session: Record<string, unknown>): string {
 async function generateFollowUp(
   session: Record<string, unknown>,
   currentQuestion: Record<string, unknown>,
-  conversationHistory: Array<{ role: string; content: string }>
+  conversationHistory: Array<{ role: string; content: string }>,
+  assessment?: Record<string, unknown> | null,
 ) {
   const client = getAnthropicClient();
   const participant = session.participant as { name: string; role: string; company: string; industry: string; teamSize: string };
@@ -1059,7 +1130,21 @@ async function generateFollowUp(
     ? responses.map((r) => `Q: ${r.questionText}\nA: ${typeof r.answer === "object" ? JSON.stringify(r.answer) : r.answer}`).join("\n\n")
     : "No prior responses yet.";
 
-  const systemPrompt = `You are an expert interviewer for HMN (Human Machine Network), conducting an AI readiness assessment.
+  // Use assessment-specific interview prompt if available, otherwise default
+  const assessmentInterviewPrompt = assessment?.interviewSystemPrompt as string | undefined;
+
+  const defaultInterviewRole = `YOUR ROLE:
+- Warm, professional, genuinely curious
+- Ask ONE follow-up at a time
+- Dig deeper based on what they actually said
+- USE your research intel to ask more targeted, informed questions
+- Reference specific things you know about them/their company when relevant
+- Listen for specificity vs. vagueness, contradictions, emotional charge
+- Keep responses concise (2-3 sentences before your follow-up)
+- When this topic feels complete (usually 2-3 exchanges), say: [QUESTION_COMPLETE]
+- Never break character. You are a human interviewer.`;
+
+  const systemPrompt = `${assessmentInterviewPrompt || `You are an expert interviewer for HMN (Human Machine Network), conducting an AI readiness assessment.`}
 
 PARTICIPANT: ${participant.name}, ${participant.role} at ${participant.company} (${participant.industry}, team size: ${participant.teamSize})
 ${researchContext}
@@ -1072,16 +1157,7 @@ SCORING: ${(currentQuestion.scoringDimensions as string[])?.join(", ") || "gener
 
 ${currentQuestion.aiFollowUpPrompt ? `FOLLOW-UP GUIDANCE:\n${currentQuestion.aiFollowUpPrompt}` : ""}
 
-YOUR ROLE:
-- Warm, professional, genuinely curious
-- Ask ONE follow-up at a time
-- Dig deeper based on what they actually said
-- USE your research intel to ask more targeted, informed questions
-- Reference specific things you know about them/their company when relevant
-- Listen for specificity vs. vagueness, contradictions, emotional charge
-- Keep responses concise (2-3 sentences before your follow-up)
-- When this topic feels complete (usually 2-3 exchanges), say: [QUESTION_COMPLETE]
-- Never break character. You are a human interviewer.`;
+${assessmentInterviewPrompt ? "" : defaultInterviewRole}`;
 
   const messages = conversationHistory
     .filter((m) => m.role !== "system")
