@@ -18,7 +18,7 @@ import {
 import {
   loadSessionFromDb, saveSessionToDb, deleteSessionFromDb,
   listAllSessions, listAllAssessments, lookupSessionsByEmail,
-  loadInvitationByToken, updateInvitationStatus, findInvitationBySessionId,
+  loadInvitationByToken, loadInvitationById, updateInvitationStatus, findInvitationBySessionId,
   loadAssessment,
 } from "./supabase.js";
 
@@ -1563,6 +1563,19 @@ app.delete("/api/admin/invitations/:id", requireAdmin, async (req, res) => {
   } catch (err) {
     console.error("Admin delete invitation error:", err);
     res.status(500).json({ error: "Failed to delete invitation" });
+  }
+});
+
+app.post("/api/admin/invitations/:id/resend", requireAdmin, async (req, res) => {
+  try {
+    const inv = await loadInvitationById(String(req.params.id));
+    if (!inv) { res.status(404).json({ error: "Invitation not found" }); return; }
+    // Reset status to sent so it appears fresh in the admin panel
+    await updateInvitationStatus(inv.token, "sent");
+    res.json({ ok: true, token: inv.token });
+  } catch (err) {
+    console.error("Admin resend invitation error:", err);
+    res.status(500).json({ error: "Failed to resend invitation" });
   }
 });
 

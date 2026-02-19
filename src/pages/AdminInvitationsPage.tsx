@@ -4,6 +4,7 @@ import {
   fetchInvitations,
   createInvitation,
   removeInvitation,
+  resendInvitation,
   fetchAssessments,
 } from "../lib/admin-api";
 import type { InvitationSummary, AssessmentSummary } from "../lib/types";
@@ -240,6 +241,20 @@ export default function AdminInvitationsPage() {
     [loadInvitations]
   );
 
+  const handleResend = useCallback(
+    async (inv: InvitationSummary) => {
+      try {
+        await resendInvitation(inv.id);
+        await copyToClipboard(buildInviteLink(inv.token));
+        setToast("Link copied — invitation reset to Sent.");
+        await loadInvitations();
+      } catch {
+        // resend failed silently
+      }
+    },
+    [loadInvitations]
+  );
+
   const handleCreateSubmit = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
@@ -453,6 +468,17 @@ export default function AdminInvitationsPage() {
                       >
                         {copiedId === inv.id ? "Copied!" : "Copy Link"}
                       </button>
+                      {inv.status !== "sent" && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleResend(inv);
+                          }}
+                          className="px-2.5 py-1 text-xs rounded-lg border transition-colors bg-sky-500/10 border-sky-500/25 text-sky-400 hover:bg-sky-500/20"
+                        >
+                          Resend
+                        </button>
+                      )}
                       <button
                         onClick={(e) => {
                           e.stopPropagation();

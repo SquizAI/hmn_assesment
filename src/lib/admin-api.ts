@@ -325,3 +325,8 @@ export async function removeInvitation(id: string) {
   const res = await adminFetch(`/api/admin/invitations/${id}`, { method: "DELETE" });
   return res.json();
 }
+
+export async function resendInvitation(id: string) {
+  const res = await adminFetch(`/api/admin/invitations/${id}/resend`, { method: "POST" });
+  return res.json();
+}
