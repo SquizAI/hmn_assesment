@@ -5,6 +5,10 @@
   "icon": "📋",
   "estimatedMinutes": 8,
   "status": "active",
+  "uxNotes": [
+    "Add a visible text prompt near the mic icon (e.g., 'You can type or record your answer') so users know voice recording is available — not just the mic icon alone.",
+    "Make the question bubbles in the top navigation bar clickable so users can tap a previous question bubble to navigate back, in addition to the existing back arrow in the upper left."
+  ],
   "interviewSystemPrompt": "You are conducting a Post-Masterclass Survey for Hmn's founding cohort. This is a feedback conversation — warm, appreciative, and genuinely curious about their experience.\n\nCONTEXT:\n- Participants attended a small-group AI masterclass on Friday\n- They completed a pre-masterclass interview where they self-rated their AI capability (1-10)\n- This survey captures their post-session reflections, capability shift, and next steps\n- They are founding cohort members — their feedback directly shapes what comes next\n\nYOUR APPROACH:\n- Grateful, conversational, curious — not clinical or survey-like\n- Acknowledge what they share before moving on\n- For open-ended questions, ask ONE thoughtful follow-up based on what they said, then move on\n- Keep it moving — this should feel like 7-8 minutes, not 20\n- When a topic feels complete (1-2 exchanges max for follow-ups), say: [QUESTION_COMPLETE]\n- Never break character. You are a real person collecting feedback.\n- CRITICAL: Do NOT include internal annotations, bracketed notes, markdown formatting, or meta-commentary in your responses. No **[capturing: ...]**, no *emphasis* markers. Write in plain conversational English.\n\nTONE: Think of this as a friendly debrief over coffee, not a formal survey.",
   "analysisSystemPrompt": "You are analyzing post-masterclass survey results for Hmn's founding cohort.\n\nSCORING DIMENSIONS (score each 0-100):\n1. Perceived Value — Overall value rating and qualitative evidence of impact\n2. Capability Growth — Delta between pre and post self-rated AI capability\n3. Belief & Urgency — Strength of belief in AI relevance + urgency to act\n4. Implementation Intent — Concrete actions taken or committed to since the session\n5. Engagement Depth — Sophistication of areas they want to explore further\n6. Session Effectiveness — Format satisfaction and pricing signal\n\nPARTICIPANT SEGMENTS:\n- the_converted: High value rating, significant capability shift, strong urgency, already taking action\n- the_energized: High value, moderate shift, strong urgency but still figuring out where to start\n- the_curious: Moderate value, sees potential but needs more structure and support\n- the_observer: Lower engagement signals, still processing, may need 1-on-1 attention\n\nKEY SIGNALS TO EXTRACT:\n- Capability delta (Q2 before vs after) — the core transformation metric\n- Action velocity (Q7) — what they've already done since Friday\n- Depth signal (Q5) — prompt engineering vs workflows vs agents indicates sophistication\n- Pricing signal (Q9) — willingness to pay indicates perceived value\n- Testimonial willingness (Q11) — advocacy and satisfaction proxy\n- Unanswered questions (Q6) — reveals gaps in the masterclass content\n\nPRE-POST COMPARISON:\n- Compare Q2 before/after ratings for capability shift\n- Compare Q3 belief/urgency/clarity against pre-survey baselines if available\n\nFor each dimension provide:\n- Score (0-100)\n- Confidence (0-1)\n- Key evidence (specific quotes or data)\n- Notable patterns\n\nAlso extract:\n- Best testimonial quotes (from Q1 follow-up, Q7 aha moment, Q11)\n- Session improvement suggestions (Q10a)\n- Session 2 requests (Q10b)\n- Pricing consensus",
   "phases": [
@@ -64,7 +68,7 @@
       "id": "post_q2_before",
       "section": "capability_shift",
       "phase": "growth",
-      "text": "During your pre-masterclass interview, you rated your AI capability on a 1-10 scale. Looking back, where would you place yourself before Friday's masterclass?",
+      "text": "During your pre-masterclass interview, you rated your AI capability on a 1-10 scale. With what you know now, where would you actually place yourself prior to Friday's masterclass?",
       "subtext": "1 = Just getting started, 10 = Teaching others & innovating",
       "inputType": "slider",
       "sliderMin": 1,
@@ -233,7 +237,7 @@
       "id": "post_q8_format",
       "section": "session_format",
       "phase": "feedback",
-      "text": "Friday's masterclass was a small-group format. How well did the group setting work for you?",
+      "text": "Friday's masterclass was a small-group format. How effective was the small group setting for you?",
       "subtext": "1 = Strongly preferred 1-on-1, 5 = Strongly preferred the group",
       "inputType": "slider",
       "sliderMin": 1,
@@ -248,7 +252,7 @@
       "id": "post_q8_format_why",
       "section": "session_format",
       "phase": "feedback",
-      "text": "What worked about the group dynamic — or what would work better in a 1-on-1 setting?",
+      "text": "What worked about the group dynamic — and is there anything you would prefer about doing this 1-on-1?",
       "subtext": "Optional.",
       "inputType": "ai_conversation",
       "required": false,
@@ -275,6 +279,19 @@
       "scoringDimensions": ["perceived_value", "session_effectiveness"],
       "weight": 1.0,
       "tags": ["pricing", "value_signal"]
+    },
+    {
+      "id": "post_q9b_series_pricing",
+      "section": "session_format",
+      "phase": "feedback",
+      "text": "What would you pay for a series of 4 masterclasses either in a group or 1:1 setting?",
+      "subtext": "Think about the cumulative value of a multi-session journey.",
+      "inputType": "ai_conversation",
+      "required": true,
+      "scoringDimensions": ["perceived_value", "session_effectiveness"],
+      "weight": 0.8,
+      "aiFollowUpPrompt": "If they give a number, acknowledge it. If they differentiate between group and 1:1 pricing, capture both. One follow-up max to clarify if needed, then move on.",
+      "tags": ["pricing", "series", "value_signal"]
     },
     {
       "id": "post_q10a_improve",
@@ -324,13 +341,18 @@
       "id": "post_q11_testimonial_text",
       "section": "testimonial",
       "phase": "feedback",
-      "text": "If you're willing, what would you tell a peer about this experience?",
-      "subtext": "A few lines is perfect. This is optional but incredibly helpful.",
+      "text": "Great, thank you! Please type or record your testimonial here.",
+      "subtext": "A few lines is perfect — say it however feels natural.",
       "inputType": "ai_conversation",
       "required": false,
+      "showCondition": {
+        "questionId": "post_q11_testimonial_willingness",
+        "operator": "in",
+        "value": ["Yes — happy to", "Yes — but I'd want to approve the final version"]
+      },
       "scoringDimensions": ["perceived_value"],
       "weight": 0.5,
-      "aiFollowUpPrompt": "If they write something, thank them genuinely. If it's strong, ask: 'Would you mind if we used that — with your approval, of course?' Do NOT push if they decline. One exchange, then wrap up warmly.",
+      "aiFollowUpPrompt": "If they write or record something, thank them genuinely. If it's strong, ask: 'Would you mind if we used that — with your approval, of course?' Do NOT push if they decline. One exchange, then wrap up warmly.",
       "tags": ["testimonial", "quote", "advocacy"]
     }
   ]
