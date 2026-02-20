@@ -45,7 +45,8 @@ async function getAssessmentName(assessmentId: string): Promise<string> {
 const app = express();
 const IS_PROD = process.env.NODE_ENV === "production";
 const PORT = IS_PROD ? parseInt(process.env.PORT || "8080", 10) : 0;
-const MODEL = "claude-sonnet-4-5-20250929";
+const MODEL = "claude-sonnet-4-6";
+const MODEL_FAST = "claude-haiku-4-5-20251001";
 
 // --- CORS (supports HumanGlue integration) ---
 const ALLOWED_ORIGINS = [
@@ -1246,7 +1247,7 @@ async function analyzeResponseConfidence(
   const priorContext = priorResponses.slice(-5).map((r) => `Q: ${r.questionText}\nA: ${typeof r.answer === "object" ? JSON.stringify(r.answer) : r.answer}`).join("\n");
 
   const response = await client.messages.create({
-    model: MODEL,
+    model: MODEL_FAST,
     max_tokens: 200,
     system: "You analyze interview responses. Return ONLY valid JSON with no other text.",
     messages: [
@@ -1297,7 +1298,7 @@ async function selectNextQuestion(
   const availableList = availableQuestions.map((q) => `- ${q.id}: "${q.text}" [${q.section}, weight: ${q.weight}, type: ${q.inputType}]`).join("\n");
 
   const response = await client.messages.create({
-    model: MODEL,
+    model: MODEL_FAST,
     max_tokens: 500,
     system: `You are an expert interview question selector for HMN Cascade AI Readiness Assessment.
 
