@@ -1637,8 +1637,10 @@ app.post("/api/admin/invitations", requireAdmin, async (req, res) => {
     const result = await createInvitationAdmin({ assessmentId, participant, note });
 
     let emailResult: { ok: boolean; error?: string } | undefined;
+    console.log(`[EMAIL] sendEmail=${sendEmail}, isEmailEnabled=${isEmailEnabled()}`);
     if (sendEmail && isEmailEnabled()) {
       const assessmentName = await getAssessmentName(assessmentId);
+      console.log(`[EMAIL] Sending to ${participant.email} for "${assessmentName}" token=${result.invitation.token}`);
       emailResult = await sendInvitationEmail({
         to: participant.email,
         participantName: participant.name,
@@ -1646,9 +1648,12 @@ app.post("/api/admin/invitations", requireAdmin, async (req, res) => {
         inviteToken: result.invitation.token,
         note,
       });
+      console.log(`[EMAIL] Result:`, JSON.stringify(emailResult));
+    } else {
+      console.log(`[EMAIL] Skipped — sendEmail=${sendEmail}, enabled=${isEmailEnabled()}`);
     }
 
-    res.status(201).json({ ...result, emailSent: emailResult?.ok ?? false });
+    res.status(201).json({ ...result, emailSent: emailResult?.ok ?? false, emailError: emailResult?.error });
   } catch (err) {
     console.error("Admin create invitation error:", err);
     res.status(500).json({ error: "Failed to create invitation" });
@@ -1713,14 +1718,17 @@ app.post("/api/admin/invitations/:id/resend", requireAdmin, async (req, res) => 
     if (!inv) { res.status(404).json({ error: "Invitation not found" }); return; }
 
     let emailResult: { ok: boolean; error?: string } = { ok: false, error: "Email not configured" };
+    console.log(`[EMAIL-RESEND] isEmailEnabled=${isEmailEnabled()}, to=${inv.participant.email}`);
     if (isEmailEnabled()) {
       const assessmentName = await getAssessmentName(inv.assessmentId);
+      console.log(`[EMAIL-RESEND] Sending to ${inv.participant.email} for "${assessmentName}"`);
       emailResult = await sendInvitationEmail({
         to: inv.participant.email,
         participantName: inv.participant.name,
         assessmentName,
         inviteToken: inv.token,
       });
+      console.log(`[EMAIL-RESEND] Result:`, JSON.stringify(emailResult));
     }
 
     await updateInvitationStatus(inv.token, "sent");

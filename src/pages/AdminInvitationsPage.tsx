@@ -168,7 +168,7 @@ export default function AdminInvitationsPage() {
 
   // ---- Email state ----
   const [emailEnabled, setEmailEnabled] = useState(false);
-  const [sendEmailOnCreate, setSendEmailOnCreate] = useState(false);
+  const [sendEmailOnCreate, setSendEmailOnCreate] = useState(true);
 
   // ---- Copy link feedback ----
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -318,7 +318,9 @@ export default function AdminInvitationsPage() {
       try {
         const result = await resendInvitation(inv.id);
         await copyToClipboard(buildInviteLink(inv.token));
-        const emailMsg = result.emailSent ? " Email resent!" : "";
+        const emailMsg = result.emailSent
+          ? " Email resent!"
+          : ` Email FAILED: ${result.emailError || "unknown error"}`;
         setToast(`Link copied — invitation reset to Sent.${emailMsg}`);
         await loadInvitations();
       } catch {
@@ -368,8 +370,12 @@ export default function AdminInvitationsPage() {
           await copyToClipboard(link);
           setShowCreateModal(false);
           setForm(EMPTY_FORM);
-          setSendEmailOnCreate(false);
-          const emailMsg = result.emailSent ? " Email sent!" : "";
+          setSendEmailOnCreate(true);
+          const emailMsg = result.emailSent
+            ? " Email sent!"
+            : (sendEmailOnCreate && emailEnabled)
+              ? ` Email FAILED: ${result.emailError || "unknown error"}`
+              : "";
           setToast(`Invitation created — link copied to clipboard!${emailMsg}`);
           await loadInvitations();
         } else {
