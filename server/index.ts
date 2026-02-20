@@ -1502,6 +1502,29 @@ app.delete("/api/admin/sessions/:id", requireAdmin, async (req, res) => {
   } catch (err) { console.error("Admin delete session error:", err); res.status(500).json({ error: "Failed to delete session" }); }
 });
 
+app.delete("/api/admin/companies/:name", requireAdmin, async (req, res) => {
+  try {
+    const companyName = decodeURIComponent(String(req.params.name));
+    const allSessions = await listAllSessions();
+    const companySessions = allSessions.filter(
+      (s) => (s.participant?.company ?? "").trim() === companyName
+    );
+    if (companySessions.length === 0) {
+      res.status(404).json({ error: "Company not found or no sessions" });
+      return;
+    }
+    let deleted = 0;
+    for (const s of companySessions) {
+      const ok = await deleteSessionFromDb(s.id);
+      if (ok) deleted++;
+    }
+    res.json({ ok: true, deletedSessions: deleted });
+  } catch (err) {
+    console.error("Admin delete company error:", err);
+    res.status(500).json({ error: "Failed to delete company sessions" });
+  }
+});
+
 app.get("/api/admin/assessments", requireAdmin, async (_req, res) => {
   try { res.json({ assessments: await listAssessmentsAdmin() }); }
   catch (err) { console.error("Admin assessments error:", err); res.status(500).json({ error: "Failed to list assessments" }); }

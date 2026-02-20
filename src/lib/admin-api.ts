@@ -242,6 +242,11 @@ export async function fetchCompanies() {
   return res.json();
 }
 
+export async function removeCompany(companyName: string) {
+  const res = await adminFetch(`/api/admin/companies/${encodeURIComponent(companyName)}`, { method: "DELETE" });
+  return res.json();
+}
+
 export async function fetchCompanyDetail(companyName: string) {
   const res = await adminFetch(`/api/admin/companies/${encodeURIComponent(companyName)}`);
   return res.json();
