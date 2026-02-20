@@ -127,6 +127,11 @@ export default function AdminInvitationsPage() {
   const [form, setForm] = useState<CreateForm>(EMPTY_FORM);
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
+  const [showAssessmentPicker, setShowAssessmentPicker] = useState(false);
+
+  // ---- Email auto-populate state ----
+  const [emailSuggestions, setEmailSuggestions] = useState<string[]>([]);
+  const [showEmailSuggestions, setShowEmailSuggestions] = useState(false);
 
   // ---- CSV modal state ----
   const [showCsvModal, setShowCsvModal] = useState(false);
@@ -198,6 +203,33 @@ export default function AdminInvitationsPage() {
     () => assessments.filter((a) => a.status === "active"),
     [assessments]
   );
+
+  // ---- Computed: email -> participant data lookup for auto-populate ----
+  const emailLookup = useMemo(() => {
+    const map = new Map<string, {
+      name: string;
+      company: string;
+      role: string;
+      industry: string;
+      teamSize: string;
+    }>();
+    const sorted = [...invitations].sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+    for (const inv of sorted) {
+      const email = inv.participantEmail.toLowerCase();
+      if (!map.has(email)) {
+        map.set(email, {
+          name: inv.participantName,
+          company: inv.participantCompany,
+          role: inv.participantRole || "",
+          industry: inv.participantIndustry || "",
+          teamSize: inv.participantTeamSize || "",
+        });
+      }
+    }
+    return map;
+  }, [invitations]);
 
   // ---- Computed: filtered invitations ----
   const filtered = useMemo(() => {
@@ -327,6 +359,42 @@ export default function AdminInvitationsPage() {
       setForm((prev) => ({ ...prev, [field]: value }));
     },
     []
+  );
+
+  const handleEmailChange = useCallback(
+    (value: string) => {
+      setForm((prev) => ({ ...prev, email: value }));
+      if (value.length >= 2) {
+        const q = value.toLowerCase();
+        const matches = Array.from(emailLookup.keys())
+          .filter((email) => email.includes(q))
+          .slice(0, 5);
+        setEmailSuggestions(matches);
+        setShowEmailSuggestions(matches.length > 0);
+      } else {
+        setEmailSuggestions([]);
+        setShowEmailSuggestions(false);
+      }
+    },
+    [emailLookup]
+  );
+
+  const autoFillFromEmail = useCallback(
+    (email: string) => {
+      const data = emailLookup.get(email.toLowerCase());
+      if (data) {
+        setForm((prev) => ({
+          ...prev,
+          name: prev.name || data.name,
+          company: prev.company || data.company,
+          role: prev.role || data.role,
+          industry: prev.industry || data.industry,
+          teamSize: prev.teamSize || data.teamSize,
+        }));
+      }
+      setShowEmailSuggestions(false);
+    },
+    [emailLookup]
   );
 
   const openCreateModal = useCallback(() => {
@@ -544,22 +612,69 @@ export default function AdminInvitationsPage() {
               </div>
             )}
 
-            {/* Assessment */}
+            {/* Assessment — Rich Picker */}
             <label className="block text-xs text-white/40 mb-1.5">
               Assessment <span className="text-red-400">*</span>
             </label>
-            <select
-              value={form.assessmentId}
-              onChange={(e) => updateForm("assessmentId", e.target.value)}
-              className="w-full bg-white/[0.05] border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-white/20 transition-colors appearance-none cursor-pointer mb-4"
-            >
-              <option value="">Select an assessment...</option>
-              {activeAssessments.map((a) => (
-                <option key={a.id} value={a.id}>
-                  {a.name}
-                </option>
-              ))}
-            </select>
+            <div className="relative mb-4">
+              <button
+                type="button"
+                onClick={() => setShowAssessmentPicker(!showAssessmentPicker)}
+                className="w-full bg-white/[0.05] border border-white/10 rounded-lg px-3 py-2 text-sm text-left text-white outline-none focus:border-white/20 transition-colors cursor-pointer"
+              >
+                {form.assessmentId ? (
+                  (() => {
+                    const sel = activeAssessments.find(a => a.id === form.assessmentId);
+                    return sel ? (
+                      <span className="flex items-center gap-2">
+                        <span>{sel.icon || "\u{1F4CB}"}</span>
+                        <span className="text-white/90 truncate">{sel.name}</span>
+                        <span className="text-white/30 text-xs ml-auto flex-shrink-0">
+                          {sel.questionCount}q &middot; {sel.estimatedMinutes}min
+                        </span>
+                      </span>
+                    ) : <span className="text-white/30">Select an assessment...</span>;
+                  })()
+                ) : (
+                  <span className="text-white/30">Select an assessment...</span>
+                )}
+              </button>
+              {showAssessmentPicker && (
+                <>
+                  <div className="fixed inset-0 z-20" onClick={() => setShowAssessmentPicker(false)} />
+                  <div className="absolute z-30 top-full mt-1 left-0 right-0 bg-[#12121a] border border-white/10 rounded-xl shadow-2xl overflow-hidden max-h-64 overflow-y-auto">
+                    {activeAssessments.map((a) => (
+                      <button
+                        key={a.id}
+                        type="button"
+                        onClick={() => {
+                          updateForm("assessmentId", a.id);
+                          setShowAssessmentPicker(false);
+                        }}
+                        className={`w-full text-left px-3 py-3 flex items-start gap-3 transition-colors border-b border-white/5 last:border-b-0 ${
+                          form.assessmentId === a.id
+                            ? "bg-white/[0.08]"
+                            : "hover:bg-white/[0.04]"
+                        }`}
+                      >
+                        <span className="text-xl leading-none mt-0.5">{a.icon || "\u{1F4CB}"}</span>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-medium text-white/90">{a.name}</div>
+                          <div className="text-xs text-white/30 line-clamp-1 mt-0.5">{a.description}</div>
+                          <div className="flex items-center gap-3 mt-1 text-xs text-white/25">
+                            <span>{a.questionCount} questions</span>
+                            <span>{a.estimatedMinutes} min</span>
+                          </div>
+                        </div>
+                        {form.assessmentId === a.id && (
+                          <span className="text-green-400 text-sm mt-1">&#10003;</span>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
 
             {/* Name */}
             <label className="block text-xs text-white/40 mb-1.5">
@@ -573,17 +688,50 @@ export default function AdminInvitationsPage() {
               className="w-full bg-white/[0.05] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/20 outline-none focus:border-white/20 transition-colors mb-4"
             />
 
-            {/* Email */}
+            {/* Email — with auto-suggest */}
             <label className="block text-xs text-white/40 mb-1.5">
               Email <span className="text-red-400">*</span>
             </label>
-            <input
-              type="email"
-              value={form.email}
-              onChange={(e) => updateForm("email", e.target.value)}
-              placeholder="participant@company.com"
-              className="w-full bg-white/[0.05] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/20 outline-none focus:border-white/20 transition-colors mb-4"
-            />
+            <div className="relative mb-4">
+              <input
+                type="email"
+                value={form.email}
+                onChange={(e) => handleEmailChange(e.target.value)}
+                onBlur={() => {
+                  setTimeout(() => {
+                    autoFillFromEmail(form.email);
+                    setShowEmailSuggestions(false);
+                  }, 150);
+                }}
+                placeholder="participant@company.com"
+                className="w-full bg-white/[0.05] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/20 outline-none focus:border-white/20 transition-colors"
+              />
+              {showEmailSuggestions && emailSuggestions.length > 0 && (
+                <div className="absolute z-30 top-full mt-1 left-0 right-0 bg-[#12121a] border border-white/10 rounded-lg shadow-xl overflow-hidden">
+                  {emailSuggestions.map((email) => {
+                    const data = emailLookup.get(email);
+                    return (
+                      <button
+                        key={email}
+                        type="button"
+                        onClick={() => {
+                          setForm((prev) => ({ ...prev, email }));
+                          autoFillFromEmail(email);
+                        }}
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-white/[0.06] transition-colors border-b border-white/5 last:border-b-0"
+                      >
+                        <span className="text-white/70">{email}</span>
+                        {data && (
+                          <span className="text-white/25 text-xs ml-2">
+                            {data.name}{data.company ? ` \u2014 ${data.company}` : ""}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
 
             {/* Company */}
             <label className="block text-xs text-white/40 mb-1.5">

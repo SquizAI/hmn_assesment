@@ -303,6 +303,9 @@ export interface InvitationSummary {
   participantName: string;
   participantEmail: string;
   participantCompany: string;
+  participantRole: string;
+  participantIndustry: string;
+  participantTeamSize: string;
   status: InvitationStatus;
   sessionId: string | null;
   createdAt: string;

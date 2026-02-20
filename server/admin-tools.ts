@@ -621,6 +621,9 @@ export interface InvitationSummary {
   participantName: string;
   participantEmail: string;
   participantCompany: string;
+  participantRole: string;
+  participantIndustry: string;
+  participantTeamSize: string;
   status: Invitation["status"];
   sessionId: string | null;
   createdAt: string;
@@ -652,6 +655,9 @@ export async function listInvitationsAdmin(filters?: {
     participantName: inv.participant.name,
     participantEmail: inv.participant.email,
     participantCompany: inv.participant.company || "",
+    participantRole: inv.participant.role || "",
+    participantIndustry: inv.participant.industry || "",
+    participantTeamSize: inv.participant.teamSize || "",
     status: inv.status,
     sessionId: inv.sessionId,
     createdAt: inv.createdAt,

@@ -197,6 +197,20 @@ export default function AdminAssessmentsPage() {
   const [sortKey, setSortKey] = useState<SortKey>("name");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
 
+  // ---- View mode ----
+  const [viewMode, setViewMode] = useState<"gallery" | "list">(() => {
+    try {
+      const saved = localStorage.getItem("cascade-assessments-view");
+      return saved === "list" ? "list" : "gallery";
+    } catch {
+      return "gallery";
+    }
+  });
+
+  useEffect(() => {
+    try { localStorage.setItem("cascade-assessments-view", viewMode); } catch { /* noop */ }
+  }, [viewMode]);
+
   // ---- Modal state ----
   const [duplicateTarget, setDuplicateTarget] = useState<Assessment | null>(
     null
@@ -505,6 +519,32 @@ export default function AdminAssessmentsPage() {
               ))}
             </div>
           </div>
+
+          {/* View toggle */}
+          <div className="flex items-center bg-white/[0.05] border border-white/10 rounded-lg overflow-hidden">
+            <button
+              onClick={() => setViewMode("gallery")}
+              className={`p-2 transition-colors ${
+                viewMode === "gallery" ? "bg-white/[0.08] text-white/70" : "text-white/30 hover:text-white/50"
+              }`}
+              title="Gallery view"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" />
+              </svg>
+            </button>
+            <button
+              onClick={() => setViewMode("list")}
+              className={`p-2 transition-colors ${
+                viewMode === "list" ? "bg-white/[0.08] text-white/70" : "text-white/30 hover:text-white/50"
+              }`}
+              title="List view"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 010 3.75H5.625a1.875 1.875 0 010-3.75z" />
+              </svg>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -558,7 +598,7 @@ export default function AdminAssessmentsPage() {
           }}
           onCreate={() => navigate("/admin/builder")}
         />
-      ) : (
+      ) : viewMode === "gallery" ? (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((assessment) => {
             const isInFlight = actionInFlight === assessment.id;
@@ -716,6 +756,72 @@ export default function AdminAssessmentsPage() {
               </div>
             );
           })}
+        </div>
+      ) : (
+        /* ---- LIST VIEW ---- */
+        <div className="bg-white/[0.03] rounded-2xl border border-white/10 overflow-hidden">
+          <div className="divide-y divide-white/5">
+            {filtered.map((assessment) => {
+              const isInFlight = actionInFlight === assessment.id;
+              return (
+                <div
+                  key={assessment.id}
+                  onClick={() => setSelectedAssessmentId(assessment.id)}
+                  className={`group flex items-center gap-4 px-4 py-3 hover:bg-white/[0.04] transition-colors cursor-pointer ${
+                    isInFlight ? "opacity-60 pointer-events-none" : ""
+                  }`}
+                >
+                  {/* Icon */}
+                  <span className="text-2xl leading-none flex-shrink-0">{assessment.icon}</span>
+
+                  {/* Name + description */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-sm font-medium text-white/90 truncate">{assessment.name}</h3>
+                      <StatusBadge status={assessment.status} />
+                    </div>
+                    <p className="text-xs text-white/30 truncate mt-0.5">{assessment.description}</p>
+                  </div>
+
+                  {/* Stats */}
+                  <div className="hidden sm:flex items-center gap-4 text-xs text-white/30 flex-shrink-0">
+                    <span>{assessment.questionCount} questions</span>
+                    <span>{assessment.estimatedMinutes} min</span>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex items-center gap-1.5 flex-shrink-0">
+                    {assessment.status === "draft" && (
+                      <QuickAction label="Activate" color="green" onClick={(e) => handleStatusChange(e, assessment.id, "active")} />
+                    )}
+                    {assessment.status === "active" && (
+                      <QuickAction label="Archive" color="gray" onClick={(e) => handleStatusChange(e, assessment.id, "archived")} />
+                    )}
+                    {assessment.status === "archived" && (
+                      <QuickAction label="Reactivate" color="blue" onClick={(e) => handleStatusChange(e, assessment.id, "active")} />
+                    )}
+                    <QuickAction
+                      label={copiedId === assessment.id ? "Copied!" : "Copy Link"}
+                      color={copiedId === assessment.id ? "green" : "blue"}
+                      onClick={(e) => handleCopyLink(e, assessment.id)}
+                    />
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/admin/builder/${assessment.id}`);
+                      }}
+                      className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg hover:bg-white/10 text-white/30 hover:text-white/60 transition-all"
+                      title="Edit in Builder"
+                    >
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
 
