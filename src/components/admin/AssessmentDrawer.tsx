@@ -35,6 +35,7 @@ interface ScoringDimension {
 interface Question {
   id: string;
   text: string;
+  subtext?: string;
   section: string;
   phase: string;
   inputType: string;
@@ -75,6 +76,15 @@ const TABS: { id: TabId; label: string }[] = [
   { id: "questions", label: "Questions" },
   { id: "scoring", label: "Scoring" },
   { id: "settings", label: "Settings" },
+];
+
+const INPUT_TYPES = [
+  { value: "ai_conversation", label: "AI Conversation" },
+  { value: "open_text", label: "Open Text" },
+  { value: "slider", label: "Slider" },
+  { value: "buttons", label: "Buttons" },
+  { value: "multi_select", label: "Multi Select" },
+  { value: "voice", label: "Voice" },
 ];
 
 const INPUT_TYPE_COLORS: Record<string, string> = {
@@ -141,8 +151,9 @@ export default function AssessmentDrawer({
   const [dupName, setDupName] = useState("");
   const [duplicating, setDuplicating] = useState(false);
 
-  // Question expansion
+  // Question expansion & inline editing
   const [expandedQuestion, setExpandedQuestion] = useState<string | null>(null);
+  const [questionEdits, setQuestionEdits] = useState<Record<string, Partial<Question>>>({});
 
   // Copy-to-clipboard feedback
   const [copied, setCopied] = useState(false);
@@ -156,7 +167,7 @@ export default function AssessmentDrawer({
   // Ref for name input
   const nameInputRef = useRef<HTMLInputElement>(null);
 
-  const hasUnsavedChanges = Object.keys(edits).length > 0;
+  const hasUnsavedChanges = Object.keys(edits).length > 0 || Object.keys(questionEdits).length > 0;
 
   /* ---- Data loading ---- */
 
@@ -166,6 +177,7 @@ export default function AssessmentDrawer({
       const data = await fetchAssessment(assessmentId);
       setAssessment(data.assessment);
       setEdits({});
+      setQuestionEdits({});
     } catch (err) {
       console.error("Failed to fetch assessment:", err);
     } finally {
@@ -214,16 +226,65 @@ export default function AssessmentDrawer({
     return assessment?.[key] as AssessmentType[K];
   };
 
+  /* ---- Question edit helpers ---- */
+
+  const setQuestionEdit = (questionId: string, field: keyof Question, value: unknown) => {
+    setQuestionEdits((prev) => {
+      const original = assessment?.questions.find((q) => q.id === questionId);
+      if (!original) return prev;
+
+      const currentEdits = prev[questionId] || {};
+      const originalValue = original[field];
+
+      // If value matches original, remove that field edit
+      if (value === originalValue) {
+        const { [field]: _, ...rest } = currentEdits;
+        if (Object.keys(rest).length === 0) {
+          const { [questionId]: __, ...remaining } = prev;
+          return remaining;
+        }
+        return { ...prev, [questionId]: rest };
+      }
+
+      return { ...prev, [questionId]: { ...currentEdits, [field]: value } };
+    });
+  };
+
+  const getQuestionField = <K extends keyof Question>(questionId: string, field: K): Question[K] => {
+    const editValue = questionEdits[questionId]?.[field];
+    if (editValue !== undefined) return editValue as Question[K];
+    const original = assessment?.questions.find((q) => q.id === questionId);
+    return original?.[field] as Question[K];
+  };
+
+  const revertQuestion = (questionId: string) => {
+    setQuestionEdits((prev) => {
+      const { [questionId]: _, ...rest } = prev;
+      return rest;
+    });
+  };
+
   /* ---- Save changes ---- */
 
   const handleSave = async () => {
     if (!assessment || !hasUnsavedChanges) return;
     setSaving(true);
     try {
-      await updateFullAssessment(assessment.id, edits);
+      const changes: Record<string, unknown> = { ...edits };
+
+      // Merge question edits into the full questions array
+      if (Object.keys(questionEdits).length > 0) {
+        changes.questions = assessment.questions.map((q) => {
+          const qEdits = questionEdits[q.id];
+          return qEdits ? { ...q, ...qEdits } : q;
+        });
+      }
+
+      await updateFullAssessment(assessment.id, changes);
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 2000);
       await loadAssessment();
+      setQuestionEdits({});
     } catch (err) {
       console.error("Failed to save:", err);
     } finally {
@@ -233,6 +294,7 @@ export default function AssessmentDrawer({
 
   const handleDiscard = () => {
     setEdits({});
+    setQuestionEdits({});
   };
 
   /* ---- Status change ---- */
@@ -656,13 +718,19 @@ export default function AssessmentDrawer({
                           {questions.map((question) => {
                             const isExpanded =
                               expandedQuestion === question.id;
+                            const isModified = !!questionEdits[question.id];
+                            const displayText = getQuestionField(question.id, "text");
+                            const displayWeight = getQuestionField(question.id, "weight");
+                            const displayInputType = getQuestionField(question.id, "inputType");
                             return (
                               <div
                                 key={question.id}
                                 className={`bg-white/3 border rounded-xl transition-colors cursor-pointer ${
-                                  isExpanded
-                                    ? "border-white/20"
-                                    : "border-white/10 hover:border-white/15"
+                                  isModified
+                                    ? "border-purple-500/30 border-l-2 border-l-purple-500/60"
+                                    : isExpanded
+                                      ? "border-white/20"
+                                      : "border-white/10 hover:border-white/15"
                                 }`}
                                 onClick={() =>
                                   setExpandedQuestion(
@@ -673,25 +741,30 @@ export default function AssessmentDrawer({
                                 {/* Question summary row */}
                                 <div className="p-3 flex items-start gap-3">
                                   <div className="flex-1 min-w-0">
-                                    <p className="text-sm text-white/75 leading-relaxed">
-                                      {question.text}
+                                    <p className={`text-sm leading-relaxed ${isModified ? "text-purple-200/80" : "text-white/75"}`}>
+                                      {displayText}
                                     </p>
                                     <div className="mt-2 flex flex-wrap items-center gap-2">
                                       <span
                                         className={`text-[10px] px-1.5 py-0.5 rounded border font-medium ${
                                           INPUT_TYPE_COLORS[
-                                            question.inputType
+                                            displayInputType
                                           ] ||
                                           "bg-white/10 text-white/50 border-white/20"
                                         }`}
                                       >
                                         {INPUT_TYPE_LABELS[
-                                          question.inputType
-                                        ] || question.inputType}
+                                          displayInputType
+                                        ] || displayInputType}
                                       </span>
                                       <span className="text-[10px] text-white/30">
-                                        weight: {question.weight}
+                                        weight: {displayWeight}
                                       </span>
+                                      {isModified && (
+                                        <span className="text-[10px] bg-purple-500/15 text-purple-300 border border-purple-500/20 px-1.5 py-0.5 rounded font-medium">
+                                          Modified
+                                        </span>
+                                      )}
                                       {question.scoringDimensions
                                         .slice(0, 3)
                                         .map((dim) => (
@@ -730,36 +803,104 @@ export default function AssessmentDrawer({
                                   </svg>
                                 </div>
 
-                                {/* Expanded detail */}
+                                {/* Expanded inline editor */}
                                 {isExpanded && (
                                   <div
                                     className="border-t border-white/10 px-3 py-3 space-y-3"
                                     onClick={(e) => e.stopPropagation()}
                                   >
-                                    <div className="grid grid-cols-2 gap-3 text-xs">
-                                      <div>
-                                        <span className="text-white/30">
-                                          Question ID
+                                    {/* Modified indicator + revert */}
+                                    {isModified && (
+                                      <div className="flex items-center justify-between">
+                                        <span className="text-[11px] text-purple-300/70">
+                                          Question modified — save below
                                         </span>
-                                        <p className="text-white/60 font-mono mt-0.5 break-all">
-                                          {question.id}
-                                        </p>
+                                        <button
+                                          onClick={() => revertQuestion(question.id)}
+                                          className="text-[11px] text-white/30 hover:text-white/60 transition-colors"
+                                        >
+                                          Revert
+                                        </button>
                                       </div>
+                                    )}
+
+                                    {/* Editable: Question text */}
+                                    <div className="space-y-1">
+                                      <label className="text-[11px] text-white/40 uppercase tracking-wider">
+                                        Question Text
+                                      </label>
+                                      <textarea
+                                        value={getQuestionField(question.id, "text")}
+                                        onChange={(e) => setQuestionEdit(question.id, "text", e.target.value)}
+                                        autoFocus
+                                        rows={3}
+                                        className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/20 focus:outline-none focus:border-purple-500/40 focus:ring-1 focus:ring-purple-500/20 resize-none"
+                                      />
+                                    </div>
+
+                                    {/* Editable: Subtext */}
+                                    <div className="space-y-1">
+                                      <label className="text-[11px] text-white/40 uppercase tracking-wider">
+                                        Subtext
+                                      </label>
+                                      <input
+                                        type="text"
+                                        value={getQuestionField(question.id, "subtext") || ""}
+                                        onChange={(e) => setQuestionEdit(question.id, "subtext", e.target.value || undefined)}
+                                        placeholder="Optional helper text..."
+                                        className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/20 focus:outline-none focus:border-purple-500/40 focus:ring-1 focus:ring-purple-500/20"
+                                      />
+                                    </div>
+
+                                    {/* Editable: Input type + Weight row */}
+                                    <div className="grid grid-cols-2 gap-3">
+                                      <div className="space-y-1">
+                                        <label className="text-[11px] text-white/40 uppercase tracking-wider">
+                                          Input Type
+                                        </label>
+                                        <select
+                                          value={getQuestionField(question.id, "inputType")}
+                                          onChange={(e) => setQuestionEdit(question.id, "inputType", e.target.value)}
+                                          className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500/40 appearance-none"
+                                        >
+                                          {INPUT_TYPES.map((t) => (
+                                            <option key={t.value} value={t.value} className="bg-[#141420]">
+                                              {t.label}
+                                            </option>
+                                          ))}
+                                        </select>
+                                      </div>
+                                      <div className="space-y-1">
+                                        <label className="text-[11px] text-white/40 uppercase tracking-wider">
+                                          Weight
+                                        </label>
+                                        <input
+                                          type="number"
+                                          min="0"
+                                          max="1"
+                                          step="0.1"
+                                          value={getQuestionField(question.id, "weight")}
+                                          onChange={(e) => setQuestionEdit(question.id, "weight", parseFloat(e.target.value) || 0)}
+                                          className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500/40"
+                                        />
+                                      </div>
+                                    </div>
+
+                                    {/* Read-only metadata */}
+                                    <div className="grid grid-cols-3 gap-3 text-xs pt-2 border-t border-white/5">
                                       <div>
                                         <span className="text-white/30">
-                                          Input Type
+                                          ID
                                         </span>
-                                        <p className="text-white/60 mt-0.5">
-                                          {INPUT_TYPE_LABELS[
-                                            question.inputType
-                                          ] || question.inputType}
+                                        <p className="text-white/50 font-mono mt-0.5 break-all text-[10px]">
+                                          {question.id}
                                         </p>
                                       </div>
                                       <div>
                                         <span className="text-white/30">
                                           Phase
                                         </span>
-                                        <p className="text-white/60 mt-0.5">
+                                        <p className="text-white/50 mt-0.5">
                                           {assessment.phases.find(
                                             (p) => p.id === question.phase,
                                           )?.label || question.phase}
@@ -769,16 +910,8 @@ export default function AssessmentDrawer({
                                         <span className="text-white/30">
                                           Section
                                         </span>
-                                        <p className="text-white/60 mt-0.5">
+                                        <p className="text-white/50 mt-0.5">
                                           {section?.label || question.section}
-                                        </p>
-                                      </div>
-                                      <div>
-                                        <span className="text-white/30">
-                                          Weight
-                                        </span>
-                                        <p className="text-white/60 mt-0.5">
-                                          {question.weight}
                                         </p>
                                       </div>
                                     </div>
@@ -1021,8 +1154,10 @@ export default function AssessmentDrawer({
               <div className="shrink-0 border-t border-white/10 bg-[#0a0a0f] px-6 py-4">
                 <div className="flex items-center justify-between gap-3">
                   <span className="text-xs text-white/40">
-                    {Object.keys(edits).length} unsaved{" "}
-                    {Object.keys(edits).length === 1 ? "change" : "changes"}
+                    {(() => {
+                      const count = Object.keys(edits).length + Object.keys(questionEdits).length;
+                      return `${count} unsaved ${count === 1 ? "change" : "changes"}`;
+                    })()}
                   </span>
                   <div className="flex gap-2">
                     <button
