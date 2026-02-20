@@ -53,7 +53,7 @@ function formatDate(dateStr: string): string {
   });
 }
 
-function formatTimestamp(dateStr: string | null): string {
+function formatRelativeTimestamp(dateStr: string | null): string {
   if (!dateStr) return "--";
   const date = new Date(dateStr);
   const now = new Date();
@@ -65,6 +65,16 @@ function formatTimestamp(dateStr: string | null): string {
   if (diffMins < 60) return `${diffMins}m ago`;
   if (diffHours < 24) return `${diffHours}h ago`;
   if (diffDays < 7) return `${diffDays}d ago`;
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+function formatAbsoluteTimestamp(dateStr: string | null): string {
+  if (!dateStr) return "--";
+  const date = new Date(dateStr);
   return date.toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
@@ -176,6 +186,10 @@ export default function AdminInvitationsPage() {
   // ---- Delete confirmation ----
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+
+  // ---- Timestamp display mode ----
+  const [useRelativeTime, setUseRelativeTime] = useState(true);
+  const formatTs = useRelativeTime ? formatRelativeTimestamp : formatAbsoluteTimestamp;
 
   // ---- Success toast ----
   const [toast, setToast] = useState<string | null>(null);
@@ -560,8 +574,13 @@ export default function AdminInvitationsPage() {
               <th className="text-left text-xs text-white/40 uppercase tracking-wider px-3 md:px-4 py-3">
                 Status
               </th>
-              <th className="text-left text-xs text-white/40 uppercase tracking-wider px-3 md:px-4 py-3 hidden sm:table-cell">
-                Activity
+              <th
+                className="text-left text-xs text-white/40 uppercase tracking-wider px-3 md:px-4 py-3 hidden sm:table-cell cursor-pointer select-none hover:text-white/60 transition-colors"
+                onClick={() => setUseRelativeTime((v) => !v)}
+                title={useRelativeTime ? "Click for date/time" : "Click for relative time"}
+              >
+                {useRelativeTime ? "Activity" : "Date / Time"}
+                <span className="ml-1 text-[10px] text-white/20">⇄</span>
               </th>
               <th className="text-left text-xs text-white/40 uppercase tracking-wider px-3 md:px-4 py-3">
                 Actions
@@ -612,29 +631,29 @@ export default function AdminInvitationsPage() {
                       return (
                         <>
                           <span className="text-white/25 text-[10px] uppercase mr-1">{label}</span>
-                          <span className="text-white/40">{formatTimestamp(date)}</span>
+                          <span className="text-white/40">{formatTs(date)}</span>
                           <div className="absolute z-40 bottom-full left-0 mb-1 hidden group-hover/ts:block bg-[#12121a] border border-white/10 rounded-lg px-3 py-2 shadow-xl min-w-[210px]">
                             <div className="text-xs space-y-1">
                               <div className="flex justify-between gap-4">
                                 <span className="text-white/40">Created</span>
-                                <span className="text-white/60">{formatTimestamp(inv.createdAt)}</span>
+                                <span className="text-white/60">{formatTs(inv.createdAt)}</span>
                               </div>
                               {inv.openedAt && (
                                 <div className="flex justify-between gap-4">
                                   <span className="text-white/40">Opened</span>
-                                  <span className="text-white/60">{formatTimestamp(inv.openedAt)}</span>
+                                  <span className="text-white/60">{formatTs(inv.openedAt)}</span>
                                 </div>
                               )}
                               {inv.startedAt && (
                                 <div className="flex justify-between gap-4">
                                   <span className="text-white/40">Started</span>
-                                  <span className="text-white/60">{formatTimestamp(inv.startedAt)}</span>
+                                  <span className="text-white/60">{formatTs(inv.startedAt)}</span>
                                 </div>
                               )}
                               {inv.completedAt && (
                                 <div className="flex justify-between gap-4">
                                   <span className="text-white/40">Completed</span>
-                                  <span className="text-white/60">{formatTimestamp(inv.completedAt)}</span>
+                                  <span className="text-white/60">{formatTs(inv.completedAt)}</span>
                                 </div>
                               )}
                             </div>
