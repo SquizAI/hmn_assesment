@@ -441,13 +441,13 @@ export default function AdminCompanyDetailPage() {
                         >
                           <div className="flex items-center justify-between mb-2">
                             <span className="text-sm font-medium text-white/80 truncate">{p.name}</span>
-                            <span className={`text-sm font-bold tabular-nums ${scoreTextColor(p.overallScore)}`}>
-                              {Math.round(p.overallScore)}
+                            <span className={`text-sm font-bold tabular-nums ${p.overallScore != null ? scoreTextColor(p.overallScore) : "text-white/30"}`}>
+                              {p.overallScore != null ? Math.round(p.overallScore) : "—"}
                             </span>
                           </div>
                           <p className="text-xs text-white/30 truncate">{p.role}</p>
                           <span className="inline-block mt-2 text-[10px] px-2 py-0.5 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-400/70">
-                            {humanize(p.archetype.replace("the_", ""))}
+                            {p.archetype ? humanize(p.archetype.replace("the_", "")) : "Pending"}
                           </span>
                         </div>
                       ))}

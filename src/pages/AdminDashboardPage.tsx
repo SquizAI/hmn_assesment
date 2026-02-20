@@ -497,7 +497,7 @@ export default function AdminDashboardPage() {
                 return (
                   <div key={a.archetype} className="flex items-center gap-2">
                     <span className="w-28 text-xs text-white/60 truncate flex-shrink-0">
-                      {humanize(a.archetype.replace("the_", ""))}
+                      {humanize((a.archetype || "unknown").replace("the_", ""))}
                     </span>
                     <div className="flex-1 bg-white/5 rounded h-4 overflow-hidden">
                       <div
@@ -556,7 +556,7 @@ export default function AdminDashboardPage() {
                         </td>
                         <td className="py-2 text-xs text-white/40 text-right tabular-nums">{b.sessions}</td>
                         <td className="py-2 text-[10px] text-white/40 text-right truncate max-w-[80px]">
-                          {humanize(b.topArchetype.replace("the_", ""))}
+                          {humanize((b.topArchetype || "unknown").replace("the_", ""))}
                         </td>
                       </tr>
                     ))}
