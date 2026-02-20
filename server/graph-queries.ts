@@ -2,6 +2,7 @@ import { runQuery } from "./neo4j.js";
 
 // ============================================================
 // GRAPH QUERY LAYER — Neo4j Cypher queries for intelligence
+// All queries scoped to source:"cascade" to isolate from Voltron data
 // ============================================================
 
 export async function getCompanyIntelligence(companyName: string) {
@@ -9,13 +10,14 @@ export async function getCompanyIntelligence(companyName: string) {
 
   const records = await runQuery(
     `
-    MATCH (c:Company {name: $companyName, source: "cascade"})<-[:WORKS_AT]-(p:Participant {source: "cascade"})-[:COMPLETED]->(s:Session {source: "cascade"})
-    OPTIONAL MATCH (s)-[:SCORED]->(d:ScoringDimension {source: "cascade"})
-    OPTIONAL MATCH (s)-[:CLASSIFIED_AS]->(a:Archetype {source: "cascade"})
-    OPTIONAL MATCH (s)-[:SURFACED]->(t:Theme {source: "cascade"})
-    OPTIONAL MATCH (s)-[:TRIGGERED]->(r:Recommendation {source: "cascade"})
-    OPTIONAL MATCH (s)-[:FLAGGED]->(rf:RedFlag {source: "cascade"})
-    OPTIONAL MATCH (s)-[:HIGHLIGHTED]->(gl:GreenLight {source: "cascade"})
+    MATCH (c:Company {name: $companyName})<-[:WORKS_AT]-(p:Participant)-[:COMPLETED]->(s:Session)
+    WHERE c.source = "cascade" AND p.source = "cascade" AND s.source = "cascade"
+    OPTIONAL MATCH (s)-[:SCORED]->(d:ScoringDimension) WHERE d.source = "cascade"
+    OPTIONAL MATCH (s)-[:CLASSIFIED_AS]->(a:Archetype) WHERE a.source = "cascade"
+    OPTIONAL MATCH (s)-[:SURFACED]->(t:Theme) WHERE t.source = "cascade"
+    OPTIONAL MATCH (s)-[:TRIGGERED]->(r:Recommendation) WHERE r.source = "cascade"
+    OPTIONAL MATCH (s)-[:FLAGGED]->(rf:RedFlag) WHERE rf.source = "cascade"
+    OPTIONAL MATCH (s)-[:HIGHLIGHTED]->(gl:GreenLight) WHERE gl.source = "cascade"
     RETURN p, s, d, a, t, r, rf, gl
     `,
     { companyName }
@@ -177,10 +179,11 @@ export async function getCompanyIntelligence(companyName: string) {
     frequency,
   }));
 
-  // Benchmark comparison: company avg vs global avg per dimension (cascade-only)
+  // Benchmark comparison: company avg vs cascade-global avg per dimension
   const benchmarkRecords = await runQuery(
     `
-    MATCH (s:Session {source: "cascade"})-[:SCORED]->(d:ScoringDimension {source: "cascade"})
+    MATCH (s:Session)-[:SCORED]->(d:ScoringDimension)
+    WHERE s.source = "cascade" AND d.source = "cascade"
     RETURN d.name AS dimension, avg(d.score) AS globalAvg
     `,
     {}
@@ -215,12 +218,14 @@ export async function getAssessmentSummary(assessmentId: string) {
 
   const records = await runQuery(
     `
-    MATCH (assess:Assessment {id: $assessmentId, source: "cascade"})<-[:FOR_ASSESSMENT]-(s:Session {source: "cascade"})
-    OPTIONAL MATCH (s)-[:SCORED]->(d:ScoringDimension {source: "cascade"})
-    OPTIONAL MATCH (s)-[:CLASSIFIED_AS]->(a:Archetype {source: "cascade"})
-    OPTIONAL MATCH (s)-[:SURFACED]->(t:Theme {source: "cascade"})
-    OPTIONAL MATCH (s)-[:TRIGGERED]->(r:Recommendation {source: "cascade"})
-    OPTIONAL MATCH (s)<-[:COMPLETED]-(p:Participant {source: "cascade"})-[:WORKS_AT]->(c:Company {source: "cascade"})
+    MATCH (assess:Assessment {id: $assessmentId})<-[:FOR_ASSESSMENT]-(s:Session)
+    WHERE assess.source = "cascade" AND s.source = "cascade"
+    OPTIONAL MATCH (s)-[:SCORED]->(d:ScoringDimension) WHERE d.source = "cascade"
+    OPTIONAL MATCH (s)-[:CLASSIFIED_AS]->(a:Archetype) WHERE a.source = "cascade"
+    OPTIONAL MATCH (s)-[:SURFACED]->(t:Theme) WHERE t.source = "cascade"
+    OPTIONAL MATCH (s)-[:TRIGGERED]->(r:Recommendation) WHERE r.source = "cascade"
+    OPTIONAL MATCH (s)<-[:COMPLETED]-(p:Participant)-[:WORKS_AT]->(c:Company)
+    WHERE p.source = "cascade" AND c.source = "cascade"
     RETURN s, d, a, t, r, p, c
     `,
     { assessmentId }
@@ -344,9 +349,10 @@ export async function getCrossCompanyBenchmarks() {
   // Industry averages (cascade-only)
   const industryResult = await runQuery(
     `
-    MATCH (c:Company {source: "cascade"})<-[:WORKS_AT]-(p:Participant {source: "cascade"})-[:COMPLETED]->(s:Session {source: "cascade"})
-    WHERE c.industry IS NOT NULL
-    OPTIONAL MATCH (s)-[:CLASSIFIED_AS]->(a:Archetype {source: "cascade"})
+    MATCH (c:Company)<-[:WORKS_AT]-(p:Participant)-[:COMPLETED]->(s:Session)
+    WHERE c.source = "cascade" AND p.source = "cascade" AND s.source = "cascade"
+      AND c.industry IS NOT NULL
+    OPTIONAL MATCH (s)-[:CLASSIFIED_AS]->(a:Archetype) WHERE a.source = "cascade"
     WITH c.industry AS industry, s, a
     RETURN industry,
            avg(s.overallScore) AS avgScore,
@@ -367,7 +373,8 @@ export async function getCrossCompanyBenchmarks() {
   // Company ranking (cascade-only)
   const companyResult = await runQuery(
     `
-    MATCH (c:Company {source: "cascade"})<-[:WORKS_AT]-(p:Participant {source: "cascade"})-[:COMPLETED]->(s:Session {source: "cascade"})
+    MATCH (c:Company)<-[:WORKS_AT]-(p:Participant)-[:COMPLETED]->(s:Session)
+    WHERE c.source = "cascade" AND p.source = "cascade" AND s.source = "cascade"
     WITH c.name AS company,
          avg(s.overallScore) AS avgScore,
          count(DISTINCT s) AS sessionCount,
@@ -388,7 +395,8 @@ export async function getCrossCompanyBenchmarks() {
   // Trending themes (top 20, cascade-only)
   const themeResult = await runQuery(
     `
-    MATCH (s:Session {source: "cascade"})-[:SURFACED]->(t:Theme {source: "cascade"})
+    MATCH (s:Session)-[:SURFACED]->(t:Theme)
+    WHERE s.source = "cascade" AND t.source = "cascade"
     WITH t.name AS name, t.sentiment AS sentiment,
          count(*) AS frequency,
          t.category AS category
@@ -409,7 +417,8 @@ export async function getCrossCompanyBenchmarks() {
   // Recommendation frequency (cascade-only)
   const recResult = await runQuery(
     `
-    MATCH (s:Session {source: "cascade"})-[:TRIGGERED]->(r:Recommendation {source: "cascade"})
+    MATCH (s:Session)-[:TRIGGERED]->(r:Recommendation)
+    WHERE s.source = "cascade" AND r.source = "cascade"
     WITH coalesce(r.service, r.name) AS service, count(*) AS count,
          collect(r.tier) AS tiers
     RETURN service, count, head(tiers) AS avgTier
@@ -438,9 +447,11 @@ export async function getThemeMap() {
   // All themes with their associations (cascade-only)
   const themeResult = await runQuery(
     `
-    MATCH (s:Session {source: "cascade"})-[:SURFACED]->(t:Theme {source: "cascade"})
-    OPTIONAL MATCH (s)<-[:COMPLETED]-(p:Participant {source: "cascade"})-[:WORKS_AT]->(c:Company {source: "cascade"})
-    OPTIONAL MATCH (s)-[:SCORED]->(d:ScoringDimension {source: "cascade"})
+    MATCH (s:Session)-[:SURFACED]->(t:Theme)
+    WHERE s.source = "cascade" AND t.source = "cascade"
+    OPTIONAL MATCH (s)<-[:COMPLETED]-(p:Participant)-[:WORKS_AT]->(c:Company)
+    WHERE p.source = "cascade" AND c.source = "cascade"
+    OPTIONAL MATCH (s)-[:SCORED]->(d:ScoringDimension) WHERE d.source = "cascade"
     WITH t.name AS name, t.sentiment AS sentiment, t.category AS category,
          collect(DISTINCT c.name) AS companies,
          collect(DISTINCT d.name) AS dimensions,
@@ -463,9 +474,10 @@ export async function getThemeMap() {
   // Co-occurrences: themes appearing in the same sessions (cascade-only)
   const coResult = await runQuery(
     `
-    MATCH (s:Session {source: "cascade"})-[:SURFACED]->(t1:Theme {source: "cascade"})
-    MATCH (s)-[:SURFACED]->(t2:Theme {source: "cascade"})
-    WHERE id(t1) < id(t2)
+    MATCH (s:Session)-[:SURFACED]->(t1:Theme)
+    WHERE s.source = "cascade" AND t1.source = "cascade"
+    MATCH (s)-[:SURFACED]->(t2:Theme)
+    WHERE t2.source = "cascade" AND id(t1) < id(t2)
     WITH t1.name AS theme1, t2.name AS theme2, count(DISTINCT s) AS frequency
     WHERE frequency > 1
     RETURN theme1, theme2, frequency
@@ -484,8 +496,9 @@ export async function getThemeMap() {
   // Dimension-to-theme mapping (cascade-only)
   const dimThemeResult = await runQuery(
     `
-    MATCH (s:Session {source: "cascade"})-[:SCORED]->(d:ScoringDimension {source: "cascade"})
-    MATCH (s)-[:SURFACED]->(t:Theme {source: "cascade"})
+    MATCH (s:Session)-[:SCORED]->(d:ScoringDimension)
+    WHERE s.source = "cascade" AND d.source = "cascade"
+    MATCH (s)-[:SURFACED]->(t:Theme) WHERE t.source = "cascade"
     WITH d.name AS dimension, collect(DISTINCT t.name) AS themes
     RETURN dimension, themes
     ORDER BY dimension

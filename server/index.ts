@@ -2470,8 +2470,8 @@ app.post("/api/admin/graph/seed", requireAdmin, async (_req, res) => {
 
 app.get("/api/admin/graph/status", requireAdmin, async (_req, res) => {
   try {
-    const nodeResult = await runQuery("MATCH (n {source: 'cascade'}) RETURN count(n) AS count", {});
-    const relResult = await runQuery("MATCH (a {source: 'cascade'})-[r]->(b {source: 'cascade'}) RETURN count(r) AS count", {});
+    const nodeResult = await runQuery("MATCH (n) WHERE n.source = 'cascade' RETURN count(n) AS count", {});
+    const relResult = await runQuery("MATCH (a)-[r]->(b) WHERE a.source = 'cascade' AND b.source = 'cascade' RETURN count(r) AS count", {});
     const nodeCount = nodeResult.length ? Number(nodeResult[0].get("count")) : 0;
     const relCount = relResult.length ? Number(relResult[0].get("count")) : 0;
     res.json({ enabled: true, nodeCount, relCount });

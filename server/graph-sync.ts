@@ -16,20 +16,22 @@ export async function syncSessionToGraph(session: InterviewSession): Promise<voi
   console.log(`[GRAPH] Syncing session ${sessionId} to graph...`);
 
   try {
-    // 1. MERGE Company node (cascade-scoped)
+    // 1. MERGE Company node — tag with source:cascade
     const companyName = session.participant.company || "Unknown";
     await runWrite(
-      `MERGE (c:Company {name: $name, source: "cascade"})
-       ON CREATE SET c.createdAt = datetime()`,
+      `MERGE (c:Company {name: $name})
+       ON CREATE SET c.createdAt = datetime()
+       SET c.source = "cascade"`,
       { name: companyName },
     );
 
-    // 2. MERGE Participant node (cascade-scoped)
+    // 2. MERGE Participant node — tag with source:cascade
     const email = session.participant.email || `${sessionId}@no-email`;
     await runWrite(
-      `MERGE (p:Participant {email: $email, source: "cascade"})
+      `MERGE (p:Participant {email: $email})
        ON CREATE SET p.name = $name, p.role = $role, p.createdAt = datetime()
-       ON MATCH SET p.name = $name, p.role = $role`,
+       ON MATCH SET p.name = $name, p.role = $role
+       SET p.source = "cascade"`,
       {
         email,
         name: session.participant.name || "Unknown",
@@ -37,14 +39,15 @@ export async function syncSessionToGraph(session: InterviewSession): Promise<voi
       },
     );
 
-    // 3. CREATE/MERGE Session node (cascade-scoped)
+    // 3. MERGE Session node — tag with source:cascade
     const overallScore = (session.analysis as CascadeAnalysis | undefined)?.overallReadinessScore ?? null;
     await runWrite(
-      `MERGE (s:Session {id: $id, source: "cascade"})
+      `MERGE (s:Session {id: $id})
        SET s.status = $status,
            s.createdAt = $createdAt,
            s.overallScore = $overallScore,
-           s.responseCount = $responseCount`,
+           s.responseCount = $responseCount,
+           s.source = "cascade"`,
       {
         id: sessionId,
         status: session.status,
@@ -54,31 +57,33 @@ export async function syncSessionToGraph(session: InterviewSession): Promise<voi
       },
     );
 
-    // 4. MERGE Assessment node (cascade-scoped)
+    // 4. MERGE Assessment node — tag with source:cascade
     const assessmentId = session.assessmentTypeId || "ai-readiness";
     await runWrite(
-      `MERGE (a:Assessment {id: $id, source: "cascade"})
-       ON CREATE SET a.createdAt = datetime()`,
+      `MERGE (a:Assessment {id: $id})
+       ON CREATE SET a.createdAt = datetime()
+       SET a.source = "cascade"`,
       { id: assessmentId },
     );
 
-    // 5. Create relationships: Participant-[:WORKS_AT]->Company (cascade-scoped)
+    // 5. Create relationships (match cascade-tagged nodes)
     await runWrite(
-      `MATCH (p:Participant {email: $email, source: "cascade"}), (c:Company {name: $company, source: "cascade"})
+      `MATCH (p:Participant {email: $email}), (c:Company {name: $company})
+       WHERE p.source = "cascade" AND c.source = "cascade"
        MERGE (p)-[:WORKS_AT]->(c)`,
       { email, company: companyName },
     );
 
-    // Participant-[:COMPLETED]->Session
     await runWrite(
-      `MATCH (p:Participant {email: $email, source: "cascade"}), (s:Session {id: $sessionId, source: "cascade"})
+      `MATCH (p:Participant {email: $email}), (s:Session {id: $sessionId})
+       WHERE p.source = "cascade" AND s.source = "cascade"
        MERGE (p)-[:COMPLETED]->(s)`,
       { email, sessionId },
     );
 
-    // Session-[:FOR_ASSESSMENT]->Assessment
     await runWrite(
-      `MATCH (s:Session {id: $sessionId, source: "cascade"}), (a:Assessment {id: $assessmentId, source: "cascade"})
+      `MATCH (s:Session {id: $sessionId}), (a:Assessment {id: $assessmentId})
+       WHERE s.source = "cascade" AND a.source = "cascade"
        MERGE (s)-[:FOR_ASSESSMENT]->(a)`,
       { sessionId, assessmentId },
     );
@@ -86,13 +91,13 @@ export async function syncSessionToGraph(session: InterviewSession): Promise<voi
     // 6. If analysis exists, create scoring relationships
     const analysis = session.analysis as CascadeAnalysis | undefined;
     if (analysis) {
-      // Session-[:SCORED {score}]->ScoringDimension (cascade-scoped)
       if (analysis.dimensionScores?.length) {
         for (const ds of analysis.dimensionScores) {
           await runWrite(
-            `MERGE (sd:ScoringDimension {name: $dimension, source: "cascade"})
+            `MERGE (sd:ScoringDimension {name: $dimension})
+             SET sd.source = "cascade"
              WITH sd
-             MATCH (s:Session {id: $sessionId, source: "cascade"})
+             MATCH (s:Session {id: $sessionId}) WHERE s.source = "cascade"
              MERGE (s)-[r:SCORED]->(sd)
              SET r.score = $score, r.confidence = $confidence`,
             {
@@ -105,12 +110,12 @@ export async function syncSessionToGraph(session: InterviewSession): Promise<voi
         }
       }
 
-      // Session-[:CLASSIFIED_AS]->Archetype (cascade-scoped)
       if (analysis.archetype) {
         await runWrite(
-          `MERGE (ar:Archetype {name: $archetype, source: "cascade"})
+          `MERGE (ar:Archetype {name: $archetype})
+           SET ar.source = "cascade"
            WITH ar
-           MATCH (s:Session {id: $sessionId, source: "cascade"})
+           MATCH (s:Session {id: $sessionId}) WHERE s.source = "cascade"
            MERGE (s)-[r:CLASSIFIED_AS]->(ar)
            SET r.confidence = $confidence, r.description = $description`,
           {
@@ -122,11 +127,10 @@ export async function syncSessionToGraph(session: InterviewSession): Promise<voi
         );
       }
 
-      // Session-[:FLAGGED]->RedFlag (cascade-scoped)
       if (analysis.redFlags?.length) {
         for (const flag of analysis.redFlags) {
           await runWrite(
-            `MATCH (s:Session {id: $sessionId, source: "cascade"})
+            `MATCH (s:Session {id: $sessionId}) WHERE s.source = "cascade"
              CREATE (rf:RedFlag {description: $description, severity: $severity, type: $type, source: "cascade", createdAt: datetime()})
              CREATE (s)-[:FLAGGED]->(rf)`,
             {
@@ -139,11 +143,10 @@ export async function syncSessionToGraph(session: InterviewSession): Promise<voi
         }
       }
 
-      // Session-[:HIGHLIGHTED]->GreenLight (cascade-scoped)
       if (analysis.greenLights?.length) {
         for (const light of analysis.greenLights) {
           await runWrite(
-            `MATCH (s:Session {id: $sessionId, source: "cascade"})
+            `MATCH (s:Session {id: $sessionId}) WHERE s.source = "cascade"
              CREATE (gl:GreenLight {description: $description, severity: $severity, type: $type, source: "cascade", createdAt: datetime()})
              CREATE (s)-[:HIGHLIGHTED]->(gl)`,
             {
@@ -156,14 +159,15 @@ export async function syncSessionToGraph(session: InterviewSession): Promise<voi
         }
       }
 
-      // Session-[:TRIGGERED]->Recommendation (cascade-scoped)
       if (analysis.serviceRecommendations?.length) {
         for (const rec of analysis.serviceRecommendations) {
           await runWrite(
-            `MATCH (s:Session {id: $sessionId, source: "cascade"})
-             MERGE (r:Recommendation {service: $service, source: "cascade"})
-             ON CREATE SET r.description = $description, r.tier = $tier, r.urgency = $urgency
+            `MERGE (r:Recommendation {service: $service})
+             SET r.source = "cascade"
+             WITH r
+             MATCH (s:Session {id: $sessionId}) WHERE s.source = "cascade"
              MERGE (s)-[rel:TRIGGERED]->(r)
+             ON CREATE SET r.description = $description, r.tier = $tier, r.urgency = $urgency
              SET rel.estimatedValue = $estimatedValue, rel.confidence = $confidence`,
             {
               sessionId,
@@ -273,18 +277,18 @@ Extract 3-8 themes. Only include dimensions that are directly relevant.`,
       return;
     }
 
-    // Sync themes to graph (cascade-scoped)
+    // Sync themes to graph (cascade-tagged)
     for (const theme of themes) {
-      // MERGE Theme node
       await runWrite(
-        `MERGE (t:Theme {name: $name, source: "cascade"})
-         ON CREATE SET t.category = $category, t.createdAt = datetime()`,
+        `MERGE (t:Theme {name: $name})
+         ON CREATE SET t.category = $category, t.createdAt = datetime()
+         SET t.source = "cascade"`,
         { name: theme.name, category: theme.category },
       );
 
-      // Session-[:SURFACED]->Theme
       await runWrite(
-        `MATCH (s:Session {id: $sessionId, source: "cascade"}), (t:Theme {name: $themeName, source: "cascade"})
+        `MATCH (s:Session {id: $sessionId}), (t:Theme {name: $themeName})
+         WHERE s.source = "cascade" AND t.source = "cascade"
          MERGE (s)-[r:SURFACED]->(t)
          SET r.sentiment = $sentiment`,
         {
@@ -294,12 +298,12 @@ Extract 3-8 themes. Only include dimensions that are directly relevant.`,
         },
       );
 
-      // Theme-[:RELATES_TO]->ScoringDimension
       for (const dim of theme.relatedDimensions) {
         await runWrite(
-          `MERGE (sd:ScoringDimension {name: $dimension, source: "cascade"})
+          `MERGE (sd:ScoringDimension {name: $dimension})
+           SET sd.source = "cascade"
            WITH sd
-           MATCH (t:Theme {name: $themeName, source: "cascade"})
+           MATCH (t:Theme {name: $themeName}) WHERE t.source = "cascade"
            MERGE (t)-[:RELATES_TO]->(sd)`,
           { dimension: dim, themeName: theme.name },
         );
@@ -325,7 +329,7 @@ export async function seedAllSessionsToGraph(): Promise<void> {
   try {
     // Clean up existing cascade-tagged nodes before re-seeding
     console.log("[GRAPH] Clearing old cascade-tagged nodes...");
-    await runWrite(`MATCH (n {source: "cascade"}) DETACH DELETE n`, {});
+    await runWrite(`MATCH (n) WHERE n.source = "cascade" DETACH DELETE n`, {});
     console.log("[GRAPH] Old cascade nodes cleared");
 
     const sessions = await listSessionsWithResponses();
@@ -333,7 +337,7 @@ export async function seedAllSessionsToGraph(): Promise<void> {
 
     for (let i = 0; i < sessions.length; i++) {
       const session = sessions[i];
-      console.log(`[GRAPH] Seeded ${i + 1}/${sessions.length} sessions (${session.id})`);
+      console.log(`[GRAPH] Seeding ${i + 1}/${sessions.length} (${session.id})`);
       await syncSessionToGraph(session);
     }
 
