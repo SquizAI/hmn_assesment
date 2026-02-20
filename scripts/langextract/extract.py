@@ -144,7 +144,7 @@ Return structured JSON matching these exact schemas.
 
     try:
         extractor = Extractor(
-            model="gemini-2.0-flash",
+            model="gemini-2.5-flash",
             api_key=GEMINI_API_KEY,
         )
 
@@ -180,7 +180,7 @@ def extract_with_gemini_direct(session: dict) -> SessionExtraction | None:
         return None
 
     genai.configure(api_key=GEMINI_API_KEY)
-    model = genai.GenerativeModel("gemini-2.0-flash")
+    model = genai.GenerativeModel("gemini-2.5-flash")
 
     data = session.get("data") or session
     participant = data.get("participant", {})
