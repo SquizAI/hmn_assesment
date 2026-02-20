@@ -1,11 +1,25 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import StatCard from "../components/admin/StatCard";
-import StatusBadge from "../components/admin/StatusBadge";
 import { fetchStats, fetchFunnel, fetchDimensions, fetchSessions, fetchCompanies } from "../lib/admin-api";
-import { fetchGraphStatus, fetchThemeMap, fetchBenchmarks, seedGraph } from "../lib/graph-api";
+import {
+  fetchGraphStatus,
+  fetchThemeMap,
+  fetchBenchmarks,
+  seedGraph,
+  fetchGrowthTimeline,
+  fetchNetworkGraph,
+} from "../lib/graph-api";
+import GraphVisualization from "../components/admin/GraphVisualization";
+import GrowthTimeline from "../components/admin/GrowthTimeline";
+import DimensionRadar from "../components/admin/DimensionRadar";
+import InsightCards from "../components/admin/InsightCards";
+import RiskSignals from "../components/admin/RiskSignals";
 
-/** Lightweight local type matching the admin stats API response shape. */
+// ============================================================
+// Local Types
+// ============================================================
+
 interface DashboardStats {
   totalSessions: number;
   completedSessions: number;
@@ -15,29 +29,16 @@ interface DashboardStats {
   assessmentBreakdown: { assessmentTypeId: string; count: number }[];
 }
 
-/** Lightweight local type matching the admin funnel API response shape. */
-interface DashboardFunnelStage {
+interface FunnelStage {
   stage: "intake" | "in_progress" | "completed" | "analyzed";
   count: number;
   percentage: number;
 }
 
-/** Lightweight local type matching the admin dimensions API response shape. */
 interface DashboardDimension {
   dimension: string;
   average: number;
   count: number;
-}
-
-/** Lightweight local type matching the admin session summary API response shape. */
-interface DashboardSession {
-  id: string;
-  participantName: string;
-  participantCompany: string;
-  status: string;
-  createdAt: string;
-  assessmentTypeId: string;
-  responseCount: number;
 }
 
 interface DashboardCompany {
@@ -59,7 +60,7 @@ interface ThemeEntry {
   theme: string;
   frequency: number;
   sentiment: "positive" | "negative" | "neutral";
-  category: "tool" | "pain_point" | "goal" | "capability";
+  category: string;
 }
 
 interface ArchetypeEntry {
@@ -72,6 +73,54 @@ interface IndustryBenchmark {
   avgScore: number;
   sessions: number;
   topArchetype: string;
+}
+
+interface TimelinePoint {
+  date: string;
+  sessions: number;
+  cumulativeSessions: number;
+}
+
+interface GraphNode {
+  id: string;
+  type: string;
+  label: string;
+  properties: Record<string, unknown>;
+}
+
+interface GraphEdge {
+  source: string;
+  target: string;
+  type: string;
+}
+
+// ============================================================
+// Helpers
+// ============================================================
+
+function humanize(snake: string): string {
+  return snake
+    .replace(/^the_/, "")
+    .split("_")
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
+}
+
+function relativeDate(dateStr: string): string {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const days = Math.floor(diff / 86400000);
+  const hours = Math.floor(diff / 3600000);
+  const minutes = Math.floor(diff / 60000);
+  if (days > 0) return `${days}d ago`;
+  if (hours > 0) return `${hours}h ago`;
+  if (minutes > 0) return `${minutes}m ago`;
+  return "just now";
+}
+
+function scoreColor(score: number): "green" | "yellow" | "red" {
+  if (score >= 70) return "green";
+  if (score >= 45) return "yellow";
+  return "red";
 }
 
 const FUNNEL_COLORS: Record<string, string> = {
@@ -88,64 +137,42 @@ const FUNNEL_LABELS: Record<string, string> = {
   analyzed: "Analyzed",
 };
 
-function humanize(snake: string): string {
-  return snake
-    .split("_")
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(" ");
-}
-
-function relativeDate(dateStr: string): string {
-  const now = Date.now();
-  const then = new Date(dateStr).getTime();
-  const diff = now - then;
-  const seconds = Math.floor(diff / 1000);
-  const minutes = Math.floor(seconds / 60);
-  const hours = Math.floor(minutes / 60);
-  const days = Math.floor(hours / 24);
-
-  if (days > 0) return `${days}d ago`;
-  if (hours > 0) return `${hours}h ago`;
-  if (minutes > 0) return `${minutes}m ago`;
-  return "just now";
-}
-
-function scoreColor(score: number): "green" | "yellow" | "red" {
-  if (score >= 70) return "green";
-  if (score >= 45) return "yellow";
-  return "red";
-}
-
-function scoreBarColor(score: number): string {
-  if (score >= 70) return "from-green-500 to-green-600";
-  if (score >= 45) return "from-yellow-500 to-yellow-600";
-  return "from-red-500 to-red-600";
-}
+// ============================================================
+// Component
+// ============================================================
 
 export default function AdminDashboardPage() {
   const navigate = useNavigate();
 
+  // Core data
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<DashboardStats | null>(null);
-  const [funnel, setFunnel] = useState<DashboardFunnelStage[]>([]);
+  const [funnel, setFunnel] = useState<FunnelStage[]>([]);
   const [dimensions, setDimensions] = useState<DashboardDimension[]>([]);
-  const [sessions, setSessions] = useState<DashboardSession[]>([]);
   const [companies, setCompanies] = useState<DashboardCompany[]>([]);
 
+  // Graph data
   const [graphStatus, setGraphStatus] = useState<GraphStatusData | null>(null);
   const [themes, setThemes] = useState<ThemeEntry[]>([]);
   const [archetypes, setArchetypes] = useState<ArchetypeEntry[]>([]);
   const [benchmarks, setBenchmarks] = useState<IndustryBenchmark[]>([]);
+  const [timeline, setTimeline] = useState<TimelinePoint[]>([]);
+  const [graphNodes, setGraphNodes] = useState<GraphNode[]>([]);
+  const [graphEdges, setGraphEdges] = useState<GraphEdge[]>([]);
   const [graphLoading, setGraphLoading] = useState(true);
   const [seeding, setSeeding] = useState(false);
 
+  // Red flags + green lights from benchmarks
+  const [redFlags, setRedFlags] = useState<{ description: string; frequency: number }[]>([]);
+  const [greenLights, setGreenLights] = useState<{ description: string; frequency: number }[]>([]);
+
+  // Load core data
   useEffect(() => {
     Promise.all([fetchStats(), fetchFunnel(), fetchDimensions(), fetchSessions(), fetchCompanies()])
-      .then(([statsData, funnelData, dimensionsData, sessionsData, companiesData]) => {
+      .then(([statsData, funnelData, _dimensionsData, _sessionsData, companiesData]) => {
         setStats(statsData);
         setFunnel(funnelData.funnel);
-        setDimensions(dimensionsData.dimensions);
-        setSessions(sessionsData.sessions);
+        setDimensions(_dimensionsData.dimensions);
         setCompanies(companiesData.companies || []);
         setLoading(false);
       })
@@ -155,26 +182,45 @@ export default function AdminDashboardPage() {
       });
   }, []);
 
+  // Load graph data
   useEffect(() => {
     fetchGraphStatus()
       .then((status) => {
         setGraphStatus(status);
         if (status.enabled && status.nodeCount > 0) {
-          return Promise.all([fetchThemeMap(), fetchBenchmarks()]);
+          return Promise.all([
+            fetchThemeMap(),
+            fetchBenchmarks(),
+            fetchGrowthTimeline(),
+            fetchNetworkGraph(),
+          ]);
         }
         return null;
       })
       .then((results) => {
         if (results) {
-          const [themeData, benchmarkData] = results;
+          const [themeData, benchmarkData, timelineData, networkData] = results;
           setThemes(themeData.themes || []);
           setArchetypes(benchmarkData.archetypes || []);
           setBenchmarks(benchmarkData.industries || []);
+          setTimeline(timelineData.timeline || []);
+          setGraphNodes(networkData.nodes || []);
+          setGraphEdges(networkData.edges || []);
+
+          // Extract red flags and green lights from theme data if available
+          if (themeData.themes) {
+            const flags = (themeData.themes as { name: string; frequency: number; sentiment: string }[])
+              .filter((t) => t.sentiment === "negative")
+              .map((t) => ({ description: t.name, frequency: t.frequency }));
+            const lights = (themeData.themes as { name: string; frequency: number; sentiment: string }[])
+              .filter((t) => t.sentiment === "positive")
+              .map((t) => ({ description: t.name, frequency: t.frequency }));
+            setRedFlags(flags);
+            setGreenLights(lights);
+          }
         }
       })
-      .catch(() => {
-        // Graph not available
-      })
+      .catch(() => {})
       .finally(() => setGraphLoading(false));
   }, []);
 
@@ -185,10 +231,18 @@ export default function AdminDashboardPage() {
       const status = await fetchGraphStatus();
       setGraphStatus(status);
       if (status.enabled && status.nodeCount > 0) {
-        const [themeData, benchmarkData] = await Promise.all([fetchThemeMap(), fetchBenchmarks()]);
+        const [themeData, benchmarkData, timelineData, networkData] = await Promise.all([
+          fetchThemeMap(),
+          fetchBenchmarks(),
+          fetchGrowthTimeline(),
+          fetchNetworkGraph(),
+        ]);
         setThemes(themeData.themes || []);
         setArchetypes(benchmarkData.archetypes || []);
         setBenchmarks(benchmarkData.industries || []);
+        setTimeline(timelineData.timeline || []);
+        setGraphNodes(networkData.nodes || []);
+        setGraphEdges(networkData.edges || []);
       }
     } catch {
       // seed failed
@@ -199,6 +253,18 @@ export default function AdminDashboardPage() {
 
   const isGraphEnabled = graphStatus?.enabled && (graphStatus?.nodeCount ?? 0) > 0;
 
+  // Computed insight data
+  const topArchetype = useMemo(() => {
+    if (archetypes.length === 0) return null;
+    const sorted = [...archetypes].sort((a, b) => b.count - a.count);
+    return sorted[0];
+  }, [archetypes]);
+
+  const topTheme = useMemo(() => {
+    if (themes.length === 0) return null;
+    return themes[0];
+  }, [themes]);
+
   if (loading) {
     return (
       <div className="px-4 md:px-6 py-4 md:py-6 flex items-center justify-center h-full">
@@ -208,140 +274,194 @@ export default function AdminDashboardPage() {
   }
 
   return (
-    <div className="px-4 md:px-6 py-4 md:py-6 space-y-4 md:space-y-6">
-      {/* Stat Cards Row */}
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 sm:gap-4">
-        <StatCard
-          label="Total Sessions"
-          value={stats?.totalSessions ?? 0}
-          sub={`${stats?.completedSessions ?? 0} completed`}
-        />
-        <StatCard
-          label="Completion Rate"
-          value={`${stats?.completionRate ?? 0}%`}
-          color={
-            (stats?.completionRate ?? 0) > 50
-              ? "green"
-              : (stats?.completionRate ?? 0) > 25
-              ? "yellow"
-              : "red"
-          }
-        />
-        <StatCard
-          label="Avg Score"
-          value={stats?.averageScore || "\u2014"}
-          color={
-            stats?.averageScore
-              ? scoreColor(stats.averageScore)
-              : "default"
-          }
-          sub="/100"
-        />
-        <StatCard
-          label="Assessments"
-          value={stats?.assessmentBreakdown?.length ?? 0}
-        />
-        <div
-          onClick={() => {
-            if (graphStatus?.enabled && (graphStatus?.nodeCount ?? 0) === 0) handleSeed();
-          }}
-          className={`bg-white/[0.03] border border-white/10 rounded-2xl p-6 hover:bg-white/[0.05] transition-colors ${
-            graphStatus?.enabled && (graphStatus?.nodeCount ?? 0) === 0 ? "cursor-pointer" : ""
-          }`}
-        >
-          <div className="text-xs text-white/40 uppercase tracking-wider mb-2">Graph</div>
-          {graphLoading ? (
-            <div className="h-8 w-24 bg-white/5 rounded animate-pulse" />
-          ) : (
-            <div className="flex items-center gap-2">
-              <span
-                className={`w-2 h-2 rounded-full ${
-                  graphStatus?.enabled && (graphStatus?.nodeCount ?? 0) > 0
-                    ? "bg-green-400"
-                    : graphStatus?.enabled
-                    ? "bg-orange-400"
-                    : "bg-gray-500"
-                }`}
-              />
-              <span className="text-sm font-medium text-white/70">
-                {graphStatus?.enabled && (graphStatus?.nodeCount ?? 0) > 0
-                  ? "Connected"
-                  : graphStatus?.enabled
-                  ? "Empty"
-                  : "Offline"}
-              </span>
-            </div>
-          )}
-          {graphStatus?.enabled && (graphStatus?.nodeCount ?? 0) > 0 && (
-            <div className="text-xs text-white/30 mt-1">{graphStatus.nodeCount} nodes</div>
-          )}
-          {graphStatus?.enabled && (graphStatus?.nodeCount ?? 0) === 0 && (
-            <div className="text-xs text-white/30 mt-1">Click to seed</div>
-          )}
-        </div>
-      </div>
+    <div className="px-4 md:px-6 py-4 md:py-6 space-y-4 md:space-y-5">
+      {/* ============================================ */}
+      {/* ROW 1: Insight Story Cards                  */}
+      {/* ============================================ */}
+      <InsightCards
+        totalSessions={stats?.totalSessions ?? 0}
+        completionRate={stats?.completionRate ?? 0}
+        averageScore={stats?.averageScore ?? 0}
+        topArchetype={topArchetype ? { name: topArchetype.archetype, count: topArchetype.count } : null}
+        topTheme={topTheme ? { name: topTheme.theme, frequency: topTheme.frequency, sentiment: topTheme.sentiment } : null}
+        redFlagCount={redFlags.length}
+        companyCount={companies.length}
+        loading={loading}
+      />
 
-      {/* Completion Funnel */}
-      <div className="bg-white/[0.03] rounded-2xl border border-white/10 p-4 md:p-6">
-        <h2 className="text-xs md:text-sm font-semibold text-white/60 uppercase tracking-wider mb-3 md:mb-4">
-          Completion Funnel
-        </h2>
-        <div className="space-y-3">
-          {funnel.map((stage) => (
-            <div key={stage.stage} className="flex items-center gap-2 md:gap-3">
-              <span className="w-20 md:w-28 text-xs md:text-sm text-white/50 flex-shrink-0">
-                {FUNNEL_LABELS[stage.stage] || stage.stage}
-              </span>
-              <div className="flex-1 bg-white/5 rounded-lg h-6 md:h-8 overflow-hidden">
-                <div
-                  className={`h-full rounded-lg bg-gradient-to-r ${FUNNEL_COLORS[stage.stage] || "from-gray-500 to-gray-600"}`}
-                  style={{ width: `${stage.percentage}%`, minWidth: "2px" }}
+      {/* ============================================ */}
+      {/* ROW 2: Growth Timeline + Stat Cards          */}
+      {/* ============================================ */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        {/* Growth Timeline (2/3 width) */}
+        <div className="lg:col-span-2">
+          <GrowthTimeline data={timeline} loading={graphLoading} />
+        </div>
+
+        {/* Stat Cards (1/3 width) */}
+        <div className="grid grid-cols-2 gap-3 content-start">
+          <StatCard
+            label="Total Sessions"
+            value={stats?.totalSessions ?? 0}
+            sub={`${stats?.completedSessions ?? 0} completed`}
+          />
+          <StatCard
+            label="Completion Rate"
+            value={`${stats?.completionRate ?? 0}%`}
+            color={
+              (stats?.completionRate ?? 0) > 50 ? "green" : (stats?.completionRate ?? 0) > 25 ? "yellow" : "red"
+            }
+          />
+          <StatCard
+            label="Avg Score"
+            value={stats?.averageScore || "\u2014"}
+            color={stats?.averageScore ? scoreColor(stats.averageScore) : "default"}
+            sub="/100"
+          />
+          {/* Graph status card */}
+          <div
+            onClick={() => {
+              if (graphStatus?.enabled && (graphStatus?.nodeCount ?? 0) === 0) handleSeed();
+            }}
+            className={`bg-white/[0.03] border border-white/10 rounded-2xl p-4 hover:bg-white/[0.05] transition-colors ${
+              graphStatus?.enabled && (graphStatus?.nodeCount ?? 0) === 0 ? "cursor-pointer" : ""
+            }`}
+          >
+            <div className="text-[10px] text-white/40 uppercase tracking-wider mb-1.5">Graph</div>
+            {graphLoading ? (
+              <div className="h-6 w-16 bg-white/5 rounded animate-pulse" />
+            ) : (
+              <div className="flex items-center gap-2">
+                <span
+                  className={`w-2 h-2 rounded-full ${
+                    isGraphEnabled ? "bg-green-400" : graphStatus?.enabled ? "bg-orange-400" : "bg-gray-500"
+                  }`}
                 />
+                <span className="text-sm font-medium text-white/70">
+                  {isGraphEnabled ? "Connected" : graphStatus?.enabled ? "Empty" : "Offline"}
+                </span>
               </div>
-              <span className="text-xs md:text-sm text-white/40 tabular-nums flex-shrink-0 w-16 md:w-24 text-right">
-                {stage.count} ({stage.percentage}%)
-              </span>
-            </div>
-          ))}
+            )}
+            {isGraphEnabled && (
+              <div className="text-[10px] text-white/30 mt-0.5">{graphStatus!.nodeCount} nodes</div>
+            )}
+            {graphStatus?.enabled && (graphStatus?.nodeCount ?? 0) === 0 && (
+              <div className="text-[10px] text-white/30 mt-0.5">
+                {seeding ? "Seeding..." : "Click to seed"}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* Two-column grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
-        {/* Dimension Averages */}
+      {/* ============================================ */}
+      {/* ROW 3: Interactive Graph Visualization       */}
+      {/* ============================================ */}
+      <GraphVisualization nodes={graphNodes} edges={graphEdges} loading={graphLoading} />
+
+      {/* ============================================ */}
+      {/* ROW 4: Dimension Radar + Archetypes + Risk   */}
+      {/* ============================================ */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <DimensionRadar dimensions={dimensions} loading={loading} />
+
+        {/* Archetype Distribution — Donut Chart */}
         <div className="bg-white/[0.03] rounded-2xl border border-white/10 p-4 md:p-6">
-          <h2 className="text-xs md:text-sm font-semibold text-white/60 uppercase tracking-wider mb-3 md:mb-4">
-            Dimension Averages
+          <h2 className="text-xs font-semibold text-white/60 uppercase tracking-wider mb-3">
+            Archetype Distribution
           </h2>
-          {dimensions.length === 0 ? (
-            <div className="text-center py-8 text-white/30">No dimension data yet</div>
-          ) : (
+          {graphLoading ? (
             <div className="space-y-3">
-              {dimensions.map((dim) => (
-                <div key={dim.dimension} className="flex items-center gap-2 md:gap-3">
-                  <span className="w-24 md:w-36 text-xs md:text-sm text-white/50 flex-shrink-0 truncate">
-                    {humanize(dim.dimension)}
-                  </span>
-                  <span className="text-xs md:text-sm font-medium text-white/70 tabular-nums w-7 md:w-8 text-right flex-shrink-0">
-                    {Math.round(dim.average)}
-                  </span>
-                  <div className="flex-1 bg-white/5 rounded-lg h-4 md:h-5 overflow-hidden">
-                    <div
-                      className={`h-full rounded-lg bg-gradient-to-r ${scoreBarColor(dim.average)}`}
-                      style={{ width: `${dim.average}%`, minWidth: "2px" }}
-                    />
-                  </div>
-                </div>
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="h-6 bg-white/5 rounded animate-pulse" />
               ))}
             </div>
+          ) : !isGraphEnabled || archetypes.length === 0 ? (
+            <div className="text-center py-8 text-white/30 text-sm">
+              {isGraphEnabled ? "No archetype data yet" : "Graph not connected"}
+            </div>
+          ) : (
+            <div>
+              {/* SVG Donut */}
+              <div className="flex justify-center mb-3">
+                <svg viewBox="0 0 100 100" className="w-32 h-32">
+                  {(() => {
+                    const total = archetypes.reduce((s, a) => s + a.count, 0);
+                    const colors = ["#a855f7", "#3b82f6", "#06b6d4", "#22c55e", "#f59e0b", "#f43f5e", "#6366f1", "#14b8a6"];
+                    let cumAngle = -90;
+                    return archetypes.map((a, i) => {
+                      const pct = a.count / total;
+                      const angle = pct * 360;
+                      const startAngle = cumAngle;
+                      cumAngle += angle;
+                      const endAngle = cumAngle;
+                      const startRad = (startAngle * Math.PI) / 180;
+                      const endRad = (endAngle * Math.PI) / 180;
+                      const largeArc = angle > 180 ? 1 : 0;
+                      const x1 = 50 + 35 * Math.cos(startRad);
+                      const y1 = 50 + 35 * Math.sin(startRad);
+                      const x2 = 50 + 35 * Math.cos(endRad);
+                      const y2 = 50 + 35 * Math.sin(endRad);
+                      const ix1 = 50 + 22 * Math.cos(endRad);
+                      const iy1 = 50 + 22 * Math.sin(endRad);
+                      const ix2 = 50 + 22 * Math.cos(startRad);
+                      const iy2 = 50 + 22 * Math.sin(startRad);
+                      return (
+                        <path
+                          key={i}
+                          d={`M ${x1} ${y1} A 35 35 0 ${largeArc} 1 ${x2} ${y2} L ${ix1} ${iy1} A 22 22 0 ${largeArc} 0 ${ix2} ${iy2} Z`}
+                          fill={colors[i % colors.length]}
+                          opacity={0.7}
+                          stroke="rgba(0,0,0,0.3)"
+                          strokeWidth="0.5"
+                        />
+                      );
+                    });
+                  })()}
+                  <text x="50" y="48" textAnchor="middle" className="fill-white/80" style={{ fontSize: "8px", fontWeight: 700 }}>
+                    {archetypes.reduce((s, a) => s + a.count, 0)}
+                  </text>
+                  <text x="50" y="56" textAnchor="middle" className="fill-white/40" style={{ fontSize: "4px" }}>
+                    total
+                  </text>
+                </svg>
+              </div>
+              {/* Legend */}
+              <div className="space-y-1.5">
+                {archetypes
+                  .sort((a, b) => b.count - a.count)
+                  .map((a, i) => {
+                    const colors = ["bg-purple-500", "bg-blue-500", "bg-cyan-500", "bg-green-500", "bg-amber-500", "bg-rose-500", "bg-indigo-500", "bg-teal-500"];
+                    const total = archetypes.reduce((s, x) => s + x.count, 0);
+                    const pct = total > 0 ? Math.round((a.count / total) * 100) : 0;
+                    return (
+                      <div key={a.archetype} className="flex items-center gap-2">
+                        <span className={`w-2 h-2 rounded-full ${colors[i % colors.length]} opacity-70`} />
+                        <span className="text-xs text-white/60 flex-1 truncate">
+                          {humanize(a.archetype)}
+                        </span>
+                        <span className="text-[10px] text-white/40 tabular-nums">{a.count}</span>
+                        <span className="text-[10px] text-white/25 tabular-nums w-8 text-right">{pct}%</span>
+                      </div>
+                    );
+                  })}
+              </div>
+            </div>
           )}
         </div>
 
-        {/* Top Companies */}
+        <RiskSignals redFlags={redFlags} greenLights={greenLights} loading={graphLoading} />
+      </div>
+
+      {/* ============================================ */}
+      {/* ROW 5: Company Leaderboard + Themes          */}
+      {/* ============================================ */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* Company Leaderboard */}
         <div className="bg-white/[0.03] rounded-2xl border border-white/10 p-4 md:p-6">
-          <div className="flex items-center justify-between mb-3 md:mb-4">
-            <h2 className="text-xs md:text-sm font-semibold text-white/60 uppercase tracking-wider">
-              Top Companies
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-xs font-semibold text-white/60 uppercase tracking-wider">
+              Company Leaderboard
             </h2>
             <button
               onClick={() => navigate("/admin/companies")}
@@ -353,35 +473,48 @@ export default function AdminDashboardPage() {
           {companies.length === 0 ? (
             <div className="text-center py-8 text-white/30">No companies yet</div>
           ) : (
-            <div className="space-y-2">
-              {companies.slice(0, 8).map((company) => (
+            <div className="space-y-1.5">
+              {companies.slice(0, 10).map((company, idx) => (
                 <div
                   key={company.company}
                   onClick={() => navigate(`/admin/companies/${encodeURIComponent(company.company)}`)}
-                  className="flex items-center gap-2 md:gap-3 px-2 md:px-3 py-2 md:py-2.5 rounded-xl hover:bg-white/5 cursor-pointer transition-colors"
+                  className="flex items-center gap-2 px-2.5 py-2 rounded-xl hover:bg-white/5 cursor-pointer transition-colors"
                 >
-                  <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-gradient-to-br from-purple-500/15 to-blue-500/15 border border-white/10 flex items-center justify-center shrink-0">
+                  {/* Rank */}
+                  <span className="text-[10px] text-white/20 tabular-nums w-4 text-right flex-shrink-0">
+                    {idx + 1}
+                  </span>
+                  {/* Avatar */}
+                  <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-purple-500/15 to-blue-500/15 border border-white/10 flex items-center justify-center shrink-0">
                     <span className="text-xs font-bold text-white/50">
                       {company.company.charAt(0).toUpperCase()}
                     </span>
                   </div>
+                  {/* Info */}
                   <div className="flex-1 min-w-0">
-                    <span className="text-xs md:text-sm font-medium text-white/80 truncate block">
-                      {company.company}
-                    </span>
-                    <span className="text-[10px] md:text-xs text-white/30">
+                    <span className="text-xs font-medium text-white/80 truncate block">{company.company}</span>
+                    <span className="text-[10px] text-white/30">
                       {company.sessionCount} session{company.sessionCount !== 1 ? "s" : ""} · {company.participantCount} people
                     </span>
                   </div>
+                  {/* Score */}
                   {company.averageScore !== null && (
-                    <span className={`text-xs md:text-sm font-semibold tabular-nums ${scoreColor(company.averageScore) === "green" ? "text-green-400" : scoreColor(company.averageScore) === "yellow" ? "text-yellow-400" : "text-red-400"}`}>
+                    <span
+                      className={`text-sm font-semibold tabular-nums ${
+                        scoreColor(company.averageScore) === "green"
+                          ? "text-green-400"
+                          : scoreColor(company.averageScore) === "yellow"
+                          ? "text-yellow-400"
+                          : "text-red-400"
+                      }`}
+                    >
                       {company.averageScore}
                     </span>
                   )}
                   {company.hasResearch && (
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
                   )}
-                  <span className="text-[10px] md:text-xs text-white/20 shrink-0 w-12 md:w-14 text-right">
+                  <span className="text-[10px] text-white/20 shrink-0 w-12 text-right">
                     {relativeDate(company.lastActivity)}
                   </span>
                 </div>
@@ -389,23 +522,20 @@ export default function AdminDashboardPage() {
             </div>
           )}
         </div>
-      </div>
 
-      {/* Graph Intelligence Panels */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
-        {/* Trending Themes */}
+        {/* Theme Intelligence */}
         <div className="bg-white/[0.03] rounded-2xl border border-white/10 p-4 md:p-6">
-          <div className="flex items-center gap-2 mb-3 md:mb-4">
+          <div className="flex items-center gap-2 mb-3">
             <svg className="w-4 h-4 text-purple-400/60" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456z" />
             </svg>
-            <h2 className="text-xs md:text-sm font-semibold text-white/60 uppercase tracking-wider">
-              Trending Themes
+            <h2 className="text-xs font-semibold text-white/60 uppercase tracking-wider">
+              Theme Intelligence
             </h2>
           </div>
           {graphLoading ? (
             <div className="space-y-3">
-              {[...Array(5)].map((_, i) => (
+              {[...Array(6)].map((_, i) => (
                 <div key={i} className="h-6 bg-white/5 rounded animate-pulse" />
               ))}
             </div>
@@ -425,8 +555,8 @@ export default function AdminDashboardPage() {
           ) : themes.length === 0 ? (
             <div className="text-center py-8 text-white/30 text-sm">No themes detected yet</div>
           ) : (
-            <div className="space-y-2.5">
-              {themes.slice(0, 10).map((theme) => {
+            <div className="space-y-2">
+              {themes.slice(0, 12).map((theme) => {
                 const maxFreq = themes[0]?.frequency || 1;
                 return (
                   <div key={theme.theme} className="flex items-center gap-2">
@@ -446,16 +576,20 @@ export default function AdminDashboardPage() {
                         style={{ width: `${(theme.frequency / maxFreq) * 100}%`, minWidth: "2px" }}
                       />
                     </div>
-                    <span className="text-[10px] text-white/30 tabular-nums w-6 text-right flex-shrink-0">{theme.frequency}</span>
-                    <span className={`text-[9px] px-1.5 py-0.5 rounded-full border flex-shrink-0 ${
-                      theme.category === "tool"
-                        ? "text-blue-400/70 border-blue-400/20 bg-blue-400/5"
-                        : theme.category === "pain_point"
-                        ? "text-red-400/70 border-red-400/20 bg-red-400/5"
-                        : theme.category === "goal"
-                        ? "text-green-400/70 border-green-400/20 bg-green-400/5"
-                        : "text-amber-400/70 border-amber-400/20 bg-amber-400/5"
-                    }`}>
+                    <span className="text-[10px] text-white/30 tabular-nums w-5 text-right flex-shrink-0">
+                      {theme.frequency}
+                    </span>
+                    <span
+                      className={`text-[9px] px-1.5 py-0.5 rounded-full border flex-shrink-0 ${
+                        theme.category === "tool"
+                          ? "text-blue-400/70 border-blue-400/20 bg-blue-400/5"
+                          : theme.category === "pain_point"
+                          ? "text-red-400/70 border-red-400/20 bg-red-400/5"
+                          : theme.category === "goal"
+                          ? "text-green-400/70 border-green-400/20 bg-green-400/5"
+                          : "text-amber-400/70 border-amber-400/20 bg-amber-400/5"
+                      }`}
+                    >
                       {theme.category === "pain_point" ? "pain" : theme.category}
                     </span>
                   </div>
@@ -464,58 +598,53 @@ export default function AdminDashboardPage() {
             </div>
           )}
         </div>
+      </div>
 
-        {/* Archetype Distribution */}
+      {/* ============================================ */}
+      {/* ROW 6: Funnel + Industry Benchmarks          */}
+      {/* ============================================ */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* Completion Funnel */}
         <div className="bg-white/[0.03] rounded-2xl border border-white/10 p-4 md:p-6">
-          <h2 className="text-xs md:text-sm font-semibold text-white/60 uppercase tracking-wider mb-3 md:mb-4">
-            Archetype Distribution
+          <h2 className="text-xs font-semibold text-white/60 uppercase tracking-wider mb-3">
+            Completion Funnel
           </h2>
-          {graphLoading ? (
-            <div className="space-y-3">
-              {[...Array(5)].map((_, i) => (
-                <div key={i} className="h-6 bg-white/5 rounded animate-pulse" />
-              ))}
-            </div>
-          ) : !isGraphEnabled ? (
-            <div className="text-center py-8 text-white/30 text-sm">Graph not connected</div>
-          ) : archetypes.length === 0 ? (
-            <div className="text-center py-8 text-white/30 text-sm">No archetype data yet</div>
-          ) : (
-            <div className="space-y-2.5">
-              {archetypes.map((a, idx) => {
-                const maxCount = archetypes[0]?.count || 1;
-                const colors = [
-                  "from-purple-500/60 to-purple-600/60",
-                  "from-blue-500/60 to-blue-600/60",
-                  "from-cyan-500/60 to-cyan-600/60",
-                  "from-green-500/60 to-green-600/60",
-                  "from-amber-500/60 to-amber-600/60",
-                  "from-rose-500/60 to-rose-600/60",
-                  "from-indigo-500/60 to-indigo-600/60",
-                  "from-teal-500/60 to-teal-600/60",
-                ];
-                return (
-                  <div key={a.archetype} className="flex items-center gap-2">
-                    <span className="w-28 text-xs text-white/60 truncate flex-shrink-0">
-                      {humanize((a.archetype || "unknown").replace("the_", ""))}
+          <div className="space-y-2.5">
+            {funnel.map((stage, i) => {
+              const nextStage = funnel[i + 1];
+              const convRate = nextStage && stage.count > 0 ? Math.round((nextStage.count / stage.count) * 100) : null;
+              return (
+                <div key={stage.stage}>
+                  <div className="flex items-center gap-2">
+                    <span className="w-20 text-xs text-white/50 flex-shrink-0">
+                      {FUNNEL_LABELS[stage.stage] || stage.stage}
                     </span>
-                    <div className="flex-1 bg-white/5 rounded h-4 overflow-hidden">
+                    <div className="flex-1 bg-white/5 rounded-lg h-6 overflow-hidden">
                       <div
-                        className={`h-full rounded bg-gradient-to-r ${colors[idx % colors.length]}`}
-                        style={{ width: `${(a.count / maxCount) * 100}%`, minWidth: "2px" }}
+                        className={`h-full rounded-lg bg-gradient-to-r ${FUNNEL_COLORS[stage.stage] || "from-gray-500 to-gray-600"}`}
+                        style={{ width: `${stage.percentage}%`, minWidth: "2px" }}
                       />
                     </div>
-                    <span className="text-xs text-white/40 tabular-nums w-6 text-right flex-shrink-0">{a.count}</span>
+                    <span className="text-xs text-white/40 tabular-nums flex-shrink-0 w-20 text-right">
+                      {stage.count} ({stage.percentage}%)
+                    </span>
                   </div>
-                );
-              })}
-            </div>
-          )}
+                  {convRate !== null && (
+                    <div className="flex items-center gap-2 ml-20 mt-0.5">
+                      <span className="text-[9px] text-white/20">
+                        {convRate}% conversion
+                      </span>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </div>
 
         {/* Industry Benchmarks */}
         <div className="bg-white/[0.03] rounded-2xl border border-white/10 p-4 md:p-6">
-          <h2 className="text-xs md:text-sm font-semibold text-white/60 uppercase tracking-wider mb-3 md:mb-4">
+          <h2 className="text-xs font-semibold text-white/60 uppercase tracking-wider mb-3">
             Industry Benchmarks
           </h2>
           {graphLoading ? (
@@ -524,44 +653,44 @@ export default function AdminDashboardPage() {
                 <div key={i} className="h-6 bg-white/5 rounded animate-pulse" />
               ))}
             </div>
-          ) : !isGraphEnabled ? (
-            <div className="text-center py-8 text-white/30 text-sm">Graph not connected</div>
-          ) : benchmarks.length === 0 ? (
-            <div className="text-center py-8 text-white/30 text-sm">No benchmark data yet</div>
+          ) : !isGraphEnabled || benchmarks.length === 0 ? (
+            <div className="text-center py-8 text-white/30 text-sm">
+              {isGraphEnabled ? "No benchmark data yet" : "Graph not connected"}
+            </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-white/[0.06]">
-                    <th className="text-left text-[10px] text-white/40 uppercase tracking-wider pb-2">Industry</th>
-                    <th className="text-right text-[10px] text-white/40 uppercase tracking-wider pb-2">Avg</th>
-                    <th className="text-right text-[10px] text-white/40 uppercase tracking-wider pb-2">Sessions</th>
-                    <th className="text-right text-[10px] text-white/40 uppercase tracking-wider pb-2">Top Type</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {[...benchmarks]
-                    .sort((a, b) => b.avgScore - a.avgScore)
-                    .map((b) => (
-                      <tr key={b.industry} className="border-t border-white/5">
-                        <td className="py-2 text-xs text-white/60 truncate max-w-[100px]">{b.industry}</td>
-                        <td className={`py-2 text-xs text-right tabular-nums font-medium ${
+            <div className="space-y-2.5">
+              {[...benchmarks]
+                .sort((a, b) => b.avgScore - a.avgScore)
+                .map((b) => (
+                  <div key={b.industry} className="flex items-center gap-2">
+                    <span className="w-24 text-xs text-white/60 truncate flex-shrink-0">{b.industry}</span>
+                    <div className="flex-1 bg-white/5 rounded h-5 overflow-hidden">
+                      <div
+                        className={`h-full rounded bg-gradient-to-r ${
                           b.avgScore >= 70
-                            ? "text-green-400"
+                            ? "from-green-500/50 to-green-600/50"
                             : b.avgScore >= 45
-                            ? "text-yellow-400"
-                            : "text-red-400"
-                        }`}>
-                          {Math.round(b.avgScore)}
-                        </td>
-                        <td className="py-2 text-xs text-white/40 text-right tabular-nums">{b.sessions}</td>
-                        <td className="py-2 text-[10px] text-white/40 text-right truncate max-w-[80px]">
-                          {humanize((b.topArchetype || "unknown").replace("the_", ""))}
-                        </td>
-                      </tr>
-                    ))}
-                </tbody>
-              </table>
+                            ? "from-yellow-500/50 to-yellow-600/50"
+                            : "from-red-500/50 to-red-600/50"
+                        }`}
+                        style={{ width: `${b.avgScore}%`, minWidth: "2px" }}
+                      />
+                    </div>
+                    <span
+                      className={`text-xs font-medium tabular-nums w-7 text-right flex-shrink-0 ${
+                        b.avgScore >= 70 ? "text-green-400" : b.avgScore >= 45 ? "text-yellow-400" : "text-red-400"
+                      }`}
+                    >
+                      {Math.round(b.avgScore)}
+                    </span>
+                    <span className="text-[10px] text-white/25 tabular-nums w-4 text-right flex-shrink-0">
+                      {b.sessions}
+                    </span>
+                    <span className="text-[9px] text-white/25 truncate w-16 text-right flex-shrink-0">
+                      {humanize(b.topArchetype || "unknown")}
+                    </span>
+                  </div>
+                ))}
             </div>
           )}
         </div>

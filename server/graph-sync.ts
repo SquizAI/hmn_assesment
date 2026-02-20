@@ -204,9 +204,11 @@ interface ExtractedTheme {
 export async function extractAndSyncThemes(session: InterviewSession): Promise<void> {
   if (!isGraphEnabled()) return;
 
-  // Filter to free-text and AI conversation responses
+  // Filter to free-text and AI conversation responses (exclude skipped)
   const textResponses = session.responses.filter(
-    (r: QuestionResponse) => r.inputType === "ai_conversation" || r.inputType === "open_text",
+    (r: QuestionResponse) =>
+      (r.inputType === "ai_conversation" || r.inputType === "open_text") &&
+      !(r as Record<string, unknown>).skipped,
   );
 
   if (textResponses.length === 0) {

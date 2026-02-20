@@ -23,7 +23,7 @@ import {
 } from "./supabase.js";
 import { isEmailEnabled, sendInvitationEmail, sendBatchInvitationEmails } from "./email.js";
 import { initGraphSchema, runQuery } from "./neo4j.js";
-import { getCompanyIntelligence, getAssessmentSummary, getCrossCompanyBenchmarks, getThemeMap } from "./graph-queries.js";
+import { getCompanyIntelligence, getAssessmentSummary, getCrossCompanyBenchmarks, getThemeMap, getGrowthTimeline, getNetworkGraph } from "./graph-queries.js";
 import { seedAllSessionsToGraph } from "./graph-sync.js";
 
 dotenv.config();
@@ -861,6 +861,17 @@ app.post("/api/interview/respond", async (req, res) => {
       });
 
       session.conversationHistory.push(...history);
+    } else if (answer === "[SKIPPED]") {
+      // --- Skipped question ---
+      session.responses.push({
+        questionId,
+        questionText: currentQuestion.text,
+        inputType: currentQuestion.inputType,
+        answer: "",
+        skipped: true,
+        timestamp: new Date().toISOString(),
+        confidenceIndicators: { specificity: 0, emotionalCharge: 0, consistency: 0 },
+      });
     } else {
       // --- Non-conversation response ---
       let confidence = { specificity: 0.8, emotionalCharge: 0.5, consistency: 0.8 };
@@ -1297,7 +1308,9 @@ async function runCascadeAnalysis(session: Record<string, unknown>, assessment?:
   }>;
   const researchContext = getResearchContext(session);
 
-  const allResponses = responses.map((r) => {
+  const allResponses = responses
+    .filter((r) => !(r as Record<string, unknown>).skipped)
+    .map((r) => {
     let answerText = typeof r.answer === "object" ? JSON.stringify(r.answer) : String(r.answer);
     if (r.aiFollowUps?.length) {
       answerText += "\n  Follow-ups:\n" + r.aiFollowUps.map((f) => `  Q: ${f.question}\n  A: ${f.answer}`).join("\n");
@@ -2455,6 +2468,26 @@ app.get("/api/admin/graph/themes", requireAdmin, async (_req, res) => {
   } catch (err) {
     console.error("[GRAPH] Theme map error:", err);
     res.status(500).json({ error: "Failed to fetch theme map" });
+  }
+});
+
+app.get("/api/admin/graph/timeline", requireAdmin, async (_req, res) => {
+  try {
+    const data = await getGrowthTimeline();
+    res.json(data);
+  } catch (err) {
+    console.error("[GRAPH] Timeline error:", err);
+    res.status(500).json({ error: "Failed to fetch growth timeline" });
+  }
+});
+
+app.get("/api/admin/graph/network", requireAdmin, async (_req, res) => {
+  try {
+    const data = await getNetworkGraph();
+    res.json(data);
+  } catch (err) {
+    console.error("[GRAPH] Network graph error:", err);
+    res.status(500).json({ error: "Failed to fetch network graph" });
   }
 });
 

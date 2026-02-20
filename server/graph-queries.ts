@@ -517,3 +517,85 @@ export async function getThemeMap() {
     dimensionThemeMap,
   };
 }
+
+// ============================================================
+// Growth Timeline — sessions over time
+// ============================================================
+
+export async function getGrowthTimeline() {
+  console.log("[GRAPH-QUERY] getGrowthTimeline");
+
+  const records = await runQuery(
+    `
+    MATCH (s:Session)
+    WHERE s.source = "cascade" AND s.createdAt IS NOT NULL
+    WITH date(datetime(s.createdAt)) AS day, count(s) AS sessions
+    RETURN toString(day) AS date, sessions
+    ORDER BY day
+    `,
+    {}
+  );
+
+  let cumulative = 0;
+  const timeline = records.map((rec) => {
+    const sessions = Number(rec.get("sessions")) || 0;
+    cumulative += sessions;
+    return {
+      date: rec.get("date"),
+      sessions,
+      cumulativeSessions: cumulative,
+    };
+  });
+
+  return { timeline };
+}
+
+// ============================================================
+// Network Graph — all cascade nodes + relationships for visualization
+// ============================================================
+
+export async function getNetworkGraph() {
+  console.log("[GRAPH-QUERY] getNetworkGraph");
+
+  // Get all cascade nodes
+  const nodeRecords = await runQuery(
+    `
+    MATCH (n)
+    WHERE n.source = "cascade"
+    RETURN id(n) AS nodeId, labels(n)[0] AS type, properties(n) AS props
+    `,
+    {}
+  );
+
+  const nodes = nodeRecords.map((rec) => {
+    const props = rec.get("props") as Record<string, unknown>;
+    const type = rec.get("type") as string;
+    // Pick a display label based on node type
+    const label =
+      props.name || props.service || props.description || props.email || props.id || type;
+    return {
+      id: String(rec.get("nodeId")),
+      type,
+      label: String(label),
+      properties: props,
+    };
+  });
+
+  // Get all relationships between cascade nodes
+  const edgeRecords = await runQuery(
+    `
+    MATCH (a)-[r]->(b)
+    WHERE a.source = "cascade" AND b.source = "cascade"
+    RETURN id(a) AS sourceId, id(b) AS targetId, type(r) AS relType
+    `,
+    {}
+  );
+
+  const edges = edgeRecords.map((rec) => ({
+    source: String(rec.get("sourceId")),
+    target: String(rec.get("targetId")),
+    type: rec.get("relType") as string,
+  }));
+
+  return { nodes, edges };
+}

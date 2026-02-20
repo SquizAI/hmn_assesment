@@ -42,3 +42,13 @@ export async function fetchGraphStatus() {
   const res = await graphFetch("/api/admin/graph/status");
   return res.json();
 }
+
+export async function fetchGrowthTimeline() {
+  const res = await graphFetch("/api/admin/graph/timeline");
+  return res.json();
+}
+
+export async function fetchNetworkGraph() {
+  const res = await graphFetch("/api/admin/graph/network");
+  return res.json();
+}
