@@ -42,6 +42,7 @@ export default function QuestionCard({ question, sessionId, onSubmit, onConversa
   const [isAiThinking, setIsAiThinking] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [conversationError, setConversationError] = useState<string | null>(null);
+  const lastMessageRef = useRef<string | null>(null);
   const conversationEndRef = useRef<HTMLDivElement>(null);
   const pageBottomRef = useRef<HTMLDivElement>(null);
 
@@ -86,7 +87,15 @@ export default function QuestionCard({ question, sessionId, onSubmit, onConversa
     }
   };
 
+  const handleRetry = () => {
+    if (lastMessageRef.current) {
+      setConversationError(null);
+      handleConversationSubmit(lastMessageRef.current);
+    }
+  };
+
   const handleConversationSubmit = async (text: string) => {
+    lastMessageRef.current = text;
     setIsAiThinking(true);
     setTextValue("");
 
@@ -209,8 +218,14 @@ export default function QuestionCard({ question, sessionId, onSubmit, onConversa
               </div>
             )}
             {conversationError && (
-              <div className="px-3 py-2 rounded-lg bg-red-500/10 border border-red-500/20 text-red-300 text-sm">
-                {conversationError}
+              <div className="px-3 py-2 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center justify-between gap-3">
+                <span className="text-red-300 text-sm">{conversationError}</span>
+                <button
+                  onClick={handleRetry}
+                  className="px-3 py-1 rounded-lg bg-white/10 hover:bg-white/15 text-white/80 text-xs font-medium transition-colors shrink-0"
+                >
+                  Retry
+                </button>
               </div>
             )}
             <div ref={conversationEndRef} />
