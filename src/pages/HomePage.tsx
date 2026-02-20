@@ -47,7 +47,7 @@ export default function HomePage() {
         if (!r.ok) throw new Error("Invalid invitation");
         return r.json();
       })
-      .then((data) => {
+      .then(async (data) => {
         const p = data.invitation.participant;
         setName(p.name || "");
         setEmail(p.email || "");
