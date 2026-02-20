@@ -62,6 +62,28 @@ export default function HomePage() {
         setShowForm(true);
 
         if (data.invitation.sessionId) {
+          // Auto-resume: redirect to the existing session instead of blocking
+          try {
+            const sessionRes = await fetch(
+              `${API_BASE}/api/sessions/${data.invitation.sessionId}`
+            );
+            if (sessionRes.ok) {
+              const sessionData = await sessionRes.json();
+              const s = sessionData.session;
+              if (s) {
+                if (s.status === "analyzed" || s.status === "completed") {
+                  navigate(`/analysis/${s.id}`, { replace: true });
+                } else if (s.status === "in_progress") {
+                  navigate(`/interview/${s.id}`, { replace: true });
+                } else {
+                  navigate(`/research/${s.id}`, { replace: true });
+                }
+                return;
+              }
+            }
+          } catch {
+            // fallback to already_used screen
+          }
           setInviteError("already_used");
         }
       })

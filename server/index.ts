@@ -1735,6 +1735,85 @@ app.get("/api/admin/email-status", requireAdmin, async (_req, res) => {
   res.json({ enabled: isEmailEnabled(), provider: "resend" });
 });
 
+app.get("/api/admin/enrich-email", requireAdmin, async (req, res) => {
+  try {
+    const email = (req.query.email as string || "").trim().toLowerCase();
+    if (!email || !email.includes("@")) {
+      res.status(400).json({ error: "Valid email required" });
+      return;
+    }
+
+    const domain = email.split("@")[1];
+
+    // Skip personal email providers
+    const personalDomains = ["gmail.com", "yahoo.com", "hotmail.com", "outlook.com", "icloud.com", "aol.com", "proton.me", "protonmail.com", "live.com", "me.com"];
+    if (personalDomains.includes(domain)) {
+      res.json({ enriched: false, reason: "personal_email" });
+      return;
+    }
+
+    // Simple domain-based enrichment: fetch the company website and extract info
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 5000);
+      const siteRes = await fetch(`https://${domain}`, {
+        signal: controller.signal,
+        headers: { "User-Agent": "Mozilla/5.0 (compatible; HMN-Assessment-Bot)" },
+      });
+      clearTimeout(timeout);
+
+      if (siteRes.ok) {
+        const html = await siteRes.text();
+        // Extract title and meta description
+        const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
+        const descMatch = html.match(/<meta[^>]*name=["']description["'][^>]*content=["']([^"']+)["']/i);
+        const title = titleMatch?.[1]?.trim() || "";
+        const description = descMatch?.[1]?.trim() || "";
+
+        // Use the Anthropic API to extract structured company info
+        const client = getAnthropicClient();
+        const extraction = await client.messages.create({
+          model: "claude-haiku-4-5-20251001",
+          max_tokens: 300,
+          messages: [{
+            role: "user",
+            content: `Extract company information from this website data for domain "${domain}".\n\nTitle: ${title}\nDescription: ${description}\n\nReturn ONLY a JSON object (no markdown, no backticks):\n{"companyName": "string or null", "industry": "string or null", "teamSize": "string range like 1-10, 11-50, 51-200, 201-1000, 1000+ or null"}`
+          }],
+        });
+
+        const responseText = extraction.content[0].type === "text" ? extraction.content[0].text : "";
+        const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          const companyData = JSON.parse(jsonMatch[0]);
+          res.json({
+            enriched: true,
+            company: companyData.companyName || domain.split(".")[0].toUpperCase(),
+            industry: companyData.industry,
+            teamSize: companyData.teamSize,
+            domain,
+          });
+          return;
+        }
+      }
+    } catch {
+      // Website fetch failed, try domain name heuristic
+    }
+
+    // Fallback: derive company name from domain
+    const domainName = domain.split(".")[0];
+    res.json({
+      enriched: true,
+      company: domainName.charAt(0).toUpperCase() + domainName.slice(1),
+      industry: null,
+      teamSize: null,
+      domain,
+    });
+  } catch (err) {
+    console.error("Email enrichment error:", err);
+    res.json({ enriched: false, reason: "error" });
+  }
+});
+
 app.get("/api/admin/export", requireAdmin, async (req, res) => {
   try {
     const format = (req.query.format as string) || "json";

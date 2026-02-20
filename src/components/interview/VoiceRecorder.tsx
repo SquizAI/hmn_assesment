@@ -25,6 +25,7 @@ export default function VoiceRecorder({ onTranscription, onPartialTranscription,
   const analyserRef = useRef<AnalyserNode | null>(null);
   const animFrameRef = useRef<number | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
+  const accumulatedRef = useRef<string>("");
 
   useEffect(() => {
     return () => {
@@ -66,6 +67,7 @@ export default function VoiceRecorder({ onTranscription, onPartialTranscription,
       setError(null);
       setPartialText("");
       setFinalText("");
+      accumulatedRef.current = "";
 
       // Get Deepgram token
       const tokenRes = await fetch(`${API_BASE}/api/deepgram-token`);
@@ -97,8 +99,6 @@ export default function VoiceRecorder({ onTranscription, onPartialTranscription,
       );
       wsRef.current = ws;
 
-      let accumulated = "";
-
       ws.onopen = () => {
         // Start MediaRecorder to send audio chunks to Deepgram
         const mr = new MediaRecorder(stream, {
@@ -122,13 +122,13 @@ export default function VoiceRecorder({ onTranscription, onPartialTranscription,
           const isFinal = data.is_final;
 
           if (isFinal && transcript) {
-            accumulated += (accumulated ? " " : "") + transcript;
-            setFinalText(accumulated);
+            accumulatedRef.current += (accumulatedRef.current ? " " : "") + transcript;
+            setFinalText(accumulatedRef.current);
             setPartialText("");
-            onPartialTranscription?.(accumulated);
+            onPartialTranscription?.(accumulatedRef.current);
           } else if (transcript) {
             setPartialText(transcript);
-            onPartialTranscription?.(accumulated + (accumulated ? " " : "") + transcript);
+            onPartialTranscription?.(accumulatedRef.current + (accumulatedRef.current ? " " : "") + transcript);
           }
         }
       };
@@ -139,8 +139,8 @@ export default function VoiceRecorder({ onTranscription, onPartialTranscription,
 
       ws.onclose = () => {
         // When WS closes, finalize
-        if (accumulated) {
-          setFinalText(accumulated);
+        if (accumulatedRef.current) {
+          setFinalText(accumulatedRef.current);
         }
       };
 
@@ -187,17 +187,13 @@ export default function VoiceRecorder({ onTranscription, onPartialTranscription,
     onRecordingStateChange?.(false);
     if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
 
-    // If we have live transcription, use it
-    setFinalText((currentFinal) => {
-      const fullText = currentFinal.trim();
-      if (fullText) {
-        onTranscription(fullText);
-        return currentFinal;
-      }
-      // If no live transcription came through, fall back to batch
-      setIsTranscribing(true);
-      return currentFinal;
-    });
+    // Read accumulated transcription directly from ref (avoids stale state and
+    // the anti-pattern of calling side-effects inside a state updater)
+    const fullText = accumulatedRef.current.trim();
+    if (fullText) {
+      setFinalText(fullText);
+      onTranscription(fullText);
+    }
   }, [onRecordingStateChange, onTranscription]);
 
   // Spacebar hotkey to toggle recording (must be after startRecording/stopRecording definitions)

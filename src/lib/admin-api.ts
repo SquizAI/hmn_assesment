@@ -336,3 +336,15 @@ export async function checkEmailStatus(): Promise<{ enabled: boolean; provider: 
   const res = await adminFetch("/api/admin/email-status");
   return res.json();
 }
+
+export async function enrichEmail(email: string): Promise<{
+  enriched: boolean;
+  reason?: string;
+  company?: string;
+  industry?: string | null;
+  teamSize?: string | null;
+  domain?: string;
+}> {
+  const res = await adminFetch(`/api/admin/enrich-email?email=${encodeURIComponent(email)}`);
+  return res.json();
+}

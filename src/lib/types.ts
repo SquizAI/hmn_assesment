@@ -143,6 +143,9 @@ export interface AssessmentSummary {
   estimatedMinutes: number;
   questionCount: number;
   status: "draft" | "active" | "archived";
+  category?: string;
+  typeBadge?: string;
+  companyNames?: string[];
 }
 
 export interface ToolCallRecord {

@@ -7,6 +7,7 @@ import {
   resendInvitation,
   fetchAssessments,
   checkEmailStatus,
+  enrichEmail,
 } from "../lib/admin-api";
 import type { InvitationSummary, AssessmentSummary } from "../lib/types";
 import CsvUploadModal from "../components/admin/CsvUploadModal";
@@ -50,6 +51,34 @@ function formatDate(dateStr: string): string {
     day: "numeric",
     year: "numeric",
   });
+}
+
+function formatTimestamp(dateStr: string | null): string {
+  if (!dateStr) return "--";
+  const date = new Date(dateStr);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+  if (diffMins < 1) return "Just now";
+  if (diffMins < 60) return `${diffMins}m ago`;
+  if (diffHours < 24) return `${diffHours}h ago`;
+  if (diffDays < 7) return `${diffDays}d ago`;
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
+
+function getMostRelevantTimestamp(inv: InvitationSummary): { label: string; date: string | null } {
+  if (inv.completedAt) return { label: "Completed", date: inv.completedAt };
+  if (inv.startedAt) return { label: "Started", date: inv.startedAt };
+  if (inv.openedAt) return { label: "Opened", date: inv.openedAt };
+  return { label: "Created", date: inv.createdAt };
 }
 
 function buildInviteLink(token: string): string {
@@ -132,6 +161,7 @@ export default function AdminInvitationsPage() {
   // ---- Email auto-populate state ----
   const [emailSuggestions, setEmailSuggestions] = useState<string[]>([]);
   const [showEmailSuggestions, setShowEmailSuggestions] = useState(false);
+  const [enriching, setEnriching] = useState(false);
 
   // ---- CSV modal state ----
   const [showCsvModal, setShowCsvModal] = useState(false);
@@ -391,8 +421,32 @@ export default function AdminInvitationsPage() {
           industry: prev.industry || data.industry,
           teamSize: prev.teamSize || data.teamSize,
         }));
+        setShowEmailSuggestions(false);
+        return;
       }
       setShowEmailSuggestions(false);
+
+      // If no local match and it looks like a corporate email, try enrichment
+      if (email.includes("@") && email.split("@")[1]?.includes(".")) {
+        setEnriching(true);
+        enrichEmail(email)
+          .then((result) => {
+            if (result.enriched) {
+              setForm((prev) => ({
+                ...prev,
+                company: prev.company || result.company || "",
+                industry: prev.industry || result.industry || "",
+                teamSize: prev.teamSize || result.teamSize || "",
+              }));
+            }
+          })
+          .catch(() => {
+            // enrichment failed silently
+          })
+          .finally(() => {
+            setEnriching(false);
+          });
+      }
     },
     [emailLookup]
   );
@@ -501,7 +555,7 @@ export default function AdminInvitationsPage() {
                 Status
               </th>
               <th className="text-left text-xs text-white/40 uppercase tracking-wider px-3 md:px-4 py-3 hidden sm:table-cell">
-                Created
+                Activity
               </th>
               <th className="text-left text-xs text-white/40 uppercase tracking-wider px-3 md:px-4 py-3">
                 Actions
@@ -546,8 +600,42 @@ export default function AdminInvitationsPage() {
                   <td className="px-3 md:px-4 py-3">
                     <StatusBadge status={inv.status} />
                   </td>
-                  <td className="px-3 md:px-4 py-3 text-white/30 text-sm hidden sm:table-cell">
-                    {formatDate(inv.createdAt)}
+                  <td className="px-3 md:px-4 py-3 text-sm hidden sm:table-cell group/ts relative">
+                    {(() => {
+                      const { label, date } = getMostRelevantTimestamp(inv);
+                      return (
+                        <>
+                          <span className="text-white/25 text-[10px] uppercase mr-1">{label}</span>
+                          <span className="text-white/40">{formatTimestamp(date)}</span>
+                          <div className="absolute z-40 bottom-full left-0 mb-1 hidden group-hover/ts:block bg-[#12121a] border border-white/10 rounded-lg px-3 py-2 shadow-xl min-w-[210px]">
+                            <div className="text-xs space-y-1">
+                              <div className="flex justify-between gap-4">
+                                <span className="text-white/40">Created</span>
+                                <span className="text-white/60">{formatTimestamp(inv.createdAt)}</span>
+                              </div>
+                              {inv.openedAt && (
+                                <div className="flex justify-between gap-4">
+                                  <span className="text-white/40">Opened</span>
+                                  <span className="text-white/60">{formatTimestamp(inv.openedAt)}</span>
+                                </div>
+                              )}
+                              {inv.startedAt && (
+                                <div className="flex justify-between gap-4">
+                                  <span className="text-white/40">Started</span>
+                                  <span className="text-white/60">{formatTimestamp(inv.startedAt)}</span>
+                                </div>
+                              )}
+                              {inv.completedAt && (
+                                <div className="flex justify-between gap-4">
+                                  <span className="text-white/40">Completed</span>
+                                  <span className="text-white/60">{formatTimestamp(inv.completedAt)}</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </>
+                      );
+                    })()}
                   </td>
                   <td className="px-3 md:px-4 py-3">
                     <div className="flex items-center gap-1.5 md:gap-2 flex-wrap">
@@ -706,6 +794,11 @@ export default function AdminInvitationsPage() {
                 placeholder="participant@company.com"
                 className="w-full bg-white/[0.05] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/20 outline-none focus:border-white/20 transition-colors"
               />
+              {enriching && (
+                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                  <div className="animate-spin w-4 h-4 border-2 border-white/20 border-t-purple-400 rounded-full" />
+                </div>
+              )}
               {showEmailSuggestions && emailSuggestions.length > 0 && (
                 <div className="absolute z-30 top-full mt-1 left-0 right-0 bg-[#12121a] border border-white/10 rounded-lg shadow-xl overflow-hidden">
                   {emailSuggestions.map((email) => {

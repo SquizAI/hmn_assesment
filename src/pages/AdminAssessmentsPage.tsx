@@ -20,6 +20,9 @@ interface Assessment {
   estimatedMinutes: number;
   questionCount: number;
   status: string; // "draft" | "active" | "archived"
+  category?: string;
+  typeBadge?: string;
+  companyNames?: string[];
 }
 
 type StatusFilter = "all" | "active" | "draft" | "archived";
@@ -196,6 +199,8 @@ export default function AdminAssessmentsPage() {
   const [search, setSearch] = useState("");
   const [sortKey, setSortKey] = useState<SortKey>("name");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
+  const [categoryFilter, setCategoryFilter] = useState("all");
+  const [companyFilter, setCompanyFilter] = useState("all");
 
   // ---- View mode ----
   const [viewMode, setViewMode] = useState<"gallery" | "list">(() => {
@@ -267,6 +272,18 @@ export default function AdminAssessmentsPage() {
     return c;
   }, [assessments]);
 
+  const categories = useMemo(() => {
+    const set = new Set<string>();
+    assessments.forEach((a) => { if (a.category) set.add(a.category); });
+    return Array.from(set).sort();
+  }, [assessments]);
+
+  const companies = useMemo(() => {
+    const set = new Set<string>();
+    assessments.forEach((a) => { (a.companyNames || []).forEach((c) => set.add(c)); });
+    return Array.from(set).sort();
+  }, [assessments]);
+
   // ---- Computed: filtered + sorted assessments ----
   const filtered = useMemo(() => {
     let list = assessments;
@@ -285,6 +302,15 @@ export default function AdminAssessmentsPage() {
           a.description.toLowerCase().includes(q) ||
           a.id.toLowerCase().includes(q)
       );
+    }
+
+    // Category filter
+    if (categoryFilter !== "all") {
+      list = list.filter((a) => a.category === categoryFilter);
+    }
+    // Company filter
+    if (companyFilter !== "all") {
+      list = list.filter((a) => (a.companyNames || []).includes(companyFilter));
     }
 
     // Sort
@@ -308,7 +334,7 @@ export default function AdminAssessmentsPage() {
     });
 
     return sorted;
-  }, [assessments, statusFilter, search, sortKey, sortDir]);
+  }, [assessments, statusFilter, search, categoryFilter, companyFilter, sortKey, sortDir]);
 
   // ---- Handlers ----
 
@@ -476,6 +502,32 @@ export default function AdminAssessmentsPage() {
               </button>
             )}
           </div>
+
+          {/* Category filter */}
+          <select
+            value={categoryFilter}
+            onChange={(e) => setCategoryFilter(e.target.value)}
+            className="bg-white/[0.05] border border-white/10 rounded-lg px-3 py-2 text-sm text-white/50 outline-none focus:border-white/20 transition-colors"
+          >
+            <option value="all">All Categories</option>
+            {categories.map((c) => (
+              <option key={c} value={c}>{c}</option>
+            ))}
+          </select>
+
+          {/* Company filter */}
+          {companies.length > 0 && (
+            <select
+              value={companyFilter}
+              onChange={(e) => setCompanyFilter(e.target.value)}
+              className="bg-white/[0.05] border border-white/10 rounded-lg px-3 py-2 text-sm text-white/50 outline-none focus:border-white/20 transition-colors"
+            >
+              <option value="all">All Companies</option>
+              {companies.map((c) => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
+          )}
 
           {/* Sort dropdown */}
           <div className="relative group">
@@ -683,6 +735,24 @@ export default function AdminAssessmentsPage() {
                   </span>
                 </div>
 
+                {/* Type + Category badges */}
+                <div className="mt-3 flex items-center gap-1.5">
+                  {assessment.typeBadge && (
+                    <span className={`px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider rounded-full ${
+                      assessment.typeBadge === "Survey" ? "bg-purple-500/15 text-purple-300" :
+                      assessment.typeBadge === "Diagnostic" ? "bg-blue-500/15 text-blue-300" :
+                      "bg-white/[0.06] text-white/40"
+                    }`}>
+                      {assessment.typeBadge}
+                    </span>
+                  )}
+                  {assessment.category && (
+                    <span className="px-2 py-0.5 text-[10px] text-white/25 bg-white/[0.03] rounded-full">
+                      {assessment.category}
+                    </span>
+                  )}
+                </div>
+
                 {/* Divider */}
                 <div className="border-t border-white/[0.06] mt-4 pt-3" />
 
@@ -779,6 +849,15 @@ export default function AdminAssessmentsPage() {
                     <div className="flex items-center gap-2">
                       <h3 className="text-sm font-medium text-white/90 truncate">{assessment.name}</h3>
                       <StatusBadge status={assessment.status} />
+                      {assessment.typeBadge && (
+                        <span className={`px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider rounded-full ${
+                          assessment.typeBadge === "Survey" ? "bg-purple-500/15 text-purple-300" :
+                          assessment.typeBadge === "Diagnostic" ? "bg-blue-500/15 text-blue-300" :
+                          "bg-white/[0.06] text-white/40"
+                        }`}>
+                          {assessment.typeBadge}
+                        </span>
+                      )}
                     </div>
                     <p className="text-xs text-white/30 truncate mt-0.5">{assessment.description}</p>
                   </div>

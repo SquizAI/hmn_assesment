@@ -74,8 +74,44 @@ function toSessionSummary(s: InterviewSession): SessionSummary {
 // ASSESSMENT CRUD
 // ============================================================
 
+function deriveTypeBadge(name: string): string {
+  const lower = name.toLowerCase();
+  if (lower.includes("survey")) return "Survey";
+  if (lower.includes("readiness") || lower.includes("diagnostic")) return "Diagnostic";
+  return "Assessment";
+}
+
+function deriveCategory(name: string, description: string): string {
+  const text = `${name} ${description}`.toLowerCase();
+  if (text.includes("ai") || text.includes("technology") || text.includes("digital") || text.includes("adaptability"))
+    return "AI & Technology";
+  if (text.includes("leader") || text.includes("culture") || text.includes("team") || text.includes("innovation"))
+    return "Leadership & Culture";
+  if (text.includes("client") || text.includes("marketing") || text.includes("service"))
+    return "Client & Marketing";
+  if (text.includes("reality gap") || text.includes("survey") || text.includes("organizational") || text.includes("post-"))
+    return "Organizational";
+  return "Other";
+}
+
 export async function listAssessmentsAdmin(): Promise<AssessmentSummary[]> {
-  const assessments = await listAllAssessments();
+  const [assessments, invitations] = await Promise.all([
+    listAllAssessments(),
+    listAllInvitations(),
+  ]);
+
+  // Build a map of assessmentId -> Set of company names from invitations
+  const companyMap = new Map<string, Set<string>>();
+  for (const inv of invitations) {
+    const company = inv.participant?.company?.trim();
+    if (company) {
+      if (!companyMap.has(inv.assessmentId)) {
+        companyMap.set(inv.assessmentId, new Set());
+      }
+      companyMap.get(inv.assessmentId)!.add(company);
+    }
+  }
+
   return assessments.map((a) => ({
     id: a.id,
     name: a.name,
@@ -84,6 +120,9 @@ export async function listAssessmentsAdmin(): Promise<AssessmentSummary[]> {
     estimatedMinutes: a.estimatedMinutes,
     questionCount: a.questions?.length ?? 0,
     status: a.status,
+    category: deriveCategory(a.name, a.description),
+    typeBadge: deriveTypeBadge(a.name),
+    companyNames: companyMap.has(a.id) ? Array.from(companyMap.get(a.id)!) : [],
   }));
 }
 

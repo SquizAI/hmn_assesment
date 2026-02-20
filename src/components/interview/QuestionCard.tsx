@@ -247,7 +247,7 @@ export default function QuestionCard({ question, sessionId, onSubmit, isSubmitti
             {/* Send button */}
             <div className="flex gap-3 items-center">
               {isEditing && <button onClick={onCancelEdit} className="px-5 py-2.5 rounded-xl text-sm text-white/40 hover:text-white/60 hover:bg-white/5 transition-all">Cancel</button>}
-              <Button onClick={handleTextSubmit} disabled={!textValue.trim() || isAiThinking || isRecording} loading={isSubmitting || isAiThinking} size="lg" className="w-full">
+              <Button onClick={handleTextSubmit} disabled={!textValue.trim() || isAiThinking} loading={isSubmitting || isAiThinking} size="lg" className="w-full">
                 {submitLabel}
               </Button>
             </div>
