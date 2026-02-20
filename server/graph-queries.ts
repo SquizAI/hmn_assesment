@@ -9,13 +9,13 @@ export async function getCompanyIntelligence(companyName: string) {
 
   const records = await runQuery(
     `
-    MATCH (c:Company {name: $companyName})<-[:WORKS_AT]-(p:Participant)-[:COMPLETED]->(s:Session)
-    OPTIONAL MATCH (s)-[:SCORED]->(d:ScoringDimension)
-    OPTIONAL MATCH (s)-[:CLASSIFIED_AS]->(a:Archetype)
-    OPTIONAL MATCH (s)-[:SURFACED]->(t:Theme)
-    OPTIONAL MATCH (s)-[:TRIGGERED]->(r:Recommendation)
-    OPTIONAL MATCH (s)-[:FLAGGED]->(rf:RedFlag)
-    OPTIONAL MATCH (s)-[:HIGHLIGHTED]->(gl:GreenLight)
+    MATCH (c:Company {name: $companyName, source: "cascade"})<-[:WORKS_AT]-(p:Participant {source: "cascade"})-[:COMPLETED]->(s:Session {source: "cascade"})
+    OPTIONAL MATCH (s)-[:SCORED]->(d:ScoringDimension {source: "cascade"})
+    OPTIONAL MATCH (s)-[:CLASSIFIED_AS]->(a:Archetype {source: "cascade"})
+    OPTIONAL MATCH (s)-[:SURFACED]->(t:Theme {source: "cascade"})
+    OPTIONAL MATCH (s)-[:TRIGGERED]->(r:Recommendation {source: "cascade"})
+    OPTIONAL MATCH (s)-[:FLAGGED]->(rf:RedFlag {source: "cascade"})
+    OPTIONAL MATCH (s)-[:HIGHLIGHTED]->(gl:GreenLight {source: "cascade"})
     RETURN p, s, d, a, t, r, rf, gl
     `,
     { companyName }
@@ -177,10 +177,10 @@ export async function getCompanyIntelligence(companyName: string) {
     frequency,
   }));
 
-  // Benchmark comparison: company avg vs global avg per dimension
+  // Benchmark comparison: company avg vs global avg per dimension (cascade-only)
   const benchmarkRecords = await runQuery(
     `
-    MATCH (s:Session)-[:SCORED]->(d:ScoringDimension)
+    MATCH (s:Session {source: "cascade"})-[:SCORED]->(d:ScoringDimension {source: "cascade"})
     RETURN d.name AS dimension, avg(d.score) AS globalAvg
     `,
     {}
@@ -215,12 +215,12 @@ export async function getAssessmentSummary(assessmentId: string) {
 
   const records = await runQuery(
     `
-    MATCH (assess:Assessment {id: $assessmentId})<-[:FOR_ASSESSMENT]-(s:Session)
-    OPTIONAL MATCH (s)-[:SCORED]->(d:ScoringDimension)
-    OPTIONAL MATCH (s)-[:CLASSIFIED_AS]->(a:Archetype)
-    OPTIONAL MATCH (s)-[:SURFACED]->(t:Theme)
-    OPTIONAL MATCH (s)-[:TRIGGERED]->(r:Recommendation)
-    OPTIONAL MATCH (s)<-[:COMPLETED]-(p:Participant)-[:WORKS_AT]->(c:Company)
+    MATCH (assess:Assessment {id: $assessmentId, source: "cascade"})<-[:FOR_ASSESSMENT]-(s:Session {source: "cascade"})
+    OPTIONAL MATCH (s)-[:SCORED]->(d:ScoringDimension {source: "cascade"})
+    OPTIONAL MATCH (s)-[:CLASSIFIED_AS]->(a:Archetype {source: "cascade"})
+    OPTIONAL MATCH (s)-[:SURFACED]->(t:Theme {source: "cascade"})
+    OPTIONAL MATCH (s)-[:TRIGGERED]->(r:Recommendation {source: "cascade"})
+    OPTIONAL MATCH (s)<-[:COMPLETED]-(p:Participant {source: "cascade"})-[:WORKS_AT]->(c:Company {source: "cascade"})
     RETURN s, d, a, t, r, p, c
     `,
     { assessmentId }
@@ -341,12 +341,12 @@ export async function getAssessmentSummary(assessmentId: string) {
 export async function getCrossCompanyBenchmarks() {
   console.log("[GRAPH-QUERY] getCrossCompanyBenchmarks");
 
-  // Industry averages
+  // Industry averages (cascade-only)
   const industryResult = await runQuery(
     `
-    MATCH (c:Company)<-[:WORKS_AT]-(p:Participant)-[:COMPLETED]->(s:Session)
+    MATCH (c:Company {source: "cascade"})<-[:WORKS_AT]-(p:Participant {source: "cascade"})-[:COMPLETED]->(s:Session {source: "cascade"})
     WHERE c.industry IS NOT NULL
-    OPTIONAL MATCH (s)-[:CLASSIFIED_AS]->(a:Archetype)
+    OPTIONAL MATCH (s)-[:CLASSIFIED_AS]->(a:Archetype {source: "cascade"})
     WITH c.industry AS industry, s, a
     RETURN industry,
            avg(s.overallScore) AS avgScore,
@@ -364,10 +364,10 @@ export async function getCrossCompanyBenchmarks() {
     topArchetype: rec.get("topArchetype") || null,
   }));
 
-  // Company ranking
+  // Company ranking (cascade-only)
   const companyResult = await runQuery(
     `
-    MATCH (c:Company)<-[:WORKS_AT]-(p:Participant)-[:COMPLETED]->(s:Session)
+    MATCH (c:Company {source: "cascade"})<-[:WORKS_AT]-(p:Participant {source: "cascade"})-[:COMPLETED]->(s:Session {source: "cascade"})
     WITH c.name AS company,
          avg(s.overallScore) AS avgScore,
          count(DISTINCT s) AS sessionCount,
@@ -385,10 +385,10 @@ export async function getCrossCompanyBenchmarks() {
     completionRate: Number(rec.get("participantCount")) || 0,
   }));
 
-  // Trending themes (top 20)
+  // Trending themes (top 20, cascade-only)
   const themeResult = await runQuery(
     `
-    MATCH (s:Session)-[:SURFACED]->(t:Theme)
+    MATCH (s:Session {source: "cascade"})-[:SURFACED]->(t:Theme {source: "cascade"})
     WITH t.name AS name, t.sentiment AS sentiment,
          count(*) AS frequency,
          t.category AS category
@@ -406,10 +406,10 @@ export async function getCrossCompanyBenchmarks() {
     growthRate: 0, // Would need historical data to calculate
   }));
 
-  // Recommendation frequency
+  // Recommendation frequency (cascade-only)
   const recResult = await runQuery(
     `
-    MATCH (s:Session)-[:TRIGGERED]->(r:Recommendation)
+    MATCH (s:Session {source: "cascade"})-[:TRIGGERED]->(r:Recommendation {source: "cascade"})
     WITH coalesce(r.service, r.name) AS service, count(*) AS count,
          collect(r.tier) AS tiers
     RETURN service, count, head(tiers) AS avgTier
@@ -435,12 +435,12 @@ export async function getCrossCompanyBenchmarks() {
 export async function getThemeMap() {
   console.log("[GRAPH-QUERY] getThemeMap");
 
-  // All themes with their associations
+  // All themes with their associations (cascade-only)
   const themeResult = await runQuery(
     `
-    MATCH (s:Session)-[:SURFACED]->(t:Theme)
-    OPTIONAL MATCH (s)<-[:COMPLETED]-(p:Participant)-[:WORKS_AT]->(c:Company)
-    OPTIONAL MATCH (s)-[:SCORED]->(d:ScoringDimension)
+    MATCH (s:Session {source: "cascade"})-[:SURFACED]->(t:Theme {source: "cascade"})
+    OPTIONAL MATCH (s)<-[:COMPLETED]-(p:Participant {source: "cascade"})-[:WORKS_AT]->(c:Company {source: "cascade"})
+    OPTIONAL MATCH (s)-[:SCORED]->(d:ScoringDimension {source: "cascade"})
     WITH t.name AS name, t.sentiment AS sentiment, t.category AS category,
          collect(DISTINCT c.name) AS companies,
          collect(DISTINCT d.name) AS dimensions,
@@ -460,11 +460,11 @@ export async function getThemeMap() {
     dimensions: (rec.get("dimensions") as string[]).filter(Boolean),
   }));
 
-  // Co-occurrences: themes appearing in the same sessions
+  // Co-occurrences: themes appearing in the same sessions (cascade-only)
   const coResult = await runQuery(
     `
-    MATCH (s:Session)-[:SURFACED]->(t1:Theme)
-    MATCH (s)-[:SURFACED]->(t2:Theme)
+    MATCH (s:Session {source: "cascade"})-[:SURFACED]->(t1:Theme {source: "cascade"})
+    MATCH (s)-[:SURFACED]->(t2:Theme {source: "cascade"})
     WHERE id(t1) < id(t2)
     WITH t1.name AS theme1, t2.name AS theme2, count(DISTINCT s) AS frequency
     WHERE frequency > 1
@@ -481,11 +481,11 @@ export async function getThemeMap() {
     frequency: Number(rec.get("frequency")) || 0,
   }));
 
-  // Dimension-to-theme mapping
+  // Dimension-to-theme mapping (cascade-only)
   const dimThemeResult = await runQuery(
     `
-    MATCH (s:Session)-[:SCORED]->(d:ScoringDimension)
-    MATCH (s)-[:SURFACED]->(t:Theme)
+    MATCH (s:Session {source: "cascade"})-[:SCORED]->(d:ScoringDimension {source: "cascade"})
+    MATCH (s)-[:SURFACED]->(t:Theme {source: "cascade"})
     WITH d.name AS dimension, collect(DISTINCT t.name) AS themes
     RETURN dimension, themes
     ORDER BY dimension
