@@ -22,6 +22,9 @@ import {
   loadAssessment,
 } from "./supabase.js";
 import { isEmailEnabled, sendInvitationEmail, sendBatchInvitationEmails } from "./email.js";
+import { initGraphSchema, runQuery } from "./neo4j.js";
+import { getCompanyIntelligence, getAssessmentSummary, getCrossCompanyBenchmarks, getThemeMap } from "./graph-queries.js";
+import { seedAllSessionsToGraph } from "./graph-sync.js";
 
 dotenv.config();
 
@@ -2412,6 +2415,73 @@ app.delete("/api/admin/preview/:sessionId", requireAdmin, async (req, res) => {
 });
 
 // ============================================================
+// GRAPH INTELLIGENCE ENDPOINTS
+// ============================================================
+
+app.get("/api/admin/graph/company/:name", requireAdmin, async (req, res) => {
+  try {
+    const data = await getCompanyIntelligence(String(req.params.name));
+    res.json(data);
+  } catch (err) {
+    console.error("[GRAPH] Company intelligence error:", err);
+    res.status(500).json({ error: "Failed to fetch company intelligence" });
+  }
+});
+
+app.get("/api/admin/graph/assessment/:id", requireAdmin, async (req, res) => {
+  try {
+    const data = await getAssessmentSummary(String(req.params.id));
+    res.json(data);
+  } catch (err) {
+    console.error("[GRAPH] Assessment summary error:", err);
+    res.status(500).json({ error: "Failed to fetch assessment summary" });
+  }
+});
+
+app.get("/api/admin/graph/benchmarks", requireAdmin, async (_req, res) => {
+  try {
+    const data = await getCrossCompanyBenchmarks();
+    res.json(data);
+  } catch (err) {
+    console.error("[GRAPH] Benchmarks error:", err);
+    res.status(500).json({ error: "Failed to fetch benchmarks" });
+  }
+});
+
+app.get("/api/admin/graph/themes", requireAdmin, async (_req, res) => {
+  try {
+    const data = await getThemeMap();
+    res.json(data);
+  } catch (err) {
+    console.error("[GRAPH] Theme map error:", err);
+    res.status(500).json({ error: "Failed to fetch theme map" });
+  }
+});
+
+app.post("/api/admin/graph/seed", requireAdmin, async (_req, res) => {
+  try {
+    const result = await seedAllSessionsToGraph();
+    res.json(result);
+  } catch (err) {
+    console.error("[GRAPH] Seed error:", err);
+    res.status(500).json({ error: "Failed to seed graph" });
+  }
+});
+
+app.get("/api/admin/graph/status", requireAdmin, async (_req, res) => {
+  try {
+    const nodeResult = await runQuery("MATCH (n) RETURN count(n) AS count", {});
+    const relResult = await runQuery("MATCH ()-[r]->() RETURN count(r) AS count", {});
+    const nodeCount = nodeResult.length ? Number(nodeResult[0].get("count")) : 0;
+    const relCount = relResult.length ? Number(relResult[0].get("count")) : 0;
+    res.json({ enabled: true, nodeCount, relCount });
+  } catch (err) {
+    console.error("[GRAPH] Status check error:", err);
+    res.json({ enabled: false, nodeCount: 0, relCount: 0 });
+  }
+});
+
+// ============================================================
 // SPA FALLBACK (must be after all API routes)
 // ============================================================
 
@@ -2432,5 +2502,10 @@ loadQuestionBank().then(() => {
     writeFileSync(join(process.cwd(), ".server-port"), String(actualPort));
     console.log(`HMN Cascade API running on http://localhost:${actualPort}`);
     console.log(`${QUESTION_BANK.length} questions loaded`);
+
+    // Initialize Neo4j graph schema (fire and forget)
+    initGraphSchema().catch((err) =>
+      console.error("[GRAPH] Schema init failed:", err)
+    );
   });
 });

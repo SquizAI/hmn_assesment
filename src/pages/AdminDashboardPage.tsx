@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import StatCard from "../components/admin/StatCard";
 import StatusBadge from "../components/admin/StatusBadge";
 import { fetchStats, fetchFunnel, fetchDimensions, fetchSessions, fetchCompanies } from "../lib/admin-api";
+import { fetchGraphStatus, fetchThemeMap, fetchBenchmarks, seedGraph } from "../lib/graph-api";
 
 /** Lightweight local type matching the admin stats API response shape. */
 interface DashboardStats {
@@ -47,6 +48,30 @@ interface DashboardCompany {
   completionRate: number;
   lastActivity: string;
   hasResearch: boolean;
+}
+
+interface GraphStatusData {
+  enabled: boolean;
+  nodeCount: number;
+}
+
+interface ThemeEntry {
+  theme: string;
+  frequency: number;
+  sentiment: "positive" | "negative" | "neutral";
+  category: "tool" | "pain_point" | "goal" | "capability";
+}
+
+interface ArchetypeEntry {
+  archetype: string;
+  count: number;
+}
+
+interface IndustryBenchmark {
+  industry: string;
+  avgScore: number;
+  sessions: number;
+  topArchetype: string;
 }
 
 const FUNNEL_COLORS: Record<string, string> = {
@@ -107,6 +132,13 @@ export default function AdminDashboardPage() {
   const [sessions, setSessions] = useState<DashboardSession[]>([]);
   const [companies, setCompanies] = useState<DashboardCompany[]>([]);
 
+  const [graphStatus, setGraphStatus] = useState<GraphStatusData | null>(null);
+  const [themes, setThemes] = useState<ThemeEntry[]>([]);
+  const [archetypes, setArchetypes] = useState<ArchetypeEntry[]>([]);
+  const [benchmarks, setBenchmarks] = useState<IndustryBenchmark[]>([]);
+  const [graphLoading, setGraphLoading] = useState(true);
+  const [seeding, setSeeding] = useState(false);
+
   useEffect(() => {
     Promise.all([fetchStats(), fetchFunnel(), fetchDimensions(), fetchSessions(), fetchCompanies()])
       .then(([statsData, funnelData, dimensionsData, sessionsData, companiesData]) => {
@@ -123,6 +155,50 @@ export default function AdminDashboardPage() {
       });
   }, []);
 
+  useEffect(() => {
+    fetchGraphStatus()
+      .then((status) => {
+        setGraphStatus(status);
+        if (status.enabled && status.nodeCount > 0) {
+          return Promise.all([fetchThemeMap(), fetchBenchmarks()]);
+        }
+        return null;
+      })
+      .then((results) => {
+        if (results) {
+          const [themeData, benchmarkData] = results;
+          setThemes(themeData.themes || []);
+          setArchetypes(benchmarkData.archetypes || []);
+          setBenchmarks(benchmarkData.industries || []);
+        }
+      })
+      .catch(() => {
+        // Graph not available
+      })
+      .finally(() => setGraphLoading(false));
+  }, []);
+
+  const handleSeed = async () => {
+    setSeeding(true);
+    try {
+      await seedGraph();
+      const status = await fetchGraphStatus();
+      setGraphStatus(status);
+      if (status.enabled && status.nodeCount > 0) {
+        const [themeData, benchmarkData] = await Promise.all([fetchThemeMap(), fetchBenchmarks()]);
+        setThemes(themeData.themes || []);
+        setArchetypes(benchmarkData.archetypes || []);
+        setBenchmarks(benchmarkData.industries || []);
+      }
+    } catch {
+      // seed failed
+    } finally {
+      setSeeding(false);
+    }
+  };
+
+  const isGraphEnabled = graphStatus?.enabled && (graphStatus?.nodeCount ?? 0) > 0;
+
   if (loading) {
     return (
       <div className="px-4 md:px-6 py-4 md:py-6 flex items-center justify-center h-full">
@@ -134,7 +210,7 @@ export default function AdminDashboardPage() {
   return (
     <div className="px-4 md:px-6 py-4 md:py-6 space-y-4 md:space-y-6">
       {/* Stat Cards Row */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 sm:gap-4">
         <StatCard
           label="Total Sessions"
           value={stats?.totalSessions ?? 0}
@@ -165,6 +241,44 @@ export default function AdminDashboardPage() {
           label="Assessments"
           value={stats?.assessmentBreakdown?.length ?? 0}
         />
+        <div
+          onClick={() => {
+            if (graphStatus?.enabled && (graphStatus?.nodeCount ?? 0) === 0) handleSeed();
+          }}
+          className={`bg-white/[0.03] border border-white/10 rounded-2xl p-6 hover:bg-white/[0.05] transition-colors ${
+            graphStatus?.enabled && (graphStatus?.nodeCount ?? 0) === 0 ? "cursor-pointer" : ""
+          }`}
+        >
+          <div className="text-xs text-white/40 uppercase tracking-wider mb-2">Graph</div>
+          {graphLoading ? (
+            <div className="h-8 w-24 bg-white/5 rounded animate-pulse" />
+          ) : (
+            <div className="flex items-center gap-2">
+              <span
+                className={`w-2 h-2 rounded-full ${
+                  graphStatus?.enabled && (graphStatus?.nodeCount ?? 0) > 0
+                    ? "bg-green-400"
+                    : graphStatus?.enabled
+                    ? "bg-orange-400"
+                    : "bg-gray-500"
+                }`}
+              />
+              <span className="text-sm font-medium text-white/70">
+                {graphStatus?.enabled && (graphStatus?.nodeCount ?? 0) > 0
+                  ? "Connected"
+                  : graphStatus?.enabled
+                  ? "Empty"
+                  : "Offline"}
+              </span>
+            </div>
+          )}
+          {graphStatus?.enabled && (graphStatus?.nodeCount ?? 0) > 0 && (
+            <div className="text-xs text-white/30 mt-1">{graphStatus.nodeCount} nodes</div>
+          )}
+          {graphStatus?.enabled && (graphStatus?.nodeCount ?? 0) === 0 && (
+            <div className="text-xs text-white/30 mt-1">Click to seed</div>
+          )}
+        </div>
       </div>
 
       {/* Completion Funnel */}
@@ -272,6 +386,182 @@ export default function AdminDashboardPage() {
                   </span>
                 </div>
               ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Graph Intelligence Panels */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
+        {/* Trending Themes */}
+        <div className="bg-white/[0.03] rounded-2xl border border-white/10 p-4 md:p-6">
+          <div className="flex items-center gap-2 mb-3 md:mb-4">
+            <svg className="w-4 h-4 text-purple-400/60" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456z" />
+            </svg>
+            <h2 className="text-xs md:text-sm font-semibold text-white/60 uppercase tracking-wider">
+              Trending Themes
+            </h2>
+          </div>
+          {graphLoading ? (
+            <div className="space-y-3">
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="h-6 bg-white/5 rounded animate-pulse" />
+              ))}
+            </div>
+          ) : !isGraphEnabled ? (
+            <div className="text-center py-8">
+              <p className="text-white/30 text-sm">Connect Neo4j to see theme intelligence</p>
+              {graphStatus?.enabled && (
+                <button
+                  onClick={handleSeed}
+                  disabled={seeding}
+                  className="mt-3 text-xs text-purple-400/70 hover:text-purple-400 transition-colors"
+                >
+                  {seeding ? "Seeding..." : "Seed Graph"}
+                </button>
+              )}
+            </div>
+          ) : themes.length === 0 ? (
+            <div className="text-center py-8 text-white/30 text-sm">No themes detected yet</div>
+          ) : (
+            <div className="space-y-2.5">
+              {themes.slice(0, 10).map((theme) => {
+                const maxFreq = themes[0]?.frequency || 1;
+                return (
+                  <div key={theme.theme} className="flex items-center gap-2">
+                    <span
+                      className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
+                        theme.sentiment === "positive"
+                          ? "bg-green-400"
+                          : theme.sentiment === "negative"
+                          ? "bg-red-400"
+                          : "bg-gray-400"
+                      }`}
+                    />
+                    <span className="w-28 text-xs text-white/60 truncate flex-shrink-0">{theme.theme}</span>
+                    <div className="flex-1 bg-white/5 rounded h-3 overflow-hidden">
+                      <div
+                        className="h-full rounded bg-gradient-to-r from-purple-500/60 to-blue-500/60"
+                        style={{ width: `${(theme.frequency / maxFreq) * 100}%`, minWidth: "2px" }}
+                      />
+                    </div>
+                    <span className="text-[10px] text-white/30 tabular-nums w-6 text-right flex-shrink-0">{theme.frequency}</span>
+                    <span className={`text-[9px] px-1.5 py-0.5 rounded-full border flex-shrink-0 ${
+                      theme.category === "tool"
+                        ? "text-blue-400/70 border-blue-400/20 bg-blue-400/5"
+                        : theme.category === "pain_point"
+                        ? "text-red-400/70 border-red-400/20 bg-red-400/5"
+                        : theme.category === "goal"
+                        ? "text-green-400/70 border-green-400/20 bg-green-400/5"
+                        : "text-amber-400/70 border-amber-400/20 bg-amber-400/5"
+                    }`}>
+                      {theme.category === "pain_point" ? "pain" : theme.category}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Archetype Distribution */}
+        <div className="bg-white/[0.03] rounded-2xl border border-white/10 p-4 md:p-6">
+          <h2 className="text-xs md:text-sm font-semibold text-white/60 uppercase tracking-wider mb-3 md:mb-4">
+            Archetype Distribution
+          </h2>
+          {graphLoading ? (
+            <div className="space-y-3">
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="h-6 bg-white/5 rounded animate-pulse" />
+              ))}
+            </div>
+          ) : !isGraphEnabled ? (
+            <div className="text-center py-8 text-white/30 text-sm">Graph not connected</div>
+          ) : archetypes.length === 0 ? (
+            <div className="text-center py-8 text-white/30 text-sm">No archetype data yet</div>
+          ) : (
+            <div className="space-y-2.5">
+              {archetypes.map((a, idx) => {
+                const maxCount = archetypes[0]?.count || 1;
+                const colors = [
+                  "from-purple-500/60 to-purple-600/60",
+                  "from-blue-500/60 to-blue-600/60",
+                  "from-cyan-500/60 to-cyan-600/60",
+                  "from-green-500/60 to-green-600/60",
+                  "from-amber-500/60 to-amber-600/60",
+                  "from-rose-500/60 to-rose-600/60",
+                  "from-indigo-500/60 to-indigo-600/60",
+                  "from-teal-500/60 to-teal-600/60",
+                ];
+                return (
+                  <div key={a.archetype} className="flex items-center gap-2">
+                    <span className="w-28 text-xs text-white/60 truncate flex-shrink-0">
+                      {humanize(a.archetype.replace("the_", ""))}
+                    </span>
+                    <div className="flex-1 bg-white/5 rounded h-4 overflow-hidden">
+                      <div
+                        className={`h-full rounded bg-gradient-to-r ${colors[idx % colors.length]}`}
+                        style={{ width: `${(a.count / maxCount) * 100}%`, minWidth: "2px" }}
+                      />
+                    </div>
+                    <span className="text-xs text-white/40 tabular-nums w-6 text-right flex-shrink-0">{a.count}</span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Industry Benchmarks */}
+        <div className="bg-white/[0.03] rounded-2xl border border-white/10 p-4 md:p-6">
+          <h2 className="text-xs md:text-sm font-semibold text-white/60 uppercase tracking-wider mb-3 md:mb-4">
+            Industry Benchmarks
+          </h2>
+          {graphLoading ? (
+            <div className="space-y-3">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="h-6 bg-white/5 rounded animate-pulse" />
+              ))}
+            </div>
+          ) : !isGraphEnabled ? (
+            <div className="text-center py-8 text-white/30 text-sm">Graph not connected</div>
+          ) : benchmarks.length === 0 ? (
+            <div className="text-center py-8 text-white/30 text-sm">No benchmark data yet</div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-white/[0.06]">
+                    <th className="text-left text-[10px] text-white/40 uppercase tracking-wider pb-2">Industry</th>
+                    <th className="text-right text-[10px] text-white/40 uppercase tracking-wider pb-2">Avg</th>
+                    <th className="text-right text-[10px] text-white/40 uppercase tracking-wider pb-2">Sessions</th>
+                    <th className="text-right text-[10px] text-white/40 uppercase tracking-wider pb-2">Top Type</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {[...benchmarks]
+                    .sort((a, b) => b.avgScore - a.avgScore)
+                    .map((b) => (
+                      <tr key={b.industry} className="border-t border-white/5">
+                        <td className="py-2 text-xs text-white/60 truncate max-w-[100px]">{b.industry}</td>
+                        <td className={`py-2 text-xs text-right tabular-nums font-medium ${
+                          b.avgScore >= 70
+                            ? "text-green-400"
+                            : b.avgScore >= 45
+                            ? "text-yellow-400"
+                            : "text-red-400"
+                        }`}>
+                          {Math.round(b.avgScore)}
+                        </td>
+                        <td className="py-2 text-xs text-white/40 text-right tabular-nums">{b.sessions}</td>
+                        <td className="py-2 text-[10px] text-white/40 text-right truncate max-w-[80px]">
+                          {humanize(b.topArchetype.replace("the_", ""))}
+                        </td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
             </div>
           )}
         </div>
