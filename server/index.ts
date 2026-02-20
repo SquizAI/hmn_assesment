@@ -24,7 +24,7 @@ import {
 import { isEmailEnabled, sendInvitationEmail, sendBatchInvitationEmails } from "./email.js";
 import { initGraphSchema, runQuery } from "./neo4j.js";
 import { getCompanyIntelligence, getAssessmentSummary, getCrossCompanyBenchmarks, getThemeMap, getGrowthTimeline, getNetworkGraph } from "./graph-queries.js";
-import { seedAllSessionsToGraph } from "./graph-sync.js";
+import { seedAllSessionsToGraph, extractAndSyncIntelligence } from "./graph-sync.js";
 
 dotenv.config();
 
@@ -2526,6 +2526,27 @@ app.post("/api/admin/graph/seed", requireAdmin, async (_req, res) => {
   } catch (err) {
     console.error("[GRAPH] Seed error:", err);
     res.status(500).json({ error: "Failed to seed graph" });
+  }
+});
+
+// Re-run intelligence extraction (tools, pain points, goals, quotes) for all analyzed sessions
+app.post("/api/admin/graph/extract", requireAdmin, async (_req, res) => {
+  try {
+    const sessions = await listAllSessions();
+    const analyzed = sessions.filter((s) => s.status === "analyzed" || s.status === "completed");
+    let success = 0;
+    for (const session of analyzed) {
+      try {
+        await extractAndSyncIntelligence(session);
+        success++;
+      } catch (err) {
+        console.error(`[GRAPH] Extract failed for ${session.id}:`, err);
+      }
+    }
+    res.json({ processed: analyzed.length, success });
+  } catch (err) {
+    console.error("[GRAPH] Extract error:", err);
+    res.status(500).json({ error: "Failed to run intelligence extraction" });
   }
 });
 

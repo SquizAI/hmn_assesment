@@ -192,115 +192,203 @@ export async function syncSessionToGraph(session: InterviewSession): Promise<voi
   }
 }
 
-// --- Theme Extraction via Claude ---
+// --- Intelligence Extraction via Claude (replaces standalone LangExtract pipeline) ---
 
 interface ExtractedTheme {
   name: string;
-  sentiment: "positive" | "negative" | "neutral";
+  sentiment: "positive" | "negative" | "neutral" | "mixed";
   category: string;
   relatedDimensions: string[];
+  evidence?: string;
+  confidence?: number;
 }
 
-export async function extractAndSyncThemes(session: InterviewSession): Promise<void> {
-  if (!isGraphEnabled()) return;
+interface ExtractedTool {
+  name: string;
+  usageFrequency?: string;
+  sophistication?: string;
+  useCase?: string;
+}
 
-  // Filter to free-text and AI conversation responses (exclude skipped)
+interface ExtractedPainPoint {
+  description: string;
+  severity: string;
+  area: string;
+  potentialAiSolution?: string;
+}
+
+interface ExtractedGoal {
+  description: string;
+  timeframe?: string;
+  relatedToAi: boolean;
+}
+
+interface ExtractedQuote {
+  text: string;
+  context: string;
+  sentiment: string;
+  usableAsTestimonial: boolean;
+}
+
+interface SessionIntelligence {
+  themes: ExtractedTheme[];
+  tools: ExtractedTool[];
+  painPoints: ExtractedPainPoint[];
+  goals: ExtractedGoal[];
+  quotes: ExtractedQuote[];
+}
+
+function buildResponseText(session: InterviewSession): string {
   const textResponses = session.responses.filter(
     (r: QuestionResponse) =>
       (r.inputType === "ai_conversation" || r.inputType === "open_text") &&
       !(r as Record<string, unknown>).skipped,
   );
 
-  if (textResponses.length === 0) {
-    console.log(`[GRAPH] No text responses for session ${session.id}, skipping theme extraction`);
-    return;
-  }
-
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) {
-    console.error("[GRAPH] ANTHROPIC_API_KEY not set, skipping theme extraction");
-    return;
-  }
-
-  // Build content from responses
-  const responseTexts = textResponses.map((r: QuestionResponse) => {
+  return textResponses.map((r: QuestionResponse) => {
     const followUps = (r.aiFollowUps || [])
       .map((f) => `  Follow-up Q: ${f.question}\n  Follow-up A: ${f.answer}`)
       .join("\n");
     const answerStr = Array.isArray(r.answer) ? r.answer.join(", ") : String(r.answer);
     return `Q: ${r.questionText}\nA: ${answerStr}${followUps ? "\n" + followUps : ""}`;
   }).join("\n\n");
+}
+
+function parseJsonResponse(text: string): unknown {
+  let jsonStr = text.trim();
+  if (jsonStr.startsWith("```")) {
+    jsonStr = jsonStr.replace(/^```(?:json)?\n?/, "").replace(/\n?```$/, "");
+  }
+  return JSON.parse(jsonStr);
+}
+
+export async function extractAndSyncThemes(session: InterviewSession): Promise<void> {
+  return extractAndSyncIntelligence(session);
+}
+
+export async function extractAndSyncIntelligence(session: InterviewSession): Promise<void> {
+  if (!isGraphEnabled()) return;
+
+  const responseTexts = buildResponseText(session);
+  if (!responseTexts.trim()) {
+    console.log(`[GRAPH] No text responses for session ${session.id}, skipping intelligence extraction`);
+    return;
+  }
+
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) {
+    console.error("[GRAPH] ANTHROPIC_API_KEY not set, skipping intelligence extraction");
+    return;
+  }
+
+  const participant = session.participant;
 
   try {
     const anthropic = new Anthropic({ apiKey });
     const message = await anthropic.messages.create({
       model: "claude-haiku-4-5-20251001",
-      max_tokens: 1024,
+      max_tokens: 2048,
       messages: [
         {
           role: "user",
-          content: `Analyze the following interview responses and extract key themes. Return ONLY valid JSON with no additional text.
+          content: `Analyze this AI readiness assessment conversation with ${participant.name || "a participant"} from ${participant.company || "unknown company"} (${participant.role || "unknown role"}).
 
-Interview responses:
-${responseTexts}
+Extract ALL of the following. Return ONLY valid JSON, no additional text.
 
-Return this exact JSON structure:
 {
   "themes": [
     {
-      "name": "theme name (short, 2-5 words)",
+      "name": "short theme name (2-5 words)",
+      "sentiment": "positive" | "negative" | "neutral" | "mixed",
+      "category": "tool" | "pain_point" | "goal" | "capability" | "process" | "culture" | "strategy",
+      "relatedDimensions": ["ai_awareness", "ai_action", "process_readiness", "strategic_clarity", "change_energy", "team_capacity", "mission_alignment", "investment_readiness"],
+      "evidence": "supporting quote or paraphrase",
+      "confidence": 0.8
+    }
+  ],
+  "tools": [
+    {
+      "name": "tool name",
+      "usageFrequency": "daily" | "weekly" | "occasionally" | "tried_once" | "never",
+      "sophistication": "basic" | "intermediate" | "advanced",
+      "useCase": "what they use it for"
+    }
+  ],
+  "painPoints": [
+    {
+      "description": "the challenge",
+      "severity": "critical" | "high" | "medium" | "low",
+      "area": "operations" | "hiring" | "sales" | "marketing" | "product" | "leadership" | "culture",
+      "potentialAiSolution": "how AI could help"
+    }
+  ],
+  "goals": [
+    {
+      "description": "desired outcome",
+      "timeframe": "immediate" | "near_term" | "long_term",
+      "relatedToAi": true
+    }
+  ],
+  "quotes": [
+    {
+      "text": "exact or near-exact quote",
+      "context": "what prompted it",
       "sentiment": "positive" | "negative" | "neutral",
-      "category": "tool" | "pain_point" | "opportunity" | "culture" | "process" | "strategy",
-      "relatedDimensions": ["ai_awareness", "ai_action", "process_readiness", "strategic_clarity", "change_energy", "team_capacity", "mission_alignment", "investment_readiness"]
+      "usableAsTestimonial": false
     }
   ]
 }
 
-Extract 3-8 themes. Only include dimensions that are directly relevant.`,
+Extract 3-8 themes, all tools mentioned, top pain points, goals, and 1-3 standout quotes.
+
+=== CONVERSATION ===
+${responseTexts}`,
         },
       ],
     });
 
-    // Parse the response
     const content = message.content[0];
     if (content.type !== "text") return;
 
-    let themes: ExtractedTheme[];
+    let intel: SessionIntelligence;
     try {
-      // Handle potential markdown code blocks in the response
-      let jsonStr = content.text.trim();
-      if (jsonStr.startsWith("```")) {
-        jsonStr = jsonStr.replace(/^```(?:json)?\n?/, "").replace(/\n?```$/, "");
-      }
-      const parsed = JSON.parse(jsonStr);
-      themes = parsed.themes || [];
+      const parsed = parseJsonResponse(content.text) as SessionIntelligence;
+      intel = {
+        themes: parsed.themes || [],
+        tools: parsed.tools || [],
+        painPoints: parsed.painPoints || [],
+        goals: parsed.goals || [],
+        quotes: parsed.quotes || [],
+      };
     } catch (parseErr) {
-      console.error("[GRAPH] Failed to parse theme extraction response:", (parseErr as Error).message);
+      console.error("[GRAPH] Failed to parse intelligence extraction:", (parseErr as Error).message);
       return;
     }
 
-    // Sync themes to graph (cascade-tagged)
-    for (const theme of themes) {
+    const sessionId = session.id;
+
+    // --- Sync themes ---
+    for (const theme of intel.themes) {
       await runWrite(
         `MERGE (t:Theme {name: $name})
          ON CREATE SET t.category = $category, t.createdAt = datetime()
          SET t.source = "cascade"`,
         { name: theme.name, category: theme.category },
       );
-
       await runWrite(
         `MATCH (s:Session {id: $sessionId}), (t:Theme {name: $themeName})
          WHERE s.source = "cascade" AND t.source = "cascade"
          MERGE (s)-[r:SURFACED]->(t)
-         SET r.sentiment = $sentiment`,
+         SET r.sentiment = $sentiment, r.confidence = $confidence, r.evidence = $evidence`,
         {
-          sessionId: session.id,
+          sessionId,
           themeName: theme.name,
           sentiment: theme.sentiment,
+          confidence: theme.confidence ?? 0.8,
+          evidence: theme.evidence || "",
         },
       );
-
-      for (const dim of theme.relatedDimensions) {
+      for (const dim of theme.relatedDimensions || []) {
         await runWrite(
           `MERGE (sd:ScoringDimension {name: $dimension})
            SET sd.source = "cascade"
@@ -312,9 +400,83 @@ Extract 3-8 themes. Only include dimensions that are directly relevant.`,
       }
     }
 
-    console.log(`[GRAPH] Extracted and synced ${themes.length} themes for session ${session.id}`);
+    // --- Sync tools ---
+    for (const tool of intel.tools) {
+      await runWrite(
+        `MERGE (t:Tool {name: $name})
+         ON CREATE SET t.createdAt = datetime()
+         SET t.source = "cascade"
+         WITH t
+         MATCH (s:Session {id: $sessionId}) WHERE s.source = "cascade"
+         MERGE (s)-[r:USES_TOOL]->(t)
+         SET r.frequency = $frequency, r.sophistication = $sophistication, r.useCase = $useCase`,
+        {
+          name: tool.name,
+          sessionId,
+          frequency: tool.usageFrequency || "unknown",
+          sophistication: tool.sophistication || "unknown",
+          useCase: tool.useCase || "",
+        },
+      );
+    }
+
+    // --- Sync pain points ---
+    for (const pp of intel.painPoints) {
+      await runWrite(
+        `MERGE (p:PainPoint {description: $desc})
+         ON CREATE SET p.createdAt = datetime()
+         SET p.severity = $severity, p.area = $area, p.source = "cascade"
+         WITH p
+         MATCH (s:Session {id: $sessionId}) WHERE s.source = "cascade"
+         MERGE (s)-[r:HAS_PAIN_POINT]->(p)
+         SET r.potentialAiSolution = $solution`,
+        {
+          desc: pp.description,
+          sessionId,
+          severity: pp.severity,
+          area: pp.area,
+          solution: pp.potentialAiSolution || "",
+        },
+      );
+    }
+
+    // --- Sync goals ---
+    for (const goal of intel.goals) {
+      await runWrite(
+        `MERGE (g:Goal {description: $desc})
+         ON CREATE SET g.createdAt = datetime()
+         SET g.timeframe = $timeframe, g.relatedToAi = $aiRelated, g.source = "cascade"
+         WITH g
+         MATCH (s:Session {id: $sessionId}) WHERE s.source = "cascade"
+         MERGE (s)-[:HAS_GOAL]->(g)`,
+        {
+          desc: goal.description,
+          sessionId,
+          timeframe: goal.timeframe || "unspecified",
+          aiRelated: goal.relatedToAi ?? false,
+        },
+      );
+    }
+
+    // --- Sync quotes ---
+    for (const quote of intel.quotes) {
+      await runWrite(
+        `MATCH (s:Session {id: $sessionId}) WHERE s.source = "cascade"
+         CREATE (q:Quote {text: $text, context: $context, sentiment: $sentiment, testimonial: $testimonial, source: "cascade", createdAt: datetime()})
+         CREATE (s)-[:QUOTED]->(q)`,
+        {
+          sessionId,
+          text: quote.text,
+          context: quote.context,
+          sentiment: quote.sentiment,
+          testimonial: quote.usableAsTestimonial ?? false,
+        },
+      );
+    }
+
+    console.log(`[GRAPH] Intelligence extracted for session ${sessionId}: ${intel.themes.length} themes, ${intel.tools.length} tools, ${intel.painPoints.length} pain points, ${intel.goals.length} goals, ${intel.quotes.length} quotes`);
   } catch (err) {
-    console.error(`[GRAPH] Theme extraction failed for session ${session.id}:`, (err as Error).message);
+    console.error(`[GRAPH] Intelligence extraction failed for session ${session.id}:`, (err as Error).message);
   }
 }
 
