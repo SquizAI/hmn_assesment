@@ -811,7 +811,17 @@ app.post("/api/interview/respond", async (req, res) => {
         questionId,
       });
 
-      const aiResponse = await generateFollowUp(session, currentQuestion, history, assessment);
+      // Count user turns — force completion after 5 to prevent infinite loops
+      const userTurns = history.filter((m: { role: string }) => m.role === "user").length;
+      const MAX_CONVERSATION_TURNS = 5;
+
+      let aiResponse: string;
+      if (userTurns >= MAX_CONVERSATION_TURNS) {
+        aiResponse = "Thank you for sharing all of that — really helpful context. [QUESTION_COMPLETE]";
+        console.log(`[INTERVIEW] Forcing conversation completion after ${userTurns} turns for question ${questionId}`);
+      } else {
+        aiResponse = await generateFollowUp(session as unknown as Record<string, unknown>, currentQuestion, history, assessment);
+      }
 
       const isComplete = aiResponse.includes("[QUESTION_COMPLETE]");
       // Strip [QUESTION_COMPLETE] marker and internal annotations like **[capturing: ...]** or **[RED FLAG: ...]**
@@ -909,15 +919,32 @@ app.post("/api/interview/respond", async (req, res) => {
     let nextQuestion: Record<string, unknown> | undefined;
     try {
       const selection = await selectNextQuestion(questionsForAI, session);
-      const selected = getQuestionFromBank(bankQuestions, selection.questionId) || getQuestionById(selection.questionId);
-      if (selected) {
-        nextQuestion = { ...selected, text: selection.adaptedText || selected.text };
+      if (selection?.questionId) {
+        // Validate the returned ID exists in the question bank
+        const selected = getQuestionFromBank(bankQuestions, selection.questionId) || getQuestionById(selection.questionId);
+        if (selected) {
+          nextQuestion = { ...selected, text: selection.adaptedText || selected.text };
+        } else {
+          console.warn(`[INTERVIEW] selectNextQuestion returned unknown ID: ${selection.questionId}, falling back`);
+        }
       }
-    } catch {
-      // fallback
+    } catch (selErr) {
+      console.error("[INTERVIEW] selectNextQuestion failed:", (selErr as Error).message);
     }
 
-    if (!nextQuestion) nextQuestion = remaining[0];
+    // Fallback: pick first remaining question
+    if (!nextQuestion && remaining.length > 0) {
+      nextQuestion = remaining[0];
+    }
+
+    // Safety: if still no question (shouldn't happen since remaining.length > 0 checked above)
+    if (!nextQuestion) {
+      console.error("[INTERVIEW] No next question available despite remaining questions existing");
+      session.status = "completed";
+      await saveSession(session as unknown as Record<string, unknown>);
+      res.json({ type: "complete", session });
+      return;
+    }
 
     // Apply [Company] substitution
     const companyName = (session.participant as { company?: string })?.company || "";

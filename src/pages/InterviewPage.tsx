@@ -170,6 +170,28 @@ export default function InterviewPage() {
     finally { setIsSubmitting(false); }
   };
 
+  // --- AI Conversation Completion (direct server data, no double-POST) ---
+
+  const handleConversationComplete = (serverData: { type: string; currentQuestion?: unknown; progress?: unknown; skippedQuestionIds?: string[]; session?: unknown }) => {
+    if (!currentQuestion) return;
+
+    // Track the answered question
+    setAnsweredQuestions((prev) => [
+      ...prev,
+      { questionId: currentQuestion.id, questionText: currentQuestion.text, answer: "(conversation)", inputType: currentQuestion.inputType },
+    ]);
+
+    // Update skipped IDs if server provides them
+    if (serverData.skippedQuestionIds) setSkippedQuestionIds(serverData.skippedQuestionIds);
+
+    if (serverData.type === "complete") {
+      setIsComplete(true);
+    } else if (serverData.type === "next_question") {
+      setCurrentQuestion(serverData.currentQuestion as Question);
+      setProgress(serverData.progress as Progress);
+    }
+  };
+
   // --- Backward Navigation ---
 
   const handleNavigateBack = (questionId: string) => {
@@ -392,6 +414,7 @@ export default function InterviewPage() {
               question={currentQuestion}
               sessionId={sessionId}
               onSubmit={handleSubmit}
+              onConversationComplete={handleConversationComplete}
               isSubmitting={isSubmitting}
               onBack={handleGoBack}
               onSkip={handleSkip}

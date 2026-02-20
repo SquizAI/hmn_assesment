@@ -24,6 +24,7 @@ interface Props {
   question: Question;
   sessionId: string;
   onSubmit: (answer: string | number | string[], conversationHistory?: ConversationMessage[]) => void;
+  onConversationComplete?: (serverData: { type: string; currentQuestion?: unknown; progress?: unknown; skippedQuestionIds?: string[]; session?: unknown }) => void;
   isSubmitting: boolean;
   initialAnswer?: string | number | string[];
   isEditing?: boolean;
@@ -33,13 +34,14 @@ interface Props {
   canGoBack?: boolean;
 }
 
-export default function QuestionCard({ question, sessionId, onSubmit, isSubmitting, initialAnswer, isEditing, onCancelEdit, onBack, onSkip, canGoBack }: Props) {
+export default function QuestionCard({ question, sessionId, onSubmit, onConversationComplete, isSubmitting, initialAnswer, isEditing, onCancelEdit, onBack, onSkip, canGoBack }: Props) {
   const [textValue, setTextValue] = useState("");
   const [sliderValue, setSliderValue] = useState<number | null>(null);
   const [buttonValue, setButtonValue] = useState<string | string[] | null>(null);
   const [conversationHistory, setConversationHistory] = useState<ConversationMessage[]>([]);
   const [isAiThinking, setIsAiThinking] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
+  const [conversationError, setConversationError] = useState<string | null>(null);
   const conversationEndRef = useRef<HTMLDivElement>(null);
   const pageBottomRef = useRef<HTMLDivElement>(null);
 
@@ -99,20 +101,39 @@ export default function QuestionCard({ question, sessionId, onSubmit, isSubmitti
     ];
 
     try {
+      setConversationError(null);
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 60000); // 60s timeout
+
       const res = await fetch(`${API_BASE}/api/interview/respond`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ sessionId, questionId: question.id, answer: text, conversationHistory: newHistory }),
+        signal: controller.signal,
       });
+      clearTimeout(timeout);
+
+      if (!res.ok) {
+        throw new Error(`Server error: ${res.status}`);
+      }
+
       const data = await res.json();
 
       if (data.type === "follow_up") {
         setConversationHistory(data.conversationHistory);
+      } else if (onConversationComplete) {
+        // Pass server response directly — avoid double-POST
+        onConversationComplete(data);
       } else {
+        // Fallback for callers without onConversationComplete
         onSubmit(text, data.conversationHistory);
       }
     } catch (err) {
       console.error("Conversation error:", err);
+      const message = (err as Error).name === "AbortError"
+        ? "Response took too long. Try sending a shorter message."
+        : "Something went wrong. Please try again.";
+      setConversationError(message);
     } finally {
       setIsAiThinking(false);
     }
@@ -185,6 +206,11 @@ export default function QuestionCard({ question, sessionId, onSubmit, isSubmitti
                 <span className="w-2 h-2 bg-purple-400/50 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
                 <span className="w-2 h-2 bg-purple-400/50 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
                 <span className="w-2 h-2 bg-purple-400/50 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+              </div>
+            )}
+            {conversationError && (
+              <div className="px-3 py-2 rounded-lg bg-red-500/10 border border-red-500/20 text-red-300 text-sm">
+                {conversationError}
               </div>
             )}
             <div ref={conversationEndRef} />
