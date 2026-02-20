@@ -383,7 +383,17 @@ export default function SessionDrawer({ sessionId, onClose, onDelete }: SessionD
                           }`}
                         >
                           <p className="text-sm text-white/50 mb-1">{resp.questionText}</p>
-                          <p className="text-white text-sm">{resp.answer}</p>
+                          <p className="text-white text-sm whitespace-pre-wrap">
+                            {(() => {
+                              const raw = resp.answer;
+                              if (typeof raw !== "string") return String(raw ?? "");
+                              // Unwrap double-serialized JSON strings: "\"value\"" → value
+                              if (raw.startsWith('"') && raw.endsWith('"')) {
+                                try { return JSON.parse(raw); } catch { /* fall through */ }
+                              }
+                              return raw;
+                            })()}
+                          </p>
                           <p className="text-xs text-white/20 mt-1">
                             {formatTimestamp(resp.timestamp)}
                           </p>
