@@ -42,6 +42,7 @@ export default function InterviewPage() {
   const [error, setError] = useState<string | null>(null);
   const [answeredQuestions, setAnsweredQuestions] = useState<AnsweredQuestion[]>([]);
   const [skippedQuestionIds, setSkippedQuestionIds] = useState<string[]>([]);
+  const [conversationHistories, setConversationHistories] = useState<Record<string, ConversationMessage[]>>({});
 
   // Dynamic assessment metadata (populated from server for non-default assessments)
   const [assessmentMeta, setAssessmentMeta] = useState<AssessmentMeta | null>(null);
@@ -155,6 +156,11 @@ export default function InterviewPage() {
       const data = await res.json();
       if (data.type === "follow_up") return; // QuestionCard handles this
 
+      // Save conversation history if present (fallback path for AI conversations)
+      if (data.conversationHistory) {
+        setConversationHistories((prev) => ({ ...prev, [currentQuestion.id]: data.conversationHistory }));
+      }
+
       // Track answered question
       setAnsweredQuestions((prev) => [
         ...prev,
@@ -172,8 +178,13 @@ export default function InterviewPage() {
 
   // --- AI Conversation Completion (direct server data, no double-POST) ---
 
-  const handleConversationComplete = (serverData: { type: string; currentQuestion?: unknown; progress?: unknown; skippedQuestionIds?: string[]; session?: unknown }) => {
+  const handleConversationComplete = (serverData: { type: string; currentQuestion?: unknown; progress?: unknown; skippedQuestionIds?: string[]; session?: unknown; conversationHistory?: ConversationMessage[] }) => {
     if (!currentQuestion) return;
+
+    // Save the conversation history for this question so it can be reviewed on back-nav
+    if (serverData.conversationHistory) {
+      setConversationHistories((prev) => ({ ...prev, [currentQuestion.id]: serverData.conversationHistory! }));
+    }
 
     // Track the answered question
     setAnsweredQuestions((prev) => [
@@ -403,6 +414,7 @@ export default function InterviewPage() {
             onSubmit={handleEditSubmit}
             isSubmitting={isSubmitting}
             initialAnswer={editingQuestion.previousAnswer as string | number | string[]}
+            initialConversationHistory={conversationHistories[editingQuestion.question.id]}
             isEditing={true}
             onCancelEdit={exitEditMode}
           />

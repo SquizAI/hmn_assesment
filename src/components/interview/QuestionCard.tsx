@@ -24,9 +24,10 @@ interface Props {
   question: Question;
   sessionId: string;
   onSubmit: (answer: string | number | string[], conversationHistory?: ConversationMessage[]) => void;
-  onConversationComplete?: (serverData: { type: string; currentQuestion?: unknown; progress?: unknown; skippedQuestionIds?: string[]; session?: unknown }) => void;
+  onConversationComplete?: (serverData: { type: string; currentQuestion?: unknown; progress?: unknown; skippedQuestionIds?: string[]; session?: unknown; conversationHistory?: ConversationMessage[] }) => void;
   isSubmitting: boolean;
   initialAnswer?: string | number | string[];
+  initialConversationHistory?: ConversationMessage[];
   isEditing?: boolean;
   onCancelEdit?: () => void;
   onBack?: () => void;
@@ -34,7 +35,7 @@ interface Props {
   canGoBack?: boolean;
 }
 
-export default function QuestionCard({ question, sessionId, onSubmit, onConversationComplete, isSubmitting, initialAnswer, isEditing, onCancelEdit, onBack, onSkip, canGoBack }: Props) {
+export default function QuestionCard({ question, sessionId, onSubmit, onConversationComplete, isSubmitting, initialAnswer, initialConversationHistory, isEditing, onCancelEdit, onBack, onSkip, canGoBack }: Props) {
   const [textValue, setTextValue] = useState("");
   const [sliderValue, setSliderValue] = useState<number | null>(null);
   const [buttonValue, setButtonValue] = useState<string | string[] | null>(null);
@@ -60,7 +61,8 @@ export default function QuestionCard({ question, sessionId, onSubmit, onConversa
   }, [conversationHistory, isAiThinking]);
 
   useEffect(() => {
-    setConversationHistory([]);
+    // Restore previous conversation if navigating back to an AI conversation question
+    setConversationHistory(initialConversationHistory || []);
     setIsAiThinking(false);
 
     if (initialAnswer !== undefined) {
@@ -69,8 +71,11 @@ export default function QuestionCard({ question, sessionId, onSubmit, onConversa
         setSliderValue(initialAnswer as number);
       } else if (question.inputType === "buttons" || question.inputType === "multi_select") {
         setButtonValue(initialAnswer as string | string[]);
+      } else if (question.inputType === "ai_conversation" && initialConversationHistory?.length) {
+        // AI conversation with history — don't pre-fill textarea with combined text
+        setTextValue("");
       } else {
-        // open_text, voice, ai_conversation — show as editable text
+        // open_text, voice — show as editable text
         setTextValue(String(initialAnswer));
       }
     } else {
@@ -78,7 +83,7 @@ export default function QuestionCard({ question, sessionId, onSubmit, onConversa
       setSliderValue(null);
       setButtonValue(null);
     }
-  }, [question.id, initialAnswer]);
+  }, [question.id, initialAnswer, initialConversationHistory]);
 
   const handleTextSubmit = () => {
     if (!textValue.trim()) return;
@@ -194,8 +199,8 @@ export default function QuestionCard({ question, sessionId, onSubmit, onConversa
         {question.subtext && <p className="text-white/50 mt-2 text-sm">{question.subtext}</p>}
       </div>
 
-      {/* AI Conversation History */}
-      {question.inputType === "ai_conversation" && !isEditing && conversationHistory.length > 0 && (
+      {/* AI Conversation History — shown during active conversation AND when reviewing a previous conversation */}
+      {question.inputType === "ai_conversation" && conversationHistory.length > 0 && (
         <div className="mb-6">
           <div className="space-y-4">
             {conversationHistory.filter(m => m.role !== "system").map((msg, i, arr) => {
@@ -289,40 +294,52 @@ export default function QuestionCard({ question, sessionId, onSubmit, onConversa
 
         {(question.inputType === "open_text" || question.inputType === "voice" || question.inputType === "ai_conversation") && (
           <div className="space-y-4">
-            {/* Editable textarea — type directly or review voice transcription */}
-            <textarea value={textValue} onChange={(e) => { if (!isRecording) setTextValue(e.target.value); }}
-              onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleTextSubmit(); } }}
-              placeholder={isRecording ? "Listening..." : "Type or tap the mic to speak..."}
-              rows={3}
-              className={`w-full border rounded-xl px-4 py-3 text-white text-sm placeholder-white/30 focus:outline-none transition-all resize-none ${
-                isRecording
-                  ? "bg-indigo-500/10 border-indigo-500/30 cursor-default"
-                  : "bg-white/5 border-white/10 focus:border-white/20 focus:bg-white/[0.08]"
-              }`} />
+            {/* Read-only review for AI conversation in edit mode */}
+            {isEditing && question.inputType === "ai_conversation" && conversationHistory.length > 0 ? (
+              <div className="space-y-4">
+                <p className="text-white/40 text-xs uppercase tracking-wider">Previous conversation</p>
+                <button onClick={onCancelEdit} className="w-full px-5 py-3 rounded-xl text-sm text-white/70 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 transition-all">
+                  Return to current question
+                </button>
+              </div>
+            ) : (
+              <>
+                {/* Editable textarea — type directly or review voice transcription */}
+                <textarea value={textValue} onChange={(e) => { if (!isRecording) setTextValue(e.target.value); }}
+                  onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleTextSubmit(); } }}
+                  placeholder={isRecording ? "Listening..." : "Type or tap the mic to speak..."}
+                  rows={3}
+                  className={`w-full border rounded-xl px-4 py-3 text-white text-sm placeholder-white/30 focus:outline-none transition-all resize-none ${
+                    isRecording
+                      ? "bg-indigo-500/10 border-indigo-500/30 cursor-default"
+                      : "bg-white/5 border-white/10 focus:border-white/20 focus:bg-white/[0.08]"
+                  }`} />
 
-            {/* Send button */}
-            <div className="flex gap-3 items-center">
-              {isEditing && <button onClick={onCancelEdit} className="px-5 py-2.5 rounded-xl text-sm text-white/40 hover:text-white/60 hover:bg-white/5 transition-all">Cancel</button>}
-              <Button onClick={handleTextSubmit} disabled={!textValue.trim() || isAiThinking} loading={isSubmitting || isAiThinking} size="lg" className="w-full">
-                {submitLabel}
-              </Button>
-            </div>
+                {/* Send button */}
+                <div className="flex gap-3 items-center">
+                  {isEditing && <button onClick={onCancelEdit} className="px-5 py-2.5 rounded-xl text-sm text-white/40 hover:text-white/60 hover:bg-white/5 transition-all">Cancel</button>}
+                  <Button onClick={handleTextSubmit} disabled={!textValue.trim() || isAiThinking} loading={isSubmitting || isAiThinking} size="lg" className="w-full">
+                    {submitLabel}
+                  </Button>
+                </div>
 
-            {/* Big circle mic button with waveform */}
-            {!isEditing && (
-              <VoiceRecorder
-                onTranscription={handleVoiceTranscription}
-                onPartialTranscription={handlePartialTranscription}
-                onRecordingStateChange={handleRecordingStateChange}
-                stopRef={stopRecordingRef}
-                hideIdleStatus
-                hideTranscriptionPreview
-              />
-            )}
+                {/* Big circle mic button with waveform */}
+                {!isEditing && (
+                  <VoiceRecorder
+                    onTranscription={handleVoiceTranscription}
+                    onPartialTranscription={handlePartialTranscription}
+                    onRecordingStateChange={handleRecordingStateChange}
+                    stopRef={stopRecordingRef}
+                    hideIdleStatus
+                    hideTranscriptionPreview
+                  />
+                )}
 
-            {/* Hint */}
-            {!isEditing && (
-              <p className="text-center text-white/30 text-xs">Tap the mic or press Space to speak &middot; Live transcription as you talk</p>
+                {/* Hint */}
+                {!isEditing && (
+                  <p className="text-center text-white/30 text-xs">Tap the mic or press Space to speak &middot; Live transcription as you talk</p>
+                )}
+              </>
             )}
           </div>
         )}

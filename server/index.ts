@@ -873,6 +873,7 @@ app.post("/api/interview/respond", async (req, res) => {
     }
 
     // --- Handle AI Conversation (unless skipping) ---
+    let aiConversationHistory: Array<{ role: string; content: string; timestamp: string; questionId?: string }> | undefined;
     if (currentQuestion.inputType === "ai_conversation" && !skip) {
       const history = conversationHistory || [];
 
@@ -950,6 +951,7 @@ app.post("/api/interview/respond", async (req, res) => {
       });
 
       session.conversationHistory.push(...history);
+      aiConversationHistory = history;
     } else if (answer === "[SKIPPED]") {
       // --- Skipped question ---
       session.responses.push({
@@ -985,7 +987,7 @@ app.post("/api/interview/respond", async (req, res) => {
     if (remaining.length === 0) {
       session.status = "completed";
       await saveSession(session);
-      res.json({ type: "complete", session });
+      res.json({ type: "complete", session, ...(aiConversationHistory && { conversationHistory: aiConversationHistory }) });
       return;
     }
 
@@ -1046,6 +1048,7 @@ app.post("/api/interview/respond", async (req, res) => {
       type: "next_question",
       currentQuestion: nextQuestion,
       skippedQuestionIds: respondSkippedIds,
+      ...(aiConversationHistory && { conversationHistory: aiConversationHistory }),
       progress: {
         questionNumber: session.responses.length + 1,
         totalQuestions: bankQuestions.length,
