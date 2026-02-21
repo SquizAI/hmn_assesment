@@ -43,6 +43,8 @@ export default function QuestionCard({ question, sessionId, onSubmit, onConversa
   const [isRecording, setIsRecording] = useState(false);
   const [conversationError, setConversationError] = useState<string | null>(null);
   const lastMessageRef = useRef<string | null>(null);
+  const suppressTranscriptionRef = useRef(false);
+  const stopRecordingRef = useRef<(() => void) | null>(null);
   const conversationEndRef = useRef<HTMLDivElement>(null);
   const pageBottomRef = useRef<HTMLDivElement>(null);
 
@@ -80,6 +82,11 @@ export default function QuestionCard({ question, sessionId, onSubmit, onConversa
 
   const handleTextSubmit = () => {
     if (!textValue.trim()) return;
+    // Stop recording and suppress any late transcription callbacks
+    if (isRecording && stopRecordingRef.current) {
+      suppressTranscriptionRef.current = true;
+      stopRecordingRef.current();
+    }
     if (question.inputType === "ai_conversation" && !isEditing) {
       handleConversationSubmit(textValue.trim());
     } else {
@@ -150,12 +157,20 @@ export default function QuestionCard({ question, sessionId, onSubmit, onConversa
 
   // Voice transcription always goes into textarea for review — never auto-submits
   const handleVoiceTranscription = (text: string) => {
+    if (suppressTranscriptionRef.current) return;
     setTextValue(text);
   };
 
   // Live partial transcription feeds into textarea as user speaks
   const handlePartialTranscription = (text: string) => {
+    if (suppressTranscriptionRef.current) return;
     setTextValue(text);
+  };
+
+  // When recording starts, allow transcription again
+  const handleRecordingStateChange = (recording: boolean) => {
+    if (recording) suppressTranscriptionRef.current = false;
+    setIsRecording(recording);
   };
 
   const submitLabel = isEditing ? "Update Answer" : (question.inputType === "ai_conversation" ? "Send" : "Continue");
@@ -298,7 +313,8 @@ export default function QuestionCard({ question, sessionId, onSubmit, onConversa
               <VoiceRecorder
                 onTranscription={handleVoiceTranscription}
                 onPartialTranscription={handlePartialTranscription}
-                onRecordingStateChange={setIsRecording}
+                onRecordingStateChange={handleRecordingStateChange}
+                stopRef={stopRecordingRef}
                 hideIdleStatus
                 hideTranscriptionPreview
               />

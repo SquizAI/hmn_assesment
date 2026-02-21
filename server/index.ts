@@ -895,7 +895,14 @@ app.post("/api/interview/respond", async (req, res) => {
         aiResponse = await generateFollowUp(session as unknown as Record<string, unknown>, currentQuestion, history, assessment);
       }
 
-      const isComplete = aiResponse.includes("[QUESTION_COMPLETE]");
+      // Detect conversation completion: explicit marker OR farewell-like response
+      const farewellPatterns = /\b(goodbye|good\s*bye|take care|talk soon|thanks for (?:sharing|being|your time)|appreciate you|that['']s (?:all|everything)|we['']re (?:all )?done)\b/i;
+      const isExplicitComplete = aiResponse.includes("[QUESTION_COMPLETE]");
+      const isFarewellComplete = !isExplicitComplete && farewellPatterns.test(aiResponse) && userTurns >= 2;
+      const isComplete = isExplicitComplete || isFarewellComplete;
+      if (isFarewellComplete) {
+        console.log(`[INTERVIEW] Auto-completing conversation for ${questionId} — farewell detected after ${userTurns} turns`);
+      }
       // Strip [QUESTION_COMPLETE] marker and internal annotations like **[capturing: ...]** or **[RED FLAG: ...]**
       const cleanResponse = aiResponse
         .replace("[QUESTION_COMPLETE]", "")

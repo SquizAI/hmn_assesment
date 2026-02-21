@@ -1,15 +1,17 @@
 import { useState, useRef, useCallback, useEffect } from "react";
+import type { MutableRefObject } from "react";
 import { API_BASE } from "../../lib/api";
 
 interface VoiceRecorderProps {
   onTranscription: (text: string) => void;
   onPartialTranscription?: (text: string) => void;
   onRecordingStateChange?: (isRecording: boolean) => void;
+  stopRef?: MutableRefObject<(() => void) | null>;
   hideIdleStatus?: boolean;
   hideTranscriptionPreview?: boolean;
 }
 
-export default function VoiceRecorder({ onTranscription, onPartialTranscription, onRecordingStateChange, hideIdleStatus, hideTranscriptionPreview }: VoiceRecorderProps) {
+export default function VoiceRecorder({ onTranscription, onPartialTranscription, onRecordingStateChange, stopRef, hideIdleStatus, hideTranscriptionPreview }: VoiceRecorderProps) {
   const [isRecording, setIsRecording] = useState(false);
   const [isTranscribing, setIsTranscribing] = useState(false);
   const [duration, setDuration] = useState(0);
@@ -208,6 +210,12 @@ export default function VoiceRecorder({ onTranscription, onPartialTranscription,
       onTranscription(fullText);
     }
   }, [onRecordingStateChange, onTranscription]);
+
+  // Expose stop function to parent via stopRef
+  useEffect(() => {
+    if (stopRef) stopRef.current = stopRecording;
+    return () => { if (stopRef) stopRef.current = null; };
+  }, [stopRef, stopRecording]);
 
   // Spacebar hotkey to toggle recording (must be after startRecording/stopRecording definitions)
   useEffect(() => {
