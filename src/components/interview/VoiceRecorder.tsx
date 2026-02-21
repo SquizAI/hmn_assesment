@@ -101,18 +101,31 @@ export default function VoiceRecorder({ onTranscription, onPartialTranscription,
 
       ws.onopen = () => {
         // Start MediaRecorder to send audio chunks to Deepgram
-        const mr = new MediaRecorder(stream, {
-          mimeType: MediaRecorder.isTypeSupported("audio/webm;codecs=opus") ? "audio/webm;codecs=opus" : "audio/webm",
-        });
+        // Detect best supported MIME type (Safari doesn't support webm)
+        const mimeTypes = [
+          "audio/webm;codecs=opus",
+          "audio/webm",
+          "audio/mp4",
+          "audio/ogg;codecs=opus",
+          "",
+        ];
+        const mimeType = mimeTypes.find((t) => t === "" || MediaRecorder.isTypeSupported(t));
+        const mrOptions: MediaRecorderOptions = mimeType ? { mimeType } : {};
 
-        mr.ondataavailable = (e) => {
-          if (e.data.size > 0 && ws.readyState === WebSocket.OPEN) {
-            ws.send(e.data);
-          }
-        };
+        try {
+          const mr = new MediaRecorder(stream, mrOptions);
 
-        mediaRecorderRef.current = mr;
-        mr.start(250); // Send chunks every 250ms for responsive transcription
+          mr.ondataavailable = (e) => {
+            if (e.data.size > 0 && ws.readyState === WebSocket.OPEN) {
+              ws.send(e.data);
+            }
+          };
+
+          mediaRecorderRef.current = mr;
+          mr.start(250); // Send chunks every 250ms for responsive transcription
+        } catch {
+          setError("Audio recording not supported in this browser.");
+        }
       };
 
       ws.onmessage = (event) => {

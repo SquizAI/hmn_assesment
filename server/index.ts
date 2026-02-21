@@ -96,6 +96,19 @@ function sanitizeId(id: string): string {
   return id.replace(/[^a-zA-Z0-9_-]/g, "");
 }
 
+// --- Dashboard Filter Extraction ---
+
+function extractDashboardFilters(query: Record<string, unknown>): import("./admin-tools.js").DashboardFilters {
+  return {
+    company: query.company as string | undefined,
+    assessmentTypeId: query.assessmentTypeId as string | undefined,
+    dateFrom: query.dateFrom as string | undefined,
+    dateTo: query.dateTo as string | undefined,
+    industry: query.industry as string | undefined,
+    archetype: query.archetype as string | undefined,
+  };
+}
+
 // --- Session Storage (Supabase) ---
 
 async function loadSession(id: string) {
@@ -1515,9 +1528,11 @@ app.post("/api/admin/logout", (_req, res) => {
 // ADMIN REST API (data endpoints for dashboard)
 // ============================================================
 
-app.get("/api/admin/stats", requireAdmin, async (_req, res) => {
-  try { res.json(await getStatsAdmin()); }
-  catch (err) { console.error("Admin stats error:", err); res.status(500).json({ error: "Failed to get stats" }); }
+app.get("/api/admin/stats", requireAdmin, async (req, res) => {
+  try {
+    const filters = extractDashboardFilters(req.query as Record<string, unknown>);
+    res.json(await getStatsAdmin(filters));
+  } catch (err) { console.error("Admin stats error:", err); res.status(500).json({ error: "Failed to get stats" }); }
 });
 
 app.get("/api/admin/sessions", requireAdmin, async (req, res) => {
@@ -1621,22 +1636,25 @@ app.post("/api/admin/assessments/:id/status", requireAdmin, async (req, res) => 
   } catch (err) { console.error("Admin status update error:", err); res.status(500).json({ error: "Failed to update status" }); }
 });
 
-app.get("/api/admin/funnel", requireAdmin, async (_req, res) => {
-  try { res.json({ funnel: await getCompletionFunnelAdmin() }); }
-  catch (err) { console.error("Admin funnel error:", err); res.status(500).json({ error: "Failed to get funnel" }); }
+app.get("/api/admin/funnel", requireAdmin, async (req, res) => {
+  try {
+    const filters = extractDashboardFilters(req.query as Record<string, unknown>);
+    res.json({ funnel: await getCompletionFunnelAdmin(filters) });
+  } catch (err) { console.error("Admin funnel error:", err); res.status(500).json({ error: "Failed to get funnel" }); }
 });
 
 app.get("/api/admin/dimensions", requireAdmin, async (req, res) => {
   try {
-    const assessmentTypeId = req.query.assessmentTypeId as string | undefined;
-    res.json({ dimensions: await getDimensionAveragesAdmin(assessmentTypeId) });
+    const filters = extractDashboardFilters(req.query as Record<string, unknown>);
+    res.json({ dimensions: await getDimensionAveragesAdmin(filters) });
   } catch (err) { console.error("Admin dimensions error:", err); res.status(500).json({ error: "Failed to get dimensions" }); }
 });
 
 // Company CRM endpoints
-app.get("/api/admin/companies", requireAdmin, async (_req, res) => {
+app.get("/api/admin/companies", requireAdmin, async (req, res) => {
   try {
-    const companies = await listCompaniesAdmin();
+    const filters = extractDashboardFilters(req.query as Record<string, unknown>);
+    const companies = await listCompaniesAdmin(filters);
     res.json({ companies });
   } catch (err) {
     console.error("Admin companies error:", err);
@@ -2479,9 +2497,10 @@ app.get("/api/admin/graph/assessment/:id", requireAdmin, async (req, res) => {
   }
 });
 
-app.get("/api/admin/graph/benchmarks", requireAdmin, async (_req, res) => {
+app.get("/api/admin/graph/benchmarks", requireAdmin, async (req, res) => {
   try {
-    const data = await getCrossCompanyBenchmarks();
+    const { company, assessmentTypeId } = extractDashboardFilters(req.query as Record<string, unknown>);
+    const data = await getCrossCompanyBenchmarks({ company, assessmentTypeId });
     res.json(data);
   } catch (err) {
     console.error("[GRAPH] Benchmarks error:", err);
@@ -2489,9 +2508,10 @@ app.get("/api/admin/graph/benchmarks", requireAdmin, async (_req, res) => {
   }
 });
 
-app.get("/api/admin/graph/themes", requireAdmin, async (_req, res) => {
+app.get("/api/admin/graph/themes", requireAdmin, async (req, res) => {
   try {
-    const data = await getThemeMap();
+    const { company, assessmentTypeId } = extractDashboardFilters(req.query as Record<string, unknown>);
+    const data = await getThemeMap({ company, assessmentTypeId });
     res.json(data);
   } catch (err) {
     console.error("[GRAPH] Theme map error:", err);
@@ -2499,9 +2519,10 @@ app.get("/api/admin/graph/themes", requireAdmin, async (_req, res) => {
   }
 });
 
-app.get("/api/admin/graph/timeline", requireAdmin, async (_req, res) => {
+app.get("/api/admin/graph/timeline", requireAdmin, async (req, res) => {
   try {
-    const data = await getGrowthTimeline();
+    const { company, assessmentTypeId } = extractDashboardFilters(req.query as Record<string, unknown>);
+    const data = await getGrowthTimeline({ company, assessmentTypeId });
     res.json(data);
   } catch (err) {
     console.error("[GRAPH] Timeline error:", err);
@@ -2509,9 +2530,10 @@ app.get("/api/admin/graph/timeline", requireAdmin, async (_req, res) => {
   }
 });
 
-app.get("/api/admin/graph/network", requireAdmin, async (_req, res) => {
+app.get("/api/admin/graph/network", requireAdmin, async (req, res) => {
   try {
-    const data = await getNetworkGraph();
+    const { company, assessmentTypeId } = extractDashboardFilters(req.query as Record<string, unknown>);
+    const data = await getNetworkGraph({ company, assessmentTypeId });
     res.json(data);
   } catch (err) {
     console.error("[GRAPH] Network graph error:", err);

@@ -1,5 +1,27 @@
 import { API_BASE } from "./api";
 
+export interface DashboardFilters {
+  company?: string;
+  assessmentTypeId?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  industry?: string;
+  archetype?: string;
+}
+
+export function buildFilterQS(filters?: DashboardFilters): string {
+  if (!filters) return "";
+  const params = new URLSearchParams();
+  if (filters.company) params.set("company", filters.company);
+  if (filters.assessmentTypeId) params.set("assessmentTypeId", filters.assessmentTypeId);
+  if (filters.dateFrom) params.set("dateFrom", filters.dateFrom);
+  if (filters.dateTo) params.set("dateTo", filters.dateTo);
+  if (filters.industry) params.set("industry", filters.industry);
+  if (filters.archetype) params.set("archetype", filters.archetype);
+  const qs = params.toString();
+  return qs ? `?${qs}` : "";
+}
+
 const adminFetch = async (path: string, options?: RequestInit) => {
   const res = await fetch(`${API_BASE}${path}`, {
     ...options,
@@ -13,16 +35,21 @@ const adminFetch = async (path: string, options?: RequestInit) => {
   return res;
 };
 
-export async function fetchStats() {
-  const res = await adminFetch("/api/admin/stats");
+export async function fetchStats(filters?: DashboardFilters) {
+  const res = await adminFetch(`/api/admin/stats${buildFilterQS(filters)}`);
   return res.json();
 }
 
-export async function fetchSessions(filters?: { since?: string; status?: string; assessmentTypeId?: string }) {
+export async function fetchSessions(filters?: DashboardFilters & { since?: string; status?: string }) {
   const params = new URLSearchParams();
   if (filters?.since) params.set("since", filters.since);
   if (filters?.status) params.set("status", filters.status);
   if (filters?.assessmentTypeId) params.set("assessmentTypeId", filters.assessmentTypeId);
+  if (filters?.company) params.set("company", filters.company);
+  if (filters?.dateFrom) params.set("dateFrom", filters.dateFrom);
+  if (filters?.dateTo) params.set("dateTo", filters.dateTo);
+  if (filters?.industry) params.set("industry", filters.industry);
+  if (filters?.archetype) params.set("archetype", filters.archetype);
   const qs = params.toString();
   const res = await adminFetch(`/api/admin/sessions${qs ? `?${qs}` : ""}`);
   return res.json();
@@ -84,14 +111,13 @@ export async function updateAssessmentStatus(id: string, status: string) {
   return res.json();
 }
 
-export async function fetchFunnel() {
-  const res = await adminFetch("/api/admin/funnel");
+export async function fetchFunnel(filters?: DashboardFilters) {
+  const res = await adminFetch(`/api/admin/funnel${buildFilterQS(filters)}`);
   return res.json();
 }
 
-export async function fetchDimensions(assessmentTypeId?: string) {
-  const qs = assessmentTypeId ? `?assessmentTypeId=${assessmentTypeId}` : "";
-  const res = await adminFetch(`/api/admin/dimensions${qs}`);
+export async function fetchDimensions(filters?: DashboardFilters) {
+  const res = await adminFetch(`/api/admin/dimensions${buildFilterQS(filters)}`);
   return res.json();
 }
 
@@ -237,8 +263,8 @@ export async function chatWithAssessmentStream(
 
 // --- Company CRM API ---
 
-export async function fetchCompanies() {
-  const res = await adminFetch("/api/admin/companies");
+export async function fetchCompanies(filters?: DashboardFilters) {
+  const res = await adminFetch(`/api/admin/companies${buildFilterQS(filters)}`);
   return res.json();
 }
 

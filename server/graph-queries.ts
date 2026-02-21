@@ -5,6 +5,12 @@ import { runQuery } from "./neo4j.js";
 // All queries scoped to source:"cascade" to isolate from Voltron data
 // ============================================================
 
+/** Optional filters forwarded from the dashboard */
+export interface GraphFilters {
+  company?: string;
+  assessmentTypeId?: string;
+}
+
 export async function getCompanyIntelligence(companyName: string) {
   console.log(`[GRAPH-QUERY] getCompanyIntelligence: ${companyName}`);
 
@@ -343,8 +349,10 @@ export async function getAssessmentSummary(assessmentId: string) {
   };
 }
 
-export async function getCrossCompanyBenchmarks() {
-  console.log("[GRAPH-QUERY] getCrossCompanyBenchmarks");
+export async function getCrossCompanyBenchmarks(filters?: GraphFilters) {
+  console.log("[GRAPH-QUERY] getCrossCompanyBenchmarks", filters);
+  const company = filters?.company ?? null;
+  const assessmentId = filters?.assessmentTypeId ?? null;
 
   // Industry averages (cascade-only)
   const industryResult = await runQuery(
@@ -352,6 +360,8 @@ export async function getCrossCompanyBenchmarks() {
     MATCH (c:Company)<-[:WORKS_AT]-(p:Participant)-[:COMPLETED]->(s:Session)
     WHERE c.source = "cascade" AND p.source = "cascade" AND s.source = "cascade"
       AND c.industry IS NOT NULL
+      AND ($company IS NULL OR c.name = $company)
+      AND ($assessmentId IS NULL OR EXISTS { MATCH (s)-[:FOR_ASSESSMENT]->(:Assessment {id: $assessmentId}) })
     OPTIONAL MATCH (s)-[:CLASSIFIED_AS]->(a:Archetype) WHERE a.source = "cascade"
     WITH c.industry AS industry, s, a
     RETURN industry,
@@ -360,7 +370,7 @@ export async function getCrossCompanyBenchmarks() {
            head(collect(a.name)) AS topArchetype
     ORDER BY avgScore DESC
     `,
-    {}
+    { company, assessmentId }
   );
 
   const industryAverages = industryResult.map((rec) => ({
@@ -375,6 +385,8 @@ export async function getCrossCompanyBenchmarks() {
     `
     MATCH (c:Company)<-[:WORKS_AT]-(p:Participant)-[:COMPLETED]->(s:Session)
     WHERE c.source = "cascade" AND p.source = "cascade" AND s.source = "cascade"
+      AND ($company IS NULL OR c.name = $company)
+      AND ($assessmentId IS NULL OR EXISTS { MATCH (s)-[:FOR_ASSESSMENT]->(:Assessment {id: $assessmentId}) })
     WITH c.name AS company,
          avg(s.overallScore) AS avgScore,
          count(DISTINCT s) AS sessionCount,
@@ -382,7 +394,7 @@ export async function getCrossCompanyBenchmarks() {
     RETURN company, avgScore, sessionCount, participantCount
     ORDER BY avgScore DESC
     `,
-    {}
+    { company, assessmentId }
   );
 
   const companyRanking = companyResult.map((rec) => ({
@@ -397,6 +409,8 @@ export async function getCrossCompanyBenchmarks() {
     `
     MATCH (s:Session)-[:SURFACED]->(t:Theme)
     WHERE s.source = "cascade" AND t.source = "cascade"
+      AND ($company IS NULL OR EXISTS { MATCH (s)<-[:COMPLETED]-(:Participant)-[:WORKS_AT]->(:Company {name: $company}) })
+      AND ($assessmentId IS NULL OR EXISTS { MATCH (s)-[:FOR_ASSESSMENT]->(:Assessment {id: $assessmentId}) })
     WITH t.name AS name, t.sentiment AS sentiment,
          count(*) AS frequency,
          t.category AS category
@@ -404,7 +418,7 @@ export async function getCrossCompanyBenchmarks() {
     ORDER BY frequency DESC
     LIMIT 20
     `,
-    {}
+    { company, assessmentId }
   );
 
   const trendingThemes = themeResult.map((rec) => ({
@@ -419,12 +433,14 @@ export async function getCrossCompanyBenchmarks() {
     `
     MATCH (s:Session)-[:TRIGGERED]->(r:Recommendation)
     WHERE s.source = "cascade" AND r.source = "cascade"
+      AND ($company IS NULL OR EXISTS { MATCH (s)<-[:COMPLETED]-(:Participant)-[:WORKS_AT]->(:Company {name: $company}) })
+      AND ($assessmentId IS NULL OR EXISTS { MATCH (s)-[:FOR_ASSESSMENT]->(:Assessment {id: $assessmentId}) })
     WITH coalesce(r.service, r.name) AS service, count(*) AS count,
          collect(r.tier) AS tiers
     RETURN service, count, head(tiers) AS avgTier
     ORDER BY count DESC
     `,
-    {}
+    { company, assessmentId }
   );
 
   const recommendationFrequency = recResult.map((rec) => ({
@@ -441,14 +457,18 @@ export async function getCrossCompanyBenchmarks() {
   };
 }
 
-export async function getThemeMap() {
-  console.log("[GRAPH-QUERY] getThemeMap");
+export async function getThemeMap(filters?: GraphFilters) {
+  console.log("[GRAPH-QUERY] getThemeMap", filters);
+  const company = filters?.company ?? null;
+  const assessmentId = filters?.assessmentTypeId ?? null;
 
   // All themes with their associations (cascade-only)
   const themeResult = await runQuery(
     `
     MATCH (s:Session)-[:SURFACED]->(t:Theme)
     WHERE s.source = "cascade" AND t.source = "cascade"
+      AND ($company IS NULL OR EXISTS { MATCH (s)<-[:COMPLETED]-(:Participant)-[:WORKS_AT]->(:Company {name: $company}) })
+      AND ($assessmentId IS NULL OR EXISTS { MATCH (s)-[:FOR_ASSESSMENT]->(:Assessment {id: $assessmentId}) })
     OPTIONAL MATCH (s)<-[:COMPLETED]-(p:Participant)-[:WORKS_AT]->(c:Company)
     WHERE p.source = "cascade" AND c.source = "cascade"
     OPTIONAL MATCH (s)-[:SCORED]->(d:ScoringDimension) WHERE d.source = "cascade"
@@ -459,7 +479,7 @@ export async function getThemeMap() {
     RETURN name, frequency, sentiment, category, companies, dimensions
     ORDER BY frequency DESC
     `,
-    {}
+    { company, assessmentId }
   );
 
   const themes = themeResult.map((rec) => ({
@@ -476,6 +496,8 @@ export async function getThemeMap() {
     `
     MATCH (s:Session)-[:SURFACED]->(t1:Theme)
     WHERE s.source = "cascade" AND t1.source = "cascade"
+      AND ($company IS NULL OR EXISTS { MATCH (s)<-[:COMPLETED]-(:Participant)-[:WORKS_AT]->(:Company {name: $company}) })
+      AND ($assessmentId IS NULL OR EXISTS { MATCH (s)-[:FOR_ASSESSMENT]->(:Assessment {id: $assessmentId}) })
     MATCH (s)-[:SURFACED]->(t2:Theme)
     WHERE t2.source = "cascade" AND id(t1) < id(t2)
     WITH t1.name AS theme1, t2.name AS theme2, count(DISTINCT s) AS frequency
@@ -484,7 +506,7 @@ export async function getThemeMap() {
     ORDER BY frequency DESC
     LIMIT 50
     `,
-    {}
+    { company, assessmentId }
   );
 
   const coOccurrences = coResult.map((rec) => ({
@@ -498,12 +520,14 @@ export async function getThemeMap() {
     `
     MATCH (s:Session)-[:SCORED]->(d:ScoringDimension)
     WHERE s.source = "cascade" AND d.source = "cascade"
+      AND ($company IS NULL OR EXISTS { MATCH (s)<-[:COMPLETED]-(:Participant)-[:WORKS_AT]->(:Company {name: $company}) })
+      AND ($assessmentId IS NULL OR EXISTS { MATCH (s)-[:FOR_ASSESSMENT]->(:Assessment {id: $assessmentId}) })
     MATCH (s)-[:SURFACED]->(t:Theme) WHERE t.source = "cascade"
     WITH d.name AS dimension, collect(DISTINCT t.name) AS themes
     RETURN dimension, themes
     ORDER BY dimension
     `,
-    {}
+    { company, assessmentId }
   );
 
   const dimensionThemeMap = dimThemeResult.map((rec) => ({
@@ -522,18 +546,22 @@ export async function getThemeMap() {
 // Growth Timeline — sessions over time
 // ============================================================
 
-export async function getGrowthTimeline() {
-  console.log("[GRAPH-QUERY] getGrowthTimeline");
+export async function getGrowthTimeline(filters?: GraphFilters) {
+  console.log("[GRAPH-QUERY] getGrowthTimeline", filters);
+  const company = filters?.company ?? null;
+  const assessmentId = filters?.assessmentTypeId ?? null;
 
   const records = await runQuery(
     `
     MATCH (s:Session)
     WHERE s.source = "cascade" AND s.createdAt IS NOT NULL
+      AND ($company IS NULL OR EXISTS { MATCH (s)<-[:COMPLETED]-(:Participant)-[:WORKS_AT]->(:Company {name: $company}) })
+      AND ($assessmentId IS NULL OR EXISTS { MATCH (s)-[:FOR_ASSESSMENT]->(:Assessment {id: $assessmentId}) })
     WITH date(datetime(s.createdAt)) AS day, count(s) AS sessions
     RETURN toString(day) AS date, sessions
     ORDER BY day
     `,
-    {}
+    { company, assessmentId }
   );
 
   let cumulative = 0;
@@ -554,18 +582,36 @@ export async function getGrowthTimeline() {
 // Network Graph — all cascade nodes + relationships for visualization
 // ============================================================
 
-export async function getNetworkGraph() {
-  console.log("[GRAPH-QUERY] getNetworkGraph");
+export async function getNetworkGraph(filters?: GraphFilters) {
+  console.log("[GRAPH-QUERY] getNetworkGraph", filters);
+  const company = filters?.company ?? null;
+  const assessmentId = filters?.assessmentTypeId ?? null;
 
-  // Get all cascade nodes
-  const nodeRecords = await runQuery(
-    `
-    MATCH (n)
-    WHERE n.source = "cascade"
-    RETURN id(n) AS nodeId, labels(n)[0] AS type, properties(n) AS props
-    `,
-    {}
-  );
+  // When filters are active, scope to the subgraph reachable from matching sessions.
+  // When no filters, return the full cascade graph.
+  const hasFilters = company !== null || assessmentId !== null;
+
+  const nodeRecords = hasFilters
+    ? await runQuery(
+        `
+        MATCH (s:Session)
+        WHERE s.source = "cascade"
+          AND ($company IS NULL OR EXISTS { MATCH (s)<-[:COMPLETED]-(:Participant)-[:WORKS_AT]->(:Company {name: $company}) })
+          AND ($assessmentId IS NULL OR EXISTS { MATCH (s)-[:FOR_ASSESSMENT]->(:Assessment {id: $assessmentId}) })
+        MATCH (s)-[*0..2]-(n)
+        WHERE n.source = "cascade"
+        RETURN DISTINCT id(n) AS nodeId, labels(n)[0] AS type, properties(n) AS props
+        `,
+        { company, assessmentId }
+      )
+    : await runQuery(
+        `
+        MATCH (n)
+        WHERE n.source = "cascade"
+        RETURN id(n) AS nodeId, labels(n)[0] AS type, properties(n) AS props
+        `,
+        {}
+      );
 
   const nodes = nodeRecords.map((rec) => {
     const props = rec.get("props") as Record<string, unknown>;
@@ -581,21 +627,42 @@ export async function getNetworkGraph() {
     };
   });
 
-  // Get all relationships between cascade nodes
-  const edgeRecords = await runQuery(
-    `
-    MATCH (a)-[r]->(b)
-    WHERE a.source = "cascade" AND b.source = "cascade"
-    RETURN id(a) AS sourceId, id(b) AS targetId, type(r) AS relType
-    `,
-    {}
-  );
+  const nodeIdSet = new Set(nodes.map((n) => n.id));
 
-  const edges = edgeRecords.map((rec) => ({
-    source: String(rec.get("sourceId")),
-    target: String(rec.get("targetId")),
-    type: rec.get("relType") as string,
-  }));
+  // Get all relationships between the selected nodes
+  const edgeRecords = hasFilters
+    ? await runQuery(
+        `
+        MATCH (s:Session)
+        WHERE s.source = "cascade"
+          AND ($company IS NULL OR EXISTS { MATCH (s)<-[:COMPLETED]-(:Participant)-[:WORKS_AT]->(:Company {name: $company}) })
+          AND ($assessmentId IS NULL OR EXISTS { MATCH (s)-[:FOR_ASSESSMENT]->(:Assessment {id: $assessmentId}) })
+        MATCH (s)-[*0..2]-(a)
+        WHERE a.source = "cascade"
+        WITH collect(DISTINCT id(a)) AS nodeIds
+        MATCH (x)-[r]->(y)
+        WHERE x.source = "cascade" AND y.source = "cascade"
+          AND id(x) IN nodeIds AND id(y) IN nodeIds
+        RETURN id(x) AS sourceId, id(y) AS targetId, type(r) AS relType
+        `,
+        { company, assessmentId }
+      )
+    : await runQuery(
+        `
+        MATCH (a)-[r]->(b)
+        WHERE a.source = "cascade" AND b.source = "cascade"
+        RETURN id(a) AS sourceId, id(b) AS targetId, type(r) AS relType
+        `,
+        {}
+      );
+
+  const edges = edgeRecords
+    .map((rec) => ({
+      source: String(rec.get("sourceId")),
+      target: String(rec.get("targetId")),
+      type: rec.get("relType") as string,
+    }))
+    .filter((e) => nodeIdSet.has(e.source) && nodeIdSet.has(e.target));
 
   return { nodes, edges };
 }

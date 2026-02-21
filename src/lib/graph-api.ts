@@ -1,4 +1,6 @@
 import { API_BASE } from "./api";
+import { buildFilterQS } from "./admin-api";
+import type { DashboardFilters } from "./admin-api";
 
 const graphFetch = async (path: string, options?: RequestInit) => {
   const res = await fetch(`${API_BASE}${path}`, {
@@ -23,13 +25,13 @@ export async function fetchAssessmentSummary(assessmentId: string) {
   return res.json();
 }
 
-export async function fetchBenchmarks() {
-  const res = await graphFetch("/api/admin/graph/benchmarks");
+export async function fetchBenchmarks(filters?: DashboardFilters) {
+  const res = await graphFetch(`/api/admin/graph/benchmarks${buildFilterQS(filters)}`);
   return res.json();
 }
 
-export async function fetchThemeMap() {
-  const res = await graphFetch("/api/admin/graph/themes");
+export async function fetchThemeMap(filters?: DashboardFilters) {
+  const res = await graphFetch(`/api/admin/graph/themes${buildFilterQS(filters)}`);
   return res.json();
 }
 
@@ -43,12 +45,12 @@ export async function fetchGraphStatus() {
   return res.json();
 }
 
-export async function fetchGrowthTimeline() {
-  const res = await graphFetch("/api/admin/graph/timeline");
+export async function fetchGrowthTimeline(filters?: DashboardFilters) {
+  const res = await graphFetch(`/api/admin/graph/timeline${buildFilterQS(filters)}`);
   return res.json();
 }
 
-export async function fetchNetworkGraph() {
-  const res = await graphFetch("/api/admin/graph/network");
+export async function fetchNetworkGraph(filters?: DashboardFilters) {
+  const res = await graphFetch(`/api/admin/graph/network${buildFilterQS(filters)}`);
   return res.json();
 }

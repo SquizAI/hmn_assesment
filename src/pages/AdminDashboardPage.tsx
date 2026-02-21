@@ -1,7 +1,8 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import StatCard from "../components/admin/StatCard";
-import { fetchStats, fetchFunnel, fetchDimensions, fetchSessions, fetchCompanies } from "../lib/admin-api";
+import { fetchStats, fetchFunnel, fetchDimensions, fetchSessions, fetchCompanies, fetchAssessments } from "../lib/admin-api";
+import type { DashboardFilters } from "../lib/admin-api";
 import {
   fetchGraphStatus,
   fetchThemeMap,
@@ -15,6 +16,7 @@ import GrowthTimeline from "../components/admin/GrowthTimeline";
 import DimensionRadar from "../components/admin/DimensionRadar";
 import InsightCards from "../components/admin/InsightCards";
 import RiskSignals from "../components/admin/RiskSignals";
+import FilterBar from "../components/admin/FilterBar";
 
 // ============================================================
 // Local Types
@@ -144,6 +146,10 @@ const FUNNEL_LABELS: Record<string, string> = {
 export default function AdminDashboardPage() {
   const navigate = useNavigate();
 
+  // Filters
+  const [filters, setFilters] = useState<DashboardFilters>({});
+  const [assessmentList, setAssessmentList] = useState<{ id: string; name: string }[]>([]);
+
   // Core data
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<DashboardStats | null>(null);
@@ -166,9 +172,35 @@ export default function AdminDashboardPage() {
   const [redFlags, setRedFlags] = useState<{ description: string; frequency: number }[]>([]);
   const [greenLights, setGreenLights] = useState<{ description: string; frequency: number }[]>([]);
 
-  // Load core data
+  // Load assessment list once (for filter dropdown)
   useEffect(() => {
-    Promise.all([fetchStats(), fetchFunnel(), fetchDimensions(), fetchSessions(), fetchCompanies()])
+    fetchAssessments()
+      .then((data) => {
+        const list = (data.assessments ?? data ?? []) as { id: string; title?: string; name?: string }[];
+        setAssessmentList(list.map((a) => ({ id: a.id, name: a.title || a.name || a.id })));
+      })
+      .catch(() => {});
+  }, []);
+
+  // Derive unique company names, industries, archetypes for filter dropdowns
+  const companyNames = useMemo(() => companies.map((c) => c.company).filter(Boolean), [companies]);
+  const industryList = useMemo(() => {
+    if (!benchmarks.length) return [];
+    return [...new Set(benchmarks.map((b) => b.industry).filter(Boolean))];
+  }, [benchmarks]);
+  const archetypeList = useMemo(() => {
+    if (!archetypes.length) return [];
+    return archetypes.map((a) => a.archetype).filter(Boolean);
+  }, [archetypes]);
+
+  const handleFilterChange = useCallback((next: DashboardFilters) => {
+    setFilters(next);
+  }, []);
+
+  // Load core data (re-fetches when filters change)
+  useEffect(() => {
+    setLoading(true);
+    Promise.all([fetchStats(filters), fetchFunnel(filters), fetchDimensions(filters), fetchSessions(filters), fetchCompanies(filters)])
       .then(([statsData, funnelData, _dimensionsData, _sessionsData, companiesData]) => {
         setStats(statsData);
         setFunnel(funnelData.funnel);
@@ -180,19 +212,20 @@ export default function AdminDashboardPage() {
         console.error("Dashboard load error:", err);
         setLoading(false);
       });
-  }, []);
+  }, [filters]);
 
-  // Load graph data
+  // Load graph data (re-fetches when filters change)
   useEffect(() => {
+    setGraphLoading(true);
     fetchGraphStatus()
       .then((status) => {
         setGraphStatus(status);
         if (status.enabled && status.nodeCount > 0) {
           return Promise.all([
-            fetchThemeMap(),
-            fetchBenchmarks(),
-            fetchGrowthTimeline(),
-            fetchNetworkGraph(),
+            fetchThemeMap(filters),
+            fetchBenchmarks(filters),
+            fetchGrowthTimeline(filters),
+            fetchNetworkGraph(filters),
           ]);
         }
         return null;
@@ -222,7 +255,7 @@ export default function AdminDashboardPage() {
       })
       .catch(() => {})
       .finally(() => setGraphLoading(false));
-  }, []);
+  }, [filters]);
 
   const handleSeed = async () => {
     setSeeding(true);
@@ -232,10 +265,10 @@ export default function AdminDashboardPage() {
       setGraphStatus(status);
       if (status.enabled && status.nodeCount > 0) {
         const [themeData, benchmarkData, timelineData, networkData] = await Promise.all([
-          fetchThemeMap(),
-          fetchBenchmarks(),
-          fetchGrowthTimeline(),
-          fetchNetworkGraph(),
+          fetchThemeMap(filters),
+          fetchBenchmarks(filters),
+          fetchGrowthTimeline(filters),
+          fetchNetworkGraph(filters),
         ]);
         setThemes(themeData.themes || []);
         setArchetypes(benchmarkData.archetypes || []);
@@ -275,6 +308,18 @@ export default function AdminDashboardPage() {
 
   return (
     <div className="px-4 md:px-6 py-4 md:py-6 space-y-4 md:space-y-5">
+      {/* ============================================ */}
+      {/* FILTER BAR                                   */}
+      {/* ============================================ */}
+      <FilterBar
+        filters={filters}
+        onChange={handleFilterChange}
+        companies={companyNames}
+        assessments={assessmentList}
+        industries={industryList}
+        archetypes={archetypeList}
+      />
+
       {/* ============================================ */}
       {/* ROW 1: Insight Story Cards                  */}
       {/* ============================================ */}

@@ -25,6 +25,49 @@ import type {
 } from "../src/lib/types";
 import { sendInvitationEmail, sendBatchInvitationEmails, isEmailEnabled } from "./email.js";
 
+// --- Dashboard Filters ---
+
+export interface DashboardFilters {
+  company?: string;
+  assessmentTypeId?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  industry?: string;
+  archetype?: string;
+}
+
+function applySessionFilters(
+  sessions: InterviewSession[],
+  filters?: DashboardFilters,
+): InterviewSession[] {
+  if (!filters) return sessions;
+  let result = sessions;
+  if (filters.company) {
+    result = result.filter((s) => (s.participant?.company ?? "").trim() === filters.company);
+  }
+  if (filters.assessmentTypeId) {
+    result = result.filter((s) => s.assessmentTypeId === filters.assessmentTypeId);
+  }
+  if (filters.dateFrom) {
+    const from = new Date(filters.dateFrom).getTime();
+    result = result.filter((s) => new Date(s.createdAt).getTime() >= from);
+  }
+  if (filters.dateTo) {
+    const to = new Date(filters.dateTo).getTime() + 86400000;
+    result = result.filter((s) => new Date(s.createdAt).getTime() < to);
+  }
+  if (filters.industry) {
+    result = result.filter((s) => (s.participant?.industry ?? "") === filters.industry);
+  }
+  if (filters.archetype) {
+    result = result.filter((s) => {
+      const analysis = s.analysis as { archetype?: string } | undefined;
+      return analysis?.archetype === filters.archetype;
+    });
+  }
+  return result;
+}
+
 // --- Session Summary type (lightweight view) ---
 
 interface SessionSummary {
@@ -241,11 +284,9 @@ export async function removeQuestionAdmin(
 // ============================================================
 
 export async function listSessionsAdmin(
-  filters?: { since?: string; status?: string; assessmentTypeId?: string }
+  filters?: DashboardFilters & { since?: string; status?: string }
 ): Promise<SessionSummary[]> {
-  const sessions = await listAllSessions();
-
-  let filtered = sessions;
+  let filtered = applySessionFilters(await listAllSessions(), filters);
 
   if (filters?.since) {
     const sinceDate = new Date(filters.since).getTime();
@@ -256,12 +297,6 @@ export async function listSessionsAdmin(
 
   if (filters?.status) {
     filtered = filtered.filter((s) => s.status === filters.status);
-  }
-
-  if (filters?.assessmentTypeId) {
-    filtered = filtered.filter(
-      (s) => s.assessmentTypeId === filters.assessmentTypeId
-    );
   }
 
   return filtered
@@ -350,8 +385,8 @@ function csvEscape(value: string): string {
 // COMPANY AGGREGATION
 // ============================================================
 
-export async function listCompaniesAdmin(): Promise<CompanySummary[]> {
-  const sessions = await listSessionsWithResponses();
+export async function listCompaniesAdmin(filters?: DashboardFilters): Promise<CompanySummary[]> {
+  const sessions = applySessionFilters(await listSessionsWithResponses(), filters);
 
   // Group sessions by company
   const companyMap = new Map<string, InterviewSession[]>();
@@ -545,8 +580,8 @@ interface StatsResult {
   assessmentBreakdown: { assessmentTypeId: string; count: number }[];
 }
 
-export async function getStatsAdmin(): Promise<StatsResult> {
-  const sessions = await listSessionsWithResponses();
+export async function getStatsAdmin(filters?: DashboardFilters): Promise<StatsResult> {
+  const sessions = applySessionFilters(await listSessionsWithResponses(), filters);
 
   const total = sessions.length;
   const completed = sessions.filter(
@@ -590,13 +625,12 @@ export async function getStatsAdmin(): Promise<StatsResult> {
 }
 
 export async function getDimensionAveragesAdmin(
-  assessmentTypeId?: string
+  filters?: DashboardFilters
 ): Promise<{ dimension: string; average: number; count: number }[]> {
-  let sessions = (await listSessionsWithResponses()).filter((s) => s.status === "analyzed" && s.analysis);
-
-  if (assessmentTypeId) {
-    sessions = sessions.filter((s) => s.assessmentTypeId === assessmentTypeId);
-  }
+  const sessions = applySessionFilters(
+    (await listSessionsWithResponses()).filter((s) => s.status === "analyzed" && s.analysis),
+    filters,
+  );
 
   const dimensionMap = new Map<string, { total: number; count: number }>();
 
@@ -621,12 +655,12 @@ export async function getDimensionAveragesAdmin(
   }));
 }
 
-export async function getCompletionFunnelAdmin(): Promise<{
+export async function getCompletionFunnelAdmin(filters?: DashboardFilters): Promise<{
   stage: string;
   count: number;
   percentage: number;
 }[]> {
-  const sessions = await listAllSessions();
+  const sessions = applySessionFilters(await listAllSessions(), filters);
   const total = sessions.length;
 
   const stages = ["intake", "in_progress", "completed", "analyzed"] as const;

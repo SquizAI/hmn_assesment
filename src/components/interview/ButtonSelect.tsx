@@ -1,15 +1,57 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 
 interface Option { label: string; value: string; description?: string; }
 
 interface ButtonSelectProps {
-  options: Option[];
+  options: unknown[];
   multiSelect?: boolean;
   onChange: (value: string | string[]) => void;
   initialValue?: string | string[];
 }
 
+/**
+ * Normalize an option from any format into { label, value, description? }.
+ *
+ * Handles:
+ *  - Already-correct objects: { label, value }
+ *  - Alternate key names:     { text, id } or { name, key }
+ *  - Plain strings:           "Option A" → { label: "Option A", value: "Option A" }
+ *  - Numbers:                 42 → { label: "42", value: "42" }
+ */
+function normalizeOption(raw: unknown, index: number): Option {
+  if (typeof raw === "string") {
+    return { label: raw, value: raw };
+  }
+  if (typeof raw === "number") {
+    return { label: String(raw), value: String(raw) };
+  }
+  if (raw && typeof raw === "object") {
+    const obj = raw as Record<string, unknown>;
+    const label =
+      (typeof obj.label === "string" && obj.label) ||
+      (typeof obj.text === "string" && obj.text) ||
+      (typeof obj.name === "string" && obj.name) ||
+      (typeof obj.title === "string" && obj.title) ||
+      "";
+    const value =
+      (typeof obj.value === "string" && obj.value) ||
+      (typeof obj.id === "string" && obj.id) ||
+      (typeof obj.key === "string" && obj.key) ||
+      label ||
+      String(index);
+    const description =
+      (typeof obj.description === "string" && obj.description) || undefined;
+    return { label: label || value, value, description };
+  }
+  // Fallback for any other type
+  return { label: String(raw), value: String(raw) };
+}
+
 export default function ButtonSelect({ options, multiSelect = false, onChange, initialValue }: ButtonSelectProps) {
+  const normalizedOptions = useMemo(
+    () => (options || []).map(normalizeOption).filter((o) => o.label),
+    [options],
+  );
   const [selected, setSelected] = useState<Set<string>>(() => {
     if (!initialValue) return new Set();
     return new Set(Array.isArray(initialValue) ? initialValue : [initialValue]);
@@ -31,7 +73,7 @@ export default function ButtonSelect({ options, multiSelect = false, onChange, i
 
   return (
     <div className="grid gap-3">
-      {options.map((opt) => {
+      {normalizedOptions.map((opt) => {
         const active = selected.has(opt.value);
         return (
           <button key={opt.value} onClick={() => handleSelect(opt.value)}
