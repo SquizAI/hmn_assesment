@@ -38,6 +38,7 @@ export default function InterviewPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isStarting, setIsStarting] = useState(true);
   const [isComplete, setIsComplete] = useState(false);
+  const [completionInfo, setCompletionInfo] = useState<{ assessmentTypeId?: string; assessmentName?: string }>({});
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [answeredQuestions, setAnsweredQuestions] = useState<AnsweredQuestion[]>([]);
@@ -172,7 +173,7 @@ export default function InterviewPage() {
       // Update skipped IDs if server provides them
       if (data.skippedQuestionIds) setSkippedQuestionIds(data.skippedQuestionIds);
 
-      if (data.type === "complete") setIsComplete(true);
+      if (data.type === "complete") { setCompletionInfo({ assessmentTypeId: data.assessmentTypeId, assessmentName: data.assessmentName }); setIsComplete(true); }
       else if (data.type === "next_question") { setCurrentQuestion(data.currentQuestion); setProgress(data.progress); }
     } catch { setError("Something went wrong."); }
     finally { setIsSubmitting(false); }
@@ -180,7 +181,7 @@ export default function InterviewPage() {
 
   // --- AI Conversation Completion (direct server data, no double-POST) ---
 
-  const handleConversationComplete = (serverData: { type: string; currentQuestion?: unknown; progress?: unknown; skippedQuestionIds?: string[]; session?: unknown; conversationHistory?: ConversationMessage[] }) => {
+  const handleConversationComplete = (serverData: { type: string; currentQuestion?: unknown; progress?: unknown; skippedQuestionIds?: string[]; session?: unknown; conversationHistory?: ConversationMessage[]; assessmentTypeId?: string; assessmentName?: string }) => {
     if (!currentQuestion) return;
 
     // Save the conversation history for this question so it can be reviewed on back-nav
@@ -198,6 +199,7 @@ export default function InterviewPage() {
     if (serverData.skippedQuestionIds) setSkippedQuestionIds(serverData.skippedQuestionIds);
 
     if (serverData.type === "complete") {
+      setCompletionInfo({ assessmentTypeId: serverData.assessmentTypeId, assessmentName: serverData.assessmentName });
       setIsComplete(true);
     } else if (serverData.type === "next_question") {
       setCurrentQuestion(serverData.currentQuestion as Question);
@@ -280,7 +282,7 @@ export default function InterviewPage() {
       // Track as skipped
       setSkippedQuestionIds((prev) => [...prev, currentQuestion.id]);
 
-      if (data.type === "complete") setIsComplete(true);
+      if (data.type === "complete") { setCompletionInfo({ assessmentTypeId: data.assessmentTypeId, assessmentName: data.assessmentName }); setIsComplete(true); }
       else if (data.type === "next_question") { setCurrentQuestion(data.currentQuestion); setProgress(data.progress); }
       if (data.skippedQuestionIds) setSkippedQuestionIds(data.skippedQuestionIds);
     } catch { setError("Something went wrong."); }
@@ -316,20 +318,38 @@ export default function InterviewPage() {
     </div>
   );
 
-  if (isComplete) return (
-    <div className="min-h-screen flex items-center justify-center px-6">
-      <div className="text-center space-y-8 max-w-md">
-        <div className="w-16 h-16 rounded-full bg-green-500/20 border border-green-500/30 flex items-center justify-center mx-auto">
-          <svg className="w-8 h-8 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+  if (isComplete) {
+    const isAiReadiness = !completionInfo.assessmentTypeId || completionInfo.assessmentTypeId === "ai-readiness";
+    return (
+      <div className="min-h-screen flex items-center justify-center px-6">
+        <div className="text-center space-y-8 max-w-md">
+          <div className="w-16 h-16 rounded-full bg-green-500/20 border border-green-500/30 flex items-center justify-center mx-auto">
+            <svg className="w-8 h-8 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+          </div>
+          {isAiReadiness ? (
+            <>
+              <div className="space-y-2">
+                <h2 className="text-2xl font-semibold text-white">Interview Complete</h2>
+                <p className="text-white/50">Ready to generate your personalized AI readiness analysis.</p>
+              </div>
+              <Button onClick={handleAnalyze} loading={isAnalyzing} size="lg">{isAnalyzing ? "Analyzing..." : "Generate My Analysis"}</Button>
+            </>
+          ) : (
+            <>
+              <div className="space-y-3">
+                <h2 className="text-2xl font-semibold text-white">Thank You!</h2>
+                <p className="text-white/60 text-lg">Your responses have been submitted successfully.</p>
+                <p className="text-white/40 text-sm leading-relaxed">
+                  We've received your feedback for the <span className="text-white/60 font-medium">{completionInfo.assessmentName}</span>. Our team is reviewing your insights and will follow up with you shortly to discuss next steps.
+                </p>
+              </div>
+              <Button onClick={() => navigate("/")} variant="secondary" size="lg">Return Home</Button>
+            </>
+          )}
         </div>
-        <div className="space-y-2">
-          <h2 className="text-2xl font-semibold text-white">Interview Complete</h2>
-          <p className="text-white/50">Ready to generate your personalized AI readiness analysis.</p>
-        </div>
-        <Button onClick={handleAnalyze} loading={isAnalyzing} size="lg">{isAnalyzing ? "Analyzing..." : "Generate My Analysis"}</Button>
       </div>
-    </div>
-  );
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col">

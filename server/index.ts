@@ -759,8 +759,8 @@ app.post("/api/interview/start", async (req, res) => {
 
       // Send completion thank-you email (fire-and-forget)
       const resumeParticipant = session.participant as { name?: string; email?: string };
+      const resumeAssessmentName = (assessment as Record<string, unknown>)?.name as string || "HMN Assessment";
       if (isEmailEnabled() && resumeParticipant?.email) {
-        const resumeAssessmentName = (assessment as Record<string, unknown>)?.name as string || "HMN Assessment";
         sendCompletionEmail({
           to: resumeParticipant.email,
           participantName: resumeParticipant.name || "there",
@@ -768,7 +768,8 @@ app.post("/api/interview/start", async (req, res) => {
         }).catch((err) => console.error("[EMAIL] Completion email failed:", err));
       }
 
-      res.json({ type: "complete", session });
+      const resumeAssessmentTypeId = (session.assessmentTypeId as string) || "ai-readiness";
+      res.json({ type: "complete", session, assessmentTypeId: resumeAssessmentTypeId, assessmentName: resumeAssessmentName });
       return;
     }
 
@@ -790,9 +791,10 @@ app.post("/api/interview/start", async (req, res) => {
       inputType: (r as Record<string, unknown>).inputType || "open_text",
     }));
 
-    // Count only responses that match actual bank questions (exclude phantom auto-populated IDs)
+    // Count only unique responses that match actual bank questions (exclude phantom auto-populated IDs and duplicates)
     const bankIdSet = new Set(bankQuestions.map((q) => q.id as string));
-    const bankAnswered = existingResponses.filter((r) => bankIdSet.has(r.questionId)).length;
+    const bankAnsweredIds = new Set(existingResponses.filter((r) => bankIdSet.has(r.questionId)).map((r) => r.questionId));
+    const bankAnswered = bankAnsweredIds.size;
     const effectiveTotal = bankQuestions.length - skippedQuestionIds.filter((id) => bankIdSet.has(id)).length;
 
     res.json({
@@ -901,6 +903,13 @@ app.post("/api/interview/respond", async (req, res) => {
     if (!currentQuestion) {
       res.status(404).json({ error: "Question not found" });
       return;
+    }
+
+    // Remove any existing response for this question to prevent duplicates (e.g., from retried requests after timeouts)
+    const existingIdx = (session.responses as Array<{ questionId: string }>).findIndex((r) => r.questionId === questionId);
+    if (existingIdx !== -1 && !conversationHistory) {
+      // Only remove for non-conversation re-submissions; conversation follow-ups build on existing state
+      session.responses.splice(existingIdx, 1);
     }
 
     // --- Handle AI Conversation (unless skipping) ---
@@ -1021,16 +1030,17 @@ app.post("/api/interview/respond", async (req, res) => {
 
       // Send completion thank-you email (fire-and-forget)
       const participant = session.participant as { name?: string; email?: string };
+      const completionAssessmentName = (assessment as Record<string, unknown>)?.name as string || "HMN Assessment";
       if (isEmailEnabled() && participant?.email) {
-        const assessmentName = (assessment as Record<string, unknown>)?.name as string || "HMN Assessment";
         sendCompletionEmail({
           to: participant.email,
           participantName: participant.name || "there",
-          assessmentName,
+          assessmentName: completionAssessmentName,
         }).catch((err) => console.error("[EMAIL] Completion email failed:", err));
       }
 
-      res.json({ type: "complete", session, ...(aiConversationHistory && { conversationHistory: aiConversationHistory }) });
+      const completionTypeId = (session.assessmentTypeId as string) || "ai-readiness";
+      res.json({ type: "complete", session, assessmentTypeId: completionTypeId, assessmentName: completionAssessmentName, ...(aiConversationHistory && { conversationHistory: aiConversationHistory }) });
       return;
     }
 
@@ -1069,8 +1079,8 @@ app.post("/api/interview/respond", async (req, res) => {
 
       // Send completion thank-you email (fire-and-forget)
       const fbParticipant = session.participant as { name?: string; email?: string };
+      const fbAssessmentName = (assessment as Record<string, unknown>)?.name as string || "HMN Assessment";
       if (isEmailEnabled() && fbParticipant?.email) {
-        const fbAssessmentName = (assessment as Record<string, unknown>)?.name as string || "HMN Assessment";
         sendCompletionEmail({
           to: fbParticipant.email,
           participantName: fbParticipant.name || "there",
@@ -1078,7 +1088,8 @@ app.post("/api/interview/respond", async (req, res) => {
         }).catch((err) => console.error("[EMAIL] Completion email failed:", err));
       }
 
-      res.json({ type: "complete", session });
+      const fbTypeId = (session.assessmentTypeId as string) || "ai-readiness";
+      res.json({ type: "complete", session, assessmentTypeId: fbTypeId, assessmentName: fbAssessmentName });
       return;
     }
 
@@ -1099,9 +1110,10 @@ app.post("/api/interview/respond", async (req, res) => {
       .map((r: { questionId: string }) => r.questionId);
     const respondSkippedIds = [...new Set([...autoIds, ...respondFilteredOutIds])];
 
-    // Count only responses matching actual bank questions (exclude phantom auto-populated IDs)
+    // Count only unique responses matching actual bank questions (exclude phantom auto-populated IDs and duplicates)
     const respondBankIdSet = new Set(bankQuestions.map((q) => q.id as string));
-    const respondBankAnswered = session.responses.filter((r: { questionId: string }) => respondBankIdSet.has(r.questionId)).length;
+    const respondBankAnsweredIds = new Set(session.responses.filter((r: { questionId: string }) => respondBankIdSet.has(r.questionId)).map((r: { questionId: string }) => r.questionId));
+    const respondBankAnswered = respondBankAnsweredIds.size;
     const respondBankSkipped = respondSkippedIds.filter((id) => respondBankIdSet.has(id)).length;
     const respondEffectiveTotal = bankQuestions.length - respondBankSkipped;
 
