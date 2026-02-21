@@ -1271,12 +1271,12 @@ async function generateFollowUp(
   const responses = session.responses as Array<{ questionText: string; answer: unknown }>;
   const researchContext = getResearchContext(session);
 
-  // Limit context to last 8 responses and truncate long answers to prevent token overflow
-  const recentResponses = responses.slice(-8);
+  // Compact prior context: last 6 responses, truncate long answers
+  const recentResponses = responses.slice(-6);
   const contextSummary = recentResponses.length > 0
     ? recentResponses.map((r) => {
         const ans = typeof r.answer === "object" ? JSON.stringify(r.answer) : String(r.answer);
-        return `Q: ${r.questionText}\nA: ${ans.length > 300 ? ans.slice(0, 300) + "..." : ans}`;
+        return `Q: ${r.questionText}\nA: ${ans.length > 200 ? ans.slice(0, 200) + "..." : ans}`;
       }).join("\n\n")
     : "No prior responses yet.";
 
@@ -1287,13 +1287,11 @@ async function generateFollowUp(
 - Warm, professional, genuinely curious
 - Ask ONE follow-up at a time
 - Dig deeper based on what they actually said
-- USE your research intel to ask more targeted, informed questions
 - Reference specific things you know about them/their company when relevant
-- Listen for specificity vs. vagueness, contradictions, emotional charge
 - Keep responses concise (2-3 sentences before your follow-up)
 - When this topic feels complete (usually 2-3 exchanges), say: [QUESTION_COMPLETE]
 - Never break character. You are a human interviewer.
-- CRITICAL: Do NOT include internal annotations, bracketed notes, markdown formatting, or meta-commentary in your responses (e.g. no **[capturing: ...]**, no **[RED FLAG: ...]**, no *emphasis*). Write in plain conversational English as a real human interviewer would speak.`;
+- Do NOT include internal annotations, bracketed notes, or markdown formatting.`;
 
   const systemPrompt = `${assessmentInterviewPrompt || `You are an expert interviewer for HMN (Human Machine Network), conducting an AI readiness assessment.`}
 
@@ -1310,9 +1308,27 @@ ${currentQuestion.aiFollowUpPrompt ? `FOLLOW-UP GUIDANCE:\n${currentQuestion.aiF
 
 ${assessmentInterviewPrompt ? "" : defaultInterviewRole}`;
 
+  // Limit conversation messages to last 10 (5 exchanges) to prevent token bloat
   const messages = conversationHistory
     .filter((m) => m.role !== "system")
-    .map((m) => ({ role: m.role as "user" | "assistant", content: m.content }));
+    .slice(-10)
+    .map((m) => ({
+      role: m.role as "user" | "assistant",
+      content: m.content.length > 2000 ? m.content.slice(0, 2000) + "..." : m.content,
+    }));
+
+  // Token estimation guard: ~4 chars per token
+  const estimatedTokens = Math.ceil((systemPrompt.length + messages.reduce((s, m) => s + m.content.length, 0)) / 4);
+  console.log(`[FOLLOW-UP] Estimated tokens: ${estimatedTokens} (system: ${systemPrompt.length} chars, messages: ${messages.length}, responses in context: ${recentResponses.length})`);
+
+  if (estimatedTokens > 150000) {
+    console.warn(`[FOLLOW-UP] Token estimate ${estimatedTokens} exceeds 150K — truncating aggressively`);
+    // Nuclear fallback: strip prior responses and limit messages
+    const minimalSystem = `${assessmentInterviewPrompt || "You are an expert interviewer for HMN."}\n\nPARTICIPANT: ${participant.name}, ${participant.role} at ${participant.company}\n\n${assessmentInterviewPrompt ? "" : defaultInterviewRole}`;
+    const minimalMessages = messages.slice(-4).map((m) => ({ ...m, content: m.content.slice(0, 500) }));
+    const response = await client.messages.create({ model: MODEL, max_tokens: 500, system: minimalSystem, messages: minimalMessages });
+    return response.content[0].type === "text" ? response.content[0].text : "";
+  }
 
   const response = await client.messages.create({
     model: MODEL,
