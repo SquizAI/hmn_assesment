@@ -21,7 +21,7 @@ import {
   loadInvitationByToken, loadInvitationById, updateInvitationStatus, findInvitationBySessionId,
   loadAssessment,
 } from "./supabase.js";
-import { isEmailEnabled, sendInvitationEmail, sendBatchInvitationEmails } from "./email.js";
+import { isEmailEnabled, sendInvitationEmail, sendBatchInvitationEmails, sendCompletionEmail } from "./email.js";
 import { initGraphSchema, runQuery } from "./neo4j.js";
 import { getCompanyIntelligence, getAssessmentSummary, getCrossCompanyBenchmarks, getThemeMap, getGrowthTimeline, getNetworkGraph } from "./graph-queries.js";
 import { seedAllSessionsToGraph, extractAndSyncIntelligence } from "./graph-sync.js";
@@ -756,6 +756,18 @@ app.post("/api/interview/start", async (req, res) => {
       // All questions answered — complete
       session.status = "completed";
       await saveSession(session as unknown as Record<string, unknown>);
+
+      // Send completion thank-you email (fire-and-forget)
+      const resumeParticipant = session.participant as { name?: string; email?: string };
+      if (isEmailEnabled() && resumeParticipant?.email) {
+        const resumeAssessmentName = (assessment as Record<string, unknown>)?.name as string || "HMN Assessment";
+        sendCompletionEmail({
+          to: resumeParticipant.email,
+          participantName: resumeParticipant.name || "there",
+          assessmentName: resumeAssessmentName,
+        }).catch((err) => console.error("[EMAIL] Completion email failed:", err));
+      }
+
       res.json({ type: "complete", session });
       return;
     }
@@ -1006,6 +1018,18 @@ app.post("/api/interview/respond", async (req, res) => {
     if (remaining.length === 0) {
       session.status = "completed";
       await saveSession(session);
+
+      // Send completion thank-you email (fire-and-forget)
+      const participant = session.participant as { name?: string; email?: string };
+      if (isEmailEnabled() && participant?.email) {
+        const assessmentName = (assessment as Record<string, unknown>)?.name as string || "HMN Assessment";
+        sendCompletionEmail({
+          to: participant.email,
+          participantName: participant.name || "there",
+          assessmentName,
+        }).catch((err) => console.error("[EMAIL] Completion email failed:", err));
+      }
+
       res.json({ type: "complete", session, ...(aiConversationHistory && { conversationHistory: aiConversationHistory }) });
       return;
     }
@@ -1042,6 +1066,18 @@ app.post("/api/interview/respond", async (req, res) => {
       console.error("[INTERVIEW] No next question available despite remaining questions existing");
       session.status = "completed";
       await saveSession(session as unknown as Record<string, unknown>);
+
+      // Send completion thank-you email (fire-and-forget)
+      const fbParticipant = session.participant as { name?: string; email?: string };
+      if (isEmailEnabled() && fbParticipant?.email) {
+        const fbAssessmentName = (assessment as Record<string, unknown>)?.name as string || "HMN Assessment";
+        sendCompletionEmail({
+          to: fbParticipant.email,
+          participantName: fbParticipant.name || "there",
+          assessmentName: fbAssessmentName,
+        }).catch((err) => console.error("[EMAIL] Completion email failed:", err));
+      }
+
       res.json({ type: "complete", session });
       return;
     }

@@ -168,6 +168,155 @@ export async function sendInvitationEmail(params: {
   }
 }
 
+// ---- Completion Thank-You Email ----
+
+function buildCompletionEmailHtml(params: {
+  participantName: string;
+  assessmentName: string;
+}): string {
+  const { participantName, assessmentName } = params;
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Thank You</title>
+</head>
+<body style="margin:0;padding:0;background:#f3f4f6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f3f4f6;padding:40px 0">
+    <tr>
+      <td align="center">
+        <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08)">
+          <!-- Header -->
+          <tr>
+            <td style="background:linear-gradient(135deg,#0a0a12 0%,#1a1a2e 100%);padding:32px 40px;text-align:center">
+              <img src="${getAppUrl()}/hmn_logo.png" alt="HMN" width="80" style="display:inline-block;margin-bottom:8px">
+              <p style="margin:0;color:rgba(255,255,255,0.5);font-size:13px;letter-spacing:1px">ASSESSMENTS</p>
+            </td>
+          </tr>
+
+          <!-- Green check icon -->
+          <tr>
+            <td style="padding:40px 40px 16px;text-align:center">
+              <div style="display:inline-block;width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#10b981 0%,#34d399 100%);line-height:64px;text-align:center">
+                <span style="font-size:32px;color:#ffffff">&#10003;</span>
+              </div>
+            </td>
+          </tr>
+
+          <!-- Body -->
+          <tr>
+            <td style="padding:8px 40px 16px;text-align:center">
+              <h1 style="margin:0 0 8px;font-size:24px;font-weight:700;color:#111827">Thank You, ${participantName}!</h1>
+              <p style="margin:0;font-size:15px;color:#6b7280;line-height:1.6">
+                Your assessment has been completed successfully.
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:0 40px 24px">
+              <p style="margin:0;font-size:15px;color:#374151;line-height:1.7">
+                We've received your responses for the <strong>${assessmentName}</strong>. Your insights are incredibly valuable and will help us craft a personalized analysis tailored to your organization.
+              </p>
+            </td>
+          </tr>
+
+          <!-- Next Steps -->
+          <tr>
+            <td style="padding:0 40px 32px">
+              <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:24px">
+                <h2 style="margin:0 0 16px;font-size:16px;font-weight:700;color:#166534">What Happens Next</h2>
+                <table cellpadding="0" cellspacing="0" width="100%">
+                  <tr>
+                    <td style="padding:0 0 12px;vertical-align:top;width:28px">
+                      <span style="display:inline-block;width:24px;height:24px;border-radius:50%;background:#dcfce7;text-align:center;line-height:24px;font-size:12px;font-weight:700;color:#166534">1</span>
+                    </td>
+                    <td style="padding:0 0 12px 8px;vertical-align:top">
+                      <p style="margin:0;font-size:14px;color:#374151;line-height:1.5"><strong>Analysis in progress</strong> — Our team is reviewing your responses and generating your personalized report.</p>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding:0 0 12px;vertical-align:top;width:28px">
+                      <span style="display:inline-block;width:24px;height:24px;border-radius:50%;background:#dcfce7;text-align:center;line-height:24px;font-size:12px;font-weight:700;color:#166534">2</span>
+                    </td>
+                    <td style="padding:0 0 12px 8px;vertical-align:top">
+                      <p style="margin:0;font-size:14px;color:#374151;line-height:1.5"><strong>We'll follow up ASAP</strong> — A member of the HMN team will reach out to schedule a walkthrough of your results and discuss next steps.</p>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding:0;vertical-align:top;width:28px">
+                      <span style="display:inline-block;width:24px;height:24px;border-radius:50%;background:#dcfce7;text-align:center;line-height:24px;font-size:12px;font-weight:700;color:#166534">3</span>
+                    </td>
+                    <td style="padding:0 0 0 8px;vertical-align:top">
+                      <p style="margin:0;font-size:14px;color:#374151;line-height:1.5"><strong>Tailored recommendations</strong> — You'll receive actionable insights and a roadmap designed specifically for your organization.</p>
+                    </td>
+                  </tr>
+                </table>
+              </div>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding:0 40px 32px;text-align:center">
+              <p style="margin:0;font-size:14px;color:#6b7280;line-height:1.6">
+                Questions in the meantime? Reach out to us anytime — we're here to help.
+              </p>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="background:#f9fafb;padding:24px 40px;border-top:1px solid #e5e7eb;text-align:center">
+              <p style="margin:0;font-size:12px;color:#9ca3af">
+                HMN Cascade Assessment System
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+}
+
+export async function sendCompletionEmail(params: {
+  to: string;
+  participantName: string;
+  assessmentName: string;
+}): Promise<{ ok: boolean; error?: string }> {
+  const client = getResend();
+  if (!client) {
+    return { ok: false, error: "Email not configured" };
+  }
+
+  const html = buildCompletionEmailHtml({
+    participantName: params.participantName,
+    assessmentName: params.assessmentName,
+  });
+
+  try {
+    const { error } = await client.emails.send({
+      from: `${getFromName()} <${getFromEmail()}>`,
+      to: params.to,
+      subject: `Thank you for completing the ${params.assessmentName}!`,
+      html,
+    });
+
+    if (error) {
+      console.error(`Completion email error for ${params.to}:`, error.message);
+      return { ok: false, error: error.message };
+    }
+    console.log(`[EMAIL] Completion thank-you sent to ${params.to}`);
+    return { ok: true };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Unknown error";
+    console.error(`Completion email error for ${params.to}:`, message);
+    return { ok: false, error: message };
+  }
+}
+
 export async function sendBatchInvitationEmails(invitations: Array<{
   to: string;
   participantName: string;
