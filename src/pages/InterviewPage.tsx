@@ -84,10 +84,12 @@ export default function InterviewPage() {
           });
         }
 
-        // Capture skipped + auto-populated for section progress
+        // Capture skipped + answered for section progress and Q pills
         if (data.skippedQuestionIds) setSkippedQuestionIds(data.skippedQuestionIds);
-        if (data.autoPopulatedResponses) {
-          setAnsweredQuestions(data.autoPopulatedResponses.map((r: { questionId: string; questionText: string; answer: unknown; inputType: string }) => ({
+        // Use answeredResponses (all prior answers) on resume, fallback to autoPopulatedResponses for fresh starts
+        const priorResponses = data.answeredResponses || data.autoPopulatedResponses;
+        if (priorResponses) {
+          setAnsweredQuestions(priorResponses.map((r: { questionId: string; questionText: string; answer: unknown; inputType: string }) => ({
             questionId: r.questionId,
             questionText: r.questionText,
             answer: r.answer,

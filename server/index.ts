@@ -770,11 +770,20 @@ app.post("/api/interview/start", async (req, res) => {
 
     console.log(`[INTERVIEW] Resuming session ${sessionId} at question ${resumeQuestion.id} (${existingResponses.length} responses saved)`);
 
+    // Return all previously answered questions so client can show Q pills and section progress
+    const answeredResponses = existingResponses.map((r) => ({
+      questionId: r.questionId,
+      questionText: r.questionText || "",
+      answer: r.answer,
+      inputType: (r as Record<string, unknown>).inputType || "open_text",
+    }));
+
     res.json({
       session,
       currentQuestion: resumeQuestion,
       skippedQuestionIds,
       autoPopulatedResponses: existingResponses.filter((r) => r.autoPopulated),
+      answeredResponses,
       assessmentQuestions: bankQuestions,
       assessmentSections: assessment?.sections || null,
       assessmentPhases: assessment?.phases || null,
