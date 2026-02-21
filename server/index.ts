@@ -733,6 +733,64 @@ app.post("/api/interview/start", async (req, res) => {
   // Load assessment-specific question bank (dynamic for non-default assessments)
   const { questions: bankQuestions, assessment } = await getAssessmentQuestionBank(session);
 
+  // --- RESUME: If session already has responses, resume from where they left off ---
+  const existingResponses = (session.responses || []) as Array<{ questionId: string; questionText?: string; answer: unknown; autoPopulated?: boolean }>;
+  const hasProgress = session.status === "in_progress" && existingResponses.length > 0;
+
+  if (hasProgress) {
+    const answeredIds = new Set(existingResponses.map((r) => r.questionId));
+    const remaining = bankQuestions.filter((q) => !answeredIds.has(q.id as string));
+    const smartRemaining = filterDeducibleQuestions(remaining, session as unknown as Record<string, unknown>);
+    const filteredOutIds = remaining.filter((q) => !smartRemaining.some((sq) => sq.id === q.id)).map((q) => q.id as string);
+
+    // Resume at the current question or first remaining
+    let resumeQuestion = session.currentQuestionIndex !== undefined
+      ? bankQuestions[session.currentQuestionIndex as number]
+      : null;
+    // If the current question was already answered, pick next remaining
+    if (!resumeQuestion || answeredIds.has(resumeQuestion.id as string)) {
+      resumeQuestion = (smartRemaining.length > 0 ? smartRemaining : remaining)[0];
+    }
+
+    if (!resumeQuestion) {
+      // All questions answered — complete
+      session.status = "completed";
+      await saveSession(session as unknown as Record<string, unknown>);
+      res.json({ type: "complete", session });
+      return;
+    }
+
+    const companyName = (session.participant as { company?: string })?.company || "";
+    if (companyName && resumeQuestion.text) {
+      resumeQuestion = { ...resumeQuestion, text: substituteCompanyName(resumeQuestion.text as string, companyName) };
+    }
+
+    const autoIds = existingResponses.filter((r) => r.autoPopulated).map((r) => r.questionId);
+    const skippedQuestionIds = [...new Set([...autoIds, ...filteredOutIds])];
+
+    console.log(`[INTERVIEW] Resuming session ${sessionId} at question ${resumeQuestion.id} (${existingResponses.length} responses saved)`);
+
+    res.json({
+      session,
+      currentQuestion: resumeQuestion,
+      skippedQuestionIds,
+      autoPopulatedResponses: existingResponses.filter((r) => r.autoPopulated),
+      assessmentQuestions: bankQuestions,
+      assessmentSections: assessment?.sections || null,
+      assessmentPhases: assessment?.phases || null,
+      assessmentScoringDimensions: assessment?.scoringDimensions || null,
+      progress: {
+        questionNumber: existingResponses.length + 1,
+        totalQuestions: bankQuestions.length,
+        phase: resumeQuestion.phase,
+        section: resumeQuestion.section,
+        completedPercentage: Math.round((existingResponses.length / bankQuestions.length) * 100),
+      },
+    });
+    return;
+  }
+
+  // --- FRESH START: First time starting this session ---
   // Auto-populate demographics from intake + research (skip redundant questions)
   const autoResponses = autoPopulateDemographics(session);
   session.responses = [...autoResponses];
@@ -797,7 +855,7 @@ app.post("/api/interview/start", async (req, res) => {
 
 app.post("/api/interview/respond", async (req, res) => {
   try {
-    const { sessionId, questionId, answer, conversationHistory } = req.body;
+    const { sessionId, questionId, answer, conversationHistory, skip } = req.body;
 
     const session = await loadSession(sessionId);
     if (!session) {
@@ -814,8 +872,8 @@ app.post("/api/interview/respond", async (req, res) => {
       return;
     }
 
-    // --- Handle AI Conversation ---
-    if (currentQuestion.inputType === "ai_conversation") {
+    // --- Handle AI Conversation (unless skipping) ---
+    if (currentQuestion.inputType === "ai_conversation" && !skip) {
       const history = conversationHistory || [];
 
       history.push({

@@ -260,10 +260,9 @@ export default function InterviewPage() {
       const res = await fetch(`${API_BASE}/api/interview/respond`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sessionId, questionId: currentQuestion.id, answer: "[SKIPPED]" }),
+        body: JSON.stringify({ sessionId, questionId: currentQuestion.id, answer: "[SKIPPED]", skip: true }),
       });
       const data = await res.json();
-      if (data.type === "follow_up") return;
 
       // Track as skipped
       setSkippedQuestionIds((prev) => [...prev, currentQuestion.id]);
