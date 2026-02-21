@@ -778,6 +778,11 @@ app.post("/api/interview/start", async (req, res) => {
       inputType: (r as Record<string, unknown>).inputType || "open_text",
     }));
 
+    // Count only responses that match actual bank questions (exclude phantom auto-populated IDs)
+    const bankIdSet = new Set(bankQuestions.map((q) => q.id as string));
+    const bankAnswered = existingResponses.filter((r) => bankIdSet.has(r.questionId)).length;
+    const effectiveTotal = bankQuestions.length - skippedQuestionIds.filter((id) => bankIdSet.has(id)).length;
+
     res.json({
       session,
       currentQuestion: resumeQuestion,
@@ -789,11 +794,11 @@ app.post("/api/interview/start", async (req, res) => {
       assessmentPhases: assessment?.phases || null,
       assessmentScoringDimensions: assessment?.scoringDimensions || null,
       progress: {
-        questionNumber: existingResponses.length + 1,
-        totalQuestions: bankQuestions.length,
+        questionNumber: bankAnswered - skippedQuestionIds.filter((id) => bankIdSet.has(id)).length + 1,
+        totalQuestions: effectiveTotal,
         phase: resumeQuestion.phase,
         section: resumeQuestion.section,
-        completedPercentage: Math.round((existingResponses.length / bankQuestions.length) * 100),
+        completedPercentage: Math.round((bankAnswered / Math.max(bankQuestions.length, 1)) * 100),
       },
     });
     return;
@@ -836,6 +841,11 @@ app.post("/api/interview/start", async (req, res) => {
   session.currentQuestionIndex = bankQuestions.findIndex((q) => q.id === firstQuestion.id);
   await saveSession(session);
 
+  // Count only auto-populated responses that match actual bank questions
+  const freshBankIdSet = new Set(bankQuestions.map((q) => q.id as string));
+  const freshBankSkipped = skippedQuestionIds.filter((id) => freshBankIdSet.has(id)).length;
+  const freshEffectiveTotal = bankQuestions.length - freshBankSkipped;
+
   res.json({
     session,
     currentQuestion: firstQuestion,
@@ -847,11 +857,11 @@ app.post("/api/interview/start", async (req, res) => {
     assessmentPhases: assessment?.phases || null,
     assessmentScoringDimensions: assessment?.scoringDimensions || null,
     progress: {
-      questionNumber: autoResponses.length + 1,
-      totalQuestions: bankQuestions.length,
+      questionNumber: 1,
+      totalQuestions: freshEffectiveTotal,
       phase: firstQuestion.phase,
       section: firstQuestion.section,
-      completedPercentage: Math.round((autoResponses.length / bankQuestions.length) * 100),
+      completedPercentage: 0,
     },
   });
   } catch (err) {
@@ -1053,17 +1063,23 @@ app.post("/api/interview/respond", async (req, res) => {
       .map((r: { questionId: string }) => r.questionId);
     const respondSkippedIds = [...new Set([...autoIds, ...respondFilteredOutIds])];
 
+    // Count only responses matching actual bank questions (exclude phantom auto-populated IDs)
+    const respondBankIdSet = new Set(bankQuestions.map((q) => q.id as string));
+    const respondBankAnswered = session.responses.filter((r: { questionId: string }) => respondBankIdSet.has(r.questionId)).length;
+    const respondBankSkipped = respondSkippedIds.filter((id) => respondBankIdSet.has(id)).length;
+    const respondEffectiveTotal = bankQuestions.length - respondBankSkipped;
+
     res.json({
       type: "next_question",
       currentQuestion: nextQuestion,
       skippedQuestionIds: respondSkippedIds,
       ...(aiConversationHistory && { conversationHistory: aiConversationHistory }),
       progress: {
-        questionNumber: session.responses.length + 1,
-        totalQuestions: bankQuestions.length,
+        questionNumber: respondBankAnswered - respondBankSkipped + 1,
+        totalQuestions: respondEffectiveTotal,
         phase: nextQuestion.phase,
         section: nextQuestion.section,
-        completedPercentage: Math.round((session.responses.length / bankQuestions.length) * 100),
+        completedPercentage: Math.round((respondBankAnswered / Math.max(bankQuestions.length, 1)) * 100),
       },
     });
   } catch (err) {
