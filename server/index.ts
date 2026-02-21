@@ -1271,8 +1271,13 @@ async function generateFollowUp(
   const responses = session.responses as Array<{ questionText: string; answer: unknown }>;
   const researchContext = getResearchContext(session);
 
-  const contextSummary = responses.length > 0
-    ? responses.map((r) => `Q: ${r.questionText}\nA: ${typeof r.answer === "object" ? JSON.stringify(r.answer) : r.answer}`).join("\n\n")
+  // Limit context to last 8 responses and truncate long answers to prevent token overflow
+  const recentResponses = responses.slice(-8);
+  const contextSummary = recentResponses.length > 0
+    ? recentResponses.map((r) => {
+        const ans = typeof r.answer === "object" ? JSON.stringify(r.answer) : String(r.answer);
+        return `Q: ${r.questionText}\nA: ${ans.length > 300 ? ans.slice(0, 300) + "..." : ans}`;
+      }).join("\n\n")
     : "No prior responses yet.";
 
   // Use assessment-specific interview prompt if available, otherwise default
