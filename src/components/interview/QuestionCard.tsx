@@ -195,7 +195,7 @@ export default function QuestionCard({ question, sessionId, onSubmit, onConversa
 
       {/* Question */}
       <div className="mb-6">
-        <h2 className="text-2xl font-semibold text-white leading-relaxed">{question.text}</h2>
+        <h2 className="text-2xl font-semibold text-white leading-relaxed">{question.text || "Please share your thoughts on this topic."}</h2>
         {question.subtext && <p className="text-white/50 mt-2 text-sm">{question.subtext}</p>}
       </div>
 

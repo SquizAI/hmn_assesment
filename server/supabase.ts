@@ -332,12 +332,28 @@ function sessionToDbRow(s: InterviewSession): Record<string, unknown> {
   };
 }
 
+function unwrapOverEncodedAnswer(val: unknown): unknown {
+  if (typeof val !== "string") return val;
+  // Repeatedly JSON.parse strings that look like they were over-encoded
+  let current = val;
+  try {
+    while (typeof current === "string") {
+      const parsed = JSON.parse(current);
+      if (parsed === current) break; // no change, stop
+      current = parsed;
+    }
+  } catch {
+    // Not valid JSON, return as-is
+  }
+  return current;
+}
+
 function dbRowToResponse(row: Record<string, unknown>): Record<string, unknown> {
   return {
     questionId: row.question_id,
     questionText: row.question_text,
     inputType: row.input_type,
-    answer: row.answer,
+    answer: unwrapOverEncodedAnswer(row.answer),
     rawTranscription: row.raw_transcription || undefined,
     audioUrl: row.audio_url || undefined,
     durationMs: row.duration_ms || undefined,
@@ -353,7 +369,7 @@ function responseToDbRow(sessionId: string, r: Record<string, unknown>): Record<
     question_id: r.questionId,
     question_text: r.questionText || "",
     input_type: r.inputType || "open_text",
-    answer: typeof r.answer === "string" || typeof r.answer === "number" ? JSON.stringify(r.answer) : r.answer,
+    answer: r.answer ?? null,
     raw_transcription: r.rawTranscription || null,
     audio_url: r.audioUrl || null,
     duration_ms: r.durationMs || null,

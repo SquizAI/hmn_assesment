@@ -9,6 +9,8 @@ interface ButtonSelectProps {
   initialValue?: string | string[];
 }
 
+const OTHER_VALUE = "__other__";
+
 /**
  * Normalize an option from any format into { label, value, description? }.
  *
@@ -52,48 +54,105 @@ export default function ButtonSelect({ options, multiSelect = false, onChange, i
     () => (options || []).map(normalizeOption).filter((o) => o.label),
     [options],
   );
+
+  // Determine if initial value includes a custom "Other" entry
+  const knownValues = useMemo(() => new Set(normalizedOptions.map((o) => o.value)), [normalizedOptions]);
+
   const [selected, setSelected] = useState<Set<string>>(() => {
     if (!initialValue) return new Set();
-    return new Set(Array.isArray(initialValue) ? initialValue : [initialValue]);
+    const vals = Array.isArray(initialValue) ? initialValue : [initialValue];
+    return new Set(vals);
   });
+  const [otherText, setOtherText] = useState<string>(() => {
+    if (!initialValue) return "";
+    const vals = Array.isArray(initialValue) ? initialValue : [initialValue];
+    const customVal = vals.find((v) => !knownValues.has(v) && v !== OTHER_VALUE);
+    return customVal || "";
+  });
+
+  const isOtherSelected = selected.has(OTHER_VALUE) || (otherText && [...selected].some((v) => !knownValues.has(v) && v !== OTHER_VALUE));
+
+  const emitChange = (nextSelected: Set<string>, currentOtherText: string) => {
+    // Build the final values: replace OTHER_VALUE sentinel with actual text
+    const values = Array.from(nextSelected).map((v) =>
+      v === OTHER_VALUE ? (currentOtherText.trim() || OTHER_VALUE) : v
+    );
+    if (multiSelect) {
+      onChange(values);
+    } else {
+      onChange(values[0] || "");
+    }
+  };
 
   const handleSelect = (value: string) => {
     const next = new Set(selected);
     if (multiSelect) {
       next.has(value) ? next.delete(value) : next.add(value);
+      // If deselecting "Other", clear the text
+      if (value === OTHER_VALUE && !next.has(OTHER_VALUE)) {
+        setOtherText("");
+      }
       setSelected(next);
-      onChange(Array.from(next));
+      emitChange(next, value === OTHER_VALUE && !next.has(OTHER_VALUE) ? "" : otherText);
     } else {
       next.clear();
       next.add(value);
+      if (value !== OTHER_VALUE) setOtherText("");
       setSelected(next);
-      onChange(value);
+      emitChange(next, value === OTHER_VALUE ? otherText : "");
     }
   };
 
+  const handleOtherTextChange = (text: string) => {
+    setOtherText(text);
+    // Ensure "Other" is selected when typing
+    const next = new Set(selected);
+    if (!next.has(OTHER_VALUE)) {
+      if (!multiSelect) next.clear();
+      next.add(OTHER_VALUE);
+      setSelected(next);
+    }
+    emitChange(next, text);
+  };
+
+  const allOptions = [...normalizedOptions, { label: "Other", value: OTHER_VALUE }];
+
   return (
     <div className="grid gap-3">
-      {normalizedOptions.map((opt) => {
-        const active = selected.has(opt.value);
+      {allOptions.map((opt) => {
+        const isOther = opt.value === OTHER_VALUE;
+        const active = isOther ? !!isOtherSelected : selected.has(opt.value);
         return (
-          <button key={opt.value} onClick={() => handleSelect(opt.value)}
-            className={`w-full text-left p-4 rounded-xl border transition-all duration-200 group
-              ${active ? "bg-white/15 border-white/40 shadow-lg shadow-white/5" : "bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20"}`}>
-            <div className="flex items-center gap-3">
-              <div className={`w-5 h-5 ${multiSelect ? "rounded-md" : "rounded-full"} border-2 flex items-center justify-center flex-shrink-0 transition-all
-                ${active ? "border-white bg-white" : "border-white/30 group-hover:border-white/50"}`}>
-                {active && (
-                  <svg className="w-3 h-3 text-black" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                  </svg>
-                )}
+          <div key={opt.value}>
+            <button onClick={() => handleSelect(opt.value)}
+              className={`w-full text-left p-4 rounded-xl border transition-all duration-200 group
+                ${active ? "bg-white/15 border-white/40 shadow-lg shadow-white/5" : "bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20"}`}>
+              <div className="flex items-center gap-3">
+                <div className={`w-5 h-5 ${multiSelect ? "rounded-md" : "rounded-full"} border-2 flex items-center justify-center flex-shrink-0 transition-all
+                  ${active ? "border-white bg-white" : "border-white/30 group-hover:border-white/50"}`}>
+                  {active && (
+                    <svg className="w-3 h-3 text-black" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                  )}
+                </div>
+                <div>
+                  <div className={`font-medium ${active ? "text-white" : "text-white/80"}`}>{opt.label}</div>
+                  {opt.description && <div className="text-sm text-white/40 mt-0.5">{opt.description}</div>}
+                </div>
               </div>
-              <div>
-                <div className={`font-medium ${active ? "text-white" : "text-white/80"}`}>{opt.label}</div>
-                {opt.description && <div className="text-sm text-white/40 mt-0.5">{opt.description}</div>}
-              </div>
-            </div>
-          </button>
+            </button>
+            {isOther && active && (
+              <input
+                type="text"
+                value={otherText}
+                onChange={(e) => handleOtherTextChange(e.target.value)}
+                placeholder="Please specify..."
+                autoFocus
+                className="mt-2 w-full bg-white/5 border border-white/20 rounded-xl px-4 py-3 text-white text-sm placeholder-white/30 focus:outline-none focus:border-white/40 focus:bg-white/[0.08] transition-all"
+              />
+            )}
+          </div>
         );
       })}
     </div>

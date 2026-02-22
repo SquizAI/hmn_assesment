@@ -1057,7 +1057,11 @@ app.post("/api/interview/respond", async (req, res) => {
         // Validate the returned ID exists in the question bank
         const selected = getQuestionFromBank(bankQuestions, selection.questionId) || getQuestionById(selection.questionId);
         if (selected) {
-          nextQuestion = { ...selected, text: selection.adaptedText || selected.text };
+          // Only use adaptedText if it's a real sentence (not placeholder like "...")
+          const adaptedText = selection.adaptedText && selection.adaptedText.trim().length > 3
+            ? selection.adaptedText
+            : null;
+          nextQuestion = { ...selected, text: adaptedText || (selected.text as string) };
         } else {
           console.warn(`[INTERVIEW] selectNextQuestion returned unknown ID: ${selection.questionId}, falling back`);
         }

@@ -318,6 +318,15 @@ export default function InterviewPage() {
     </div>
   );
 
+  const handleBackFromComplete = () => {
+    setIsComplete(false);
+    // Navigate back to the last answered question for review/editing
+    if (visibleAnswered.length > 0) {
+      const lastAnswered = visibleAnswered[visibleAnswered.length - 1];
+      handleNavigateBack(lastAnswered.questionId);
+    }
+  };
+
   if (isComplete) {
     const isAiReadiness = !completionInfo.assessmentTypeId || completionInfo.assessmentTypeId === "ai-readiness";
     return (
@@ -332,7 +341,13 @@ export default function InterviewPage() {
                 <h2 className="text-2xl font-semibold text-white">Interview Complete</h2>
                 <p className="text-white/50">Ready to generate your personalized AI readiness analysis.</p>
               </div>
-              <Button onClick={handleAnalyze} loading={isAnalyzing} size="lg">{isAnalyzing ? "Analyzing..." : "Generate My Analysis"}</Button>
+              <div className="space-y-3">
+                <Button onClick={handleAnalyze} loading={isAnalyzing} size="lg">{isAnalyzing ? "Analyzing..." : "Generate My Analysis"}</Button>
+                <button onClick={handleBackFromComplete} className="flex items-center gap-1.5 mx-auto text-sm text-white/40 hover:text-white/60 transition-colors">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+                  Back to review answers
+                </button>
+              </div>
             </>
           ) : (
             <>
@@ -343,7 +358,13 @@ export default function InterviewPage() {
                   We've received your feedback for the <span className="text-white/60 font-medium">{completionInfo.assessmentName}</span>. Our team is reviewing your insights and will follow up with you shortly to discuss next steps.
                 </p>
               </div>
-              <Button onClick={() => navigate("/")} variant="secondary" size="lg">Return Home</Button>
+              <div className="space-y-3">
+                <Button onClick={() => navigate("/")} variant="secondary" size="lg">Return Home</Button>
+                <button onClick={handleBackFromComplete} className="flex items-center gap-1.5 mx-auto text-sm text-white/40 hover:text-white/60 transition-colors">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+                  Back to review answers
+                </button>
+              </div>
             </>
           )}
         </div>

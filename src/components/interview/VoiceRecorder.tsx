@@ -169,46 +169,51 @@ export default function VoiceRecorder({ onTranscription, onPartialTranscription,
   }, [onRecordingStateChange, onPartialTranscription, updateAudioLevels]);
 
   const stopRecording = useCallback(() => {
-    // Stop MediaRecorder
-    if (mediaRecorderRef.current?.state === "recording") {
-      mediaRecorderRef.current.stop();
-    }
+    // Immediately update UI to reflect stopped state
+    setIsRecording(false);
+    onRecordingStateChange?.(false);
+    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
 
-    // Close WebSocket
-    if (wsRef.current?.readyState === WebSocket.OPEN) {
-      wsRef.current.send(JSON.stringify({ type: "CloseStream" }));
-      wsRef.current.close();
-    }
-
-    // Stop audio viz
+    // Stop audio viz immediately
     if (animFrameRef.current) {
       cancelAnimationFrame(animFrameRef.current);
       animFrameRef.current = null;
     }
     setAudioLevels(new Array(32).fill(0));
 
-    // Stop stream
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach((t) => t.stop());
-      streamRef.current = null;
-    }
+    // Buffer delay: keep the audio stream and WebSocket open briefly
+    // so trailing words are captured before termination
+    setTimeout(() => {
+      // Stop MediaRecorder
+      if (mediaRecorderRef.current?.state === "recording") {
+        mediaRecorderRef.current.stop();
+      }
 
-    // Close audio context
-    if (audioContextRef.current?.state !== "closed") {
-      audioContextRef.current?.close();
-    }
+      // Close WebSocket
+      if (wsRef.current?.readyState === WebSocket.OPEN) {
+        wsRef.current.send(JSON.stringify({ type: "CloseStream" }));
+        wsRef.current.close();
+      }
 
-    setIsRecording(false);
-    onRecordingStateChange?.(false);
-    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+      // Stop stream
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((t) => t.stop());
+        streamRef.current = null;
+      }
 
-    // Read accumulated transcription directly from ref (avoids stale state and
-    // the anti-pattern of calling side-effects inside a state updater)
-    const fullText = accumulatedRef.current.trim();
-    if (fullText) {
-      setFinalText(fullText);
-      onTranscription(fullText);
-    }
+      // Close audio context
+      if (audioContextRef.current?.state !== "closed") {
+        audioContextRef.current?.close();
+      }
+
+      // Read accumulated transcription directly from ref (avoids stale state and
+      // the anti-pattern of calling side-effects inside a state updater)
+      const fullText = accumulatedRef.current.trim();
+      if (fullText) {
+        setFinalText(fullText);
+        onTranscription(fullText);
+      }
+    }, 600);
   }, [onRecordingStateChange, onTranscription]);
 
   // Expose stop function to parent via stopRef
@@ -293,8 +298,8 @@ export default function VoiceRecorder({ onTranscription, onPartialTranscription,
             </>
           ) : (
             <>
-              <p className="text-white/50 text-sm font-medium">Tap or press Space to speak</p>
-              <p className="text-white/30 text-xs mt-1">Live transcription as you talk</p>
+              <p className="text-white/80 text-sm font-medium">Tap or press Space to speak</p>
+              <p className="text-white/50 text-xs mt-1">Live transcription as you talk</p>
             </>
           )}
         </div>

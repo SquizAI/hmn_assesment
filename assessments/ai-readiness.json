@@ -183,7 +183,7 @@
       "inputType": "slider",
       "sliderMin": 1,
       "sliderMax": 10,
-      "sliderLabels": { "min": "Avoid AI", "max": "Teaching & innovating" },
+      "sliderLabels": { "min": "Avoiding it", "max": "Teaching others & innovating" },
       "required": true,
       "scoringDimensions": ["ai_awareness", "ai_action"],
       "weight": 0.8,
