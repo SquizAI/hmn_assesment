@@ -187,7 +187,7 @@ export default function AdaptabilitySessionView({ analysis }: AdaptabilitySessio
               {pillar.label} — Content Markers
             </summary>
             <div className="px-3 pb-2">
-              {Object.entries(pillar.markers as Record<string, MarkerScore>).map(([code, marker]) => (
+              {Object.entries(pillar.markers as unknown as Record<string, MarkerScore>).map(([code, marker]) => (
                 <MarkerScoreRow key={code} code={code} marker={marker} />
               ))}
             </div>

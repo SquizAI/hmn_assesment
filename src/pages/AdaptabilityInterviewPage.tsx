@@ -454,7 +454,7 @@ export default function AdaptabilityInterviewPage() {
           onSkip={!isRequired ? handleSkip : undefined}
           isSubmitting={isSubmitting}
           sessionId={sessionId || ""}
-          existingConversationHistory={conversationHistories[currentQuestion.id as string]}
+          initialConversationHistory={conversationHistories[currentQuestion.id as string]}
         />
       </div>
     </div>
