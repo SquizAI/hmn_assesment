@@ -19,6 +19,7 @@
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/papaparse": "^5.5.2",
+    "@vapi-ai/web": "^2.5.2",
     "@xyflow/react": "^12.10.0",
     "concurrently": "^9.2.1",
     "cookie-parser": "^1.4.7",

@@ -4,6 +4,8 @@ import HomePage from "./pages/HomePage";
 import ResearchPage from "./pages/ResearchPage";
 import InterviewPage from "./pages/InterviewPage";
 import AnalysisPage from "./pages/AnalysisPage";
+import AdaptabilityInterviewPage from "./pages/AdaptabilityInterviewPage";
+import AdaptabilityProfilePage from "./pages/AdaptabilityProfilePage";
 import AdminLoginPage from "./pages/AdminLoginPage";
 import AdminLayout from "./components/admin/AdminLayout";
 import AdminDashboardPage from "./pages/AdminDashboardPage";
@@ -48,6 +50,8 @@ export default function App() {
         <Route path="/research/:sessionId" element={<ResearchPage />} />
         <Route path="/interview/:sessionId" element={<InterviewPage />} />
         <Route path="/analysis/:sessionId" element={<AnalysisPage />} />
+        <Route path="/adaptability-interview/:sessionId" element={<AdaptabilityInterviewPage />} />
+        <Route path="/adaptability-profile/:sessionId" element={<AdaptabilityProfilePage />} />
         <Route path="/admin" element={<AdminLoginPage />} />
         <Route element={<AdminErrorBoundary><AdminLayout /></AdminErrorBoundary>}>
           <Route path="/admin/dashboard" element={<AdminDashboardPage />} />

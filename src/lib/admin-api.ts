@@ -298,6 +298,17 @@ export async function deletePreviewSession(sessionId: string): Promise<void> {
   await adminFetch(`/api/admin/preview/${sessionId}`, { method: "DELETE" });
 }
 
+// --- Calibration API ---
+
+export async function runCalibration(maxSessions = 10) {
+  const res = await adminFetch("/api/admin/calibration/run", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ maxSessions }),
+  });
+  return res.json();
+}
+
 // --- Invitations API ---
 
 export async function fetchInvitations(filters?: {
@@ -377,5 +388,33 @@ export async function enrichEmail(email: string): Promise<{
   domain?: string;
 }> {
   const res = await adminFetch(`/api/admin/enrich-email?email=${encodeURIComponent(email)}`);
+  return res.json();
+}
+
+// --- VAPI Outbound Calling ---
+
+export async function initiateCall(sessionId: string, phone: string): Promise<{
+  success: boolean;
+  vapiCallId?: string;
+  error?: string;
+}> {
+  const res = await adminFetch("/api/admin/calls/initiate", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ sessionId, phone }),
+  });
+  return res.json();
+}
+
+export async function getCallStatus(sessionId: string): Promise<{
+  vapiCallId: string | null;
+  callPhone: string | null;
+  callInitiatedAt: string | null;
+  callCompletedAt: string | null;
+  callDuration: number | null;
+  callRecordingUrl: string | null;
+  hasTranscript: boolean;
+}> {
+  const res = await adminFetch(`/api/admin/calls/${sessionId}/status`);
   return res.json();
 }

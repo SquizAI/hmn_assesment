@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import StatusBadge from "./StatusBadge";
 import ResearchCard from "./ResearchCard";
-import { fetchSession, removeSession, triggerResearch } from "../../lib/admin-api";
-import type { ResearchData } from "../../lib/types";
+import AdaptabilitySessionView from "./AdaptabilitySessionView";
+import { fetchSession, removeSession, triggerResearch, initiateCall, getCallStatus } from "../../lib/admin-api";
+import type { ResearchData, AdaptabilityAnalysis } from "../../lib/types";
 
 interface Participant {
   name: string;
@@ -50,7 +51,9 @@ interface InterviewSession {
   updatedAt: string;
   responses: Response[];
   analysis?: Analysis;
+  adaptabilityAnalysis?: AdaptabilityAnalysis;
   research?: ResearchData | null;
+  assessmentTypeId?: string;
 }
 
 interface SessionDrawerProps {
@@ -98,6 +101,17 @@ export default function SessionDrawer({ sessionId, onClose, onDelete }: SessionD
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [activeTab, setActiveTab] = useState<TabId>("details");
   const [researchLoading, setResearchLoading] = useState(false);
+  const [callPhone, setCallPhone] = useState("");
+  const [callLoading, setCallLoading] = useState(false);
+  const [callError, setCallError] = useState<string | null>(null);
+  const [callStatus, setCallStatus] = useState<{
+    vapiCallId: string | null;
+    callInitiatedAt: string | null;
+    callCompletedAt: string | null;
+    callDuration: number | null;
+    callRecordingUrl: string | null;
+    hasTranscript: boolean;
+  } | null>(null);
 
   const loadSession = async () => {
     setLoading(true);
@@ -113,6 +127,8 @@ export default function SessionDrawer({ sessionId, onClose, onDelete }: SessionD
 
   useEffect(() => {
     loadSession();
+    // Load call status
+    getCallStatus(sessionId).then(setCallStatus).catch(() => {});
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         setVisible(true);
@@ -156,6 +172,31 @@ export default function SessionDrawer({ sessionId, onClose, onDelete }: SessionD
       // failed
     } finally {
       setResearchLoading(false);
+    }
+  };
+
+  const handleInitiateCall = async () => {
+    if (!callPhone.trim()) { setCallError("Enter a phone number"); return; }
+    setCallLoading(true);
+    setCallError(null);
+    try {
+      const result = await initiateCall(sessionId, callPhone.trim());
+      if (result.success) {
+        setCallStatus({
+          vapiCallId: result.vapiCallId || null,
+          callInitiatedAt: new Date().toISOString(),
+          callCompletedAt: null,
+          callDuration: null,
+          callRecordingUrl: null,
+          hasTranscript: false,
+        });
+      } else {
+        setCallError(result.error || "Call failed");
+      }
+    } catch {
+      setCallError("Failed to initiate call");
+    } finally {
+      setCallLoading(false);
     }
   };
 
@@ -259,6 +300,78 @@ export default function SessionDrawer({ sessionId, onClose, onDelete }: SessionD
                     </div>
                   </div>
 
+                  {/* Call Participant */}
+                  <div className="bg-white/[0.03] rounded-xl p-4 space-y-3">
+                    <p className="text-sm text-white/40 font-medium">Call Participant</p>
+
+                    {callStatus?.vapiCallId ? (
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <span className={`w-2 h-2 rounded-full ${callStatus.callCompletedAt ? "bg-green-400" : "bg-yellow-400 animate-pulse"}`} />
+                          <span className="text-sm text-white/70">
+                            {callStatus.callCompletedAt
+                              ? `Call completed${callStatus.callDuration ? ` (${Math.round(callStatus.callDuration / 60)}m)` : ""}`
+                              : "Call in progress..."}
+                          </span>
+                        </div>
+                        {callStatus.callRecordingUrl && (
+                          <a
+                            href={callStatus.callRecordingUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 text-xs text-purple-400 hover:text-purple-300 transition-colors"
+                          >
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            Listen to recording
+                          </a>
+                        )}
+                        {callStatus.hasTranscript && (
+                          <span className="inline-flex items-center gap-1 text-xs text-green-400/70">
+                            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
+                            Transcript saved
+                          </span>
+                        )}
+                        <button
+                          onClick={() => { setCallStatus(null); setCallPhone(""); }}
+                          className="text-xs text-white/30 hover:text-white/50 transition-colors"
+                        >
+                          Call again
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        <div className="flex gap-2">
+                          <input
+                            type="tel"
+                            value={callPhone}
+                            onChange={(e) => setCallPhone(e.target.value)}
+                            placeholder="+1 (555) 123-4567"
+                            className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/30 focus:outline-none focus:border-white/20"
+                          />
+                          <button
+                            onClick={handleInitiateCall}
+                            disabled={callLoading || !callPhone.trim()}
+                            className="px-4 py-2 rounded-lg text-sm font-medium bg-purple-600 hover:bg-purple-700 text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5"
+                          >
+                            {callLoading ? (
+                              <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" /></svg>
+                            ) : (
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>
+                            )}
+                            Call
+                          </button>
+                        </div>
+                        {callError && (
+                          <p className="text-red-400 text-xs">{callError}</p>
+                        )}
+                        <p className="text-white/20 text-xs">Vappy will call and run the full assessment via voice</p>
+                      </div>
+                    )}
+                  </div>
+
                   {/* Delete Button */}
                   <div className="pt-4 border-t border-white/10">
                     <button
@@ -278,7 +391,16 @@ export default function SessionDrawer({ sessionId, onClose, onDelete }: SessionD
               {/* Analysis Tab */}
               {activeTab === "analysis" && (
                 <>
-                  {session.analysis ? (
+                  {session.assessmentTypeId === "adaptability-index" ? (
+                    session.adaptabilityAnalysis ? (
+                      <AdaptabilitySessionView analysis={session.adaptabilityAnalysis} />
+                    ) : (
+                      <div className="text-center py-12 text-white/30">
+                        <p>No adaptability analysis available yet</p>
+                        <p className="text-xs mt-1 text-white/20">Complete the session to generate analysis</p>
+                      </div>
+                    )
+                  ) : session.analysis ? (
                     <div className="space-y-4">
                       {/* Overall Score */}
                       <div className="bg-white/[0.03] rounded-xl p-4 flex items-center gap-4">

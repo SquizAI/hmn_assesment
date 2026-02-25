@@ -25,6 +25,7 @@ import { isEmailEnabled, sendInvitationEmail, sendBatchInvitationEmails, sendCom
 import { initGraphSchema, runQuery } from "./neo4j.js";
 import { getCompanyIntelligence, getAssessmentSummary, getCrossCompanyBenchmarks, getThemeMap, getGrowthTimeline, getNetworkGraph } from "./graph-queries.js";
 import { seedAllSessionsToGraph, extractAndSyncIntelligence } from "./graph-sync.js";
+import { runAdaptabilityAnalysis, generateAdaptabilityProfile } from "./adaptability-scoring.js";
 
 dotenv.config();
 
@@ -884,6 +885,170 @@ app.post("/api/interview/start", async (req, res) => {
   }
 });
 
+// --- Streaming AI Conversation Endpoint ---
+
+app.post("/api/interview/conversation-stream", async (req, res) => {
+  try {
+    const { sessionId, questionId, answer, conversationHistory: clientHistory } = req.body;
+
+    const session = await loadSession(sessionId);
+    if (!session) { res.status(404).json({ error: "Session not found" }); return; }
+
+    const { questions: bankQuestions, assessment } = await getAssessmentQuestionBank(session);
+    const currentQuestion = getQuestionFromBank(bankQuestions, questionId) || getQuestionById(questionId);
+    if (!currentQuestion) { res.status(404).json({ error: "Question not found" }); return; }
+
+    const history = clientHistory || [];
+    history.push({ role: "user", content: String(answer), timestamp: new Date().toISOString(), questionId });
+
+    const userTurns = history.filter((m: { role: string }) => m.role === "user").length;
+    const MAX_CONVERSATION_TURNS = 5;
+
+    // Set up SSE headers
+    res.setHeader("Content-Type", "text/event-stream");
+    res.setHeader("Cache-Control", "no-cache");
+    res.setHeader("Connection", "keep-alive");
+    res.setHeader("X-Accel-Buffering", "no"); // Disable nginx buffering
+    res.flushHeaders();
+
+    let aiResponse: string;
+
+    if (userTurns >= MAX_CONVERSATION_TURNS) {
+      aiResponse = "Thank you for sharing all of that — really helpful context. [QUESTION_COMPLETE]";
+      res.write(`data: ${JSON.stringify({ type: "token", text: aiResponse.replace("[QUESTION_COMPLETE]", "").trim() })}\n\n`);
+    } else {
+      // Stream the follow-up response
+      aiResponse = await streamFollowUp(res, session as unknown as Record<string, unknown>, currentQuestion, history, assessment);
+    }
+
+    // Check completion
+    const farewellPatterns = /\b(goodbye|good\s*bye|take care|talk soon|thanks for (?:sharing|being|your time)|appreciate you|that['']s (?:all|everything)|we['']re (?:all )?done)\b/i;
+    const isExplicitComplete = aiResponse.includes("[QUESTION_COMPLETE]");
+    const isFarewellComplete = !isExplicitComplete && farewellPatterns.test(aiResponse) && userTurns >= 2;
+    const isComplete = isExplicitComplete || isFarewellComplete;
+
+    const cleanResponse = aiResponse.replace("[QUESTION_COMPLETE]", "").replace(/\*\*\[.*?\]\*\*\s*/g, "").trim();
+
+    if (!isComplete) {
+      history.push({ role: "assistant", content: cleanResponse, timestamp: new Date().toISOString(), questionId });
+      res.write(`data: ${JSON.stringify({ type: "done", isComplete: false, conversationHistory: history })}\n\n`);
+      res.end();
+      return;
+    }
+
+    // --- Conversation complete: finalize ---
+    const fullAnswer = history.filter((m: { role: string }) => m.role === "user").map((m: { content: string }) => m.content).join("\n");
+
+    // Remove any existing response for this question
+    const existingIdx = (session.responses as Array<{ questionId: string }>).findIndex((r) => r.questionId === questionId);
+    if (existingIdx !== -1) session.responses.splice(existingIdx, 1);
+
+    // Run confidence + next question in PARALLEL
+    const answeredIds = new Set(session.responses.map((r: { questionId: string }) => r.questionId));
+    answeredIds.add(questionId); // include this one
+    const remaining = bankQuestions.filter((q) => !answeredIds.has(q.id as string));
+    const smartRemaining = filterDeducibleQuestions(remaining, session);
+    const questionsForAI = smartRemaining.length > 0 ? smartRemaining : remaining;
+
+    const [confidence, selection] = await Promise.all([
+      analyzeResponseConfidence(fullAnswer, currentQuestion.text as string, session.responses),
+      remaining.length > 0 ? selectNextQuestion(questionsForAI, session).catch(() => null) : Promise.resolve(null),
+    ]);
+
+    session.responses.push({
+      questionId,
+      questionText: currentQuestion.text,
+      inputType: currentQuestion.inputType,
+      answer: fullAnswer,
+      timestamp: new Date().toISOString(),
+      aiFollowUps: history
+        .filter((m: { role: string }) => m.role === "assistant")
+        .map((m: { content: string; timestamp: string }, i: number) => ({
+          question: m.content,
+          answer: history.filter((c: { role: string }) => c.role === "user")[i + 1]?.content || "",
+          timestamp: m.timestamp,
+        })),
+      confidenceIndicators: confidence,
+    });
+    session.conversationHistory.push(...history);
+
+    if (remaining.length === 0) {
+      session.status = "completed";
+      await saveSession(session);
+      const completionAssessmentName = (assessment as Record<string, unknown>)?.name as string || "HMN Assessment";
+      const completionTypeId = (session.assessmentTypeId as string) || "ai-readiness";
+
+      // Fire-and-forget completion email
+      const participant = session.participant as { name?: string; email?: string };
+      if (isEmailEnabled() && participant?.email) {
+        sendCompletionEmail({ to: participant.email, participantName: participant.name || "there", assessmentName: completionAssessmentName }).catch(() => {});
+      }
+
+      res.write(`data: ${JSON.stringify({ type: "done", isComplete: true, responseType: "complete", session, assessmentTypeId: completionTypeId, assessmentName: completionAssessmentName, conversationHistory: history })}\n\n`);
+      res.end();
+      return;
+    }
+
+    // Resolve next question
+    let nextQuestion: Record<string, unknown> | undefined;
+    if (selection?.questionId) {
+      const selected = getQuestionFromBank(bankQuestions, selection.questionId) || getQuestionById(selection.questionId);
+      if (selected) {
+        const adaptedText = selection.adaptedText && selection.adaptedText.trim().length > 3 ? selection.adaptedText : null;
+        nextQuestion = { ...selected, text: adaptedText || (selected.text as string) };
+      }
+    }
+    if (!nextQuestion) nextQuestion = remaining[0];
+
+    // Apply [Company] substitution
+    const companyName = (session.participant as { company?: string })?.company || "";
+    if (companyName && nextQuestion?.text) {
+      nextQuestion = { ...nextQuestion, text: substituteCompanyName(nextQuestion.text as string, companyName) };
+    }
+
+    session.currentQuestionIndex = bankQuestions.findIndex((q) => q.id === nextQuestion!.id);
+    session.currentPhase = nextQuestion.phase;
+    session.currentSection = nextQuestion.section;
+    await saveSession(session);
+
+    // Compute skipped IDs
+    const autoIds = session.responses.filter((r: { autoPopulated?: boolean }) => r.autoPopulated).map((r: { questionId: string }) => r.questionId);
+    const respondFilteredOutIds = remaining.filter((q) => !smartRemaining.some((sq) => sq.id === q.id)).map((q) => q.id as string);
+    const respondSkippedIds = [...new Set([...autoIds, ...respondFilteredOutIds])];
+
+    const respondBankIdSet = new Set(bankQuestions.map((q) => q.id as string));
+    const respondBankAnsweredIds = new Set(session.responses.filter((r: { questionId: string }) => respondBankIdSet.has(r.questionId)).map((r: { questionId: string }) => r.questionId));
+    const respondBankAnswered = respondBankAnsweredIds.size;
+    const respondBankSkipped = respondSkippedIds.filter((id) => respondBankIdSet.has(id)).length;
+    const respondEffectiveTotal = bankQuestions.length - respondBankSkipped;
+
+    res.write(`data: ${JSON.stringify({
+      type: "done",
+      isComplete: true,
+      responseType: "next_question",
+      currentQuestion: nextQuestion,
+      skippedQuestionIds: respondSkippedIds,
+      conversationHistory: history,
+      progress: {
+        questionNumber: respondBankAnswered - respondBankSkipped + 1,
+        totalQuestions: respondEffectiveTotal,
+        phase: nextQuestion.phase,
+        section: nextQuestion.section,
+        completedPercentage: Math.round((respondBankAnswered / Math.max(bankQuestions.length, 1)) * 100),
+      },
+    })}\n\n`);
+    res.end();
+  } catch (err) {
+    console.error("Conversation stream error:", err);
+    try {
+      res.write(`data: ${JSON.stringify({ type: "error", message: "Something went wrong. Please try again." })}\n\n`);
+      res.end();
+    } catch {
+      // Headers already sent, can't respond
+    }
+  }
+});
+
 // --- Interview Respond ---
 
 app.post("/api/interview/respond", async (req, res) => {
@@ -1005,19 +1170,24 @@ app.post("/api/interview/respond", async (req, res) => {
       });
     } else {
       // --- Non-conversation response ---
-      let confidence = { specificity: 0.8, emotionalCharge: 0.5, consistency: 0.8 };
+      // Defer confidence analysis — run it in parallel with next question selection below
+      let confidencePromise: Promise<{ specificity: number; emotionalCharge: number; consistency: number }> | null = null;
       if (currentQuestion.inputType === "open_text" || currentQuestion.inputType === "voice") {
-        confidence = await analyzeResponseConfidence(String(answer), currentQuestion.text as string, session.responses);
+        confidencePromise = analyzeResponseConfidence(String(answer), currentQuestion.text as string, session.responses);
       }
 
+      // Push response with placeholder confidence (updated below after parallel resolve)
       session.responses.push({
         questionId,
         questionText: currentQuestion.text,
         inputType: currentQuestion.inputType,
         answer,
         timestamp: new Date().toISOString(),
-        confidenceIndicators: confidence,
+        confidenceIndicators: { specificity: 0.8, emotionalCharge: 0.5, consistency: 0.8 },
       });
+
+      // Store the promise to resolve after next question selection
+      (session as unknown as Record<string, unknown>)._pendingConfidence = { promise: confidencePromise, responseIndex: session.responses.length - 1 };
     }
 
     // --- Next Question ---
@@ -1025,6 +1195,14 @@ app.post("/api/interview/respond", async (req, res) => {
     const remaining = bankQuestions.filter((q) => !answeredIds.has(q.id as string));
 
     if (remaining.length === 0) {
+      // Resolve any pending confidence before saving
+      const pending = (session as unknown as Record<string, unknown>)._pendingConfidence as { promise: Promise<{ specificity: number; emotionalCharge: number; consistency: number }> | null; responseIndex: number } | undefined;
+      if (pending?.promise) {
+        const confidence = await pending.promise;
+        (session.responses[pending.responseIndex] as unknown as Record<string, unknown>).confidenceIndicators = confidence;
+      }
+      delete (session as unknown as Record<string, unknown>)._pendingConfidence;
+
       session.status = "completed";
       await saveSession(session);
 
@@ -1049,25 +1227,32 @@ app.post("/api/interview/respond", async (req, res) => {
     const respondFilteredOutIds = remaining.filter((q) => !smartRemaining.some((sq) => sq.id === q.id)).map((q) => q.id as string);
     const questionsForAI = smartRemaining.length > 0 ? smartRemaining : remaining;
 
-    // AI-powered question selection (with deduction context)
+    // Run next question selection + pending confidence in PARALLEL
+    const pending = (session as unknown as Record<string, unknown>)._pendingConfidence as { promise: Promise<{ specificity: number; emotionalCharge: number; consistency: number }> | null; responseIndex: number } | undefined;
+
+    const [selection, resolvedConfidence] = await Promise.all([
+      selectNextQuestion(questionsForAI, session).catch(() => null),
+      pending?.promise ?? Promise.resolve(null),
+    ]);
+
+    // Update confidence if we had a pending promise
+    if (resolvedConfidence && pending) {
+      (session.responses[pending.responseIndex] as unknown as Record<string, unknown>).confidenceIndicators = resolvedConfidence;
+    }
+    delete (session as unknown as Record<string, unknown>)._pendingConfidence;
+
+    // Resolve next question from selection
     let nextQuestion: Record<string, unknown> | undefined;
-    try {
-      const selection = await selectNextQuestion(questionsForAI, session);
-      if (selection?.questionId) {
-        // Validate the returned ID exists in the question bank
-        const selected = getQuestionFromBank(bankQuestions, selection.questionId) || getQuestionById(selection.questionId);
-        if (selected) {
-          // Only use adaptedText if it's a real sentence (not placeholder like "...")
-          const adaptedText = selection.adaptedText && selection.adaptedText.trim().length > 3
-            ? selection.adaptedText
-            : null;
-          nextQuestion = { ...selected, text: adaptedText || (selected.text as string) };
-        } else {
-          console.warn(`[INTERVIEW] selectNextQuestion returned unknown ID: ${selection.questionId}, falling back`);
-        }
+    if (selection?.questionId) {
+      const selected = getQuestionFromBank(bankQuestions, selection.questionId) || getQuestionById(selection.questionId);
+      if (selected) {
+        const adaptedText = selection.adaptedText && selection.adaptedText.trim().length > 3
+          ? selection.adaptedText
+          : null;
+        nextQuestion = { ...selected, text: adaptedText || (selected.text as string) };
+      } else {
+        console.warn(`[INTERVIEW] selectNextQuestion returned unknown ID: ${selection.questionId}, falling back`);
       }
-    } catch (selErr) {
-      console.error("[INTERVIEW] selectNextQuestion failed:", (selErr as Error).message);
     }
 
     // Fallback: pick first remaining question
@@ -1219,6 +1404,91 @@ app.get("/api/interview/:sessionId/response/:questionId", async (req, res) => {
   res.json({ response, question });
 });
 
+// --- VAPI Voice Context ---
+
+app.post("/api/vapi/context", async (req, res) => {
+  try {
+    const { sessionId, questionId } = req.body;
+
+    const session = await loadSession(sessionId);
+    if (!session) { res.status(404).json({ error: "Session not found" }); return; }
+
+    const { questions: bankQuestions } = await getAssessmentQuestionBank(session);
+    const question = getQuestionFromBank(bankQuestions, questionId) || getQuestionById(questionId);
+    if (!question) { res.status(404).json({ error: "Question not found" }); return; }
+
+    const participant = session.participant as { name?: string; role?: string; company?: string; industry?: string; teamSize?: string };
+    const responses = session.responses as Array<{ questionText?: string; answer?: unknown }>;
+
+    // Build context from prior responses
+    const contextSummary = responses.length > 0
+      ? responses.slice(-5).map((r) =>
+          `Q: ${r.questionText}\nA: ${typeof r.answer === "object" ? JSON.stringify(r.answer) : r.answer}`
+        ).join("\n\n")
+      : "This is the first question — no prior responses yet.";
+
+    const qText = (question as { text?: string }).text || "";
+    const qSubtext = (question as { subtext?: string }).subtext || "";
+    const qSection = (question as { section?: string }).section || "";
+    const qPhase = (question as { phase?: string }).phase || "";
+    const qDimensions = ((question as { scoringDimensions?: string[] }).scoringDimensions || []).join(", ");
+    const qFollowUp = (question as { aiFollowUpPrompt?: string }).aiFollowUpPrompt || "";
+
+    const systemPrompt = `You are Vappy, an expert voice interviewer for HMN (Human Machine Network), conducting an AI readiness diagnostic assessment via voice.
+
+PARTICIPANT CONTEXT:
+- Name: ${participant.name || ""}
+- Role: ${participant.role || ""}
+- Company: ${participant.company || ""}
+- Industry: ${participant.industry || ""}
+- Team Size: ${participant.teamSize || ""}
+
+RECENT PRIOR RESPONSES:
+${contextSummary}
+
+CURRENT QUESTION:
+"${qText}"
+${qSubtext ? `Context: ${qSubtext}` : ""}
+- Section: ${qSection}
+- Phase: ${qPhase}
+- Scoring Focus: ${qDimensions}
+
+${qFollowUp ? `FOLLOW-UP GUIDANCE:\n${qFollowUp}` : ""}
+
+YOUR PERSONALITY & RULES:
+- You are warm, direct, and genuinely curious — like a sharp consultant who actually cares
+- You speak naturally and conversationally — never robotic or overly formal
+- You call them by name occasionally
+- You ask ONE follow-up at a time, never stack questions
+- Listen for specificity: names, numbers, tools, real examples
+- Listen for contradictions with prior answers
+- Listen for emotional shifts — energy, frustration, excitement
+- Keep your responses SHORT for voice — 1-2 sentences max before asking your follow-up
+- Don't lecture, don't teach, don't summarize back to them excessively
+- When the topic feels explored (usually 2-3 exchanges), wrap up naturally and say "Thank you, let's move on."
+- Never break character. You are a human interviewer having a real conversation.
+- Do NOT say "as an AI" or reference being artificial in any way.`;
+
+    let firstMessage: string;
+    if (responses.length === 0) {
+      firstMessage = `Hey ${participant.name || "there"}, I'm Vappy — I'll be walking you through your assessment today. This is going to be a real conversation, not a survey. Ready to dive in? Here's what I want to start with: ${qText}`;
+    } else {
+      firstMessage = `Great, let's keep going. ${qText}`;
+    }
+
+    res.json({
+      systemPrompt,
+      firstMessage,
+      questionId: (question as { id?: string }).id,
+      inputType: (question as { inputType?: string }).inputType,
+      isConversation: (question as { inputType?: string }).inputType === "ai_conversation",
+    });
+  } catch (err) {
+    console.error("[VAPI Context] Error:", err);
+    res.status(500).json({ error: "Failed to build voice context" });
+  }
+});
+
 // --- Analyze ---
 
 app.post("/api/interview/analyze", async (req, res) => {
@@ -1235,10 +1505,23 @@ app.post("/api/interview/analyze", async (req, res) => {
       return;
     }
 
-    // Load assessment-specific config for analysis prompt
-    const { assessment } = await getAssessmentQuestionBank(session);
-    const analysis = await runCascadeAnalysis(session, assessment);
-    session.analysis = analysis;
+    const assessmentTypeId = (session.assessmentTypeId as string) || "ai-readiness";
+
+    if (assessmentTypeId === "adaptability-index") {
+      // Run the adaptability-specific scoring engine
+      const client = getAnthropicClient();
+      const adaptAnalysis = await runAdaptabilityAnalysis(client, session);
+      const participant = session.participant as { name: string; role: string; company: string; industry: string };
+      const profile = await generateAdaptabilityProfile(client, adaptAnalysis, participant);
+      session.analysis = { ...adaptAnalysis, profile } as unknown as Record<string, unknown>;
+      session.adaptabilityAnalysis = adaptAnalysis;
+    } else {
+      // Load assessment-specific config for analysis prompt
+      const { assessment } = await getAssessmentQuestionBank(session);
+      const analysis = await runCascadeAnalysis(session, assessment);
+      session.analysis = analysis;
+    }
+
     session.status = "analyzed";
     await saveSession(session);
 
@@ -1258,6 +1541,33 @@ app.post("/api/interview/analyze", async (req, res) => {
   } catch (err) {
     console.error("Analysis error:", err);
     res.status(500).json({ error: "Analysis failed" });
+  }
+});
+
+// --- Adaptability Index Profile ---
+
+app.get("/api/adaptability/profile/:sessionId", async (req, res) => {
+  try {
+    const session = await loadSession(req.params.sessionId);
+    if (!session) {
+      res.status(404).json({ error: "Session not found" });
+      return;
+    }
+
+    if (!session.analysis) {
+      res.status(400).json({ error: "Session has not been analyzed yet" });
+      return;
+    }
+
+    // Return the analysis and profile data
+    // The profile is generated during analysis for adaptability-index assessments
+    res.json({
+      analysis: session.analysis,
+      profile: session.analysis.profile || session.analysis,
+    });
+  } catch (err) {
+    console.error("Profile fetch error:", err);
+    res.status(500).json({ error: "Failed to load profile" });
   }
 });
 
@@ -1335,6 +1645,93 @@ function getResearchContext(session: Record<string, unknown>): string {
   if (research.interviewAngles?.length) parts.push(`Suggested angles: ${research.interviewAngles.join("; ")}`);
 
   return parts.join("\n");
+}
+
+/** Stream AI follow-up response via SSE, returning the full accumulated text */
+async function streamFollowUp(
+  sseRes: express.Response,
+  session: Record<string, unknown>,
+  currentQuestion: Record<string, unknown>,
+  conversationHistory: Array<{ role: string; content: string }>,
+  assessment?: Record<string, unknown> | null,
+): Promise<string> {
+  const client = getAnthropicClient();
+  const participant = session.participant as { name: string; role: string; company: string; industry: string; teamSize: string };
+  const responses = session.responses as Array<{ questionText: string; answer: unknown }>;
+  const researchContext = getResearchContext(session);
+
+  const recentResponses = responses.slice(-6);
+  const contextSummary = recentResponses.length > 0
+    ? recentResponses.map((r) => {
+        const ans = typeof r.answer === "object" ? JSON.stringify(r.answer) : String(r.answer);
+        return `Q: ${r.questionText}\nA: ${ans.length > 200 ? ans.slice(0, 200) + "..." : ans}`;
+      }).join("\n\n")
+    : "No prior responses yet.";
+
+  const assessmentInterviewPrompt = assessment?.interviewSystemPrompt as string | undefined;
+  const defaultInterviewRole = `YOUR ROLE:
+- Warm, professional, genuinely curious
+- Ask ONE follow-up at a time
+- Dig deeper based on what they actually said
+- Reference specific things you know about them/their company when relevant
+- Keep responses concise (2-3 sentences before your follow-up)
+- When this topic feels complete (usually 2-3 exchanges), say: [QUESTION_COMPLETE]
+- Never break character. You are a human interviewer.
+- Do NOT include internal annotations, bracketed notes, or markdown formatting.`;
+
+  const systemPrompt = `${assessmentInterviewPrompt || `You are an expert interviewer for HMN (Human Machine Network), conducting an AI readiness assessment.`}
+
+PARTICIPANT: ${participant.name}, ${participant.role} at ${participant.company} (${participant.industry}, team size: ${participant.teamSize})
+${researchContext}
+
+PRIOR RESPONSES:
+${contextSummary}
+
+CURRENT QUESTION: ${currentQuestion.section} / ${currentQuestion.phase}
+SCORING: ${(currentQuestion.scoringDimensions as string[])?.join(", ") || "general"}
+
+${currentQuestion.aiFollowUpPrompt ? `FOLLOW-UP GUIDANCE:\n${currentQuestion.aiFollowUpPrompt}` : ""}
+
+${assessmentInterviewPrompt ? "" : defaultInterviewRole}`;
+
+  const messages = conversationHistory
+    .filter((m) => m.role !== "system")
+    .slice(-10)
+    .map((m) => ({
+      role: m.role as "user" | "assistant",
+      content: m.content.length > 2000 ? m.content.slice(0, 2000) + "..." : m.content,
+    }));
+
+  let fullText = "";
+
+  try {
+    const stream = client.messages.stream({
+      model: MODEL,
+      max_tokens: 500,
+      system: systemPrompt,
+      messages,
+    });
+
+    for await (const event of stream) {
+      if (event.type === "content_block_delta" && (event.delta as { type: string; text?: string }).type === "text_delta") {
+        const text = (event.delta as { text: string }).text;
+        fullText += text;
+        // Strip [QUESTION_COMPLETE] and annotations from streamed tokens
+        const cleanToken = text.replace("[QUESTION_COMPLETE]", "").replace(/\*\*\[.*?\]\*\*/g, "");
+        if (cleanToken) {
+          sseRes.write(`data: ${JSON.stringify({ type: "token", text: cleanToken })}\n\n`);
+        }
+      }
+    }
+  } catch (err) {
+    console.error("[STREAM] Follow-up streaming error:", err);
+    if (!fullText) {
+      fullText = "I appreciate you sharing that. Could you tell me more about your experience? [QUESTION_COMPLETE]";
+      sseRes.write(`data: ${JSON.stringify({ type: "token", text: fullText.replace("[QUESTION_COMPLETE]", "") })}\n\n`);
+    }
+  }
+
+  return fullText;
 }
 
 async function generateFollowUp(
@@ -1815,6 +2212,170 @@ app.get("/api/admin/dimensions", requireAdmin, async (req, res) => {
     res.json({ dimensions: await getDimensionAveragesAdmin(filters) });
   } catch (err) { console.error("Admin dimensions error:", err); res.status(500).json({ error: "Failed to get dimensions" }); }
 });
+
+// --- Adaptability Calibration ---
+
+// Trigger a calibration run (re-scores a sample of sessions and computes agreement)
+app.post("/api/admin/calibration/run", requireAdmin, async (req, res) => {
+  try {
+    const maxSessions = Math.min(Number(req.body.maxSessions) || 10, 50);
+    const client = getAnthropicClient();
+
+    // Load completed adaptability-index sessions
+    const allSessions = await listAllSessions();
+    const adaptSessions = allSessions
+      .filter((s: Record<string, unknown>) =>
+        s.assessmentTypeId === "adaptability-index" &&
+        s.status === "analyzed" &&
+        s.analysis
+      )
+      .slice(0, maxSessions);
+
+    if (adaptSessions.length === 0) {
+      res.json({ error: "No analyzed adaptability sessions found", report: null });
+      return;
+    }
+
+    // Dual-score each session: pass1 = stored, pass2 = fresh re-score
+    const pairs: { sessionId: string; pass1: Record<string, number>; pass2: Record<string, number> }[] = [];
+
+    for (const session of adaptSessions) {
+      try {
+        const pass1Scores = extractAllMarkerScores(session.analysis as Record<string, unknown>);
+        const pass2Analysis = await runAdaptabilityAnalysis(client, session as Record<string, unknown>);
+        const pass2Scores = extractAllMarkerScores(pass2Analysis as unknown as Record<string, unknown>);
+        pairs.push({ sessionId: session.id as string, pass1: pass1Scores, pass2: pass2Scores });
+      } catch (err) {
+        console.error(`Calibration scoring failed for session ${session.id}:`, err);
+      }
+    }
+
+    if (pairs.length === 0) {
+      res.json({ error: "All re-scoring attempts failed", report: null });
+      return;
+    }
+
+    // Compute agreement metrics
+    const allMarkers = Object.keys(pairs[0].pass1);
+    const markerAgreement: Record<string, { kappa: number; weightedKappa: number; exactAgreement: number; withinOneAgreement: number; n: number }> = {};
+
+    for (const marker of allMarkers) {
+      const r1 = pairs.map((p) => p.pass1[marker] ?? 0);
+      const r2 = pairs.map((p) => p.pass2[marker] ?? 0);
+      const exact = r1.filter((v, i) => v === r2[i]).length / r1.length;
+      const withinOne = r1.filter((v, i) => Math.abs(v - r2[i]) <= 1).length / r1.length;
+      markerAgreement[marker] = {
+        kappa: computeKappa(r1, r2),
+        weightedKappa: computeWeightedKappa(r1, r2),
+        exactAgreement: Math.round(exact * 100),
+        withinOneAgreement: Math.round(withinOne * 100),
+        n: r1.length,
+      };
+    }
+
+    // Overall
+    const allR1 = allMarkers.flatMap((m) => pairs.map((p) => p.pass1[m] ?? 0));
+    const allR2 = allMarkers.flatMap((m) => pairs.map((p) => p.pass2[m] ?? 0));
+    const overallKappa = computeKappa(allR1, allR2);
+    const overallWeighted = computeWeightedKappa(allR1, allR2);
+
+    const report = {
+      runDate: new Date().toISOString(),
+      sessionCount: pairs.length,
+      sessionIds: pairs.map((p) => p.sessionId),
+      markerAgreement,
+      overallAgreement: {
+        kappa: overallKappa,
+        weightedKappa: overallWeighted,
+        passesThreshold: overallWeighted >= 0.7,
+      },
+      driftIndicators: {
+        markersBelow07: allMarkers.filter((m) => markerAgreement[m].weightedKappa < 0.7),
+        markersBelow05: allMarkers.filter((m) => markerAgreement[m].weightedKappa < 0.5),
+      },
+    };
+
+    res.json({ report });
+  } catch (err) {
+    console.error("Calibration run error:", err);
+    res.status(500).json({ error: "Calibration run failed" });
+  }
+});
+
+// Helper: extract all marker scores from an analysis object
+function extractAllMarkerScores(analysis: Record<string, unknown>): Record<string, number> {
+  const scores: Record<string, number> = {};
+  const pillars = [
+    { key: "pillar1", codes: ["1A", "1B", "1C", "1D"] },
+    { key: "pillar2", codes: ["2A", "2B", "2C", "2D"] },
+    { key: "pillar3", codes: ["3A", "3B", "3C", "3D"] },
+    { key: "pillar4", codes: ["4A", "4B", "4C", "4D"] },
+  ];
+  for (const p of pillars) {
+    const pillarData = analysis[p.key] as Record<string, unknown> | undefined;
+    const markers = pillarData?.markers as Record<string, { score: number }> | undefined;
+    if (markers) {
+      for (const code of p.codes) {
+        scores[code] = markers[code]?.score ?? 0;
+      }
+    }
+  }
+  // Process markers
+  const proc = analysis.processScores as Record<string, Record<string, { score: number }>> | undefined;
+  if (proc) {
+    for (const [, pillarProc] of Object.entries(proc)) {
+      for (const [code, marker] of Object.entries(pillarProc)) {
+        scores[code] = marker?.score ?? 0;
+      }
+    }
+  }
+  return scores;
+}
+
+// Cohen's kappa (unweighted)
+function computeKappa(r1: number[], r2: number[]): number {
+  if (r1.length === 0) return 0;
+  const categories = [...new Set([...r1, ...r2])].sort();
+  if (categories.length <= 1) return 1;
+  const n = r1.length;
+  const matrix: Record<string, Record<string, number>> = {};
+  for (const c1 of categories) {
+    matrix[c1] = {};
+    for (const c2 of categories) matrix[c1][c2] = 0;
+  }
+  for (let i = 0; i < n; i++) matrix[r1[i]][r2[i]]++;
+  const po = categories.reduce((sum, c) => sum + matrix[c][c], 0) / n;
+  const pe = categories.reduce((sum, c) => {
+    const row = categories.reduce((s, c2) => s + matrix[c][c2], 0) / n;
+    const col = categories.reduce((s, c2) => s + matrix[c2][c], 0) / n;
+    return sum + row * col;
+  }, 0);
+  return pe >= 1 ? 1 : (po - pe) / (1 - pe);
+}
+
+// Weighted kappa (quadratic weights)
+function computeWeightedKappa(r1: number[], r2: number[]): number {
+  if (r1.length === 0) return 0;
+  const categories = [...new Set([...r1, ...r2])].sort();
+  if (categories.length <= 1) return 1;
+  const k = categories.length;
+  const n = r1.length;
+  const catIdx: Record<number, number> = {};
+  categories.forEach((c, i) => (catIdx[c] = i));
+  const obs: number[][] = Array.from({ length: k }, () => Array(k).fill(0));
+  for (let i = 0; i < n; i++) obs[catIdx[r1[i]]][catIdx[r2[i]]]++;
+  const rowSums = obs.map((row) => row.reduce((a, b) => a + b, 0));
+  const colSums = Array.from({ length: k }, (_, j) => obs.reduce((a, row) => a + row[j], 0));
+  let wo = 0, we = 0;
+  for (let i = 0; i < k; i++) {
+    for (let j = 0; j < k; j++) {
+      const w = 1 - ((i - j) * (i - j)) / ((k - 1) * (k - 1));
+      wo += w * (obs[i][j] / n);
+      we += w * ((rowSums[i] * colSums[j]) / (n * n));
+    }
+  }
+  return we >= 1 ? 1 : (wo - we) / (1 - we);
+}
 
 // Company CRM endpoints
 app.get("/api/admin/companies", requireAdmin, async (req, res) => {
@@ -2748,6 +3309,236 @@ app.get("/api/admin/graph/status", requireAdmin, async (_req, res) => {
   } catch (err) {
     console.error("[GRAPH] Status check error:", err);
     res.json({ enabled: false, nodeCount: 0, relCount: 0 });
+  }
+});
+
+// ============================================================
+// VAPI OUTBOUND CALLING
+// ============================================================
+
+const VAPI_API_URL = "https://api.vapi.ai/call";
+const VAPI_WEBHOOK_URL = `${process.env.APP_URL || "http://localhost:3001"}/api/vapi/webhook`;
+
+function buildOutboundSystemPrompt(participant: {
+  name?: string; role?: string; company?: string; industry?: string; teamSize?: string;
+}, questions: Array<Record<string, unknown>>): string {
+  const name = participant.name || "there";
+  const company = participant.company || "your company";
+  const role = participant.role || "your role";
+  const industry = participant.industry || "your industry";
+  const teamSize = participant.teamSize || "your team";
+
+  // Build question blocks grouped by phase/section
+  const questionBlocks = questions.map((q) => {
+    const lines: string[] = [];
+    lines.push(`[SECTION: ${q.section} | QUESTION: ${q.id}]`);
+    if ((q.weight as number) >= 0.9) lines.push(`** HIGH PRIORITY (weight: ${q.weight}) **`);
+    lines.push(`Ask: "${q.text}"`);
+    if (q.subtext) lines.push(`Context: ${q.subtext}`);
+    if (q.inputType === "slider") {
+      lines.push(`[SLIDER: Convert to verbal scale]`);
+    } else if (q.inputType === "buttons" && Array.isArray(q.options)) {
+      const labels = (q.options as Array<{ label: string }>).map((o) => o.label).join(", ");
+      lines.push(`[CHOICES: ${labels}]`);
+    } else if (q.inputType === "ai_conversation") {
+      lines.push(`[CONVERSATION: Deep-dive, aim for 2-3 exchanges]`);
+    }
+    if (q.aiFollowUpPrompt) lines.push(`Follow-up guidance: ${q.aiFollowUpPrompt}`);
+    if (Array.isArray(q.scoringDimensions) && q.scoringDimensions.length > 0) {
+      lines.push(`Scoring: ${(q.scoringDimensions as string[]).join(", ")}`);
+    }
+    return lines.join("\n");
+  }).join("\n\n");
+
+  return `You are Vappy, an AI assessment interviewer for HMN Cascade — a strategic AI readiness assessment built by HumanGlue.
+
+=== YOUR PERSONALITY ===
+You are warm, direct, and genuinely curious. Think: a sharp management consultant who actually cares. You speak naturally and conversationally — never robotic. You listen deeply and respond to what people ACTUALLY say.
+
+=== VOICE OUTPUT RULES ===
+This is a VOICE conversation. Write all numbers as spoken words. Avoid abbreviations, URLs, or special characters.
+
+=== PARTICIPANT CONTEXT ===
+Name: ${name}
+Company: ${company}
+Role: ${role}
+Industry: ${industry}
+Team Size: ${teamSize}
+
+=== CRITICAL: SECTION MARKERS ===
+Markers like [SECTION: ... | QUESTION: ...] are for internal tracking. NEVER say them aloud.
+
+=== HOW TO HANDLE QUESTION TYPES ===
+- Slider questions: Ask conversationally, never recite scales robotically
+- Button/choice questions: Frame naturally, don't list all options mechanically
+- AI conversation questions: Heart of assessment, aim for 2-3 exchanges per question
+- Open text: Simple factual, ask and move on
+
+=== TRANSITIONS ===
+Use natural transitions between sections. Between phases, acknowledge the shift.
+
+=== THE QUESTIONS ===
+${questionBlocks}
+
+=== CLOSING ===
+After the final question, thank them warmly. Mention their responses will be analyzed for a personalized profile. Someone from HumanGlue will follow up.
+
+=== RULES ===
+1. NEVER read section markers aloud
+2. NEVER skip an entire section
+3. Keep pace conversational
+4. Listen for contradictions between sections
+5. Use their words in follow-ups
+6. NEVER break character
+7. Pronounce "HMN" as "human"`;
+}
+
+// Initiate outbound call to a session participant
+app.post("/api/admin/calls/initiate", requireAdmin, async (req, res) => {
+  try {
+    const { sessionId, phone } = req.body;
+    if (!sessionId || !phone) {
+      res.status(400).json({ error: "sessionId and phone are required" });
+      return;
+    }
+
+    const session = await loadSession(sessionId);
+    if (!session) { res.status(404).json({ error: "Session not found" }); return; }
+
+    const participant = session.participant as { name?: string; role?: string; company?: string; industry?: string; teamSize?: string };
+    const { questions: bankQuestions } = await getAssessmentQuestionBank(session as unknown as Record<string, unknown>);
+
+    // Build assistant config with full question bank
+    const systemPrompt = buildOutboundSystemPrompt(participant, bankQuestions);
+    const firstName = (participant.name || "there").split(" ")[0];
+
+    const assistantConfig = {
+      name: "Vappy - HMN Cascade Assessment",
+      firstMessage: `Hey ${firstName}! This is Vappy from HumanGlue. Thanks for making time for your AI readiness assessment — I know you're busy. We've got about twenty to thirty minutes together, and I promise this won't feel like a survey. Think of it more like a strategic conversation about where you and your organization stand with AI. Sound good?`,
+      model: {
+        provider: "anthropic",
+        model: "claude-sonnet-4-6",
+        messages: [{ role: "system", content: systemPrompt }],
+      },
+      voice: {
+        provider: "11labs",
+        voiceId: "XrExE9yKIg1WjnnlVkGX",
+        stability: 0.55,
+        similarityBoost: 0.8,
+        speed: 0.9,
+      },
+      serverUrl: VAPI_WEBHOOK_URL,
+      silenceTimeoutSeconds: 45,
+      maxDurationSeconds: 2400,
+      backgroundDenoisingEnabled: true,
+      modelOutputInMessagesEnabled: true,
+      endCallMessage: "Thank you so much for your time and honesty today. Your responses are going to give us a really clear picture. Someone from HumanGlue will be in touch soon with your personalized AI readiness profile. Take care!",
+    };
+
+    // Call VAPI API
+    const vapiRes = await fetch(VAPI_API_URL, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${process.env.VAPI_PRIVATE_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        assistant: assistantConfig,
+        phoneNumberId: process.env.VAPI_PHONE_NUMBER_ID,
+        customer: { number: phone, name: participant.name || "Participant" },
+      }),
+    });
+
+    if (!vapiRes.ok) {
+      const errorBody = await vapiRes.text();
+      console.error("[VAPI] Call initiation failed:", vapiRes.status, errorBody);
+      res.status(502).json({ error: `VAPI error: ${vapiRes.status}`, details: errorBody });
+      return;
+    }
+
+    const vapiData = await vapiRes.json();
+    const vapiCallId = vapiData.id;
+
+    // Store the call reference on the session
+    const sessionRec = session as unknown as Record<string, unknown>;
+    sessionRec.vapiCallId = vapiCallId;
+    sessionRec.callPhone = phone;
+    sessionRec.callInitiatedAt = new Date().toISOString();
+    await saveSession(sessionRec);
+
+    res.json({ success: true, vapiCallId, sessionId });
+  } catch (err) {
+    console.error("[VAPI] Call initiation error:", err);
+    res.status(500).json({ error: "Failed to initiate call" });
+  }
+});
+
+// VAPI Webhook — receives call status updates and end-of-call reports
+app.post("/api/vapi/webhook", async (req, res) => {
+  try {
+    const body = req.body;
+    const messageType = body.message?.type;
+
+    if (messageType === "end-of-call-report") {
+      const vapiCallId = body.message.call?.id;
+      const transcript = body.message.artifact?.transcript || "";
+      const messages = body.message.artifact?.messages || [];
+      const recordingUrl = body.message.artifact?.recordingUrl;
+      const durationSeconds = body.message.durationSeconds;
+
+      console.log(`[VAPI Webhook] End-of-call for ${vapiCallId}, duration: ${durationSeconds}s, transcript length: ${transcript.length}`);
+
+      // Find the session linked to this VAPI call
+      const allSessions = await listAllSessions();
+      const session = allSessions.find(
+        (s) => (s as unknown as Record<string, unknown>).vapiCallId === vapiCallId
+      );
+
+      if (session) {
+        // Store transcript and recording on the session
+        const rec = session as unknown as Record<string, unknown>;
+        rec.callTranscript = transcript;
+        rec.callMessages = messages;
+        rec.callRecordingUrl = recordingUrl;
+        rec.callDuration = durationSeconds;
+        rec.callCompletedAt = new Date().toISOString();
+        rec.status = "completed";
+        await saveSession(rec);
+        console.log(`[VAPI Webhook] Session ${session.id} updated with call transcript`);
+      } else {
+        console.warn(`[VAPI Webhook] No session found for vapiCallId ${vapiCallId}`);
+      }
+    } else if (messageType === "status-update") {
+      const status = body.message.status;
+      console.log(`[VAPI Webhook] Status update: ${status} for call ${body.message.call?.id}`);
+    }
+
+    res.json({ ok: true });
+  } catch (err) {
+    console.error("[VAPI Webhook] Error:", err);
+    res.status(500).json({ error: "Webhook processing failed" });
+  }
+});
+
+// Get call status for a session
+app.get("/api/admin/calls/:sessionId/status", requireAdmin, async (req, res) => {
+  try {
+    const session = await loadSession(req.params.sessionId as string);
+    if (!session) { res.status(404).json({ error: "Session not found" }); return; }
+
+    const s = session as unknown as Record<string, unknown>;
+    res.json({
+      vapiCallId: s.vapiCallId || null,
+      callPhone: s.callPhone || null,
+      callInitiatedAt: s.callInitiatedAt || null,
+      callCompletedAt: s.callCompletedAt || null,
+      callDuration: s.callDuration || null,
+      callRecordingUrl: s.callRecordingUrl || null,
+      hasTranscript: !!(s.callTranscript),
+    });
+  } catch (err) {
+    console.error("[VAPI] Call status error:", err);
+    res.status(500).json({ error: "Failed to get call status" });
   }
 });
 

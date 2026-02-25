@@ -408,7 +408,12 @@ export default function AdminDashboardPage() {
       {/* ROW 4: Dimension Radar + Archetypes + Risk   */}
       {/* ============================================ */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <DimensionRadar dimensions={dimensions} loading={loading} />
+        <DimensionRadar
+          dimensions={dimensions}
+          loading={loading}
+          mode={filters.assessmentTypeId === "adaptability-index" ? "adaptability" : "ai-readiness"}
+          maxScore={filters.assessmentTypeId === "adaptability-index" ? 25 : 100}
+        />
 
         {/* Archetype Distribution — Donut Chart */}
         <div className="bg-white/[0.03] rounded-2xl border border-white/10 p-4 md:p-6">

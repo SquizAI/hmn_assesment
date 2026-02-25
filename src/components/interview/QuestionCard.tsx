@@ -1,9 +1,10 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import type { Question, ConversationMessage } from "../../lib/types";
 import { API_BASE } from "../../lib/api";
 import SliderInput from "./SliderInput";
 import ButtonSelect from "./ButtonSelect";
 import VoiceRecorder from "./VoiceRecorder";
+import VapiVoiceAgent from "./VapiVoiceAgent";
 import Button from "../ui/Button";
 
 /** Strip internal AI annotations and render basic markdown emphasis as JSX */
@@ -42,6 +43,7 @@ export default function QuestionCard({ question, sessionId, onSubmit, onConversa
   const [conversationHistory, setConversationHistory] = useState<ConversationMessage[]>([]);
   const [isAiThinking, setIsAiThinking] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
+  const [isVapiActive, setIsVapiActive] = useState(false);
   const [conversationError, setConversationError] = useState<string | null>(null);
   const lastMessageRef = useRef<string | null>(null);
   const suppressTranscriptionRef = useRef(false);
@@ -121,12 +123,22 @@ export default function QuestionCard({ question, sessionId, onSubmit, onConversa
       }] : []),
     ];
 
+    // Immediately show the user's message in the conversation
+    const userMsg: ConversationMessage = {
+      role: "user",
+      content: text,
+      timestamp: new Date().toISOString(),
+      questionId: question.id,
+    };
+    const historyWithUser = [...newHistory, userMsg];
+    setConversationHistory(historyWithUser);
+
     try {
       setConversationError(null);
       const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 60000); // 60s timeout
+      const timeout = setTimeout(() => controller.abort(), 120000); // 120s timeout
 
-      const res = await fetch(`${API_BASE}/api/interview/respond`, {
+      const res = await fetch(`${API_BASE}/api/interview/conversation-stream`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ sessionId, questionId: question.id, answer: text, conversationHistory: newHistory }),
@@ -138,16 +150,55 @@ export default function QuestionCard({ question, sessionId, onSubmit, onConversa
         throw new Error(`Server error: ${res.status}`);
       }
 
-      const data = await res.json();
+      // Stream SSE response — show tokens as they arrive
+      const reader = res.body?.getReader();
+      if (!reader) throw new Error("No response body");
 
-      if (data.type === "follow_up") {
-        setConversationHistory(data.conversationHistory);
-      } else if (onConversationComplete) {
-        // Pass server response directly — avoid double-POST
-        onConversationComplete(data);
-      } else {
-        // Fallback for callers without onConversationComplete
-        onSubmit(text, data.conversationHistory);
+      const decoder = new TextDecoder();
+      let streamedText = "";
+      let buffer = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() || ""; // Keep incomplete line in buffer
+
+        for (const line of lines) {
+          if (!line.startsWith("data: ")) continue;
+          try {
+            const event = JSON.parse(line.slice(6));
+
+            if (event.type === "token") {
+              streamedText += event.text;
+              // Update conversation with streaming assistant message
+              setConversationHistory([
+                ...historyWithUser,
+                { role: "assistant" as const, content: streamedText, timestamp: new Date().toISOString(), questionId: question.id },
+              ]);
+            } else if (event.type === "done") {
+              setIsAiThinking(false);
+              if (!event.isComplete) {
+                // Still in conversation — update with server's history
+                setConversationHistory(event.conversationHistory);
+              } else if (event.responseType === "complete" && onConversationComplete) {
+                onConversationComplete(event);
+              } else if (event.responseType === "next_question" && onConversationComplete) {
+                onConversationComplete({ type: "next_question", ...event });
+              } else if (onConversationComplete) {
+                onConversationComplete(event);
+              } else {
+                onSubmit(text, event.conversationHistory);
+              }
+            } else if (event.type === "error") {
+              setConversationError(event.message);
+            }
+          } catch {
+            // Skip malformed SSE lines
+          }
+        }
       }
     } catch (err) {
       console.error("Conversation error:", err);
@@ -155,6 +206,8 @@ export default function QuestionCard({ question, sessionId, onSubmit, onConversa
         ? "Response took too long. Try sending a shorter message."
         : "Something went wrong. Please try again.";
       setConversationError(message);
+      // Restore history without the streaming message
+      setConversationHistory(historyWithUser);
     } finally {
       setIsAiThinking(false);
     }
@@ -177,6 +230,19 @@ export default function QuestionCard({ question, sessionId, onSubmit, onConversa
     if (recording) suppressTranscriptionRef.current = false;
     setIsRecording(recording);
   };
+
+  // VAPI voice agent: when the call ends, use the transcript as the text answer
+  const handleVapiTranscript = useCallback((transcript: string) => {
+    setTextValue(transcript);
+    // For AI conversations, auto-submit the voice transcript into the conversation
+    if (question.inputType === "ai_conversation" && !isEditing) {
+      handleConversationSubmit(transcript);
+    }
+  }, [question.inputType, isEditing]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleVapiCallState = useCallback((active: boolean) => {
+    setIsVapiActive(active);
+  }, []);
 
   const submitLabel = isEditing ? "Update Answer" : (question.inputType === "ai_conversation" ? "Send" : "Continue");
 
@@ -323,21 +389,54 @@ export default function QuestionCard({ question, sessionId, onSubmit, onConversa
                   </Button>
                 </div>
 
-                {/* Big circle mic button with waveform */}
+                {/* Voice input options */}
                 {!isEditing && (
-                  <VoiceRecorder
-                    onTranscription={handleVoiceTranscription}
-                    onPartialTranscription={handlePartialTranscription}
-                    onRecordingStateChange={handleRecordingStateChange}
-                    stopRef={stopRecordingRef}
-                    hideIdleStatus
-                    hideTranscriptionPreview
-                  />
-                )}
+                  <div className="space-y-4">
+                    {/* VAPI Voice Agent — full AI voice conversation */}
+                    {question.inputType === "ai_conversation" && (
+                      <div className="pt-2">
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="flex-1 h-px bg-white/10" />
+                          <span className="text-xs text-white/30 uppercase tracking-wider">or have a voice conversation</span>
+                          <div className="flex-1 h-px bg-white/10" />
+                        </div>
+                        <VapiVoiceAgent
+                          sessionId={sessionId}
+                          currentQuestionId={question.id}
+                          onTranscriptComplete={handleVapiTranscript}
+                          onCallStateChange={handleVapiCallState}
+                        />
+                      </div>
+                    )}
 
-                {/* Hint */}
-                {!isEditing && (
-                  <p className="text-center text-white/30 text-xs">Tap the mic or press Space to speak &middot; Live transcription as you talk</p>
+                    {/* Deepgram mic button with waveform — for text transcription */}
+                    {!isVapiActive && (
+                      <>
+                        {question.inputType === "ai_conversation" && (
+                          <div className="flex items-center gap-3">
+                            <div className="flex-1 h-px bg-white/10" />
+                            <span className="text-xs text-white/30 uppercase tracking-wider">or dictate text</span>
+                            <div className="flex-1 h-px bg-white/10" />
+                          </div>
+                        )}
+                        <VoiceRecorder
+                          onTranscription={handleVoiceTranscription}
+                          onPartialTranscription={handlePartialTranscription}
+                          onRecordingStateChange={handleRecordingStateChange}
+                          stopRef={stopRecordingRef}
+                          hideIdleStatus
+                          hideTranscriptionPreview
+                        />
+                      </>
+                    )}
+
+                    {/* Hint */}
+                    <p className="text-center text-white/30 text-xs">
+                      {question.inputType === "ai_conversation"
+                        ? "Talk to Vappy for a voice conversation, or type / dictate below"
+                        : "Tap the mic or press Space to speak \u00B7 Live transcription as you talk"}
+                    </p>
+                  </div>
                 )}
               </>
             )}
