@@ -132,7 +132,7 @@ export default function VapiVoiceAgent({
       const context = await res.json();
 
       await vapiRef.current.start({
-        name: "Vappy - HMN Cascade",
+        name: "Kascade - HMN Cascade",
         firstMessage: context.firstMessage,
         model: {
           provider: "anthropic",
@@ -141,7 +141,7 @@ export default function VapiVoiceAgent({
         },
         voice: {
           provider: "11labs",
-          voiceId: "XrExE9yKIg1WjnnlVkGX",
+          voiceId: "uju3wxzG5OhpWcoi3SMy",
           stability: 0.55,
           similarityBoost: 0.8,
           speed: 0.9,
@@ -196,7 +196,7 @@ export default function VapiVoiceAgent({
                 }`}
               >
                 <span className="text-[10px] uppercase tracking-wider text-white/30 block mb-0.5">
-                  {t.role === "user" ? "You" : "Vappy"}
+                  {t.role === "user" ? "You" : "Kascade"}
                 </span>
                 {t.text}
               </div>
@@ -214,8 +214,8 @@ export default function VapiVoiceAgent({
       {callStatus !== "idle" && (
         <div className="text-center">
           <span className="text-sm text-white/60">
-            {callStatus === "connecting" && "Connecting to Vappy..."}
-            {callStatus === "active" && (isSpeaking ? "Vappy is speaking..." : "Listening...")}
+            {callStatus === "connecting" && "Connecting to Kascade..."}
+            {callStatus === "active" && (isSpeaking ? "Kascade is speaking..." : "Listening...")}
             {callStatus === "ending" && "Wrapping up..."}
           </span>
         </div>
@@ -280,7 +280,7 @@ export default function VapiVoiceAgent({
               }
               ${callStatus === "connecting" || callStatus === "ending" ? "cursor-wait" : "cursor-pointer"}
             `}
-            title={callStatus === "idle" ? "Talk to Vappy" : "End call"}
+            title={callStatus === "idle" ? "Talk to Kascade" : "End call"}
           >
             {callStatus === "idle" ? (
               <svg className="w-7 h-7 text-white" fill="currentColor" viewBox="0 0 24 24">
@@ -316,7 +316,7 @@ export default function VapiVoiceAgent({
 
           {callStatus === "idle" && (
             <div className="absolute -bottom-7 left-1/2 -translate-x-1/2 whitespace-nowrap">
-              <span className="text-[11px] text-white/40 font-medium">Talk to Vappy</span>
+              <span className="text-[11px] text-white/40 font-medium">Talk to Kascade</span>
             </div>
           )}
         </div>

@@ -4,7 +4,6 @@ import { API_BASE } from "../../lib/api";
 import SliderInput from "./SliderInput";
 import ButtonSelect from "./ButtonSelect";
 import VoiceRecorder from "./VoiceRecorder";
-import VapiVoiceAgent from "./VapiVoiceAgent";
 import Button from "../ui/Button";
 
 /** Strip internal AI annotations and render basic markdown emphasis as JSX */
@@ -43,7 +42,10 @@ export default function QuestionCard({ question, sessionId, onSubmit, onConversa
   const [conversationHistory, setConversationHistory] = useState<ConversationMessage[]>([]);
   const [isAiThinking, setIsAiThinking] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
-  const [isVapiActive, setIsVapiActive] = useState(false);
+  const [callPhone, setCallPhone] = useState("");
+  const [callLoading, setCallLoading] = useState(false);
+  const [callStatus, setCallStatus] = useState<"idle" | "calling" | "completed">("idle");
+  const [callError, setCallError] = useState<string | null>(null);
   const [conversationError, setConversationError] = useState<string | null>(null);
   const lastMessageRef = useRef<string | null>(null);
   const suppressTranscriptionRef = useRef(false);
@@ -231,18 +233,28 @@ export default function QuestionCard({ question, sessionId, onSubmit, onConversa
     setIsRecording(recording);
   };
 
-  // VAPI voice agent: when the call ends, use the transcript as the text answer
-  const handleVapiTranscript = useCallback((transcript: string) => {
-    setTextValue(transcript);
-    // For AI conversations, auto-submit the voice transcript into the conversation
-    if (question.inputType === "ai_conversation" && !isEditing) {
-      handleConversationSubmit(transcript);
+  // Request a phone call for voice assessment
+  const handleRequestCall = useCallback(async () => {
+    if (!callPhone.trim()) return;
+    setCallLoading(true);
+    setCallError(null);
+    try {
+      const res = await fetch(`${API_BASE}/api/interview/request-call`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionId, phone: callPhone }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to initiate call");
+      }
+      setCallStatus("calling");
+    } catch (err) {
+      setCallError((err as Error).message);
+    } finally {
+      setCallLoading(false);
     }
-  }, [question.inputType, isEditing]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const handleVapiCallState = useCallback((active: boolean) => {
-    setIsVapiActive(active);
-  }, []);
+  }, [sessionId, callPhone]);
 
   const submitLabel = isEditing ? "Update Answer" : (question.inputType === "ai_conversation" ? "Send" : "Continue");
 
@@ -392,48 +404,79 @@ export default function QuestionCard({ question, sessionId, onSubmit, onConversa
                 {/* Voice input options */}
                 {!isEditing && (
                   <div className="space-y-4">
-                    {/* VAPI Voice Agent — full AI voice conversation */}
+                    {/* Phone call option — take assessment by phone */}
                     {question.inputType === "ai_conversation" && (
                       <div className="pt-2">
                         <div className="flex items-center gap-3 mb-3">
                           <div className="flex-1 h-px bg-white/10" />
-                          <span className="text-xs text-white/30 uppercase tracking-wider">or have a voice conversation</span>
+                          <span className="text-xs text-white/30 uppercase tracking-wider">or take this assessment by phone</span>
                           <div className="flex-1 h-px bg-white/10" />
                         </div>
-                        <VapiVoiceAgent
-                          sessionId={sessionId}
-                          currentQuestionId={question.id}
-                          onTranscriptComplete={handleVapiTranscript}
-                          onCallStateChange={handleVapiCallState}
-                        />
+                        {callStatus === "idle" ? (
+                          <div className="space-y-2">
+                            <div className="flex gap-2">
+                              <input
+                                type="tel"
+                                value={callPhone}
+                                onChange={(e) => setCallPhone(e.target.value)}
+                                placeholder="+1 (555) 123-4567"
+                                className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder-white/30 focus:outline-none focus:border-purple-500/40 transition-all"
+                              />
+                              <button
+                                onClick={handleRequestCall}
+                                disabled={!callPhone.trim() || callLoading}
+                                className="px-5 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-blue-600 text-white text-sm font-medium hover:opacity-90 disabled:opacity-40 transition-all flex items-center gap-2 whitespace-nowrap"
+                              >
+                                {callLoading ? (
+                                  <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                                  </svg>
+                                ) : (
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                                  </svg>
+                                )}
+                                Call me
+                              </button>
+                            </div>
+                            {callError && <p className="text-red-400 text-xs text-center">{callError}</p>}
+                          </div>
+                        ) : callStatus === "calling" ? (
+                          <div className="flex items-center justify-center gap-3 py-4 px-4 rounded-xl bg-green-500/5 border border-green-500/20">
+                            <span className="w-3 h-3 rounded-full bg-green-400 animate-pulse" />
+                            <span className="text-green-300 text-sm">Kascade is calling you now — pick up to start your assessment</span>
+                          </div>
+                        ) : callStatus === "completed" ? (
+                          <div className="flex items-center justify-center gap-2 py-4 px-4 rounded-xl bg-green-500/5 border border-green-500/20">
+                            <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                            <span className="text-green-300 text-sm">Call completed — your responses have been recorded</span>
+                          </div>
+                        ) : null}
                       </div>
                     )}
 
-                    {/* Deepgram mic button with waveform — for text transcription */}
-                    {!isVapiActive && (
-                      <>
-                        {question.inputType === "ai_conversation" && (
-                          <div className="flex items-center gap-3">
-                            <div className="flex-1 h-px bg-white/10" />
-                            <span className="text-xs text-white/30 uppercase tracking-wider">or dictate text</span>
-                            <div className="flex-1 h-px bg-white/10" />
-                          </div>
-                        )}
-                        <VoiceRecorder
-                          onTranscription={handleVoiceTranscription}
-                          onPartialTranscription={handlePartialTranscription}
-                          onRecordingStateChange={handleRecordingStateChange}
-                          stopRef={stopRecordingRef}
-                          hideIdleStatus
-                          hideTranscriptionPreview
-                        />
-                      </>
-                    )}
+                    {/* Deepgram mic button — speech-to-text dictation */}
+                    <div className="flex items-center gap-3">
+                      <div className="flex-1 h-px bg-white/10" />
+                      <span className="text-xs text-white/30 uppercase tracking-wider">or dictate</span>
+                      <div className="flex-1 h-px bg-white/10" />
+                    </div>
+                    <VoiceRecorder
+                      onTranscription={handleVoiceTranscription}
+                      onPartialTranscription={handlePartialTranscription}
+                      onRecordingStateChange={handleRecordingStateChange}
+                      stopRef={stopRecordingRef}
+                      hideIdleStatus
+                      hideTranscriptionPreview
+                    />
 
                     {/* Hint */}
                     <p className="text-center text-white/30 text-xs">
                       {question.inputType === "ai_conversation"
-                        ? "Talk to Vappy for a voice conversation, or type / dictate below"
+                        ? "Enter your phone number for a voice assessment, or type / dictate your responses"
                         : "Tap the mic or press Space to speak \u00B7 Live transcription as you talk"}
                     </p>
                   </div>

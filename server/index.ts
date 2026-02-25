@@ -1434,7 +1434,7 @@ app.post("/api/vapi/context", async (req, res) => {
     const qDimensions = ((question as { scoringDimensions?: string[] }).scoringDimensions || []).join(", ");
     const qFollowUp = (question as { aiFollowUpPrompt?: string }).aiFollowUpPrompt || "";
 
-    const systemPrompt = `You are Vappy, an expert voice interviewer for HMN (Human Machine Network), conducting an AI readiness diagnostic assessment via voice.
+    const systemPrompt = `You are Kascade, an expert voice interviewer calling from HMN (Human), conducting an AI readiness diagnostic assessment via voice.
 
 PARTICIPANT CONTEXT:
 - Name: ${participant.name || ""}
@@ -1471,7 +1471,7 @@ YOUR PERSONALITY & RULES:
 
     let firstMessage: string;
     if (responses.length === 0) {
-      firstMessage = `Hey ${participant.name || "there"}, I'm Vappy — I'll be walking you through your assessment today. This is going to be a real conversation, not a survey. Ready to dive in? Here's what I want to start with: ${qText}`;
+      firstMessage = `Hey ${participant.name || "there"}, I'm Kascade calling from HMN — I'll be walking you through your assessment today. This is going to be a real conversation, not a survey. Ready to dive in? Here's what I want to start with: ${qText}`;
     } else {
       firstMessage = `Great, let's keep going. ${qText}`;
     }
@@ -1486,6 +1486,85 @@ YOUR PERSONALITY & RULES:
   } catch (err) {
     console.error("[VAPI Context] Error:", err);
     res.status(500).json({ error: "Failed to build voice context" });
+  }
+});
+
+// --- Participant-facing: Request a phone call for voice assessment ---
+app.post("/api/interview/request-call", async (req, res) => {
+  try {
+    const { sessionId, phone } = req.body;
+    if (!sessionId || !phone) {
+      res.status(400).json({ error: "sessionId and phone are required" });
+      return;
+    }
+
+    const session = await loadSession(sessionId);
+    if (!session) { res.status(404).json({ error: "Session not found" }); return; }
+
+    const participant = session.participant as { name?: string; role?: string; company?: string; industry?: string; teamSize?: string };
+    const { questions: bankQuestions } = await getAssessmentQuestionBank(session as unknown as Record<string, unknown>);
+
+    const systemPrompt = buildOutboundSystemPrompt(participant, bankQuestions);
+    const firstName = (participant.name || "there").split(" ")[0];
+
+    const assistantConfig = {
+      name: "Kascade - HMN Assessment",
+      firstMessage: `Hey ${firstName}! This is Kascade calling from HMN. Thanks for making time for your assessment — I know you're busy. We've got about twenty to thirty minutes together, and I promise this won't feel like a survey. Think of it more like a strategic conversation about where you and your organization stand. Sound good?`,
+      model: {
+        provider: "anthropic",
+        model: "claude-sonnet-4-6",
+        messages: [{ role: "system", content: systemPrompt }],
+      },
+      voice: {
+        provider: "11labs",
+        voiceId: "uju3wxzG5OhpWcoi3SMy",
+        stability: 0.55,
+        similarityBoost: 0.8,
+        speed: 0.9,
+      },
+      serverUrl: VAPI_WEBHOOK_URL,
+      silenceTimeoutSeconds: 45,
+      maxDurationSeconds: 2400,
+      backgroundDenoisingEnabled: true,
+      modelOutputInMessagesEnabled: true,
+      endCallMessage: "Thank you so much for your time and honesty today. Your responses are going to give us a really clear picture. Someone from HMN will be in touch soon with your personalized profile. Take care!",
+    };
+
+    // Normalize phone to E.164
+    let normalizedPhone = phone.replace(/[\s\-\(\)\.]/g, "");
+    if (!normalizedPhone.startsWith("+")) normalizedPhone = "+1" + normalizedPhone;
+
+    const vapiRes = await fetch(VAPI_API_URL, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${process.env.VAPI_PRIVATE_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        phoneNumberId: process.env.VAPI_PHONE_NUMBER_ID,
+        customer: { number: normalizedPhone },
+        assistant: assistantConfig,
+      }),
+    });
+
+    if (!vapiRes.ok) {
+      const errBody = await vapiRes.text();
+      console.error("[VAPI Participant Call] Error:", errBody);
+      res.status(500).json({ error: "Failed to initiate call" });
+      return;
+    }
+
+    const vapiData = await vapiRes.json() as { id: string };
+    // Store call ID on session
+    (session as unknown as Record<string, unknown>).vapiCallId = vapiData.id;
+    (session as unknown as Record<string, unknown>).callPhone = normalizedPhone;
+    (session as unknown as Record<string, unknown>).callStatus = "calling";
+    saveSession(session as unknown as Record<string, unknown>);
+
+    res.json({ success: true, vapiCallId: vapiData.id });
+  } catch (err) {
+    console.error("[Participant Call Request] Error:", err);
+    res.status(500).json({ error: "Failed to initiate call" });
   }
 });
 
@@ -3350,7 +3429,7 @@ function buildOutboundSystemPrompt(participant: {
     return lines.join("\n");
   }).join("\n\n");
 
-  return `You are Vappy, an AI assessment interviewer for HMN Cascade — a strategic AI readiness assessment built by HumanGlue.
+  return `You are Kascade, an AI assessment interviewer for HMN (Human) — a strategic AI readiness and human potential assessment.
 
 === YOUR PERSONALITY ===
 You are warm, direct, and genuinely curious. Think: a sharp management consultant who actually cares. You speak naturally and conversationally — never robotic. You listen deeply and respond to what people ACTUALLY say.
@@ -3381,7 +3460,7 @@ Use natural transitions between sections. Between phases, acknowledge the shift.
 ${questionBlocks}
 
 === CLOSING ===
-After the final question, thank them warmly. Mention their responses will be analyzed for a personalized profile. Someone from HumanGlue will follow up.
+After the final question, thank them warmly. Mention their responses will be analyzed for a personalized profile. Someone from HMN will follow up.
 
 === RULES ===
 1. NEVER read section markers aloud
@@ -3413,8 +3492,8 @@ app.post("/api/admin/calls/initiate", requireAdmin, async (req, res) => {
     const firstName = (participant.name || "there").split(" ")[0];
 
     const assistantConfig = {
-      name: "Vappy - HMN Cascade Assessment",
-      firstMessage: `Hey ${firstName}! This is Vappy from HumanGlue. Thanks for making time for your AI readiness assessment — I know you're busy. We've got about twenty to thirty minutes together, and I promise this won't feel like a survey. Think of it more like a strategic conversation about where you and your organization stand with AI. Sound good?`,
+      name: "Kascade - HMN Assessment",
+      firstMessage: `Hey ${firstName}! This is Kascade calling from HMN. Thanks for making time for your assessment — I know you're busy. We've got about twenty to thirty minutes together, and I promise this won't feel like a survey. Think of it more like a strategic conversation about where you and your organization stand. Sound good?`,
       model: {
         provider: "anthropic",
         model: "claude-sonnet-4-6",
@@ -3422,7 +3501,7 @@ app.post("/api/admin/calls/initiate", requireAdmin, async (req, res) => {
       },
       voice: {
         provider: "11labs",
-        voiceId: "XrExE9yKIg1WjnnlVkGX",
+        voiceId: "uju3wxzG5OhpWcoi3SMy",
         stability: 0.55,
         similarityBoost: 0.8,
         speed: 0.9,
@@ -3432,7 +3511,7 @@ app.post("/api/admin/calls/initiate", requireAdmin, async (req, res) => {
       maxDurationSeconds: 2400,
       backgroundDenoisingEnabled: true,
       modelOutputInMessagesEnabled: true,
-      endCallMessage: "Thank you so much for your time and honesty today. Your responses are going to give us a really clear picture. Someone from HumanGlue will be in touch soon with your personalized AI readiness profile. Take care!",
+      endCallMessage: "Thank you so much for your time and honesty today. Your responses are going to give us a really clear picture. Someone from HMN will be in touch soon with your personalized profile. Take care!",
     };
 
     // Call VAPI API
