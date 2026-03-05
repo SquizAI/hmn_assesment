@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import StatusBadge from "./StatusBadge";
+import { useToast } from "../ui/Toast";
 import {
   fetchAssessment,
   updateFullAssessment,
@@ -161,8 +162,9 @@ export default function AssessmentDrawer({
   // Archive confirmation
   const [archiveConfirm, setArchiveConfirm] = useState(false);
 
-  // Navigation
+  // Navigation & toast
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   // Ref for name input
   const nameInputRef = useRef<HTMLInputElement>(null);
@@ -180,6 +182,7 @@ export default function AssessmentDrawer({
       setQuestionEdits({});
     } catch (err) {
       console.error("Failed to fetch assessment:", err);
+      toast("Failed to load assessment", "error");
     } finally {
       setLoading(false);
     }
@@ -285,8 +288,10 @@ export default function AssessmentDrawer({
       setTimeout(() => setSaveSuccess(false), 2000);
       await loadAssessment();
       setQuestionEdits({});
+      toast("Changes saved successfully", "success");
     } catch (err) {
       console.error("Failed to save:", err);
+      toast("Failed to save changes", "error");
     } finally {
       setSaving(false);
     }
@@ -305,8 +310,10 @@ export default function AssessmentDrawer({
     try {
       await updateAssessmentStatus(assessment.id, newStatus);
       await loadAssessment();
+      toast(`Status changed to ${newStatus}`, "success");
     } catch (err) {
       console.error("Failed to update status:", err);
+      toast("Failed to update status", "error");
     } finally {
       setStatusUpdating(false);
     }
@@ -323,8 +330,10 @@ export default function AssessmentDrawer({
       setShowDuplicate(false);
       onRefresh?.();
       setDupName("");
+      toast("Assessment duplicated successfully", "success");
     } catch (err) {
       console.error("Failed to duplicate:", err);
+      toast("Failed to duplicate assessment", "error");
     } finally {
       setDuplicating(false);
     }
@@ -336,6 +345,7 @@ export default function AssessmentDrawer({
     navigator.clipboard.writeText(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 1500);
+    toast("Copied to clipboard", "info");
   };
 
   /* ---- Derived data ---- */

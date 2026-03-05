@@ -5,6 +5,7 @@ import ChatInput from "../components/admin/ChatInput";
 import ToolActivity from "../components/admin/ToolActivity";
 import WorkflowCanvas from "../components/workflow/WorkflowCanvas";
 import { inferPhase } from "../components/admin/ProcessMap";
+import { useToast } from "../components/ui/Toast";
 import type { BuilderPhase } from "../lib/graph-layout";
 import { adminChatStream, chatWithAssessmentStream, fetchAssessment, fetchAssessments } from "../lib/admin-api";
 import type { ChatAttachment } from "../lib/admin-api";
@@ -38,6 +39,7 @@ function formatFileSize(bytes: number): string {
 export default function AssessmentBuilderPage() {
   const navigate = useNavigate();
   const { id: urlParamId } = useParams<{ id?: string }>();
+  const { toast } = useToast();
 
   // --- Core state ---
   const [assessmentId, setAssessmentId] = useState<string | null>(urlParamId || null);
@@ -48,6 +50,7 @@ export default function AssessmentBuilderPage() {
   const [toolEvents, setToolEvents] = useState<ToolEvent[]>([]);
 
   // --- UI state ---
+  const [activeQuickAction, setActiveQuickAction] = useState<string | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(() => {
     try { return localStorage.getItem("cascade-builder-fullscreen") === "true"; } catch { return false; }
   });
@@ -110,8 +113,8 @@ export default function AssessmentBuilderPage() {
   // Detect new assessment creation (Phase 1 → Phase 2 transition)
   // ============================================================
 
-  const detectNewAssessment = useCallback(async () => {
-    if (assessmentId) return; // already have one
+  const detectNewAssessment = useCallback(async (): Promise<boolean> => {
+    if (assessmentId) return false; // already have one
     try {
       const data = await fetchAssessments();
       const assessments = data?.assessments || [];
@@ -122,10 +125,12 @@ export default function AssessmentBuilderPage() {
       );
       if (recent) {
         setAssessmentId(recent.id);
+        return true;
       }
     } catch {
       // ignore
     }
+    return false;
   }, [assessmentId]);
 
   // ============================================================
@@ -248,19 +253,27 @@ export default function AssessmentBuilderPage() {
 
       // After AI response, check if an assessment was created (Phase 1 → 2)
       if (!assessmentId) {
-        await detectNewAssessment();
+        const found = await detectNewAssessment();
+        if (found) {
+          toast("Assessment created successfully", "success");
+        }
       }
 
       // Refresh assessment data for live preview
       if (assessmentId) {
-        setTimeout(() => refreshAssessment(), 500);
+        setTimeout(async () => {
+          await refreshAssessment();
+          toast("Assessment updated", "success");
+        }, 500);
       }
     } catch (err) {
       console.error("Chat error:", err);
       if ((err as Error)?.message === "Unauthorized") {
+        toast("Session expired — redirecting to login", "error");
         navigate("/admin");
         return;
       }
+      toast("Something went wrong. Please try again.", "error");
       setMessages([
         ...newMessages,
         { role: "assistant", content: "Something went wrong. Please try again.", timestamp: new Date().toISOString() },
@@ -268,6 +281,7 @@ export default function AssessmentBuilderPage() {
     } finally {
       setIsThinking(false);
       setToolEvents([]);
+      setActiveQuickAction(null);
     }
   };
 
@@ -410,16 +424,34 @@ export default function AssessmentBuilderPage() {
 
                   {/* Quick actions */}
                   <div className="grid grid-cols-2 gap-2 max-w-md mx-auto">
-                    {QUICK_ACTIONS.map((action) => (
-                      <button
-                        key={action.label}
-                        onClick={() => handleSend(action.label)}
-                        className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-white/[0.03] border border-white/10 text-white/50 text-sm hover:bg-white/[0.07] hover:text-white/80 hover:border-white/20 transition-all text-left"
-                      >
-                        <span className="text-base">{action.icon}</span>
-                        <span className="text-xs">{action.label}</span>
-                      </button>
-                    ))}
+                    {QUICK_ACTIONS.map((action) => {
+                      const isActive = activeQuickAction === action.label;
+                      const isDisabled = isThinking;
+                      return (
+                        <button
+                          key={action.label}
+                          disabled={isDisabled}
+                          onClick={() => {
+                            setActiveQuickAction(action.label);
+                            handleSend(action.label);
+                          }}
+                          className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border text-sm transition-all text-left ${
+                            isActive
+                              ? "bg-purple-500/10 border-purple-500/30 text-purple-300"
+                              : isDisabled
+                                ? "bg-white/[0.02] border-white/5 text-white/20 cursor-not-allowed"
+                                : "bg-white/[0.03] border-white/10 text-white/50 hover:bg-white/[0.07] hover:text-white/80 hover:border-white/20"
+                          }`}
+                        >
+                          {isActive ? (
+                            <div className="w-4 h-4 border-2 border-purple-400/30 border-t-purple-400 rounded-full animate-spin shrink-0" />
+                          ) : (
+                            <span className="text-base">{action.icon}</span>
+                          )}
+                          <span className="text-xs">{isActive ? "Working..." : action.label}</span>
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               )}
@@ -437,24 +469,35 @@ export default function AssessmentBuilderPage() {
                     Ask me to add questions, adjust scoring, or refine the structure.
                   </p>
                   <div className="flex justify-center gap-2">
-                    <button
-                      onClick={() => handleSend("Show me a summary of this assessment and suggest improvements")}
-                      className="px-3 py-2 rounded-xl bg-white/[0.03] border border-white/10 text-white/50 text-xs hover:bg-white/[0.07] hover:text-white/80 transition-all"
-                    >
-                      Review & improve
-                    </button>
-                    <button
-                      onClick={() => handleSend("Add more questions to this assessment")}
-                      className="px-3 py-2 rounded-xl bg-white/[0.03] border border-white/10 text-white/50 text-xs hover:bg-white/[0.07] hover:text-white/80 transition-all"
-                    >
-                      Add questions
-                    </button>
-                    <button
-                      onClick={() => handleSend("Show me the scoring coverage and suggest calibration")}
-                      className="px-3 py-2 rounded-xl bg-white/[0.03] border border-white/10 text-white/50 text-xs hover:bg-white/[0.07] hover:text-white/80 transition-all"
-                    >
-                      Calibrate scoring
-                    </button>
+                    {[
+                      { label: "Review & improve", prompt: "Show me a summary of this assessment and suggest improvements" },
+                      { label: "Add questions", prompt: "Add more questions to this assessment" },
+                      { label: "Calibrate scoring", prompt: "Show me the scoring coverage and suggest calibration" },
+                    ].map((btn) => {
+                      const isActive = activeQuickAction === btn.prompt;
+                      return (
+                        <button
+                          key={btn.label}
+                          disabled={isThinking}
+                          onClick={() => {
+                            setActiveQuickAction(btn.prompt);
+                            handleSend(btn.prompt);
+                          }}
+                          className={`px-3 py-2 rounded-xl border text-xs transition-all flex items-center gap-1.5 ${
+                            isActive
+                              ? "bg-purple-500/10 border-purple-500/30 text-purple-300"
+                              : isThinking
+                                ? "bg-white/[0.02] border-white/5 text-white/20 cursor-not-allowed"
+                                : "bg-white/[0.03] border-white/10 text-white/50 hover:bg-white/[0.07] hover:text-white/80"
+                          }`}
+                        >
+                          {isActive && (
+                            <div className="w-3 h-3 border-2 border-purple-400/30 border-t-purple-400 rounded-full animate-spin shrink-0" />
+                          )}
+                          {isActive ? "Working..." : btn.label}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               )}

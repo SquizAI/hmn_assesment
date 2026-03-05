@@ -1,5 +1,6 @@
 import { Component, lazy, Suspense } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { ToastProvider } from "./components/ui/Toast";
 import HomePage from "./pages/HomePage";
 import ResearchPage from "./pages/ResearchPage";
 import InterviewPage from "./pages/InterviewPage";
@@ -64,6 +65,7 @@ class AdminErrorBoundary extends Component<{ children: React.ReactNode }, { hasE
 
 export default function App() {
   return (
+    <ToastProvider>
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<HomePage />} />
@@ -96,5 +98,6 @@ export default function App() {
         </Route>
       </Routes>
     </BrowserRouter>
+    </ToastProvider>
   );
 }
