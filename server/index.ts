@@ -26,6 +26,16 @@ import { initGraphSchema, runQuery } from "./neo4j.js";
 import { getCompanyIntelligence, getAssessmentSummary, getCrossCompanyBenchmarks, getThemeMap, getGrowthTimeline, getNetworkGraph } from "./graph-queries.js";
 import { seedAllSessionsToGraph, extractAndSyncIntelligence } from "./graph-sync.js";
 import { runAdaptabilityAnalysis, generateAdaptabilityProfile } from "./adaptability-scoring.js";
+import campaignRoutes from "./routes/campaigns.js";
+import contactRoutes from "./routes/contacts.js";
+import callRoutes from "./routes/calls.js";
+import webhookRoutes from "./routes/webhooks.js";
+import searchRoutes from "./routes/search.js";
+import analyticsRoutes from "./routes/analytics.js";
+import settingsRoutes from "./routes/settings.js";
+import cleanupRoutes from "./routes/cleanup.js";
+import resumeRoutes from "./routes/resume.js";
+import compareRoutes from "./routes/compare.js";
 
 dotenv.config();
 
@@ -630,6 +640,10 @@ app.post("/api/sessions", async (req, res) => {
     res.status(500).json({ error: "Failed to create session" });
   }
 });
+
+// Mount resume/compare routers BEFORE the :sessionId wildcard
+app.use("/api/sessions/resume", resumeRoutes);
+app.use("/api/sessions/compare", compareRoutes);
 
 app.get("/api/sessions/lookup", async (req, res) => {
   try {
@@ -3620,6 +3634,23 @@ app.get("/api/admin/calls/:sessionId/status", requireAdmin, async (req, res) => 
     res.status(500).json({ error: "Failed to get call status" });
   }
 });
+
+// ============================================================
+// ROUTE MODULES (v1 feature ports)
+// ============================================================
+
+app.use("/api/admin/campaigns", requireAdmin, campaignRoutes);
+app.use("/api/admin/contacts", requireAdmin, contactRoutes);
+app.use("/api/admin/calls-history", requireAdmin, callRoutes);
+app.use("/api/admin/webhooks", requireAdmin, webhookRoutes);
+app.use("/api/admin/search", requireAdmin, searchRoutes);
+app.use("/api/admin/analytics", requireAdmin, analyticsRoutes);
+app.use("/api/admin/settings", requireAdmin, settingsRoutes);
+app.use("/api/admin/cron", requireAdmin, cleanupRoutes);
+// Health check
+app.get("/api/health", (_req, res) => { res.json({ status: "ok", timestamp: new Date().toISOString() }); });
+app.get("/live", (_req, res) => { res.status(200).send("OK"); });
+app.get("/ready", (_req, res) => { res.status(200).send("OK"); });
 
 // ============================================================
 // SPA FALLBACK (must be after all API routes)

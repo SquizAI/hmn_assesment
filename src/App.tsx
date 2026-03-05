@@ -1,4 +1,4 @@
-import { Component } from "react";
+import { Component, lazy, Suspense } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import HomePage from "./pages/HomePage";
 import ResearchPage from "./pages/ResearchPage";
@@ -16,6 +16,26 @@ import AdminPreviewPage from "./pages/AdminPreviewPage";
 import AdminCompaniesPage from "./pages/AdminCompaniesPage";
 import AdminCompanyDetailPage from "./pages/AdminCompanyDetailPage";
 import AdminInvitationsPage from "./pages/AdminInvitationsPage";
+
+// Lazy-loaded v1 feature pages
+const AdminCampaignsPage = lazy(() => import("./pages/AdminCampaignsPage"));
+const AdminCampaignDetailPage = lazy(() => import("./pages/AdminCampaignDetailPage"));
+const AdminContactsPage = lazy(() => import("./pages/AdminContactsPage"));
+const AdminCallsPage = lazy(() => import("./pages/AdminCallsPage"));
+const AdminWebhooksPage = lazy(() => import("./pages/AdminWebhooksPage"));
+const AdminSearchPage = lazy(() => import("./pages/AdminSearchPage"));
+const AdminAnalyticsPage = lazy(() => import("./pages/AdminAnalyticsPage"));
+const AdminSettingsPage = lazy(() => import("./pages/AdminSettingsPage"));
+const ResumePage = lazy(() => import("./pages/ResumePage"));
+const ComparePage = lazy(() => import("./pages/ComparePage"));
+
+function LazyFallback() {
+  return (
+    <div className="flex items-center justify-center h-full min-h-[60vh]">
+      <div className="text-white/30 text-sm">Loading...</div>
+    </div>
+  );
+}
 
 
 class AdminErrorBoundary extends Component<{ children: React.ReactNode }, { hasError: boolean }> {
@@ -52,6 +72,8 @@ export default function App() {
         <Route path="/analysis/:sessionId" element={<AnalysisPage />} />
         <Route path="/adaptability-interview/:sessionId" element={<AdaptabilityInterviewPage />} />
         <Route path="/adaptability-profile/:sessionId" element={<AdaptabilityProfilePage />} />
+        <Route path="/resume/:token" element={<Suspense fallback={<LazyFallback />}><ResumePage /></Suspense>} />
+        <Route path="/compare" element={<Suspense fallback={<LazyFallback />}><ComparePage /></Suspense>} />
         <Route path="/admin" element={<AdminLoginPage />} />
         <Route element={<AdminErrorBoundary><AdminLayout /></AdminErrorBoundary>}>
           <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
@@ -63,6 +85,14 @@ export default function App() {
           <Route path="/admin/builder" element={<AssessmentBuilderPage />} />
           <Route path="/admin/builder/:id" element={<AssessmentBuilderPage />} />
           <Route path="/admin/preview/:assessmentId" element={<AdminPreviewPage />} />
+          <Route path="/admin/campaigns" element={<Suspense fallback={<LazyFallback />}><AdminCampaignsPage /></Suspense>} />
+          <Route path="/admin/campaigns/:id" element={<Suspense fallback={<LazyFallback />}><AdminCampaignDetailPage /></Suspense>} />
+          <Route path="/admin/contacts" element={<Suspense fallback={<LazyFallback />}><AdminContactsPage /></Suspense>} />
+          <Route path="/admin/calls" element={<Suspense fallback={<LazyFallback />}><AdminCallsPage /></Suspense>} />
+          <Route path="/admin/webhooks" element={<Suspense fallback={<LazyFallback />}><AdminWebhooksPage /></Suspense>} />
+          <Route path="/admin/search" element={<Suspense fallback={<LazyFallback />}><AdminSearchPage /></Suspense>} />
+          <Route path="/admin/analytics" element={<Suspense fallback={<LazyFallback />}><AdminAnalyticsPage /></Suspense>} />
+          <Route path="/admin/settings" element={<Suspense fallback={<LazyFallback />}><AdminSettingsPage /></Suspense>} />
         </Route>
       </Routes>
     </BrowserRouter>

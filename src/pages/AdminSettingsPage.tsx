@@ -1,0 +1,136 @@
+import { useEffect, useState } from "react";
+
+interface RetentionSettings {
+  retention_days: number | null;
+  auto_cleanup: boolean;
+  last_cleanup_at: string | null;
+}
+
+const RETENTION_OPTIONS = [
+  { value: 30, label: "30 Days" },
+  { value: 60, label: "60 Days" },
+  { value: 90, label: "90 Days" },
+  { value: 180, label: "6 Months" },
+  { value: 365, label: "1 Year" },
+  { value: 0, label: "Forever" },
+];
+
+export default function AdminSettingsPage() {
+  const [settings, setSettings] = useState<RetentionSettings>({ retention_days: null, auto_cleanup: false, last_cleanup_at: null });
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [cleaning, setCleaning] = useState(false);
+  const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
+  const [preview, setPreview] = useState<{ count: number; oldest: string | null } | null>(null);
+
+  const showToast = (message: string, type: "success" | "error") => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 4000);
+  };
+
+  useEffect(() => {
+    fetch("/api/admin/settings/retention", { credentials: "include" })
+      .then((res) => res.ok ? res.json() : null)
+      .then((data) => { if (data) setSettings(data); })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const res = await fetch("/api/admin/settings/retention", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(settings),
+      });
+      if (!res.ok) throw new Error("Failed to save");
+      showToast("Settings saved", "success");
+    } catch { showToast("Failed to save settings", "error"); }
+    finally { setSaving(false); }
+  };
+
+  const handlePreview = async () => {
+    if (!settings.retention_days) return;
+    try {
+      const res = await fetch(`/api/admin/settings/retention/preview?days=${settings.retention_days}`, { credentials: "include" });
+      if (res.ok) setPreview(await res.json());
+    } catch { /* ignore */ }
+  };
+
+  const handleCleanup = async () => {
+    if (!confirm("Run data cleanup now? This will permanently delete old sessions.")) return;
+    setCleaning(true);
+    try {
+      const res = await fetch("/api/admin/cron/cleanup", { method: "POST", credentials: "include" });
+      if (!res.ok) throw new Error("Cleanup failed");
+      const data = await res.json();
+      showToast(`Cleanup complete. ${data.deleted || 0} sessions removed.`, "success");
+    } catch { showToast("Cleanup failed", "error"); }
+    finally { setCleaning(false); }
+  };
+
+  if (loading) return <div className="flex items-center justify-center h-full min-h-[60vh]"><div className="text-white/30 text-sm">Loading settings...</div></div>;
+
+  return (
+    <div className="max-w-3xl mx-auto p-6">
+      {toast && <div className={`fixed top-6 right-6 z-50 px-5 py-3 rounded-xl text-sm font-medium shadow-lg border ${toast.type === "success" ? "bg-green-500/20 text-green-400 border-green-500/30" : "bg-red-500/20 text-red-400 border-red-500/30"}`}>{toast.message}</div>}
+
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-white">Settings</h1>
+        <p className="text-white/40 mt-1">Configure data retention and system preferences</p>
+      </div>
+
+      <div className="bg-white/5 border border-white/10 rounded-2xl p-6 space-y-6">
+        <div>
+          <h2 className="text-lg font-semibold text-white mb-1">Data Retention</h2>
+          <p className="text-sm text-white/40">Configure how long session data is kept before automatic cleanup</p>
+        </div>
+
+        <div>
+          <label className="block text-sm text-white/60 mb-2">Retention Period</label>
+          <select
+            value={settings.retention_days ?? 0}
+            onChange={(e) => {
+              const val = parseInt(e.target.value);
+              setSettings({ ...settings, retention_days: val === 0 ? null : val });
+              setPreview(null);
+            }}
+            className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-sm text-white focus:border-white/30 focus:outline-none appearance-none"
+          >
+            {RETENTION_OPTIONS.map((opt) => <option key={opt.value} value={opt.value} className="bg-gray-900">{opt.label}</option>)}
+          </select>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <button type="button" onClick={() => setSettings({ ...settings, auto_cleanup: !settings.auto_cleanup })} className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${settings.auto_cleanup ? "bg-purple-600" : "bg-white/10"}`}>
+            <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${settings.auto_cleanup ? "translate-x-6" : "translate-x-1"}`} />
+          </button>
+          <span className="text-sm text-white/60">Auto-cleanup (runs daily)</span>
+        </div>
+
+        {settings.last_cleanup_at && (
+          <p className="text-xs text-white/30">Last cleanup: {new Date(settings.last_cleanup_at).toLocaleString()}</p>
+        )}
+
+        {settings.retention_days && (
+          <div>
+            <button onClick={handlePreview} className="text-xs text-purple-400 hover:text-purple-300 underline">Preview what would be deleted</button>
+            {preview && (
+              <div className="mt-2 p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg">
+                <p className="text-sm text-amber-400">{preview.count} session{preview.count !== 1 ? "s" : ""} would be deleted</p>
+                {preview.oldest && <p className="text-xs text-amber-400/60 mt-1">Oldest: {new Date(preview.oldest).toLocaleDateString()}</p>}
+              </div>
+            )}
+          </div>
+        )}
+
+        <div className="flex items-center gap-3 pt-4 border-t border-white/5">
+          <button onClick={handleSave} disabled={saving} className="px-5 py-2.5 text-sm font-medium rounded-lg bg-gradient-to-r from-purple-600 to-blue-600 text-white disabled:opacity-50 transition-all">{saving ? "Saving..." : "Save Settings"}</button>
+          <button onClick={handleCleanup} disabled={cleaning || !settings.retention_days} className="px-4 py-2.5 text-sm font-medium rounded-lg bg-white/10 text-white hover:bg-white/20 border border-white/10 disabled:opacity-50 transition-colors">{cleaning ? "Cleaning..." : "Run Cleanup Now"}</button>
+        </div>
+      </div>
+    </div>
+  );
+}

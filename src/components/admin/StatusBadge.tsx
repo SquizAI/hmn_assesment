@@ -9,6 +9,14 @@ const STATUS_STYLES: Record<string, string> = {
   sent: "bg-sky-500/20 text-sky-300 border-sky-500/30",
   opened: "bg-amber-500/20 text-amber-300 border-amber-500/30",
   started: "bg-indigo-500/20 text-indigo-300 border-indigo-500/30",
+  queued: "bg-gray-500/20 text-gray-300 border-gray-500/30",
+  ringing: "bg-amber-500/20 text-amber-300 border-amber-500/30",
+  failed: "bg-red-500/20 text-red-300 border-red-500/30",
+  no_answer: "bg-orange-500/20 text-orange-300 border-orange-500/30",
+  new: "bg-sky-500/20 text-sky-300 border-sky-500/30",
+  called: "bg-green-500/20 text-green-300 border-green-500/30",
+  paused: "bg-yellow-500/20 text-yellow-300 border-yellow-500/30",
+  pending: "bg-gray-500/20 text-gray-300 border-gray-500/30",
 };
 
 const STATUS_LABELS: Record<string, string> = {
@@ -22,11 +30,20 @@ const STATUS_LABELS: Record<string, string> = {
   sent: "Sent",
   opened: "Opened",
   started: "Started",
+  queued: "Queued",
+  ringing: "Ringing",
+  failed: "Failed",
+  no_answer: "No Answer",
+  new: "New",
+  called: "Called",
+  paused: "Paused",
+  pending: "Pending",
 };
 
-export default function StatusBadge({ status }: { status: string }) {
+export default function StatusBadge({ status, size }: { status: string; size?: "sm" | "md" }) {
+  const sizeClass = size === "sm" ? "px-1.5 py-0.5 text-[10px]" : "px-2 py-0.5 text-xs";
   return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${STATUS_STYLES[status] || "bg-white/10 text-white/50 border-white/20"}`}>
+    <span className={`inline-flex items-center rounded-full font-medium border ${sizeClass} ${STATUS_STYLES[status] || "bg-white/10 text-white/50 border-white/20"}`}>
       {STATUS_LABELS[status] || status}
     </span>
   );

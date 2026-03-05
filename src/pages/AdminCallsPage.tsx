@@ -1,0 +1,177 @@
+import { useEffect, useState, useCallback } from "react";
+import { Link } from "react-router-dom";
+import StatusBadge from "../components/admin/StatusBadge";
+
+interface Call {
+  id: string;
+  contact_id: string;
+  session_id: string | null;
+  status: string;
+  duration_seconds: number | null;
+  recording_url: string | null;
+  transcript: string | null;
+  transcript_messages: Array<{ role: string; message: string; timestamp?: number }> | null;
+  analysis_status: string;
+  created_at: string;
+  contact: { id: string; name: string; phone: string; company: string | null } | null;
+}
+
+const STATUS_OPTIONS = [
+  { value: "", label: "All Statuses" },
+  { value: "queued", label: "Queued" },
+  { value: "ringing", label: "Ringing" },
+  { value: "in_progress", label: "In Progress" },
+  { value: "completed", label: "Completed" },
+  { value: "failed", label: "Failed" },
+  { value: "no_answer", label: "No Answer" },
+];
+
+function formatDuration(seconds: number | null): string {
+  if (!seconds) return "--:--";
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
+}
+
+function formatDate(iso: string): string {
+  return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+}
+
+function AudioPlayer({ src }: { src: string }) {
+  return (
+    <audio controls className="w-full h-10" preload="metadata">
+      <source src={src} />
+    </audio>
+  );
+}
+
+function TranscriptViewer({ messages }: { messages: Array<{ role: string; message: string }> | null }) {
+  if (!messages || messages.length === 0) return <p className="text-xs text-white/30">No transcript available</p>;
+  return (
+    <div className="space-y-2 max-h-60 overflow-y-auto">
+      {messages.map((msg, i) => (
+        <div key={i} className={`flex gap-2 ${msg.role === "assistant" ? "" : "flex-row-reverse"}`}>
+          <div className={`max-w-[80%] px-3 py-2 rounded-lg text-xs ${msg.role === "assistant" ? "bg-purple-500/10 text-purple-200" : "bg-white/5 text-white/70"}`}>
+            {msg.message}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export default function AdminCallsPage() {
+  const [calls, setCalls] = useState<Call[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [statusFilter, setStatusFilter] = useState("");
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
+
+  const fetchCalls = useCallback(async () => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams();
+      if (statusFilter) params.set("status", statusFilter);
+      params.set("page", String(page));
+      params.set("limit", "50");
+      const res = await fetch(`/api/admin/calls?${params}`, { credentials: "include" });
+      if (!res.ok) throw new Error("Failed to fetch calls");
+      const data = await res.json();
+      setCalls(data.calls || []);
+      setTotal(data.total || 0);
+    } catch (err) { console.error("Failed to load calls:", err); }
+    finally { setLoading(false); }
+  }, [statusFilter, page]);
+
+  useEffect(() => { fetchCalls(); }, [fetchCalls]);
+
+  const totalPages = Math.ceil(total / 50);
+
+  return (
+    <div className="max-w-7xl mx-auto p-6">
+      <div className="flex flex-wrap items-center gap-4 mb-8">
+        <h1 className="text-3xl font-bold text-white mr-auto">Call History</h1>
+        <select value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }} className="bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-sm text-white focus:border-white/30 focus:outline-none appearance-none">
+          {STATUS_OPTIONS.map((opt) => <option key={opt.value} value={opt.value} className="bg-[#12121a]">{opt.label}</option>)}
+        </select>
+      </div>
+
+      <div className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="bg-white/5">
+                <th className="text-left px-6 py-3 text-xs font-medium text-white/40 uppercase tracking-wider">Contact</th>
+                <th className="text-left px-6 py-3 text-xs font-medium text-white/40 uppercase tracking-wider">Phone</th>
+                <th className="text-left px-6 py-3 text-xs font-medium text-white/40 uppercase tracking-wider">Status</th>
+                <th className="text-left px-6 py-3 text-xs font-medium text-white/40 uppercase tracking-wider">Duration</th>
+                <th className="text-left px-6 py-3 text-xs font-medium text-white/40 uppercase tracking-wider">Recording</th>
+                <th className="text-left px-6 py-3 text-xs font-medium text-white/40 uppercase tracking-wider">Analysis</th>
+                <th className="text-left px-6 py-3 text-xs font-medium text-white/40 uppercase tracking-wider">Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading ? (
+                <tr><td colSpan={7} className="px-6 py-8 text-center text-white/30 text-sm">Loading...</td></tr>
+              ) : calls.length === 0 ? (
+                <tr><td colSpan={7} className="px-6 py-8 text-center text-white/30 text-sm">No calls found.</td></tr>
+              ) : calls.map((call) => (
+                <>
+                  <tr key={call.id} onClick={() => setExpandedId(expandedId === call.id ? null : call.id)} className="border-b border-white/5 hover:bg-white/5 cursor-pointer transition-all">
+                    <td className="px-6 py-4">
+                      <p className="text-sm font-medium text-white">{call.contact?.name || "Unknown"}</p>
+                      {call.contact?.company && <p className="text-xs text-white/40">{call.contact.company}</p>}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-white/60 font-mono">{call.contact?.phone || "\u2014"}</td>
+                    <td className="px-6 py-4"><StatusBadge status={call.status} size="sm" /></td>
+                    <td className="px-6 py-4 text-sm text-white/60">{formatDuration(call.duration_seconds)}</td>
+                    <td className="px-6 py-4">
+                      {call.recording_url ? (
+                        <span className="inline-flex items-center gap-1 text-xs text-green-400/70">
+                          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19.114 5.636a9 9 0 010 12.728M16.463 8.288a5.25 5.25 0 010 7.424M6.75 8.25l4.72-4.72a.75.75 0 011.28.53v15.88a.75.75 0 01-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.01 9.01 0 012.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75z" /></svg>
+                          Available
+                        </span>
+                      ) : <span className="text-xs text-white/20">&mdash;</span>}
+                    </td>
+                    <td className="px-6 py-4">
+                      {call.analysis_status === "completed" && call.session_id ? (
+                        <Link to={`/analysis/${call.session_id}`} onClick={(e) => e.stopPropagation()} className="text-xs text-purple-400 hover:text-purple-300 underline underline-offset-2 transition-colors">View Analysis</Link>
+                      ) : <StatusBadge status={call.analysis_status} size="sm" />}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-white/40">{formatDate(call.created_at)}</td>
+                  </tr>
+                  {expandedId === call.id && (
+                    <tr key={`${call.id}-expanded`}>
+                      <td colSpan={7} className="px-6 py-4 bg-white/[0.02]">
+                        <div className="max-w-3xl space-y-4">
+                          <div>
+                            <h4 className="text-sm font-medium text-white/70 mb-2">Recording</h4>
+                            {call.recording_url ? <AudioPlayer src={call.recording_url} /> : <p className="text-xs text-white/30">No recording available</p>}
+                          </div>
+                          <div>
+                            <h4 className="text-sm font-medium text-white/70 mb-2">Transcript</h4>
+                            <TranscriptViewer messages={call.transcript_messages} />
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between px-6 py-3 border-t border-white/5">
+            <p className="text-xs text-white/30">Showing {(page - 1) * 50 + 1}-{Math.min(page * 50, total)} of {total}</p>
+            <div className="flex gap-1">
+              <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1} className="px-3 py-1 text-xs rounded-lg bg-white/5 text-white/40 hover:bg-white/10 disabled:opacity-30 transition-colors">Prev</button>
+              <button onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page === totalPages} className="px-3 py-1 text-xs rounded-lg bg-white/5 text-white/40 hover:bg-white/10 disabled:opacity-30 transition-colors">Next</button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
