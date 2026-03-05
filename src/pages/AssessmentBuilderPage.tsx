@@ -54,6 +54,10 @@ export default function AssessmentBuilderPage() {
   const [isFullscreen, setIsFullscreen] = useState(() => {
     try { return localStorage.getItem("cascade-builder-fullscreen") === "true"; } catch { return false; }
   });
+  const [chatWidth, setChatWidth] = useState(() => {
+    try { return parseInt(localStorage.getItem("cascade-chat-width") || "420") || 420; } catch { return 420; }
+  });
+  const [isResizing, setIsResizing] = useState(false);
   const [attachments, setAttachments] = useState<ChatAttachment[]>([]);
   const [isDragging, setIsDragging] = useState(false);
 
@@ -61,6 +65,7 @@ export default function AssessmentBuilderPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const dragCounterRef = useRef(0);
+  const resizeRef = useRef<{ startX: number; startWidth: number } | null>(null);
 
   // ============================================================
   // Effects
@@ -84,6 +89,39 @@ export default function AssessmentBuilderPage() {
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
   }, [isFullscreen]);
+
+  // Persist chat width
+  useEffect(() => {
+    try { localStorage.setItem("cascade-chat-width", String(chatWidth)); } catch { /* noop */ }
+  }, [chatWidth]);
+
+  // Chat panel resize via drag handle
+  const handleResizeStart = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    resizeRef.current = { startX: e.clientX, startWidth: chatWidth };
+    setIsResizing(true);
+  }, [chatWidth]);
+
+  useEffect(() => {
+    if (!isResizing) return;
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!resizeRef.current) return;
+      // Dragging left = increase chat width (handle is on left edge of chat)
+      const delta = resizeRef.current.startX - e.clientX;
+      const newWidth = Math.min(900, Math.max(320, resizeRef.current.startWidth + delta));
+      setChatWidth(newWidth);
+    };
+    const handleMouseUp = () => {
+      setIsResizing(false);
+      resizeRef.current = null;
+    };
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseup", handleMouseUp);
+    return () => {
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [isResizing]);
 
   // Load existing assessment when editing
   useEffect(() => {
@@ -340,6 +378,27 @@ export default function AssessmentBuilderPage() {
         </div>
 
         <div className="flex items-center gap-2">
+          {/* Chat width presets */}
+          <div className="flex items-center bg-white/[0.03] border border-white/[0.06] rounded-lg overflow-hidden">
+            {([
+              { w: 420, label: "S", title: "Narrow chat" },
+              { w: 600, label: "M", title: "Medium chat" },
+              { w: 800, label: "L", title: "Wide chat" },
+            ] as const).map((preset) => (
+              <button
+                key={preset.w}
+                onClick={() => setChatWidth(preset.w)}
+                className={`px-2 py-1.5 text-[10px] font-semibold transition-colors ${
+                  Math.abs(chatWidth - preset.w) < 30
+                    ? "bg-white/10 text-white/70"
+                    : "text-white/25 hover:text-white/50"
+                }`}
+                title={preset.title}
+              >
+                {preset.label}
+              </button>
+            ))}
+          </div>
           {/* Fullscreen toggle */}
           <button
             onClick={() => setIsFullscreen((f) => !f)}
@@ -370,8 +429,26 @@ export default function AssessmentBuilderPage() {
           />
         </div>
 
+        {/* Resize handle */}
+        <div
+          onMouseDown={handleResizeStart}
+          className={`w-1.5 shrink-0 cursor-col-resize group relative z-10 ${isResizing ? "bg-purple-500/30" : "hover:bg-white/10"} transition-colors`}
+          title="Drag to resize chat"
+        >
+          <div className={`absolute inset-y-0 -left-1 -right-1 ${isResizing ? "" : "group-hover:bg-white/5"}`} />
+          {/* Visible grip dots */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className="w-0.5 h-0.5 rounded-full bg-white/30" />
+            <div className="w-0.5 h-0.5 rounded-full bg-white/30" />
+            <div className="w-0.5 h-0.5 rounded-full bg-white/30" />
+          </div>
+        </div>
+
         {/* Right: AI Conversation */}
-        <div className="w-[420px] shrink-0 border-l border-white/[0.06] flex flex-col min-w-0 relative">
+        <div
+          style={{ width: chatWidth }}
+          className={`shrink-0 border-l border-white/[0.06] flex flex-col min-w-0 relative ${isResizing ? "select-none" : ""}`}
+        >
           {/* Drag overlay */}
           {isDragging && (
             <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm border-2 border-dashed border-purple-400/50 rounded-xl pointer-events-none">
