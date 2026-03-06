@@ -44,6 +44,7 @@ export default function InterviewPage() {
   const [answeredQuestions, setAnsweredQuestions] = useState<AnsweredQuestion[]>([]);
   const [skippedQuestionIds, setSkippedQuestionIds] = useState<string[]>([]);
   const [conversationHistories, setConversationHistories] = useState<Record<string, ConversationMessage[]>>({});
+  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
 
   // Dynamic assessment metadata (populated from server for non-default assessments)
   const [assessmentMeta, setAssessmentMeta] = useState<AssessmentMeta | null>(null);
@@ -54,6 +55,14 @@ export default function InterviewPage() {
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
   }, [currentQuestion?.id]);
+
+  // Auto-clear save status after 3 seconds
+  useEffect(() => {
+    if (saveStatus === "saved" || saveStatus === "error") {
+      const timer = setTimeout(() => setSaveStatus("idle"), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [saveStatus]);
 
   // Edit mode state
   const [editingQuestion, setEditingQuestion] = useState<{
@@ -150,6 +159,7 @@ export default function InterviewPage() {
   const handleSubmit = async (answer: string | number | string[], conversationHistory?: ConversationMessage[]) => {
     if (!currentQuestion) return;
     setIsSubmitting(true);
+    setSaveStatus("saving");
     try {
       const res = await fetch(`${API_BASE}/api/interview/respond`, {
         method: "POST",
@@ -157,7 +167,7 @@ export default function InterviewPage() {
         body: JSON.stringify({ sessionId, questionId: currentQuestion.id, answer, conversationHistory }),
       });
       const data = await res.json();
-      if (data.type === "follow_up") return; // QuestionCard handles this
+      if (data.type === "follow_up") { setSaveStatus("idle"); return; } // QuestionCard handles this
 
       // Save conversation history if present (fallback path for AI conversations)
       if (data.conversationHistory) {
@@ -173,9 +183,11 @@ export default function InterviewPage() {
       // Update skipped IDs if server provides them
       if (data.skippedQuestionIds) setSkippedQuestionIds(data.skippedQuestionIds);
 
+      setSaveStatus("saved");
+
       if (data.type === "complete") { setCompletionInfo({ assessmentTypeId: data.assessmentTypeId, assessmentName: data.assessmentName }); setIsComplete(true); }
       else if (data.type === "next_question") { setCurrentQuestion(data.currentQuestion); setProgress(data.progress); }
-    } catch { setError("Something went wrong."); }
+    } catch { setSaveStatus("error"); setError("Something went wrong."); }
     finally { setIsSubmitting(false); }
   };
 
@@ -183,6 +195,7 @@ export default function InterviewPage() {
 
   const handleConversationComplete = (serverData: { type: string; currentQuestion?: unknown; progress?: unknown; skippedQuestionIds?: string[]; session?: unknown; conversationHistory?: ConversationMessage[]; assessmentTypeId?: string; assessmentName?: string }) => {
     if (!currentQuestion) return;
+    setSaveStatus("saved");
 
     // Save the conversation history for this question so it can be reviewed on back-nav
     if (serverData.conversationHistory) {
@@ -231,6 +244,7 @@ export default function InterviewPage() {
   const handleEditSubmit = async (answer: string | number | string[]) => {
     if (!editingQuestion) return;
     setIsSubmitting(true);
+    setSaveStatus("saving");
     try {
       const res = await fetch(`${API_BASE}/api/interview/respond`, {
         method: "PUT",
@@ -246,9 +260,11 @@ export default function InterviewPage() {
         )
       );
 
+      setSaveStatus("saved");
+
       // Return to current question
       exitEditMode();
-    } catch { setError("Failed to update answer."); }
+    } catch { setSaveStatus("error"); setError("Failed to update answer."); }
     finally { setIsSubmitting(false); }
   };
 
@@ -271,6 +287,7 @@ export default function InterviewPage() {
   const handleSkip = async () => {
     if (!currentQuestion) return;
     setIsSubmitting(true);
+    setSaveStatus("saving");
     try {
       const res = await fetch(`${API_BASE}/api/interview/respond`, {
         method: "POST",
@@ -282,10 +299,12 @@ export default function InterviewPage() {
       // Track as skipped
       setSkippedQuestionIds((prev) => [...prev, currentQuestion.id]);
 
+      setSaveStatus("saved");
+
       if (data.type === "complete") { setCompletionInfo({ assessmentTypeId: data.assessmentTypeId, assessmentName: data.assessmentName }); setIsComplete(true); }
       else if (data.type === "next_question") { setCurrentQuestion(data.currentQuestion); setProgress(data.progress); }
       if (data.skippedQuestionIds) setSkippedQuestionIds(data.skippedQuestionIds);
-    } catch { setError("Something went wrong."); }
+    } catch { setSaveStatus("error"); setError("Something went wrong."); }
     finally { setIsSubmitting(false); }
   };
 
@@ -386,17 +405,44 @@ export default function InterviewPage() {
             phaseOrder={phaseProps.phaseOrder}
             phaseLabels={phaseProps.phaseLabels}
           />
-          {/* Current progress bar */}
+          {/* Current progress bar + save indicator */}
           {progress && (
-            <ProgressBar
-              questionNumber={progress.questionNumber}
-              totalQuestions={progress.totalQuestions}
-              phase={progress.phase}
-              section={progress.section}
-              completedPercentage={progress.completedPercentage}
-              phaseLabels={phaseProps.phaseLabels}
-              sectionLabels={phaseProps.sectionLabels}
-            />
+            <div className="space-y-1">
+              <ProgressBar
+                questionNumber={progress.questionNumber}
+                totalQuestions={progress.totalQuestions}
+                phase={progress.phase}
+                section={progress.section}
+                completedPercentage={progress.completedPercentage}
+                phaseLabels={phaseProps.phaseLabels}
+                sectionLabels={phaseProps.sectionLabels}
+              />
+              <div className="flex items-center justify-between min-h-[20px]">
+                {/* Resume hint — shown after first answer */}
+                {answeredQuestions.length > 0 && saveStatus === "idle" && (
+                  <span className="text-[10px] text-white/25">You can close and resume anytime</span>
+                )}
+                {/* Save status indicator */}
+                {saveStatus === "saving" && (
+                  <span className="ml-auto flex items-center gap-1 text-[10px] text-white/30">
+                    <span className="w-3 h-3 border border-white/20 border-t-white/50 rounded-full animate-spin" />
+                    Saving...
+                  </span>
+                )}
+                {saveStatus === "saved" && (
+                  <span className="ml-auto flex items-center gap-1 text-[10px] text-green-400/70 animate-fade-in">
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                    Progress saved
+                  </span>
+                )}
+                {saveStatus === "error" && (
+                  <span className="ml-auto flex items-center gap-1 text-[10px] text-red-400/70">
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    Save failed
+                  </span>
+                )}
+              </div>
+            </div>
           )}
         </div>
       </header>

@@ -40,7 +40,7 @@ export async function fetchStats(filters?: DashboardFilters) {
   return res.json();
 }
 
-export async function fetchSessions(filters?: DashboardFilters & { since?: string; status?: string }) {
+export async function fetchSessions(filters?: DashboardFilters & { since?: string; status?: string; page?: number; limit?: number }) {
   const params = new URLSearchParams();
   if (filters?.since) params.set("since", filters.since);
   if (filters?.status) params.set("status", filters.status);
@@ -50,6 +50,8 @@ export async function fetchSessions(filters?: DashboardFilters & { since?: strin
   if (filters?.dateTo) params.set("dateTo", filters.dateTo);
   if (filters?.industry) params.set("industry", filters.industry);
   if (filters?.archetype) params.set("archetype", filters.archetype);
+  if (filters?.page) params.set("page", String(filters.page));
+  if (filters?.limit) params.set("limit", String(filters.limit));
   const qs = params.toString();
   const res = await adminFetch(`/api/admin/sessions${qs ? `?${qs}` : ""}`);
   return res.json();

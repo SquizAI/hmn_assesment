@@ -45,13 +45,19 @@ router.post("/cleanup", async (_req, res) => {
     await getSupabase().from("cascade_analyses").delete().in("session_id", ids);
     await getSupabase().from("cascade_sessions").delete().in("id", ids);
 
+    // Clean up expired resume tokens
+    const { count: expiredTokens } = await getSupabase()
+      .from("cascade_resume_tokens")
+      .delete({ count: "exact" })
+      .lt("expires_at", new Date().toISOString());
+
     // Update last_cleanup_at
     await getSupabase()
       .from("cascade_settings")
       .update({ value: { ...settings, last_cleanup_at: new Date().toISOString() }, updated_at: new Date().toISOString() })
       .eq("key", "retention");
 
-    res.json({ deleted: ids.length });
+    res.json({ deleted: ids.length, expiredTokensCleaned: expiredTokens || 0 });
   } catch (err) {
     console.error("[cleanup] error:", err);
     res.status(500).json({ error: "Cleanup failed" });

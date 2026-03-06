@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import StatusBadge from "../components/admin/StatusBadge";
+import ConfirmDialog from "../components/ui/ConfirmDialog";
 
 interface Campaign {
   id: string;
@@ -31,6 +32,13 @@ export default function AdminCampaignDetailPage() {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
+
+  const showToast = (message: string, type: "success" | "error") => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 4000);
+  };
 
   useEffect(() => {
     if (!id) return;
@@ -44,7 +52,7 @@ export default function AdminCampaignDetailPage() {
 
   const handleAction = async (action: "start" | "pause" | "delete") => {
     if (!id) return;
-    if (action === "delete" && !confirm("Delete this campaign and all its contacts?")) return;
+    setShowDeleteConfirm(false);
     setActionLoading(true);
     try {
       if (action === "delete") {
@@ -57,7 +65,9 @@ export default function AdminCampaignDetailPage() {
       const data = await res.json();
       setCampaign(data.campaign);
       setContacts(data.contacts || []);
+      showToast(`Campaign ${action === "start" ? "started" : "paused"}`, "success");
     } catch (err) {
+      showToast(`Failed to ${action} campaign`, "error");
       console.error(`Failed to ${action} campaign:`, err);
     } finally {
       setActionLoading(false);
@@ -72,6 +82,8 @@ export default function AdminCampaignDetailPage() {
 
   return (
     <div className="max-w-5xl mx-auto p-6">
+      {toast && <div className={`fixed top-6 right-6 z-50 px-5 py-3 rounded-xl text-sm font-medium shadow-lg border transition-all ${toast.type === "success" ? "bg-green-500/20 text-green-400 border-green-500/30" : "bg-red-500/20 text-red-400 border-red-500/30"}`}>{toast.message}</div>}
+
       <button onClick={() => navigate("/admin/campaigns")} className="text-white/40 hover:text-white/60 text-sm mb-4 inline-flex items-center gap-1 transition-colors">
         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" /></svg>
         Back to Campaigns
@@ -91,10 +103,10 @@ export default function AdminCampaignDetailPage() {
           )}
           {campaign.status === "active" && (
             <button onClick={() => handleAction("pause")} disabled={actionLoading} className="px-4 py-2 text-sm font-medium rounded-lg bg-yellow-600/80 text-white hover:bg-yellow-500/80 disabled:opacity-50 transition-all">
-              Pause
+              {actionLoading ? "Pausing..." : "Pause"}
             </button>
           )}
-          <button onClick={() => handleAction("delete")} disabled={actionLoading} className="px-4 py-2 text-sm font-medium rounded-lg bg-red-600/20 text-red-400 hover:bg-red-600/30 border border-red-500/20 disabled:opacity-50 transition-all">
+          <button onClick={() => setShowDeleteConfirm(true)} disabled={actionLoading} className="px-4 py-2 text-sm font-medium rounded-lg bg-red-600/20 text-red-400 hover:bg-red-600/30 border border-red-500/20 disabled:opacity-50 transition-all">
             Delete
           </button>
         </div>
@@ -150,6 +162,14 @@ export default function AdminCampaignDetailPage() {
           </tbody>
         </table>
       </div>
+      <ConfirmDialog
+        open={showDeleteConfirm}
+        title="Delete Campaign"
+        message="This will permanently delete the campaign and all its contacts. This action cannot be undone."
+        confirmLabel="Delete Campaign"
+        onConfirm={() => handleAction("delete")}
+        onCancel={() => setShowDeleteConfirm(false)}
+      />
     </div>
   );
 }

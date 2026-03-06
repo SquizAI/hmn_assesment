@@ -100,6 +100,9 @@ export default function AdminSessionsPage() {
   const [shiftHeld, setShiftHeld] = useState(false);
   const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set());
   const [toast, setToast] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalSessions, setTotalSessions] = useState(0);
+  const pageSize = 50;
 
   const exportRef = useRef<HTMLDivElement>(null);
   const formatTs = useRelativeTime ? formatRelative : formatAbsolute;
@@ -137,22 +140,23 @@ export default function AdminSessionsPage() {
     return () => clearTimeout(t);
   }, [toast]);
 
-  const loadSessions = useCallback(async () => {
+  const loadSessions = useCallback(async (page = currentPage) => {
     setLoading(true);
     try {
-      const data = await fetchSessions();
+      const data = await fetchSessions({ page, limit: pageSize });
       setSessions(data.sessions);
+      if (data.total !== undefined) setTotalSessions(data.total);
     } catch {
       setSessions([]);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [currentPage]);
 
   useEffect(() => {
-    loadSessions();
+    loadSessions(currentPage);
     fetchAssessments().then((d) => setAssessments(d.assessments ?? [])).catch(() => {});
-  }, [loadSessions]);
+  }, [currentPage]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Derived data for filters
   const companies = useMemo(() => {
@@ -431,13 +435,34 @@ export default function AdminSessionsPage() {
           </table>
         </div>
 
-        {/* Table footer with count */}
+        {/* Table footer with count + pagination */}
         <div className="border-t border-white/5 px-4 py-2.5 flex items-center justify-between text-xs text-white/30">
           <span>
             {filteredSessions.length === sessions.length
-              ? `${sessions.length} sessions`
-              : `${filteredSessions.length} of ${sessions.length} sessions`}
+              ? `${totalSessions > sessions.length ? `${sessions.length} of ${totalSessions}` : `${sessions.length}`} sessions`
+              : `${filteredSessions.length} of ${sessions.length} sessions (filtered)`}
           </span>
+          {totalSessions > pageSize && (
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage <= 1}
+                className="px-2.5 py-1 rounded-lg border border-white/10 text-white/40 hover:text-white/70 hover:bg-white/5 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              >
+                Prev
+              </button>
+              <span className="text-white/50">
+                Page {currentPage} of {Math.ceil(totalSessions / pageSize)}
+              </span>
+              <button
+                onClick={() => setCurrentPage((p) => Math.min(Math.ceil(totalSessions / pageSize), p + 1))}
+                disabled={currentPage >= Math.ceil(totalSessions / pageSize)}
+                className="px-2.5 py-1 rounded-lg border border-white/10 text-white/40 hover:text-white/70 hover:bg-white/5 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              >
+                Next
+              </button>
+            </div>
+          )}
           {shiftHeld && <span className="text-red-400/40">Hold Shift to delete</span>}
         </div>
       </div>

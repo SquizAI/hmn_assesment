@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import StatusBadge from "../components/admin/StatusBadge";
+import ConfirmDialog from "../components/ui/ConfirmDialog";
 
 interface Contact {
   id: string;
@@ -43,6 +44,13 @@ export default function AdminContactsPage() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [calling, setCalling] = useState(false);
   const [newContact, setNewContact] = useState({ name: "", phone: "", email: "", company: "", role: "", industry: "", team_size: "" });
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
+
+  const showToast = (message: string, type: "success" | "error") => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 4000);
+  };
 
   const fetchContacts = useCallback(async () => {
     setLoading(true);
@@ -86,9 +94,10 @@ export default function AdminContactsPage() {
     setCalling(true);
     try {
       await fetch("/api/admin/calls/initiate", { method: "POST", headers: { "Content-Type": "application/json" }, credentials: "include", body: JSON.stringify({ contactIds: Array.from(selectedIds) }) });
+      showToast(`${selectedIds.size} call(s) initiated`, "success");
       setSelectedIds(new Set());
       fetchContacts();
-    } catch (err) { console.error("Failed to initiate calls:", err); }
+    } catch (err) { showToast("Failed to initiate calls", "error"); console.error("Failed to initiate calls:", err); }
     finally { setCalling(false); }
   };
 
@@ -96,23 +105,26 @@ export default function AdminContactsPage() {
     e.preventDefault();
     try {
       const res = await fetch("/api/admin/contacts", { method: "POST", headers: { "Content-Type": "application/json" }, credentials: "include", body: JSON.stringify(newContact) });
-      if (!res.ok) return;
+      if (!res.ok) throw new Error("Failed");
       setNewContact({ name: "", phone: "", email: "", company: "", role: "", industry: "", team_size: "" });
       setShowAddForm(false);
+      showToast("Contact added", "success");
       fetchContacts();
-    } catch (err) { console.error("Failed to add contact:", err); }
+    } catch (err) { showToast("Failed to add contact", "error"); console.error("Failed to add contact:", err); }
   };
 
   const handleDeleteContact = async (id: string) => {
-    if (!confirm("Delete this contact?")) return;
-    try { await fetch(`/api/admin/contacts/${id}`, { method: "DELETE", credentials: "include" }); fetchContacts(); }
-    catch (err) { console.error("Failed to delete contact:", err); }
+    try { await fetch(`/api/admin/contacts/${id}`, { method: "DELETE", credentials: "include" }); showToast("Contact deleted", "success"); fetchContacts(); }
+    catch (err) { showToast("Failed to delete contact", "error"); console.error("Failed to delete contact:", err); }
+    finally { setDeleteTarget(null); }
   };
 
   const totalPages = Math.ceil(total / 50);
 
   return (
     <div className="max-w-7xl mx-auto p-6">
+      {toast && <div className={`fixed top-6 right-6 z-50 px-5 py-3 rounded-xl text-sm font-medium shadow-lg border transition-all ${toast.type === "success" ? "bg-green-500/20 text-green-400 border-green-500/30" : "bg-red-500/20 text-red-400 border-red-500/30"}`}>{toast.message}</div>}
+
       <div className="flex flex-wrap items-center gap-4 mb-6">
         <h1 className="text-3xl font-bold text-white mr-auto">Contacts</h1>
         <input type="text" placeholder="Search contacts..." value={searchInput} onChange={(e) => setSearchInput(e.target.value)} className="bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-sm text-white placeholder-white/30 focus:border-white/30 focus:outline-none w-64" />
@@ -181,7 +193,7 @@ export default function AdminContactsPage() {
                   <td className="px-4 py-3"><div className="flex gap-1 flex-wrap">{(contact.tags || []).slice(0, 3).map((tag) => <span key={tag} className="px-1.5 py-0.5 text-[10px] bg-white/5 text-white/40 rounded">{tag}</span>)}</div></td>
                   <td className="px-4 py-3 text-sm text-white/40">{formatDate(contact.created_at)}</td>
                   <td className="px-4 py-3 text-right">
-                    <button onClick={() => handleDeleteContact(contact.id)} title="Delete" className="p-1.5 text-white/30 hover:text-red-400 transition-colors rounded-lg hover:bg-white/5">
+                    <button onClick={() => setDeleteTarget(contact.id)} title="Delete" className="p-1.5 text-white/30 hover:text-red-400 transition-colors rounded-lg hover:bg-white/5">
                       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" /></svg>
                     </button>
                   </td>
@@ -200,6 +212,14 @@ export default function AdminContactsPage() {
           </div>
         )}
       </div>
+      <ConfirmDialog
+        open={!!deleteTarget}
+        title="Delete Contact"
+        message="This contact and their associated data will be permanently removed."
+        confirmLabel="Delete"
+        onConfirm={() => deleteTarget && handleDeleteContact(deleteTarget)}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </div>
   );
 }

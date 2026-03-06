@@ -43,6 +43,12 @@ export default function AdminCampaignsPage() {
   const [windowEnd, setWindowEnd] = useState("17:00");
   const [timezone, setTimezone] = useState("America/New_York");
   const [maxConcurrent, setMaxConcurrent] = useState(3);
+  const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
+
+  const showToast = (message: string, type: "success" | "error") => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 4000);
+  };
 
   const fetchCampaigns = async () => {
     setLoading(true);
@@ -94,8 +100,10 @@ export default function AdminCampaignsPage() {
       if (!res.ok) throw new Error("Failed to create campaign");
       resetForm();
       setShowNewForm(false);
+      showToast("Campaign created", "success");
       fetchCampaigns();
     } catch (err) {
+      showToast("Failed to create campaign", "error");
       console.error("Failed to create campaign:", err);
     } finally {
       setCreating(false);
@@ -126,6 +134,8 @@ export default function AdminCampaignsPage() {
 
   return (
     <div className="max-w-7xl mx-auto p-6">
+      {toast && <div className={`fixed top-6 right-6 z-50 px-5 py-3 rounded-xl text-sm font-medium shadow-lg border transition-all ${toast.type === "success" ? "bg-green-500/20 text-green-400 border-green-500/30" : "bg-red-500/20 text-red-400 border-red-500/30"}`}>{toast.message}</div>}
+
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-3xl font-bold text-white">Campaigns</h1>
         <button onClick={() => setShowNewForm(!showNewForm)} className="px-5 py-2.5 text-sm font-medium rounded-xl bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-500 hover:to-blue-500 transition-all">

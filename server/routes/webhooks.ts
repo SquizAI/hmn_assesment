@@ -29,6 +29,10 @@ router.post("/", async (req, res) => {
   try {
     const { url, campaign_id, events, secret, is_active } = req.body;
     if (!url || !events?.length) { res.status(400).json({ error: "url and events are required" }); return; }
+    // Validate URL format
+    try { const u = new URL(url); if (!["http:", "https:"].includes(u.protocol)) throw new Error(); }
+    catch { res.status(400).json({ error: "url must be a valid http/https URL" }); return; }
+    if (!Array.isArray(events)) { res.status(400).json({ error: "events must be an array" }); return; }
 
     const id = crypto.randomUUID();
     const row = {

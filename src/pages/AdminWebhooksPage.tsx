@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
+import ConfirmDialog from "../components/ui/ConfirmDialog";
 
 interface Webhook {
   id: string;
@@ -37,6 +38,7 @@ export default function AdminWebhooksPage() {
   const [formEvents, setFormEvents] = useState<string[]>(["call_completed", "campaign_completed"]);
   const [formSecret, setFormSecret] = useState("");
   const [formActive, setFormActive] = useState(true);
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
 
   const showToast = useCallback((message: string, type: "success" | "error") => {
     setToast({ message, type });
@@ -80,9 +82,9 @@ export default function AdminWebhooksPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Delete this webhook?")) return;
     try { await fetch(`/api/admin/webhooks/${id}`, { method: "DELETE", credentials: "include" }); showToast("Deleted", "success"); fetchData(); }
     catch { showToast("Failed to delete", "error"); }
+    finally { setDeleteTarget(null); }
   };
 
   const handleToggle = async (wh: Webhook) => {
@@ -184,12 +186,20 @@ export default function AdminWebhooksPage() {
               <div className="flex items-center gap-2 pt-2 border-t border-white/5">
                 <button onClick={() => handleTest(wh.id)} disabled={testingId === wh.id} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-white/5 text-white/60 hover:bg-white/10 disabled:opacity-50 transition-all">{testingId === wh.id ? "Testing..." : "Test"}</button>
                 <button onClick={() => { setEditingWebhook(wh); setFormUrl(wh.url); setFormEvents([...wh.events]); setFormSecret(wh.secret || ""); setFormActive(wh.is_active); setShowForm(true); }} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-white/5 text-white/60 hover:bg-white/10 transition-all">Edit</button>
-                <button onClick={() => handleDelete(wh.id)} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-white/5 text-red-400/60 hover:bg-red-500/10 hover:text-red-400 transition-all ml-auto">Delete</button>
+                <button onClick={() => setDeleteTarget(wh.id)} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-white/5 text-red-400/60 hover:bg-red-500/10 hover:text-red-400 transition-all ml-auto">Delete</button>
               </div>
             </div>
           ))}
         </div>
       )}
+      <ConfirmDialog
+        open={!!deleteTarget}
+        title="Delete Webhook"
+        message="This webhook will stop receiving event notifications. This action cannot be undone."
+        confirmLabel="Delete"
+        onConfirm={() => deleteTarget && handleDelete(deleteTarget)}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </div>
   );
 }

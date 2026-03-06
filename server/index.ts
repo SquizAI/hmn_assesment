@@ -17,7 +17,7 @@ import {
 } from "./admin-tools.js";
 import {
   loadSessionFromDb, saveSessionToDb, deleteSessionFromDb,
-  listAllSessions, listAllAssessments, lookupSessionsByEmail,
+  listAllSessions, listSessionsPaginated, listAllAssessments, lookupSessionsByEmail,
   loadInvitationByToken, loadInvitationById, updateInvitationStatus, findInvitationBySessionId,
   loadAssessment,
 } from "./supabase.js";
@@ -585,8 +585,21 @@ app.get("/api/sessions", requireAdmin, async (_req, res) => {
 app.post("/api/sessions", async (req, res) => {
   try {
     const { participant, assessmentTypeId, inviteToken } = req.body;
-    if (!participant?.name || !participant?.company || !participant?.email) {
-      res.status(400).json({ error: "name, company, and business email are required" });
+    if (!participant || typeof participant !== "object") {
+      res.status(400).json({ error: "participant object is required" });
+      return;
+    }
+    const { name, company, email } = participant as Record<string, unknown>;
+    if (!name || typeof name !== "string" || name.trim().length < 1 || (name as string).length > 200) {
+      res.status(400).json({ error: "name is required (1-200 characters)" });
+      return;
+    }
+    if (!company || typeof company !== "string" || (company as string).trim().length < 1 || (company as string).length > 200) {
+      res.status(400).json({ error: "company is required (1-200 characters)" });
+      return;
+    }
+    if (!email || typeof email !== "string" || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email as string)) {
+      res.status(400).json({ error: "a valid business email is required" });
       return;
     }
 
@@ -1506,6 +1519,12 @@ YOUR PERSONALITY & RULES:
 // --- Participant-facing: Request a phone call for voice assessment ---
 app.post("/api/interview/request-call", async (req, res) => {
   try {
+    // Check VAPI configuration before proceeding
+    if (!process.env.VAPI_PRIVATE_KEY || !process.env.VAPI_PHONE_NUMBER_ID) {
+      res.status(503).json({ error: "Voice calling is not configured. Please contact your administrator." });
+      return;
+    }
+
     const { sessionId, phone } = req.body;
     if (!sessionId || !phone) {
       res.status(400).json({ error: "sessionId and phone are required" });
@@ -2193,10 +2212,24 @@ app.get("/api/admin/stats", requireAdmin, async (req, res) => {
 
 app.get("/api/admin/sessions", requireAdmin, async (req, res) => {
   try {
+    const { since, status, assessmentTypeId, company, page, limit } = req.query as Record<string, string>;
+
+    // If pagination params provided, use paginated query (new path)
+    if (page || limit) {
+      const result = await listSessionsPaginated({
+        page: page ? parseInt(page) : 1,
+        limit: limit ? parseInt(limit) : 50,
+        since, status, assessmentTypeId, company,
+      });
+      res.json(result);
+      return;
+    }
+
+    // Legacy: return all sessions (backward-compatible for dashboard etc.)
     const filters: { since?: string; status?: string; assessmentTypeId?: string } = {};
-    if (req.query.since) filters.since = req.query.since as string;
-    if (req.query.status) filters.status = req.query.status as string;
-    if (req.query.assessmentTypeId) filters.assessmentTypeId = req.query.assessmentTypeId as string;
+    if (since) filters.since = since;
+    if (status) filters.status = status;
+    if (assessmentTypeId) filters.assessmentTypeId = assessmentTypeId;
     res.json({ sessions: await listSessionsAdmin(Object.keys(filters).length > 0 ? filters : undefined) });
   } catch (err) { console.error("Admin sessions error:", err); res.status(500).json({ error: "Failed to list sessions" }); }
 });
@@ -3489,6 +3522,12 @@ After the final question, thank them warmly. Mention their responses will be ana
 // Initiate outbound call to a session participant
 app.post("/api/admin/calls/initiate", requireAdmin, async (req, res) => {
   try {
+    // Check VAPI configuration
+    if (!process.env.VAPI_PRIVATE_KEY || !process.env.VAPI_PHONE_NUMBER_ID) {
+      res.status(503).json({ error: "Voice calling is not configured. Set VAPI_PRIVATE_KEY and VAPI_PHONE_NUMBER_ID environment variables." });
+      return;
+    }
+
     const { sessionId, phone } = req.body;
     if (!sessionId || !phone) {
       res.status(400).json({ error: "sessionId and phone are required" });

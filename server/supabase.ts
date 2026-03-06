@@ -172,6 +172,41 @@ export async function listAllSessions(): Promise<InterviewSession[]> {
   return data.map((row) => dbRowToSession(row, [], [], null));
 }
 
+export async function listSessionsPaginated(options: {
+  page?: number; limit?: number; status?: string; since?: string;
+  company?: string; assessmentTypeId?: string;
+}): Promise<{ sessions: InterviewSession[]; total: number; page: number; limit: number }> {
+  const page = Math.max(1, options.page || 1);
+  const limit = Math.min(100, options.limit || 50);
+  const offset = (page - 1) * limit;
+
+  let query = getSupabase()
+    .from("cascade_sessions")
+    .select("*", { count: "exact" })
+    .order("created_at", { ascending: false })
+    .range(offset, offset + limit - 1);
+
+  if (options.status) query = query.eq("status", options.status);
+  if (options.since) query = query.gte("created_at", options.since);
+  if (options.assessmentTypeId) query = query.eq("assessment_config_id", options.assessmentTypeId);
+
+  const { data, error, count } = await query;
+  if (error || !data) return { sessions: [], total: 0, page, limit };
+
+  let sessions = data.map((row) => dbRowToSession(row, [], [], null));
+
+  // Client-side filter for JSONB company field (Supabase doesn't support nested JSONB ilike easily)
+  if (options.company) {
+    const companyLower = options.company.toLowerCase();
+    sessions = sessions.filter((s) => {
+      const p = s.participant as { company?: string } | undefined;
+      return p?.company?.toLowerCase().includes(companyLower);
+    });
+  }
+
+  return { sessions, total: count || 0, page, limit };
+}
+
 export async function listSessionsWithResponses(): Promise<InterviewSession[]> {
   const { data: sessions, error } = await getSupabase()
     .from("cascade_sessions")

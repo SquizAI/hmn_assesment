@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import ConfirmDialog from "../components/ui/ConfirmDialog";
 
 interface RetentionSettings {
   retention_days: number | null;
@@ -22,6 +23,7 @@ export default function AdminSettingsPage() {
   const [cleaning, setCleaning] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
   const [preview, setPreview] = useState<{ count: number; oldest: string | null } | null>(null);
+  const [showCleanupConfirm, setShowCleanupConfirm] = useState(false);
 
   const showToast = (message: string, type: "success" | "error") => {
     setToast({ message, type });
@@ -60,7 +62,7 @@ export default function AdminSettingsPage() {
   };
 
   const handleCleanup = async () => {
-    if (!confirm("Run data cleanup now? This will permanently delete old sessions.")) return;
+    setShowCleanupConfirm(false);
     setCleaning(true);
     try {
       const res = await fetch("/api/admin/cron/cleanup", { method: "POST", credentials: "include" });
@@ -128,9 +130,19 @@ export default function AdminSettingsPage() {
 
         <div className="flex items-center gap-3 pt-4 border-t border-white/5">
           <button onClick={handleSave} disabled={saving} className="px-5 py-2.5 text-sm font-medium rounded-lg bg-gradient-to-r from-purple-600 to-blue-600 text-white disabled:opacity-50 transition-all">{saving ? "Saving..." : "Save Settings"}</button>
-          <button onClick={handleCleanup} disabled={cleaning || !settings.retention_days} className="px-4 py-2.5 text-sm font-medium rounded-lg bg-white/10 text-white hover:bg-white/20 border border-white/10 disabled:opacity-50 transition-colors">{cleaning ? "Cleaning..." : "Run Cleanup Now"}</button>
+          <button onClick={() => setShowCleanupConfirm(true)} disabled={cleaning || !settings.retention_days} className="px-4 py-2.5 text-sm font-medium rounded-lg bg-white/10 text-white hover:bg-white/20 border border-white/10 disabled:opacity-50 transition-colors">{cleaning ? "Cleaning..." : "Run Cleanup Now"}</button>
         </div>
       </div>
+
+      <ConfirmDialog
+        open={showCleanupConfirm}
+        title="Run Data Cleanup"
+        message="This will permanently delete sessions older than the configured retention period. This action cannot be undone."
+        confirmLabel="Run Cleanup"
+        variant="warning"
+        onConfirm={handleCleanup}
+        onCancel={() => setShowCleanupConfirm(false)}
+      />
     </div>
   );
 }
