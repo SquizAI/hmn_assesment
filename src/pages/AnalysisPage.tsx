@@ -1,8 +1,12 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import type { CascadeAnalysis, DimensionScore, GapAnalysis, ServiceRecommendation, DeepDiveTrigger } from "../lib/types";
+import type { CascadeAnalysis, DeepDiveTrigger } from "../lib/types";
 import { API_BASE } from "../lib/api";
 import Button from "../components/ui/Button";
+import DimensionScoreCard from "../components/analysis/DimensionScoreCard";
+import GapAnalysisGrid from "../components/analysis/GapAnalysisGrid";
+import FlagsList from "../components/analysis/FlagsList";
+import ServiceRecommendations from "../components/analysis/ServiceRecommendations";
 
 // Default labels for the ai-readiness assessment
 const DEFAULT_DIM_LABELS: Record<string, string> = {
@@ -10,10 +14,6 @@ const DEFAULT_DIM_LABELS: Record<string, string> = {
   strategic_clarity: "Strategic Clarity", change_energy: "Change Energy", team_capacity: "Team Capacity",
   mission_alignment: "Mission Alignment", investment_readiness: "Investment Readiness",
 };
-
-function formatDimLabel(id: string): string {
-  return id.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
-}
 
 export default function AnalysisPage() {
   const { sessionId } = useParams<{ sessionId: string }>();
@@ -86,82 +86,28 @@ export default function AnalysisPage() {
           </section>
         )}
 
-        {/* Scores */}
+        {/* Dimension Scores */}
         <section>
           <h2 className="text-lg font-semibold text-white mb-6">Dimension Scores</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {analysis.dimensionScores.map((s: DimensionScore) => {
-              const c = s.score >= 70 ? "bg-green-500" : s.score >= 45 ? "bg-yellow-500" : "bg-red-500";
-              return (
-                <div key={s.dimension} className="bg-white/5 border border-white/10 rounded-xl p-4 space-y-3">
-                  <div className="flex items-center justify-between"><span className="text-sm font-medium text-white">{dimLabels[s.dimension] || formatDimLabel(s.dimension)}</span><div className="flex items-center gap-2"><span className="text-lg font-bold text-white">{s.score}</span><span className="text-xs text-white/30">/ 100</span></div></div>
-                  <div className="h-2 w-full bg-white/10 rounded-full overflow-hidden"><div className={`h-full rounded-full ${c} transition-all duration-1000`} style={{ width: `${s.score}%` }} /></div>
-                  {s.evidence.length > 0 && <p className="text-xs text-white/40 italic truncate">&ldquo;{s.evidence[0]}&rdquo;</p>}
-                </div>
-              );
-            })}
-          </div>
+          <DimensionScoreCard scores={analysis.dimensionScores} dimLabels={dimLabels} />
         </section>
 
-        {/* Gaps */}
+        {/* Gap Analysis */}
         {analysis.gaps.length > 0 && (
           <section>
             <h2 className="text-lg font-semibold text-white mb-6">Gap Analysis</h2>
-            <div className="space-y-4">
-              {analysis.gaps.map((g: GapAnalysis, i: number) => {
-                const s1 = analysis.dimensionScores.find(s => s.dimension === g.dimension1);
-                const s2 = analysis.dimensionScores.find(s => s.dimension === g.dimension2);
-                return (
-                  <div key={i} className="bg-orange-500/5 border border-orange-500/20 rounded-xl p-5 space-y-3">
-                    <div className="flex items-center justify-between"><span className="text-sm font-medium text-orange-300 capitalize">{g.pattern.replace(/_/g, " ")}</span><span className="text-xs text-orange-300/60">Severity: {g.severity}</span></div>
-                    <div className="flex items-center gap-4 text-sm"><span className="text-white/60">{dimLabels[g.dimension1] || formatDimLabel(g.dimension1)}: <strong className="text-white">{s1?.score ?? "?"}</strong></span><span className="text-white/20">vs</span><span className="text-white/60">{dimLabels[g.dimension2] || formatDimLabel(g.dimension2)}: <strong className="text-white">{s2?.score ?? "?"}</strong></span></div>
-                    <p className="text-sm text-white/50">{g.description}</p>
-                    <p className="text-xs text-orange-300/80 font-medium">{g.serviceRecommendation}</p>
-                  </div>
-                );
-              })}
-            </div>
+            <GapAnalysisGrid gaps={analysis.gaps} dimensionScores={analysis.dimensionScores} dimLabels={dimLabels} />
           </section>
         )}
 
-        {/* Flags */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {analysis.redFlags.length > 0 && (
-            <section className="bg-red-500/5 border border-red-500/20 rounded-2xl p-6">
-              <h3 className="text-sm font-semibold text-red-400 uppercase tracking-wider mb-4">Watch Out For</h3>
-              <ul className="space-y-3">{analysis.redFlags.map((f, i) => <li key={i} className="flex gap-2 text-sm text-white/70"><span className="text-red-400">&#x2022;</span>{f.description}</li>)}</ul>
-            </section>
-          )}
-          {analysis.greenLights.length > 0 && (
-            <section className="bg-green-500/5 border border-green-500/20 rounded-2xl p-6">
-              <h3 className="text-sm font-semibold text-green-400 uppercase tracking-wider mb-4">Strengths</h3>
-              <ul className="space-y-3">{analysis.greenLights.map((f, i) => <li key={i} className="flex gap-2 text-sm text-white/70"><span className="text-green-400">&#x2022;</span>{f.description}</li>)}</ul>
-            </section>
-          )}
-        </div>
+        {/* Red Flags & Green Lights */}
+        <FlagsList redFlags={analysis.redFlags} greenLights={analysis.greenLights} />
 
-        {/* Services */}
+        {/* Service Recommendations */}
         {analysis.serviceRecommendations.length > 0 && (
           <section>
             <h2 className="text-lg font-semibold text-white mb-6">Recommended Next Steps</h2>
-            <div className="space-y-4">
-              {analysis.serviceRecommendations.map((r: ServiceRecommendation, i: number) => {
-                const tc: Record<number, string> = { 1: "bg-blue-500/20 text-blue-300 border-blue-500/30", 2: "bg-purple-500/20 text-purple-300 border-purple-500/30", 3: "bg-amber-500/20 text-amber-300 border-amber-500/30" };
-                const uc: Record<string, string> = { immediate: "text-red-400", near_term: "text-yellow-400", strategic: "text-blue-400" };
-                return (
-                  <div key={i} className="bg-white/5 border border-white/10 rounded-xl p-5">
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="space-y-2 flex-1">
-                        <div className="flex items-center gap-2"><span className={`px-2 py-0.5 rounded text-xs font-medium border ${tc[r.tier]}`}>Tier {r.tier}</span><span className={`text-xs ${uc[r.urgency]}`}>{r.urgency.replace("_", " ")}</span></div>
-                        <h3 className="font-medium text-white">{r.service}</h3>
-                        <p className="text-sm text-white/50">{r.description}</p>
-                      </div>
-                      <div className="text-sm font-medium text-white flex-shrink-0">{r.estimatedValue}</div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+            <ServiceRecommendations recommendations={analysis.serviceRecommendations} />
           </section>
         )}
 

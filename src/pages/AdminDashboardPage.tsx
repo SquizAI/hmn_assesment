@@ -1,6 +1,7 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import StatCard from "../components/admin/StatCard";
+import { API_BASE } from "../lib/api";
 import { fetchStats, fetchFunnel, fetchDimensions, fetchSessions, fetchCompanies, fetchAssessments } from "../lib/admin-api";
 import type { DashboardFilters } from "../lib/admin-api";
 import {
@@ -172,6 +173,11 @@ export default function AdminDashboardPage() {
   const [redFlags, setRedFlags] = useState<{ description: string; frequency: number }[]>([]);
   const [greenLights, setGreenLights] = useState<{ description: string; frequency: number }[]>([]);
 
+  // Real-time notifications via SSE
+  const [notifications, setNotifications] = useState<{ id: number; message: string; type: string }[]>([]);
+  const notifIdRef = useRef(0);
+  const refreshRef = useRef<() => void>(() => {});
+
   // Load assessment list once (for filter dropdown)
   useEffect(() => {
     fetchAssessments()
@@ -197,9 +203,40 @@ export default function AdminDashboardPage() {
     setFilters(next);
   }, []);
 
-  // Load core data (re-fetches when filters change)
+  // SSE subscription for real-time admin events
   useEffect(() => {
-    setLoading(true);
+    const url = `${API_BASE}/api/admin/events`;
+    let es: EventSource | null = null;
+    try {
+      es = new EventSource(url, { withCredentials: true });
+      es.onmessage = (e) => {
+        try {
+          const event = JSON.parse(e.data);
+          if (event.type === "connected") return;
+
+          const id = ++notifIdRef.current;
+          let message = "";
+          if (event.type === "session_completed") message = `${event.data?.name || "Someone"} completed their assessment`;
+          else if (event.type === "analysis_ready") message = `Analysis ready for ${event.data?.name || "a session"}`;
+          else if (event.type === "call_completed") message = `Call completed: ${event.data?.contactName || "contact"}`;
+          else return;
+
+          setNotifications((prev) => [...prev.slice(-4), { id, message, type: event.type }]);
+          setTimeout(() => setNotifications((prev) => prev.filter((n) => n.id !== id)), 5000);
+
+          // Auto-refresh stats on meaningful events
+          refreshRef.current();
+        } catch { /* ignore parse errors */ }
+      };
+      es.onerror = () => {
+        // Silently reconnect — EventSource auto-reconnects
+      };
+    } catch { /* SSE not supported or blocked */ }
+    return () => { es?.close(); };
+  }, []);
+
+  // Load core data (re-fetches when filters change)
+  const loadCoreData = useCallback(() => {
     Promise.all([fetchStats(filters), fetchFunnel(filters), fetchDimensions(filters), fetchSessions(filters), fetchCompanies(filters)])
       .then(([statsData, funnelData, _dimensionsData, _sessionsData, companiesData]) => {
         setStats(statsData);
@@ -213,6 +250,16 @@ export default function AdminDashboardPage() {
         setLoading(false);
       });
   }, [filters]);
+
+  useEffect(() => {
+    setLoading(true);
+    loadCoreData();
+  }, [loadCoreData]);
+
+  // Wire SSE refresh to reload core data
+  useEffect(() => {
+    refreshRef.current = loadCoreData;
+  }, [loadCoreData]);
 
   // Load graph data (re-fetches when filters change)
   useEffect(() => {
@@ -308,6 +355,26 @@ export default function AdminDashboardPage() {
 
   return (
     <div className="px-4 md:px-6 py-4 md:py-6 space-y-4 md:space-y-5">
+      {/* Real-time notification toasts */}
+      {notifications.length > 0 && (
+        <div className="fixed top-4 right-4 z-50 space-y-2">
+          {notifications.map((n) => (
+            <div
+              key={n.id}
+              className={`px-4 py-3 rounded-xl text-sm font-medium shadow-lg border backdrop-blur-sm animate-slide-in ${
+                n.type === "analysis_ready"
+                  ? "bg-purple-500/20 text-purple-300 border-purple-500/30"
+                  : n.type === "session_completed"
+                  ? "bg-green-500/20 text-green-300 border-green-500/30"
+                  : "bg-blue-500/20 text-blue-300 border-blue-500/30"
+              }`}
+            >
+              {n.message}
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* ============================================ */}
       {/* FILTER BAR                                   */}
       {/* ============================================ */}

@@ -36,8 +36,32 @@ import settingsRoutes from "./routes/settings.js";
 import cleanupRoutes from "./routes/cleanup.js";
 import resumeRoutes from "./routes/resume.js";
 import compareRoutes from "./routes/compare.js";
+import { addSSEClient, emitAdminEvent } from "./admin-events.js";
 
 dotenv.config();
+
+// ============================================================
+// Simple TTL cache for expensive queries
+// ============================================================
+
+const cache = new Map<string, { data: unknown; expires: number }>();
+
+function getCached<T>(key: string): T | null {
+  const entry = cache.get(key);
+  if (!entry || Date.now() > entry.expires) { cache.delete(key); return null; }
+  return entry.data as T;
+}
+
+function setCache(key: string, data: unknown, ttlMs: number): void {
+  cache.set(key, { data, expires: Date.now() + ttlMs });
+}
+
+function invalidateCache(prefix?: string): void {
+  if (!prefix) { cache.clear(); return; }
+  for (const key of cache.keys()) {
+    if (key.startsWith(prefix)) cache.delete(key);
+  }
+}
 
 // Helper: look up assessment name by ID
 async function getAssessmentName(assessmentId: string): Promise<string> {
@@ -1233,6 +1257,15 @@ app.post("/api/interview/respond", async (req, res) => {
       session.status = "completed";
       await saveSession(session);
 
+      // Notify admin dashboard + invalidate stats cache
+      invalidateCache("stats:");
+      const participantInfo = session.participant as { name?: string; email?: string; company?: string };
+      emitAdminEvent({
+        type: "session_completed",
+        data: { sessionId: session.id, name: participantInfo?.name || "Unknown", company: participantInfo?.company || "" },
+        timestamp: new Date().toISOString(),
+      });
+
       // Send completion thank-you email (fire-and-forget)
       const participant = session.participant as { name?: string; email?: string };
       const completionAssessmentName = (assessment as Record<string, unknown>)?.name as string || "HMN Assessment";
@@ -1636,6 +1669,15 @@ app.post("/api/interview/analyze", async (req, res) => {
 
     session.status = "analyzed";
     await saveSession(session);
+
+    // Notify admin dashboard + invalidate stats cache
+    invalidateCache("stats:");
+    const participant = session.participant as Record<string, unknown> | undefined;
+    emitAdminEvent({
+      type: "analysis_ready",
+      data: { sessionId, name: participant?.name || "Unknown", company: participant?.company || "" },
+      timestamp: new Date().toISOString(),
+    });
 
     // Update linked invitation to completed
     try {
@@ -2200,13 +2242,38 @@ app.post("/api/admin/logout", (_req, res) => {
 });
 
 // ============================================================
+// ADMIN SSE — Real-time event stream
+// ============================================================
+
+app.get("/api/admin/events", requireAdmin, (req, res) => {
+  res.writeHead(200, {
+    "Content-Type": "text/event-stream",
+    "Cache-Control": "no-cache",
+    Connection: "keep-alive",
+  });
+  res.write("data: {\"type\":\"connected\"}\n\n");
+  addSSEClient(res);
+
+  // Heartbeat every 30s to keep connection alive
+  const heartbeat = setInterval(() => {
+    try { res.write(": heartbeat\n\n"); } catch { clearInterval(heartbeat); }
+  }, 30000);
+  req.on("close", () => clearInterval(heartbeat));
+});
+
+// ============================================================
 // ADMIN REST API (data endpoints for dashboard)
 // ============================================================
 
 app.get("/api/admin/stats", requireAdmin, async (req, res) => {
   try {
     const filters = extractDashboardFilters(req.query as Record<string, unknown>);
-    res.json(await getStatsAdmin(filters));
+    const cacheKey = `stats:${JSON.stringify(filters)}`;
+    const cached = getCached(cacheKey);
+    if (cached) { res.json(cached); return; }
+    const data = await getStatsAdmin(filters);
+    setCache(cacheKey, data, 30_000); // 30s TTL
+    res.json(data);
   } catch (err) { console.error("Admin stats error:", err); res.status(500).json({ error: "Failed to get stats" }); }
 });
 
@@ -2274,8 +2341,14 @@ app.delete("/api/admin/companies/:name", requireAdmin, async (req, res) => {
 });
 
 app.get("/api/admin/assessments", requireAdmin, async (_req, res) => {
-  try { res.json({ assessments: await listAssessmentsAdmin() }); }
-  catch (err) { console.error("Admin assessments error:", err); res.status(500).json({ error: "Failed to list assessments" }); }
+  try {
+    const cacheKey = "assessments:list";
+    const cached = getCached(cacheKey);
+    if (cached) { res.json(cached); return; }
+    const data = { assessments: await listAssessmentsAdmin() };
+    setCache(cacheKey, data, 60_000); // 60s TTL
+    res.json(data);
+  } catch (err) { console.error("Admin assessments error:", err); res.status(500).json({ error: "Failed to list assessments" }); }
 });
 
 app.get("/api/admin/assessments/:id", requireAdmin, async (req, res) => {
@@ -2291,6 +2364,7 @@ app.post("/api/admin/assessments", requireAdmin, async (req, res) => {
     const { config } = req.body;
     if (!config?.id || !config?.name) { res.status(400).json({ error: "config with id and name required" }); return; }
     const result = await createAssessmentAdmin(config);
+    invalidateCache("assessments:");
     res.status(201).json(result);
   } catch (err) { console.error("Admin create assessment error:", err); res.status(500).json({ error: "Failed to create assessment" }); }
 });
@@ -2301,6 +2375,7 @@ app.put("/api/admin/assessments/:id", requireAdmin, async (req, res) => {
     if (!changes) { res.status(400).json({ error: "changes object required" }); return; }
     const result = await updateAssessmentAdmin(String(req.params.id), changes);
     if (!result.ok) { res.status(404).json({ error: "Assessment not found" }); return; }
+    invalidateCache("assessments:");
     res.json({ ok: true });
   } catch (err) { console.error("Admin update assessment error:", err); res.status(500).json({ error: "Failed to update assessment" }); }
 });
