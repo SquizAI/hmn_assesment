@@ -230,7 +230,7 @@ export default function AdminChatDrawer({ open, onClose }: Props) {
         `}
       >
         <div
-          className="h-full w-full sm:w-[440px] md:w-[440px] bg-[#0c0c16] border-l border-border flex flex-col shadow-2xl shadow-black/40 md:shadow-none"
+          className="h-full w-full sm:w-[440px] md:w-[440px] bg-background dark:bg-[#0c0c16] border-l border-border flex flex-col shadow-2xl shadow-foreground/5 dark:shadow-black/40 md:shadow-none"
           onDragEnter={handleDragEnter}
           onDragLeave={handleDragLeave}
           onDragOver={handleDragOver}
@@ -346,12 +346,12 @@ export default function AdminChatDrawer({ open, onClose }: Props) {
                 {attachments.map((att, i) => (
                   <div
                     key={i}
-                    className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-500/10 border border-blue-500/20 text-blue-300 text-[11px]"
+                    className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-300 text-[11px]"
                   >
                     <span className="truncate max-w-[100px]">{att.filename}</span>
                     <button
                       onClick={() => removeAttachment(i)}
-                      className="text-blue-400/50 hover:text-blue-300 transition-colors"
+                      className="text-blue-500/60 hover:text-blue-600 dark:text-blue-400/50 dark:hover:text-blue-300 transition-colors"
                     >
                       &#x2715;
                     </button>
