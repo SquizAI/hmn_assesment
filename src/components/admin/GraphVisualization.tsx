@@ -285,9 +285,11 @@ export default function GraphVisualization({ nodes: rawNodes, edges: rawEdges, l
       const ctx = canvas.getContext("2d")!;
       canvas.width = 256;
       canvas.height = 64;
-      ctx.font = "bold 22px -apple-system, BlinkMacSystemFont, sans-serif";
+      ctx.font = "bold 22px var(--font-sans), sans-serif";
       ctx.textAlign = "center";
-      ctx.fillStyle = isDimmed ? "rgba(255,255,255,0.15)" : "rgba(255,255,255,0.85)";
+      const isDark = document.documentElement.classList.contains("dark");
+      const textColor = isDark ? "255,255,255" : "0,0,0";
+      ctx.fillStyle = isDimmed ? `rgba(${textColor},0.15)` : `rgba(${textColor},0.85)`;
       ctx.fillText(displayLabel, 128, 40);
 
       const texture = new THREE.CanvasTexture(canvas);
@@ -378,16 +380,16 @@ export default function GraphVisualization({ nodes: rawNodes, edges: rawEdges, l
       } overflow-hidden flex flex-col`}
     >
       {/* Top Toolbar */}
-      <div className="flex items-center gap-2 px-4 py-2.5 border-b border-white/[0.06] shrink-0">
+      <div className="flex items-center gap-2 px-4 py-2.5 border-b border-border/50 shrink-0">
         {/* Search */}
         <div className="relative flex-1 max-w-xs">
-          <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/25" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+          <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground/70" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
           <input
             type="text"
             placeholder="Search nodes..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-muted border border-border rounded-lg pl-8 pr-3 py-1.5 text-xs text-foreground placeholder-white/25 focus:outline-none focus:border-border"
+            className="w-full bg-background border border-border rounded-lg pl-8 pr-3 py-1.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50"
           />
           {searchQuery && (
             <button onClick={() => setSearchQuery("")} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground/70 hover:text-muted-foreground text-xs">
@@ -448,7 +450,7 @@ export default function GraphVisualization({ nodes: rawNodes, edges: rawEdges, l
 
       {/* Node Type Filter Panel (collapsible) */}
       {showFilters && (
-        <div className="px-4 py-3 border-b border-white/[0.06] bg-white/[0.02] shrink-0">
+        <div className="px-4 py-3 border-b border-border/50 bg-muted/30 shrink-0">
           <div className="flex items-center justify-between mb-2">
             <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Node Types</span>
             <div className="flex gap-2">
@@ -483,7 +485,7 @@ export default function GraphVisualization({ nodes: rawNodes, edges: rawEdges, l
 
       {/* Edge Type Filter Panel (collapsible) */}
       {showEdgeFilters && (
-        <div className="px-4 py-3 border-b border-white/[0.06] bg-white/[0.02] shrink-0">
+        <div className="px-4 py-3 border-b border-border/50 bg-muted/30 shrink-0">
           <div className="flex items-center justify-between mb-2">
             <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Relationship Types</span>
             <div className="flex gap-2">
@@ -544,7 +546,7 @@ export default function GraphVisualization({ nodes: rawNodes, edges: rawEdges, l
 
         {/* Node Detail Panel */}
         {selectedNode && (
-          <div className="w-80 shrink-0 border-l border-white/[0.06] bg-white/[0.02] overflow-y-auto">
+          <div className="w-80 shrink-0 border-l border-border/50 bg-background/50 backdrop-blur-md overflow-y-auto">
             <div className="p-4">
               {/* Header */}
               <div className="flex items-start justify-between mb-4">
@@ -589,7 +591,7 @@ export default function GraphVisualization({ nodes: rawNodes, edges: rawEdges, l
                       <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: conn.node ? NODE_COLORS[conn.node.type] || DEFAULT_COLOR : "#444" }} />
                       <div className="min-w-0 flex-1">
                         <p className="text-xs text-muted-foreground group-hover:text-foreground/90 truncate">{conn.node?.label || "Unknown"}</p>
-                        <p className="text-[9px] text-white/25">{LINK_LABELS[conn.type] || conn.type}</p>
+                        <p className="text-[9px] text-muted-foreground/60">{LINK_LABELS[conn.type] || conn.type}</p>
                       </div>
                     </button>
                   ))}
@@ -604,8 +606,8 @@ export default function GraphVisualization({ nodes: rawNodes, edges: rawEdges, l
       </div>
 
       {/* Bottom Legend */}
-      <div className="flex items-center gap-3 px-4 py-2 border-t border-white/[0.06] overflow-x-auto shrink-0">
-        <span className="text-[9px] text-white/25 uppercase tracking-wider shrink-0">Legend:</span>
+      <div className="flex items-center gap-3 px-4 py-2 border-t border-border/50 overflow-x-auto shrink-0">
+        <span className="text-[9px] text-muted-foreground uppercase tracking-wider shrink-0">Legend:</span>
         {Object.entries(NODE_COLORS)
           .filter(([type]) => activeNodeTypes.has(type))
           .map(([type, color]) => (

@@ -336,7 +336,7 @@ export default function CsvUploadModal({ assessments, onClose, onComplete }: Pro
                   <select
                     value={assessmentId}
                     onChange={(e) => setAssessmentId(e.target.value)}
-                    className="w-full bg-white/[0.05] border border-border rounded-lg px-3 py-2 text-sm text-foreground outline-none focus:border-border appearance-none cursor-pointer"
+                    className="w-full bg-muted/60 border border-border rounded-lg px-3 py-2 text-sm text-foreground outline-none focus:border-border appearance-none cursor-pointer"
                   >
                     <option value="">Select an assessment...</option>
                     {assessments.filter((a) => a.status === "active").map((a) => (
@@ -360,7 +360,7 @@ export default function CsvUploadModal({ assessments, onClose, onComplete }: Pro
                     Drag & drop your CSV file here
                   </p>
                   <p className="text-xs text-muted-foreground/50 mb-4">or</p>
-                  <label className="inline-block px-4 py-2 text-sm font-medium rounded-xl border border-white/15 text-foreground/80 hover:bg-white/[0.05] cursor-pointer transition-colors">
+                  <label className="inline-block px-4 py-2 text-sm font-medium rounded-xl border border-white/15 text-foreground/80 hover:bg-muted/60 cursor-pointer transition-colors">
                     Browse Files
                     <input
                       type="file"
@@ -400,7 +400,7 @@ export default function CsvUploadModal({ assessments, onClose, onComplete }: Pro
                             ? "border-green-500/20 bg-green-500/5"
                             : required
                             ? "border-red-500/20 bg-red-500/5"
-                            : "border-border/50 bg-white/[0.02]"
+                            : "border-border/50 bg-muted/30"
                         }`}
                       >
                         <div className="w-24 flex-shrink-0">
@@ -411,7 +411,7 @@ export default function CsvUploadModal({ assessments, onClose, onComplete }: Pro
                         <select
                           value={mapping?.csvColumn || ""}
                           onChange={(e) => updateMapping(field, e.target.value || null)}
-                          className="flex-1 bg-white/[0.05] border border-border rounded-lg px-2 py-1.5 text-sm text-foreground outline-none focus:border-border appearance-none cursor-pointer"
+                          className="flex-1 bg-muted/60 border border-border rounded-lg px-2 py-1.5 text-sm text-foreground outline-none focus:border-border appearance-none cursor-pointer"
                         >
                           <option value="">Not mapped</option>
                           {field === "name" && nameDetection.type === "composite" && (
@@ -616,7 +616,7 @@ export default function CsvUploadModal({ assessments, onClose, onComplete }: Pro
                   className={`px-5 py-2 text-sm font-medium rounded-xl border transition-all ${
                     requiredFieldsMapped
                       ? "bg-white/[0.10] border-white/15 text-foreground hover:bg-white/[0.15]"
-                      : "bg-white/[0.04] border-border text-white/25 cursor-not-allowed"
+                      : "bg-white/[0.04] border-border text-muted-foreground/60 cursor-not-allowed"
                   }`}
                 >
                   Preview &rarr;
@@ -629,7 +629,7 @@ export default function CsvUploadModal({ assessments, onClose, onComplete }: Pro
                   className={`px-5 py-2 text-sm font-medium rounded-xl border transition-all ${
                     validRows.length > 0 && assessmentId
                       ? "bg-gradient-to-r from-purple-500/20 to-blue-500/20 border-purple-500/20 text-purple-200 hover:from-purple-500/30 hover:to-blue-500/30 hover:text-foreground"
-                      : "bg-white/[0.04] border-border text-white/25 cursor-not-allowed"
+                      : "bg-white/[0.04] border-border text-muted-foreground/60 cursor-not-allowed"
                   }`}
                 >
                   Import {validRows.length} invitation{validRows.length !== 1 ? "s" : ""}

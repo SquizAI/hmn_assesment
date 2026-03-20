@@ -266,8 +266,8 @@ export default function VoiceRecorder({ onTranscription, onPartialTranscription,
           ${isRecording
             ? "bg-red-500 hover:bg-red-600 shadow-lg shadow-red-500/30"
             : isTranscribing
-            ? "bg-white/20 cursor-not-allowed"
-            : "bg-muted hover:bg-white/20 border-2 border-white/30 hover:border-white/50"
+            ? "bg-muted/200 cursor-not-allowed"
+            : "bg-muted hover:bg-muted/200 border-2 border-border hover:border-border/300"
           }`}
       >
         {isTranscribing ? (

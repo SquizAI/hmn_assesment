@@ -45,7 +45,7 @@ export default function ResearchCard({
   if (!research || research.status === "no_results" || research.status === "error") {
     return (
       <div className="bg-muted/50 rounded-2xl border border-border p-6 text-center space-y-3">
-        <div className="w-12 h-12 rounded-xl bg-white/[0.05] border border-border flex items-center justify-center mx-auto">
+        <div className="w-12 h-12 rounded-xl bg-muted/60 border border-border flex items-center justify-center mx-auto">
           <svg className="w-6 h-6 text-muted-foreground/50" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
           </svg>
@@ -102,7 +102,7 @@ export default function ResearchCard({
       </div>
 
       {sourcesExpanded && sources && (
-        <div className="bg-muted/50 rounded-xl border border-white/[0.06] px-3 py-2 space-y-1">
+        <div className="bg-muted/50 rounded-xl border border-border/50 px-3 py-2 space-y-1">
           {sources.map((src, i) => (
             <a
               key={i}
@@ -269,7 +269,7 @@ export default function ResearchCard({
         <button
           onClick={onTriggerResearch}
           disabled={triggerLoading}
-          className="w-full px-3 py-2 rounded-xl bg-muted/50 border border-border text-muted-foreground text-xs hover:bg-white/[0.06] hover:text-muted-foreground transition-all disabled:opacity-40"
+          className="w-full px-3 py-2 rounded-xl bg-muted/50 border border-border text-muted-foreground text-xs hover:bg-muted/70 hover:text-muted-foreground transition-all disabled:opacity-40"
         >
           {triggerLoading ? "Re-researching..." : "Re-research"}
         </button>

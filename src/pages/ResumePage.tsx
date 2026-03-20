@@ -102,7 +102,7 @@ export default function ResumePage() {
               <h2 className="text-2xl font-semibold text-foreground">Link Unavailable</h2>
               <p className="text-muted-foreground">{error}</p>
             </div>
-            <button onClick={() => navigate("/")} className="px-6 py-2.5 text-sm font-medium rounded-lg bg-muted text-foreground hover:bg-white/20 border border-border transition-colors">Start New Assessment</button>
+            <button onClick={() => navigate("/")} className="px-6 py-2.5 text-sm font-medium rounded-lg bg-muted text-foreground hover:bg-muted/200 border border-border transition-colors">Start New Assessment</button>
           </div>
         </main>
       </div>

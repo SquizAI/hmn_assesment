@@ -172,8 +172,8 @@ function MiniTimeline({ data }: { data: { date: string; count: number }[] }) {
         ))}
       </div>
       <div className="flex justify-between mt-2">
-        <span className="text-[10px] text-white/25">{data[0]?.date}</span>
-        <span className="text-[10px] text-white/25">{data[data.length - 1]?.date}</span>
+        <span className="text-[10px] text-muted-foreground/60">{data[0]?.date}</span>
+        <span className="text-[10px] text-muted-foreground/60">{data[data.length - 1]?.date}</span>
       </div>
     </div>
   );
@@ -263,7 +263,7 @@ export default function AdminAnalyticsPage() {
           <button
             onClick={() => handleExport("sessions")}
             disabled={exporting}
-            className="px-4 py-2 text-sm font-medium rounded-lg bg-muted text-foreground hover:bg-white/20 border border-border disabled:opacity-50 transition-colors"
+            className="px-4 py-2 text-sm font-medium rounded-lg bg-muted text-foreground hover:bg-muted/200 border border-border disabled:opacity-50 transition-colors"
           >
             Export Assessments
           </button>
@@ -286,7 +286,7 @@ export default function AdminAnalyticsPage() {
       </div>
 
       {/* View Tabs */}
-      <div className="flex items-center gap-1 mb-6 border-b border-white/[0.06] overflow-x-auto">
+      <div className="flex items-center gap-1 mb-6 border-b border-border/50 overflow-x-auto">
         {VIEW_TABS.map((tab) => (
           <button
             key={tab.value}
@@ -488,7 +488,7 @@ export default function AdminAnalyticsPage() {
                       <div className="flex items-center justify-between mb-1.5">
                         <span className="text-sm text-foreground/80 group-hover:text-foreground/90 transition-colors">{dim.label}</span>
                         <div className="flex items-center gap-2">
-                          <span className="text-[10px] text-white/25">n={dim.count}</span>
+                          <span className="text-[10px] text-muted-foreground/60">n={dim.count}</span>
                           <span className={`text-sm font-semibold ${getScoreTextColor(dim.average)}`}>
                             {dim.average}<span className="text-muted-foreground/50 font-normal text-xs">/100</span>
                           </span>
@@ -601,7 +601,7 @@ export default function AdminAnalyticsPage() {
                         maxValue={Math.max(...data.archetype_distribution.map((d) => d.count), 1)}
                       />
                       {/* Donut-style percentages */}
-                      <div className="mt-5 pt-4 border-t border-white/[0.06]">
+                      <div className="mt-5 pt-4 border-t border-border/50">
                         <div className="flex flex-wrap gap-3">
                           {data.archetype_distribution.map((a) => {
                             const pct = data.kpi.total_assessments ? Math.round((a.count / data.kpi.total_assessments) * 100) : 0;
@@ -609,7 +609,7 @@ export default function AdminAnalyticsPage() {
                               <div
                                 key={a.archetype}
                                 className={`px-3 py-2 rounded-lg border transition-colors cursor-default ${
-                                  selectedArchetype === a.archetype ? "bg-purple-500/15 border-purple-500/30" : "bg-muted/50 border-white/[0.06]"
+                                  selectedArchetype === a.archetype ? "bg-purple-500/15 border-purple-500/30" : "bg-muted/50 border-border/50"
                                 }`}
                               >
                                 <p className="text-lg font-bold text-foreground">{pct}%</p>
@@ -667,7 +667,7 @@ export default function AdminAnalyticsPage() {
                   <>
                     <MiniTimeline data={data.assessments_over_time} />
                     {/* Summary stats */}
-                    <div className="mt-5 pt-4 border-t border-white/[0.06] grid grid-cols-3 gap-4">
+                    <div className="mt-5 pt-4 border-t border-border/50 grid grid-cols-3 gap-4">
                       <div>
                         <p className="text-[10px] text-muted-foreground/70 uppercase tracking-wider">Total</p>
                         <p className="text-lg font-bold text-foreground">
@@ -794,19 +794,19 @@ export default function AdminAnalyticsPage() {
                 <h3 className="text-base font-semibold text-foreground mb-2">Quick Insights</h3>
                 <p className="text-xs text-muted-foreground mb-5">Summary metrics for the selected period</p>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                  <div className="bg-muted/50 rounded-xl p-4 border border-white/[0.06]">
+                  <div className="bg-muted/50 rounded-xl p-4 border border-border/50">
                     <p className="text-2xl font-bold text-foreground">{data.top_gaps.length}</p>
                     <p className="text-[10px] text-muted-foreground mt-1">Unique Gaps</p>
                   </div>
-                  <div className="bg-muted/50 rounded-xl p-4 border border-white/[0.06]">
+                  <div className="bg-muted/50 rounded-xl p-4 border border-border/50">
                     <p className="text-2xl font-bold text-foreground">{data.industry_breakdown.length}</p>
                     <p className="text-[10px] text-muted-foreground mt-1">Companies</p>
                   </div>
-                  <div className="bg-muted/50 rounded-xl p-4 border border-white/[0.06]">
+                  <div className="bg-muted/50 rounded-xl p-4 border border-border/50">
                     <p className="text-2xl font-bold text-foreground">{data.archetype_distribution.length}</p>
                     <p className="text-[10px] text-muted-foreground mt-1">Archetypes</p>
                   </div>
-                  <div className="bg-muted/50 rounded-xl p-4 border border-white/[0.06]">
+                  <div className="bg-muted/50 rounded-xl p-4 border border-border/50">
                     <p className="text-2xl font-bold text-foreground">{data.dimension_averages.length}</p>
                     <p className="text-[10px] text-muted-foreground mt-1">Dimensions</p>
                   </div>

@@ -140,7 +140,7 @@ export default function AdminCampaignsPage() {
         <div className="mb-6 p-6 bg-muted border border-border rounded-2xl">
           <form onSubmit={handleCreate} className="space-y-4">
             <div className="flex items-center gap-4">
-              <input type="text" placeholder="Campaign name..." value={newName} onChange={(e) => setNewName(e.target.value)} autoFocus className="flex-1 bg-muted border border-border rounded-lg px-4 py-2.5 text-sm text-foreground placeholder-white/30 focus:border-white/30 focus:outline-none" />
+              <input type="text" placeholder="Campaign name..." value={newName} onChange={(e) => setNewName(e.target.value)} autoFocus className="flex-1 bg-muted border border-border rounded-lg px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-border focus:outline-none" />
             </div>
             <div className="flex items-center gap-3">
               <button type="button" onClick={() => setEnableScheduling(!enableScheduling)} className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${enableScheduling ? "bg-purple-600" : "bg-muted"}`}>
@@ -152,29 +152,29 @@ export default function AdminCampaignsPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-4 bg-muted border border-border rounded-xl">
                 <div>
                   <label className="block text-xs text-muted-foreground mb-1.5">Schedule Date</label>
-                  <input type="date" value={scheduleDate} onChange={(e) => setScheduleDate(e.target.value)} min={getMinDate()} required={enableScheduling} className="w-full bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:border-white/30 focus:outline-none [color-scheme:dark]" />
+                  <input type="date" value={scheduleDate} onChange={(e) => setScheduleDate(e.target.value)} min={getMinDate()} required={enableScheduling} className="w-full bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:border-border focus:outline-none [color-scheme:dark]" />
                 </div>
                 <div>
                   <label className="block text-xs text-muted-foreground mb-1.5">Schedule Time</label>
-                  <input type="time" value={scheduleTime} onChange={(e) => setScheduleTime(e.target.value)} required={enableScheduling} className="w-full bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:border-white/30 focus:outline-none [color-scheme:dark]" />
+                  <input type="time" value={scheduleTime} onChange={(e) => setScheduleTime(e.target.value)} required={enableScheduling} className="w-full bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:border-border focus:outline-none [color-scheme:dark]" />
                 </div>
                 <div>
                   <label className="block text-xs text-muted-foreground mb-1.5">Timezone</label>
-                  <select value={timezone} onChange={(e) => setTimezone(e.target.value)} className="w-full bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:border-white/30 focus:outline-none appearance-none">
-                    {US_TIMEZONES.map((tz) => <option key={tz.value} value={tz.value} className="bg-gray-900">{tz.label}</option>)}
+                  <select value={timezone} onChange={(e) => setTimezone(e.target.value)} className="w-full bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:border-border focus:outline-none appearance-none">
+                    {US_TIMEZONES.map((tz) => <option key={tz.value} value={tz.value} className="bg-muted">{tz.label}</option>)}
                   </select>
                 </div>
                 <div>
                   <label className="block text-xs text-muted-foreground mb-1.5">Window Start</label>
-                  <input type="time" value={windowStart} onChange={(e) => setWindowStart(e.target.value)} className="w-full bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:border-white/30 focus:outline-none [color-scheme:dark]" />
+                  <input type="time" value={windowStart} onChange={(e) => setWindowStart(e.target.value)} className="w-full bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:border-border focus:outline-none [color-scheme:dark]" />
                 </div>
                 <div>
                   <label className="block text-xs text-muted-foreground mb-1.5">Window End</label>
-                  <input type="time" value={windowEnd} onChange={(e) => setWindowEnd(e.target.value)} className="w-full bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:border-white/30 focus:outline-none [color-scheme:dark]" />
+                  <input type="time" value={windowEnd} onChange={(e) => setWindowEnd(e.target.value)} className="w-full bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:border-border focus:outline-none [color-scheme:dark]" />
                 </div>
                 <div>
                   <label className="block text-xs text-muted-foreground mb-1.5">Max Concurrent Calls</label>
-                  <input type="number" value={maxConcurrent} onChange={(e) => setMaxConcurrent(Math.max(1, parseInt(e.target.value) || 1))} min={1} max={20} className="w-full bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:border-white/30 focus:outline-none" />
+                  <input type="number" value={maxConcurrent} onChange={(e) => setMaxConcurrent(Math.max(1, parseInt(e.target.value) || 1))} min={1} max={20} className="w-full bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:border-border focus:outline-none" />
                 </div>
               </div>
             )}
@@ -227,7 +227,7 @@ export default function AdminCampaignsPage() {
                 <div className="flex items-center gap-4 text-xs">
                   <div className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-green-400" /><span className="text-muted-foreground">{campaign.calls_completed} completed</span></div>
                   <div className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-red-400" /><span className="text-muted-foreground">{campaign.calls_failed} failed</span></div>
-                  <div className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-white/30" /><span className="text-muted-foreground">{campaign.calls_pending} pending</span></div>
+                  <div className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-muted/300" /><span className="text-muted-foreground">{campaign.calls_pending} pending</span></div>
                 </div>
               </div>
             );

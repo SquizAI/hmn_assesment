@@ -77,7 +77,7 @@ export default function ToolActivity({ events }: Props) {
   return (
     <div className="flex justify-start">
       <div className="max-w-[85%] w-full">
-        <div className="bg-white/[0.05] rounded-2xl rounded-bl-md border border-white/[0.08] overflow-hidden">
+        <div className="bg-muted/60 rounded-2xl rounded-bl-md border border-border/60 overflow-hidden">
           {/* Header — always visible */}
           <button
             onClick={() => setExpanded((e) => !e)}
@@ -115,7 +115,7 @@ export default function ToolActivity({ events }: Props) {
 
           {/* Expanded tool list */}
           {expanded && steps.length > 0 && (
-            <div className="border-t border-white/[0.06] px-4 py-2 space-y-1">
+            <div className="border-t border-border/50 px-4 py-2 space-y-1">
               {steps.map((step, i) => (
                 <div
                   key={`${step.name}-${i}`}

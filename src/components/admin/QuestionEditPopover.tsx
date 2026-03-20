@@ -73,7 +73,7 @@ export default function QuestionEditPopover({ question, onSave, onClose }: Props
             value={text}
             onChange={(e) => setText(e.target.value)}
             rows={3}
-            className="w-full bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder-white/20 focus:outline-none focus:border-purple-500/40 focus:ring-1 focus:ring-purple-500/20 resize-none"
+            className="w-full bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-purple-500/40 focus:ring-1 focus:ring-purple-500/20 resize-none"
           />
         </div>
 

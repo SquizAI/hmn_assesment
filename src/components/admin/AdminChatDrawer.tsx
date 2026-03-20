@@ -230,14 +230,14 @@ export default function AdminChatDrawer({ open, onClose }: Props) {
         `}
       >
         <div
-          className="h-full w-full sm:w-[440px] md:w-[440px] bg-[#0c0c16] border-l border-white/[0.06] flex flex-col shadow-2xl shadow-black/40 md:shadow-none"
+          className="h-full w-full sm:w-[440px] md:w-[440px] bg-[#0c0c16] border-l border-border/50 flex flex-col shadow-2xl shadow-black/40 md:shadow-none"
           onDragEnter={handleDragEnter}
           onDragLeave={handleDragLeave}
           onDragOver={handleDragOver}
           onDrop={handleDrop}
         >
         {/* Header */}
-        <div className="shrink-0 flex items-center justify-between px-4 py-3 border-b border-white/[0.06]">
+        <div className="shrink-0 flex items-center justify-between px-4 py-3 border-b border-border/50">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-purple-500/20 to-blue-500/20 border border-border flex items-center justify-center">
               <span className="text-sm">🤖</span>
@@ -337,12 +337,12 @@ export default function AdminChatDrawer({ open, onClose }: Props) {
         </div>
 
         {/* Bottom bar: attachments + input */}
-        <div className="border-t border-white/[0.06] shrink-0">
+        <div className="border-t border-border/50 shrink-0">
           {/* Attached files bar */}
           {attachments.length > 0 && (
             <div className="px-4 pt-2.5 pb-0">
               <div className="flex items-center gap-1.5 flex-wrap">
-                <span className="text-[10px] text-white/25 uppercase tracking-wider">Attached:</span>
+                <span className="text-[10px] text-muted-foreground/60 uppercase tracking-wider">Attached:</span>
                 {attachments.map((att, i) => (
                   <div
                     key={i}
@@ -367,7 +367,7 @@ export default function AdminChatDrawer({ open, onClose }: Props) {
               {/* File upload button */}
               <button
                 onClick={() => fileInputRef.current?.click()}
-                className="p-2.5 bg-muted/50 hover:bg-white/[0.06] border border-white/[0.08] rounded-lg text-muted-foreground/70 hover:text-muted-foreground transition-all shrink-0"
+                className="p-2.5 bg-muted/50 hover:bg-muted/70 border border-border/60 rounded-lg text-muted-foreground/70 hover:text-muted-foreground transition-all shrink-0"
                 title="Attach files"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>

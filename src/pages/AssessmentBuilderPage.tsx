@@ -357,7 +357,7 @@ export default function AssessmentBuilderPage() {
       onDrop={handleDrop}
     >
       {/* Top bar */}
-      <div className="shrink-0 flex items-center justify-between px-4 py-3 border-b border-white/[0.06]">
+      <div className="shrink-0 flex items-center justify-between px-4 py-3 border-b border-border/50">
         <div className="flex items-center gap-3">
           <button
             onClick={() => navigate("/admin/assessments")}
@@ -379,7 +379,7 @@ export default function AssessmentBuilderPage() {
 
         <div className="flex items-center gap-2">
           {/* Chat width presets */}
-          <div className="flex items-center bg-muted/50 border border-white/[0.06] rounded-lg overflow-hidden">
+          <div className="flex items-center bg-muted/50 border border-border/50 rounded-lg overflow-hidden">
             {([
               { w: 420, label: "S", title: "Narrow chat" },
               { w: 600, label: "M", title: "Medium chat" },
@@ -391,7 +391,7 @@ export default function AssessmentBuilderPage() {
                 className={`px-2 py-1.5 text-[10px] font-semibold transition-colors ${
                   Math.abs(chatWidth - preset.w) < 30
                     ? "bg-muted text-foreground/80"
-                    : "text-white/25 hover:text-muted-foreground"
+                    : "text-muted-foreground/60 hover:text-muted-foreground"
                 }`}
                 title={preset.title}
               >
@@ -402,7 +402,7 @@ export default function AssessmentBuilderPage() {
           {/* Fullscreen toggle */}
           <button
             onClick={() => setIsFullscreen((f) => !f)}
-            className="p-2 rounded-lg bg-muted/50 hover:bg-white/[0.06] border border-white/[0.06] text-muted-foreground/70 hover:text-muted-foreground transition-all"
+            className="p-2 rounded-lg bg-muted/50 hover:bg-muted/70 border border-border/50 text-muted-foreground/70 hover:text-muted-foreground transition-all"
             title={isFullscreen ? "Exit fullscreen (Esc)" : "Fullscreen mode"}
           >
             {isFullscreen ? (
@@ -438,16 +438,16 @@ export default function AssessmentBuilderPage() {
           <div className={`absolute inset-y-0 -left-1 -right-1 ${isResizing ? "" : "group-hover:bg-muted"}`} />
           {/* Visible grip dots */}
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-            <div className="w-0.5 h-0.5 rounded-full bg-white/30" />
-            <div className="w-0.5 h-0.5 rounded-full bg-white/30" />
-            <div className="w-0.5 h-0.5 rounded-full bg-white/30" />
+            <div className="w-0.5 h-0.5 rounded-full bg-muted/300" />
+            <div className="w-0.5 h-0.5 rounded-full bg-muted/300" />
+            <div className="w-0.5 h-0.5 rounded-full bg-muted/300" />
           </div>
         </div>
 
         {/* Right: AI Conversation */}
         <div
           style={{ width: chatWidth }}
-          className={`shrink-0 border-l border-white/[0.06] flex flex-col min-w-0 relative ${isResizing ? "select-none" : ""}`}
+          className={`shrink-0 border-l border-border/50 flex flex-col min-w-0 relative ${isResizing ? "select-none" : ""}`}
         >
           {/* Drag overlay */}
           {isDragging && (
@@ -516,7 +516,7 @@ export default function AssessmentBuilderPage() {
                             isActive
                               ? "bg-purple-500/10 border-purple-500/30 text-purple-300"
                               : isDisabled
-                                ? "bg-white/[0.02] border-border/50 text-muted-foreground/50 cursor-not-allowed"
+                                ? "bg-muted/30 border-border/50 text-muted-foreground/50 cursor-not-allowed"
                                 : "bg-muted/50 border-border text-muted-foreground hover:bg-white/[0.07] hover:text-foreground/90 hover:border-border"
                           }`}
                         >
@@ -564,7 +564,7 @@ export default function AssessmentBuilderPage() {
                             isActive
                               ? "bg-purple-500/10 border-purple-500/30 text-purple-300"
                               : isThinking
-                                ? "bg-white/[0.02] border-border/50 text-muted-foreground/50 cursor-not-allowed"
+                                ? "bg-muted/30 border-border/50 text-muted-foreground/50 cursor-not-allowed"
                                 : "bg-muted/50 border-border text-muted-foreground hover:bg-white/[0.07] hover:text-foreground/90"
                           }`}
                         >
@@ -605,7 +605,7 @@ export default function AssessmentBuilderPage() {
               <div className="px-6 pt-3 pb-0">
                 <div className="max-w-3xl mx-auto">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-[10px] text-white/25 uppercase tracking-wider">Attached:</span>
+                    <span className="text-[10px] text-muted-foreground/60 uppercase tracking-wider">Attached:</span>
                     {attachments.map((att, i) => (
                       <div
                         key={i}
@@ -631,7 +631,7 @@ export default function AssessmentBuilderPage() {
                 {/* File upload button */}
                 <button
                   onClick={() => fileInputRef.current?.click()}
-                  className="p-3 bg-muted/50 hover:bg-white/[0.06] border border-white/[0.08] rounded-xl text-muted-foreground/70 hover:text-muted-foreground transition-all shrink-0"
+                  className="p-3 bg-muted/50 hover:bg-muted/70 border border-border/60 rounded-xl text-muted-foreground/70 hover:text-muted-foreground transition-all shrink-0"
                   title="Attach files"
                 >
                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>

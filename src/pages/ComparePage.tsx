@@ -96,7 +96,7 @@ export default function ComparePage() {
     <div className="min-h-screen flex items-center justify-center px-6 bg-background">
       <div className="text-center space-y-4">
         <p className="text-muted-foreground">{error}</p>
-        <button onClick={() => navigate("/")} className="px-5 py-2.5 text-sm font-medium rounded-lg bg-muted text-foreground hover:bg-white/20 border border-border transition-colors">Return Home</button>
+        <button onClick={() => navigate("/")} className="px-5 py-2.5 text-sm font-medium rounded-lg bg-muted text-foreground hover:bg-muted/200 border border-border transition-colors">Return Home</button>
       </div>
     </div>
   );
@@ -105,7 +105,7 @@ export default function ComparePage() {
     <div className="min-h-screen flex items-center justify-center px-6 bg-background">
       <div className="text-center space-y-4">
         <p className="text-muted-foreground">No completed assessments found for this {email ? "email" : "company"}.</p>
-        <button onClick={() => navigate("/")} className="px-5 py-2.5 text-sm font-medium rounded-lg bg-muted text-foreground hover:bg-white/20 border border-border transition-colors">Take an Assessment</button>
+        <button onClick={() => navigate("/")} className="px-5 py-2.5 text-sm font-medium rounded-lg bg-muted text-foreground hover:bg-muted/200 border border-border transition-colors">Take an Assessment</button>
       </div>
     </div>
   );
@@ -292,7 +292,7 @@ export default function ComparePage() {
                             <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-orange-500/15" title={gap.description}><span className="text-orange-300 text-sm font-bold">{gap.severity}</span></span>
                           ) : isResolved ? (
                             <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-green-500/15"><svg className="w-4 h-4 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg></span>
-                          ) : <span className="text-white/15">&mdash;</span>}
+                          ) : <span className="text-muted-foreground/30">&mdash;</span>}
                         </td>
                       );
                     })}
@@ -303,7 +303,7 @@ export default function ComparePage() {
             <div className="flex gap-6 mt-4 text-xs text-muted-foreground">
               <div className="flex items-center gap-2"><span className="inline-block w-4 h-4 rounded-full bg-orange-500/15 border border-orange-500/30" />Present (severity score)</div>
               <div className="flex items-center gap-2"><span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-green-500/15 border border-green-500/30"><svg className="w-2.5 h-2.5 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg></span>Resolved</div>
-              <div className="flex items-center gap-2"><span className="text-white/15">&mdash;</span>Never detected</div>
+              <div className="flex items-center gap-2"><span className="text-muted-foreground/30">&mdash;</span>Never detected</div>
             </div>
           </section>
         )}

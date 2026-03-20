@@ -38,7 +38,7 @@ export default function ChatInput({ onSend, disabled, placeholder }: Props) {
         placeholder={placeholder || "Ask me anything about your assessments..."}
         disabled={disabled}
         rows={1}
-        className="flex-1 bg-muted border border-border rounded-xl px-4 py-3 text-foreground placeholder-white/20 focus:outline-none focus:border-white/30 transition-colors resize-none disabled:opacity-50"
+        className="flex-1 bg-muted border border-border rounded-xl px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-border transition-colors resize-none disabled:opacity-50"
       />
       <button
         onClick={handleSend}

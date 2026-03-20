@@ -72,7 +72,7 @@ function StatCard({ label, value, active, onClick }: { label: string; value: num
       className={`flex flex-col items-center px-4 py-2.5 rounded-xl border transition-all min-w-[80px] ${
         active
           ? "bg-white/[0.08] border-border text-foreground"
-          : "bg-muted/50 border-border/50 text-muted-foreground hover:bg-white/[0.05] hover:border-border"
+          : "bg-muted/50 border-border/50 text-muted-foreground hover:bg-muted/60 hover:border-border"
       }`}
     >
       <span className="text-lg font-semibold">{value}</span>
@@ -247,7 +247,7 @@ export default function AdminSessionsPage() {
   };
 
   const selectCls =
-    "bg-white/[0.05] border border-border rounded-lg px-3 py-2 text-sm text-foreground outline-none focus:border-border transition-colors appearance-none cursor-pointer";
+    "bg-muted/60 border border-border rounded-lg px-3 py-2 text-sm text-foreground outline-none focus:border-border transition-colors appearance-none cursor-pointer";
 
   return (
     <div className="px-4 md:px-6 py-6">
@@ -267,7 +267,7 @@ export default function AdminSessionsPage() {
           placeholder="Search by name or company..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full sm:w-auto bg-white/[0.05] border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder-white/30 outline-none focus:border-border transition-colors"
+          className="w-full sm:w-auto bg-muted/60 border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-border transition-colors"
         />
 
         <div className="flex gap-2 sm:gap-3 flex-wrap">
@@ -307,7 +307,7 @@ export default function AdminSessionsPage() {
         <div className="sm:ml-auto relative" ref={exportRef}>
           <button
             onClick={() => setExportOpen(!exportOpen)}
-            className="w-full sm:w-auto bg-white/[0.05] border border-border rounded-lg px-4 py-2 text-sm text-foreground hover:bg-white/[0.08] transition-colors"
+            className="w-full sm:w-auto bg-muted/60 border border-border rounded-lg px-4 py-2 text-sm text-foreground hover:bg-white/[0.08] transition-colors"
           >
             Export
           </button>
@@ -315,13 +315,13 @@ export default function AdminSessionsPage() {
             <div className="absolute right-0 sm:right-0 left-0 sm:left-auto top-full mt-1 bg-[#12121a] border border-border rounded-lg overflow-hidden shadow-xl z-20 sm:min-w-[120px]">
               <button
                 onClick={() => handleExport("csv")}
-                className="block w-full text-left px-4 py-2 text-sm text-foreground hover:bg-white/[0.06] transition-colors"
+                className="block w-full text-left px-4 py-2 text-sm text-foreground hover:bg-muted/70 transition-colors"
               >
                 CSV
               </button>
               <button
                 onClick={() => handleExport("json")}
-                className="block w-full text-left px-4 py-2 text-sm text-foreground hover:bg-white/[0.06] transition-colors"
+                className="block w-full text-left px-4 py-2 text-sm text-foreground hover:bg-muted/70 transition-colors"
               >
                 JSON
               </button>
@@ -343,7 +343,7 @@ export default function AdminSessionsPage() {
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="bg-white/[0.02]">
+              <tr className="bg-muted/30">
                 <th className="text-left text-xs text-muted-foreground uppercase tracking-wider px-4 py-3">
                   Name
                 </th>

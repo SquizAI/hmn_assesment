@@ -133,7 +133,7 @@ export default function AdaptabilityProfilePage() {
             {profile.pillarScores.map((ps) => (
               <div
                 key={ps.pillar}
-                className="rounded-xl border border-border/50 bg-white/[0.02] p-5"
+                className="rounded-xl border border-border/50 bg-muted/30 p-5"
               >
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-3">
@@ -228,7 +228,7 @@ export default function AdaptabilityProfilePage() {
               {profile.developmentEdges.map((de, i) => (
                 <div
                   key={i}
-                  className="rounded-xl border border-border/50 bg-white/[0.02] p-6 space-y-4"
+                  className="rounded-xl border border-border/50 bg-muted/30 p-6 space-y-4"
                 >
                   <div className="flex items-center gap-2">
                     <div
@@ -245,7 +245,7 @@ export default function AdaptabilityProfilePage() {
                   <p className="text-muted-foreground text-sm">
                     {de.observation}
                   </p>
-                  <div className="rounded-lg bg-white/[0.02] border border-border/50 p-4 space-y-2">
+                  <div className="rounded-lg bg-muted/30 border border-border/50 p-4 space-y-2">
                     <p className="text-muted-foreground text-sm">
                       <span className="text-muted-foreground">Why this matters:</span>{" "}
                       {de.whyItMatters}
@@ -278,7 +278,7 @@ export default function AdaptabilityProfilePage() {
               {profile.developmentPlan.map((phase) => (
                 <div
                   key={phase.phase}
-                  className="rounded-xl border border-border/50 bg-white/[0.02] p-6 space-y-4"
+                  className="rounded-xl border border-border/50 bg-muted/30 p-6 space-y-4"
                 >
                   <div className="flex items-center justify-between">
                     <div>
@@ -305,7 +305,7 @@ export default function AdaptabilityProfilePage() {
                       </li>
                     ))}
                   </ul>
-                  <div className="rounded-lg bg-white/[0.01] border border-border/50 p-3 space-y-1">
+                  <div className="rounded-lg bg-transparent border border-border/50 p-3 space-y-1">
                     <p className="text-muted-foreground text-xs">
                       <span className="text-muted-foreground/70">You may experience:</span>{" "}
                       {phase.expectedExperience}
@@ -333,7 +333,7 @@ export default function AdaptabilityProfilePage() {
         )}
 
         {/* Section 6: Re-assessment */}
-        <section className="rounded-xl border border-border/50 bg-white/[0.02] p-6 space-y-3">
+        <section className="rounded-xl border border-border/50 bg-muted/30 p-6 space-y-3">
           <h3 className="text-foreground/80 font-medium">Your Re-Assessment</h3>
           {profile.reassessmentDate && (
             <p className="text-muted-foreground text-sm">

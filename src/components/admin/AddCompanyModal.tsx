@@ -172,7 +172,7 @@ export default function AddCompanyModal({ open, onClose, onCreated }: Props) {
       {/* Modal */}
       <div className="relative w-full max-w-lg bg-[#0d0d1a] border border-border rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
         {/* Header */}
-        <div className="px-6 py-4 border-b border-white/[0.06] flex items-center justify-between shrink-0">
+        <div className="px-6 py-4 border-b border-border/50 flex items-center justify-between shrink-0">
           <div>
             <h2 className="text-base font-semibold text-foreground/90">
               {result ? "Done!" : step === "company" ? "New Company" : step === "employees" ? "Add Employees" : "Review & Send"}
@@ -242,7 +242,7 @@ export default function AddCompanyModal({ open, onClose, onCreated }: Props) {
                   value={companyName}
                   onChange={(e) => setCompanyName(e.target.value)}
                   placeholder="Acme Corp"
-                  className="w-full bg-muted border border-border rounded-xl px-4 py-2.5 text-sm text-foreground placeholder-white/20 outline-none focus:border-purple-500/40 transition-colors"
+                  className="w-full bg-muted border border-border rounded-xl px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-purple-500/40 transition-colors"
                   onKeyDown={(e) => e.key === "Enter" && canProceedToEmployees && setStep("employees")}
                 />
               </div>
@@ -253,7 +253,7 @@ export default function AddCompanyModal({ open, onClose, onCreated }: Props) {
                   value={domain}
                   onChange={(e) => setDomain(e.target.value)}
                   placeholder="acme.com"
-                  className="w-full bg-muted border border-border rounded-xl px-4 py-2.5 text-sm text-foreground placeholder-white/20 outline-none focus:border-purple-500/40 transition-colors"
+                  className="w-full bg-muted border border-border rounded-xl px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-purple-500/40 transition-colors"
                 />
                 <p className="text-[11px] text-muted-foreground/50 mt-1">Auto-detected from employee emails</p>
               </div>
@@ -264,7 +264,7 @@ export default function AddCompanyModal({ open, onClose, onCreated }: Props) {
                   value={industry}
                   onChange={(e) => setIndustry(e.target.value)}
                   placeholder="Technology, Healthcare, Finance..."
-                  className="w-full bg-muted border border-border rounded-xl px-4 py-2.5 text-sm text-foreground placeholder-white/20 outline-none focus:border-purple-500/40 transition-colors"
+                  className="w-full bg-muted border border-border rounded-xl px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-purple-500/40 transition-colors"
                 />
               </div>
             </div>
@@ -293,7 +293,7 @@ export default function AddCompanyModal({ open, onClose, onCreated }: Props) {
                         value={emp.name}
                         onChange={(e) => updateEmployee(i, "name", e.target.value)}
                         placeholder="Name"
-                        className="bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder-white/20 outline-none focus:border-purple-500/40 transition-colors"
+                        className="bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-purple-500/40 transition-colors"
                       />
                       <input
                         type="email"
@@ -303,14 +303,14 @@ export default function AddCompanyModal({ open, onClose, onCreated }: Props) {
                           if (i === 0) autoDetectDomain(e.target.value);
                         }}
                         placeholder="email@company.com"
-                        className="bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder-white/20 outline-none focus:border-purple-500/40 transition-colors"
+                        className="bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-purple-500/40 transition-colors"
                       />
                       <input
                         type="text"
                         value={emp.role}
                         onChange={(e) => updateEmployee(i, "role", e.target.value)}
                         placeholder="Role (optional)"
-                        className="bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder-white/20 outline-none focus:border-purple-500/40 transition-colors"
+                        className="bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-purple-500/40 transition-colors"
                         onKeyDown={(e) => {
                           if (e.key === "Enter") {
                             e.preventDefault();
@@ -321,7 +321,7 @@ export default function AddCompanyModal({ open, onClose, onCreated }: Props) {
                     </div>
                     <button
                       onClick={() => removeEmployee(i)}
-                      className={`p-2 text-white/10 hover:text-red-400 transition-colors shrink-0 ${employees.length <= 1 ? "invisible" : ""}`}
+                      className={`p-2 text-muted-foreground/40 hover:text-red-400 transition-colors shrink-0 ${employees.length <= 1 ? "invisible" : ""}`}
                     >
                       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -400,7 +400,7 @@ export default function AddCompanyModal({ open, onClose, onCreated }: Props) {
 
               {/* Employee list */}
               <div className="bg-muted/50 rounded-xl border border-border overflow-hidden">
-                <div className="px-4 py-2.5 border-b border-white/[0.06]">
+                <div className="px-4 py-2.5 border-b border-border/50">
                   <span className="text-xs text-muted-foreground">
                     {validEmployees.length} employee{validEmployees.length !== 1 ? "s" : ""}
                   </span>
@@ -443,7 +443,7 @@ export default function AddCompanyModal({ open, onClose, onCreated }: Props) {
 
         {/* Footer */}
         {!result && (
-          <div className="px-6 py-4 border-t border-white/[0.06] flex items-center justify-between shrink-0">
+          <div className="px-6 py-4 border-t border-border/50 flex items-center justify-between shrink-0">
             <button
               onClick={() => {
                 if (step === "company") onClose();

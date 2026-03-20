@@ -394,7 +394,7 @@ export default function InterviewPage() {
               <div className="flex items-center justify-between min-h-[20px]">
                 {/* Resume hint — shown after first answer */}
                 {answeredQuestions.length > 0 && saveStatus === "idle" && (
-                  <span className="text-[10px] text-white/25">You can close and resume anytime</span>
+                  <span className="text-[10px] text-muted-foreground/60">You can close and resume anytime</span>
                 )}
                 {/* Save status indicator */}
                 {saveStatus === "saving" && (

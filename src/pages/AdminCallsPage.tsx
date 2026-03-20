@@ -87,7 +87,7 @@ export default function AdminCallsPage() {
     <div className="max-w-7xl mx-auto p-6">
       <div className="flex flex-wrap items-center gap-4 mb-8">
         <h1 className="text-3xl font-bold text-foreground mr-auto">Call History</h1>
-        <select value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }} className="bg-muted border border-border rounded-lg px-4 py-2 text-sm text-foreground focus:border-white/30 focus:outline-none appearance-none">
+        <select value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }} className="bg-muted border border-border rounded-lg px-4 py-2 text-sm text-foreground focus:border-border focus:outline-none appearance-none">
           {STATUS_OPTIONS.map((opt) => <option key={opt.value} value={opt.value} className="bg-[#12121a]">{opt.label}</option>)}
         </select>
       </div>
@@ -138,7 +138,7 @@ export default function AdminCallsPage() {
                   </tr>
                   {expandedId === call.id && (
                     <tr key={`${call.id}-expanded`}>
-                      <td colSpan={7} className="px-6 py-4 bg-white/[0.02]">
+                      <td colSpan={7} className="px-6 py-4 bg-muted/30">
                         <div className="max-w-3xl space-y-4">
                           <div>
                             <h4 className="text-sm font-medium text-foreground/80 mb-2">Recording</h4>

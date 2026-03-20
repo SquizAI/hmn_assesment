@@ -148,7 +148,7 @@ export default function HomePage() {
   };
 
   const STATUS_COLORS: Record<string, string> = {
-    intake: "text-gray-400",
+    intake: "text-muted-foreground",
     in_progress: "text-blue-400",
     completed: "text-green-400",
     analyzed: "text-purple-400",
@@ -162,7 +162,8 @@ export default function HomePage() {
       <header className="border-b border-border/50 px-4 sm:px-6 py-4">
         <div className="max-w-5xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <img src="/hmn_logo.png" alt="HMN" className="h-8 w-auto" />
+            <img src="/hmn_logo.png" alt="HMN" className="hidden dark:block h-8 w-auto" />
+            <img src="/hmn_logo_grey.png" alt="HMN" className="block dark:hidden h-8 w-auto" />
             <span className="font-semibold text-foreground/90">Cascade</span>
           </div>
           <div className="flex items-center gap-4">
@@ -253,7 +254,7 @@ export default function HomePage() {
                     <button
                       key={s.id}
                       onClick={() => handleResumeSession(s)}
-                      className="w-full text-left bg-muted/50 border border-border rounded-xl p-4 hover:bg-white/[0.06] hover:border-border transition-all"
+                      className="w-full text-left bg-muted/50 border border-border rounded-xl p-4 hover:bg-muted/70 hover:border-border transition-all"
                     >
                       <div className="flex items-center justify-between mb-1">
                         <span className="text-foreground font-medium">{s.participantName}</span>
@@ -331,7 +332,8 @@ export default function HomePage() {
           <div className="max-w-2xl text-center space-y-10">
             <div className="space-y-6">
               <div className="flex justify-center">
-                <img src="/hmn_logo.png" alt="HMN" className="h-16 w-auto opacity-80" />
+                <img src="/hmn_logo.png" alt="HMN" className="hidden dark:block h-16 w-auto opacity-80" />
+                <img src="/hmn_logo_grey.png" alt="HMN" className="block dark:hidden h-16 w-auto opacity-80" />
               </div>
               <div className="space-y-3">
                 <h1 className="text-3xl sm:text-5xl font-bold tracking-tight">
@@ -345,7 +347,7 @@ export default function HomePage() {
               </div>
             </div>
 
-            <div className="bg-card/60 backdrop-blur-2xl border border-border/50 shadow-2xl rounded-3xl p-6 sm:p-8 max-w-sm mx-auto ring-1 ring-white/5">
+            <div className="bg-card/60 backdrop-blur-2xl border border-border/50 shadow-2xl rounded-3xl p-6 sm:p-8 max-w-sm mx-auto ring-1 ring-border/30">
               <div className="space-y-3">
                 <div className="w-10 h-10 rounded-xl bg-muted border border-border flex items-center justify-center mx-auto">
                   <svg className="w-5 h-5 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>

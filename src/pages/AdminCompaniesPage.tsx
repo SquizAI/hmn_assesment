@@ -150,12 +150,12 @@ export default function AdminCompaniesPage() {
           placeholder="Search companies or industries..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="bg-white/[0.05] border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder-white/30 outline-none focus:border-border transition-colors w-full sm:w-72"
+          className="bg-muted/60 border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-border transition-colors w-full sm:w-72"
         />
         <select
           value={sortBy}
           onChange={(e) => setSortBy(e.target.value as "activity" | "sessions" | "score")}
-          className="bg-white/[0.05] border border-border rounded-lg px-3 py-2 text-sm text-foreground outline-none focus:border-border transition-colors appearance-none cursor-pointer"
+          className="bg-muted/60 border border-border rounded-lg px-3 py-2 text-sm text-foreground outline-none focus:border-border transition-colors appearance-none cursor-pointer"
         >
           <option value="activity">Recent Activity</option>
           <option value="sessions">Most Sessions</option>
@@ -186,7 +186,7 @@ export default function AdminCompaniesPage() {
               {/* Company Header */}
               <div
                 onClick={() => setExpandedCompany(expandedCompany === company.company ? null : company.company)}
-                className="flex flex-wrap items-center gap-3 md:gap-4 px-4 md:px-5 py-3 md:py-4 cursor-pointer hover:bg-white/[0.02] transition-colors"
+                className="flex flex-wrap items-center gap-3 md:gap-4 px-4 md:px-5 py-3 md:py-4 cursor-pointer hover:bg-muted/30 transition-colors"
               >
                 {/* Company icon */}
                 <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500/20 to-blue-500/20 border border-border flex items-center justify-center flex-shrink-0">
@@ -273,7 +273,7 @@ export default function AdminCompaniesPage() {
 
               {/* Expanded: View detail link */}
               {expandedCompany === company.company && (
-                <div className="border-t border-white/[0.06] px-5 py-3 flex items-center justify-between">
+                <div className="border-t border-border/50 px-5 py-3 flex items-center justify-between">
                   <span className="text-xs text-muted-foreground/70">
                     {company.completedCount} completed, {company.analyzedCount} analyzed
                   </span>

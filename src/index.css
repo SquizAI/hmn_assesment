@@ -71,7 +71,7 @@ body::before {
   left: -10%;
   width: 50vw;
   height: 50vw;
-  background: var(--primary);
+  background: #2563eb; /* Royal Blue */
   opacity: 0.08;
 }
 
@@ -80,8 +80,8 @@ body::after {
   right: -10%;
   width: 60vw;
   height: 60vw;
-  background: #8b5cf6;
-  opacity: 0.05;
+  background: #06b6d4; /* Cyan */
+  opacity: 0.06;
 }
 
 .dark body::before { opacity: 0.15; }

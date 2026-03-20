@@ -123,15 +123,15 @@ export default function AdminWebhooksPage() {
             {!editingWebhook && (
               <div>
                 <label className="block text-xs text-muted-foreground mb-1.5">Campaign (optional)</label>
-                <select value={formCampaignId} onChange={(e) => setFormCampaignId(e.target.value)} className="w-full bg-muted border border-border rounded-lg px-4 py-2.5 text-sm text-foreground focus:border-white/30 focus:outline-none appearance-none">
-                  <option value="" className="bg-gray-900">Global (no campaign)</option>
-                  {campaigns.map((c) => <option key={c.id} value={c.id} className="bg-gray-900">{c.name}</option>)}
+                <select value={formCampaignId} onChange={(e) => setFormCampaignId(e.target.value)} className="w-full bg-muted border border-border rounded-lg px-4 py-2.5 text-sm text-foreground focus:border-border focus:outline-none appearance-none">
+                  <option value="" className="bg-muted">Global (no campaign)</option>
+                  {campaigns.map((c) => <option key={c.id} value={c.id} className="bg-muted">{c.name}</option>)}
                 </select>
               </div>
             )}
             <div>
               <label className="block text-xs text-muted-foreground mb-1.5">Webhook URL</label>
-              <input type="url" placeholder="https://example.com/webhook" value={formUrl} onChange={(e) => setFormUrl(e.target.value)} required className="w-full bg-muted border border-border rounded-lg px-4 py-2.5 text-sm text-foreground placeholder-white/30 focus:border-white/30 focus:outline-none" />
+              <input type="url" placeholder="https://example.com/webhook" value={formUrl} onChange={(e) => setFormUrl(e.target.value)} required className="w-full bg-muted border border-border rounded-lg px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-border focus:outline-none" />
             </div>
             <div>
               <label className="block text-xs text-muted-foreground mb-2">Events</label>
@@ -145,7 +145,7 @@ export default function AdminWebhooksPage() {
             </div>
             <div>
               <label className="block text-xs text-muted-foreground mb-1.5">Secret (optional)</label>
-              <input type="text" placeholder="Sent as X-Webhook-Secret header" value={formSecret} onChange={(e) => setFormSecret(e.target.value)} className="w-full bg-muted border border-border rounded-lg px-4 py-2.5 text-sm text-foreground placeholder-white/30 focus:border-white/30 focus:outline-none" />
+              <input type="text" placeholder="Sent as X-Webhook-Secret header" value={formSecret} onChange={(e) => setFormSecret(e.target.value)} className="w-full bg-muted border border-border rounded-lg px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-border focus:outline-none" />
             </div>
             <div className="flex items-center gap-3">
               <button type="button" onClick={() => setFormActive(!formActive)} className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${formActive ? "bg-purple-600" : "bg-muted"}`}>

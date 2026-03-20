@@ -511,13 +511,13 @@ export default function AdminInvitationsPage() {
           placeholder="Search by name, email, or company..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="bg-white/[0.05] border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder-white/30 outline-none focus:border-border transition-colors sm:w-64"
+          className="bg-muted/60 border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-border transition-colors sm:w-64"
         />
 
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
-          className="bg-white/[0.05] border border-border rounded-lg px-3 py-2 text-sm text-foreground outline-none focus:border-border transition-colors appearance-none cursor-pointer"
+          className="bg-muted/60 border border-border rounded-lg px-3 py-2 text-sm text-foreground outline-none focus:border-border transition-colors appearance-none cursor-pointer"
         >
           <option value="all">All Statuses</option>
           <option value="sent">Sent</option>
@@ -529,7 +529,7 @@ export default function AdminInvitationsPage() {
         <select
           value={assessmentFilter}
           onChange={(e) => setAssessmentFilter(e.target.value)}
-          className="bg-white/[0.05] border border-border rounded-lg px-3 py-2 text-sm text-foreground outline-none focus:border-border transition-colors appearance-none cursor-pointer"
+          className="bg-muted/60 border border-border rounded-lg px-3 py-2 text-sm text-foreground outline-none focus:border-border transition-colors appearance-none cursor-pointer"
         >
           <option value="all">All Assessments</option>
           {activeAssessments.map((a) => (
@@ -542,7 +542,7 @@ export default function AdminInvitationsPage() {
         <div className="sm:ml-auto flex items-center gap-2">
           <button
             onClick={() => setShowCsvModal(true)}
-            className="px-4 py-2 text-sm font-medium rounded-xl transition-all border border-white/15 text-muted-foreground hover:bg-white/[0.06] hover:text-foreground/90"
+            className="px-4 py-2 text-sm font-medium rounded-xl transition-all border border-white/15 text-muted-foreground hover:bg-muted/70 hover:text-foreground/90"
           >
             Bulk Import
           </button>
@@ -561,7 +561,7 @@ export default function AdminInvitationsPage() {
       <div className="bg-muted/50 rounded-2xl border border-border overflow-x-auto">
         <table className="w-full min-w-0">
           <thead>
-            <tr className="bg-white/[0.02]">
+            <tr className="bg-muted/30">
               <th className="text-left text-xs text-muted-foreground uppercase tracking-wider px-3 md:px-4 py-3">
                 Participant
               </th>
@@ -630,7 +630,7 @@ export default function AdminInvitationsPage() {
                       const { label, date } = getMostRelevantTimestamp(inv);
                       return (
                         <>
-                          <span className="text-white/25 text-[10px] uppercase mr-1">{label}</span>
+                          <span className="text-muted-foreground/60 text-[10px] uppercase mr-1">{label}</span>
                           <span className="text-muted-foreground">{formatTs(date)}</span>
                           <div className="absolute z-40 bottom-full left-0 mb-1 hidden group-hover/ts:block bg-[#12121a] border border-border rounded-lg px-3 py-2 shadow-xl min-w-[210px]">
                             <div className="text-xs space-y-1">
@@ -733,7 +733,7 @@ export default function AdminInvitationsPage() {
               <button
                 type="button"
                 onClick={() => setShowAssessmentPicker(!showAssessmentPicker)}
-                className="w-full bg-white/[0.05] border border-border rounded-lg px-3 py-2 text-sm text-left text-foreground outline-none focus:border-border transition-colors cursor-pointer"
+                className="w-full bg-muted/60 border border-border rounded-lg px-3 py-2 text-sm text-left text-foreground outline-none focus:border-border transition-colors cursor-pointer"
               >
                 {form.assessmentId ? (
                   (() => {
@@ -774,7 +774,7 @@ export default function AdminInvitationsPage() {
                         <div className="flex-1 min-w-0">
                           <div className="text-sm font-medium text-foreground/90">{a.name}</div>
                           <div className="text-xs text-muted-foreground/70 line-clamp-1 mt-0.5">{a.description}</div>
-                          <div className="flex items-center gap-3 mt-1 text-xs text-white/25">
+                          <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground/60">
                             <span>{a.questionCount} questions</span>
                             <span>{a.estimatedMinutes} min</span>
                           </div>
@@ -798,7 +798,7 @@ export default function AdminInvitationsPage() {
               value={form.name}
               onChange={(e) => updateForm("name", e.target.value)}
               placeholder="Participant name"
-              className="w-full bg-white/[0.05] border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder-white/20 outline-none focus:border-border transition-colors mb-4"
+              className="w-full bg-muted/60 border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-border transition-colors mb-4"
             />
 
             {/* Email — with auto-suggest */}
@@ -817,7 +817,7 @@ export default function AdminInvitationsPage() {
                   }, 150);
                 }}
                 placeholder="participant@company.com"
-                className="w-full bg-white/[0.05] border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder-white/20 outline-none focus:border-border transition-colors"
+                className="w-full bg-muted/60 border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-border transition-colors"
               />
               {enriching && (
                 <div className="absolute right-3 top-1/2 -translate-y-1/2">
@@ -836,11 +836,11 @@ export default function AdminInvitationsPage() {
                           setForm((prev) => ({ ...prev, email }));
                           autoFillFromEmail(email);
                         }}
-                        className="w-full text-left px-3 py-2 text-sm hover:bg-white/[0.06] transition-colors border-b border-border/50 last:border-b-0"
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-muted/70 transition-colors border-b border-border/50 last:border-b-0"
                       >
                         <span className="text-foreground/80">{email}</span>
                         {data && (
-                          <span className="text-white/25 text-xs ml-2">
+                          <span className="text-muted-foreground/60 text-xs ml-2">
                             {data.name}{data.company ? ` \u2014 ${data.company}` : ""}
                           </span>
                         )}
@@ -860,7 +860,7 @@ export default function AdminInvitationsPage() {
               value={form.company}
               onChange={(e) => updateForm("company", e.target.value)}
               placeholder="Company name"
-              className="w-full bg-white/[0.05] border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder-white/20 outline-none focus:border-border transition-colors mb-4"
+              className="w-full bg-muted/60 border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-border transition-colors mb-4"
             />
 
             {/* Role + Industry side by side */}
@@ -874,7 +874,7 @@ export default function AdminInvitationsPage() {
                   value={form.role}
                   onChange={(e) => updateForm("role", e.target.value)}
                   placeholder="e.g. VP Engineering"
-                  className="w-full bg-white/[0.05] border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder-white/20 outline-none focus:border-border transition-colors"
+                  className="w-full bg-muted/60 border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-border transition-colors"
                 />
               </div>
               <div>
@@ -886,7 +886,7 @@ export default function AdminInvitationsPage() {
                   value={form.industry}
                   onChange={(e) => updateForm("industry", e.target.value)}
                   placeholder="e.g. SaaS"
-                  className="w-full bg-white/[0.05] border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder-white/20 outline-none focus:border-border transition-colors"
+                  className="w-full bg-muted/60 border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-border transition-colors"
                 />
               </div>
             </div>
@@ -900,7 +900,7 @@ export default function AdminInvitationsPage() {
               value={form.teamSize}
               onChange={(e) => updateForm("teamSize", e.target.value)}
               placeholder="e.g. 50-100"
-              className="w-full bg-white/[0.05] border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder-white/20 outline-none focus:border-border transition-colors mb-4"
+              className="w-full bg-muted/60 border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-border transition-colors mb-4"
             />
 
             {/* Note */}
@@ -912,7 +912,7 @@ export default function AdminInvitationsPage() {
               onChange={(e) => updateForm("note", e.target.value)}
               placeholder="Optional note for this invitation..."
               rows={3}
-              className="w-full bg-white/[0.05] border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder-white/20 outline-none focus:border-border transition-colors mb-6 resize-none"
+              className="w-full bg-muted/60 border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-border transition-colors mb-6 resize-none"
             />
 
             {/* Email toggle */}
@@ -945,7 +945,7 @@ export default function AdminInvitationsPage() {
                 disabled={creating}
                 className={`px-5 py-2 text-sm font-medium rounded-xl border transition-all ${
                   creating
-                    ? "bg-white/[0.04] border-border text-white/25 cursor-not-allowed"
+                    ? "bg-white/[0.04] border-border text-muted-foreground/60 cursor-not-allowed"
                     : "bg-white/[0.10] border-white/15 text-foreground hover:bg-white/[0.15]"
                 }`}
               >

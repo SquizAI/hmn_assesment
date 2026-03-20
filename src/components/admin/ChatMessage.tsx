@@ -76,7 +76,7 @@ export default function ChatMessage({ role, content, onAction, isLatest, toolCal
                   return (
                     <tr
                       key={i}
-                      className={`transition-colors ${question ? "hover:bg-purple-500/[0.06] cursor-pointer group" : "hover:bg-white/[0.02]"}`}
+                      className={`transition-colors ${question ? "hover:bg-purple-500/[0.06] cursor-pointer group" : "hover:bg-muted/30"}`}
                       onClick={question ? () => setEditingQuestion(question) : undefined}
                     >
                       {row.map((cell, j) => (
@@ -111,7 +111,7 @@ export default function ChatMessage({ role, content, onAction, isLatest, toolCal
     const flushCode = () => {
       elements.push(
         <div key={`code-${elements.length}`} className="my-3 rounded-lg overflow-hidden">
-          <div className="bg-white/[0.06] px-3 py-1.5 text-[10px] text-muted-foreground/70 uppercase tracking-widest border-b border-border/50">
+          <div className="bg-muted/70 px-3 py-1.5 text-[10px] text-muted-foreground/70 uppercase tracking-widest border-b border-border/50">
             {codeLang || "code"}
           </div>
           <pre className="bg-muted/50 px-4 py-3 overflow-x-auto text-sm">
@@ -279,7 +279,7 @@ export default function ChatMessage({ role, content, onAction, isLatest, toolCal
               </button>
             )}
             {toolsExpanded && toolCalls && (
-              <div className="bg-muted/50 rounded-xl border border-white/[0.06] px-3 py-2 space-y-1 mb-1">
+              <div className="bg-muted/50 rounded-xl border border-border/50 px-3 py-2 space-y-1 mb-1">
                 {toolCalls.map((tc, i) => (
                   <div key={i} className="flex items-center gap-2 text-[11px]">
                     {tc.success ? (
@@ -296,7 +296,7 @@ export default function ChatMessage({ role, content, onAction, isLatest, toolCal
                 ))}
               </div>
             )}
-            <div className="bg-white/[0.05] rounded-2xl rounded-bl-md px-4 py-3 text-sm leading-relaxed text-foreground/90 border border-white/[0.08]">
+            <div className="bg-muted/60 rounded-2xl rounded-bl-md px-4 py-3 text-sm leading-relaxed text-foreground/90 border border-border/60">
               {renderContent(body)}
             </div>
             {actions.length > 0 && isLatest && onAction && (

@@ -292,7 +292,7 @@ export default function AdminChatPage() {
           <div className="px-6 pt-3 pb-0">
             <div className="max-w-3xl mx-auto">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-[10px] text-white/25 uppercase tracking-wider">Attached:</span>
+                <span className="text-[10px] text-muted-foreground/60 uppercase tracking-wider">Attached:</span>
                 {attachments.map((att, i) => (
                   <div
                     key={i}
@@ -318,7 +318,7 @@ export default function AdminChatPage() {
             {/* File upload button */}
             <button
               onClick={() => fileInputRef.current?.click()}
-              className="p-3 bg-muted/50 hover:bg-white/[0.06] border border-white/[0.08] rounded-xl text-muted-foreground/70 hover:text-muted-foreground transition-all shrink-0"
+              className="p-3 bg-muted/50 hover:bg-muted/70 border border-border/60 rounded-xl text-muted-foreground/70 hover:text-muted-foreground transition-all shrink-0"
               title="Attach files"
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>

@@ -78,7 +78,7 @@ function FilterTab({
       {label}
       <span
         className={`ml-2 text-xs tabular-nums ${
-          active ? "text-muted-foreground" : "text-white/25"
+          active ? "text-muted-foreground" : "text-muted-foreground/60"
         }`}
       >
         {count}
@@ -99,7 +99,7 @@ function QuickAction({
   const colorMap: Record<string, string> = {
     green:
       "bg-green-500/10 border-green-500/25 text-green-400 hover:bg-green-500/20",
-    gray: "bg-gray-500/10 border-gray-500/25 text-gray-400 hover:bg-gray-500/20",
+    gray: "bg-gray-500/10 border-gray-500/25 text-muted-foreground hover:bg-gray-500/20",
     blue: "bg-blue-500/10 border-blue-500/25 text-blue-400 hover:bg-blue-500/20",
     red: "bg-red-500/10 border-red-500/25 text-red-400 hover:bg-red-500/20",
     amber:
@@ -418,7 +418,7 @@ export default function AdminAssessmentsPage() {
         <p className="text-muted-foreground text-sm">{error}</p>
         <button
           onClick={loadAssessments}
-          className="px-4 py-2 text-sm rounded-xl bg-white/[0.06] border border-border text-foreground hover:bg-white/[0.10] transition-colors"
+          className="px-4 py-2 text-sm rounded-xl bg-muted/70 border border-border text-foreground hover:bg-white/[0.10] transition-colors"
         >
           Retry
         </button>
@@ -477,11 +477,11 @@ export default function AdminAssessmentsPage() {
               placeholder="Search assessments..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="bg-white/[0.05] border border-border rounded-lg pl-9 pr-3 py-2 text-sm text-foreground placeholder-white/30 outline-none focus:border-border transition-colors w-full sm:w-56"
+              className="bg-muted/60 border border-border rounded-lg pl-9 pr-3 py-2 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-border transition-colors w-full sm:w-56"
             />
             {/* Search icon */}
             <svg
-              className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/25"
+              className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/60"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -507,7 +507,7 @@ export default function AdminAssessmentsPage() {
           <select
             value={categoryFilter}
             onChange={(e) => setCategoryFilter(e.target.value)}
-            className="bg-white/[0.05] border border-border rounded-lg px-3 py-2 text-sm text-muted-foreground outline-none focus:border-border transition-colors"
+            className="bg-muted/60 border border-border rounded-lg px-3 py-2 text-sm text-muted-foreground outline-none focus:border-border transition-colors"
           >
             <option value="all">All Categories</option>
             {categories.map((c) => (
@@ -520,7 +520,7 @@ export default function AdminAssessmentsPage() {
             <select
               value={companyFilter}
               onChange={(e) => setCompanyFilter(e.target.value)}
-              className="bg-white/[0.05] border border-border rounded-lg px-3 py-2 text-sm text-muted-foreground outline-none focus:border-border transition-colors"
+              className="bg-muted/60 border border-border rounded-lg px-3 py-2 text-sm text-muted-foreground outline-none focus:border-border transition-colors"
             >
               <option value="all">All Companies</option>
               {companies.map((c) => (
@@ -531,7 +531,7 @@ export default function AdminAssessmentsPage() {
 
           {/* Sort dropdown */}
           <div className="relative group">
-            <button className="bg-white/[0.05] border border-border rounded-lg px-3 py-2 text-sm text-muted-foreground hover:bg-white/[0.08] transition-colors flex items-center gap-1">
+            <button className="bg-muted/60 border border-border rounded-lg px-3 py-2 text-sm text-muted-foreground hover:bg-white/[0.08] transition-colors flex items-center gap-1">
               <svg
                 className="w-4 h-4"
                 fill="none"
@@ -561,7 +561,7 @@ export default function AdminAssessmentsPage() {
                   onClick={() => handleSortToggle(key)}
                   className={`block w-full text-left px-4 py-2 text-sm transition-colors ${
                     sortKey === key
-                      ? "text-foreground bg-white/[0.06]"
+                      ? "text-foreground bg-muted/70"
                       : "text-muted-foreground hover:bg-white/[0.04]"
                   }`}
                 >
@@ -573,7 +573,7 @@ export default function AdminAssessmentsPage() {
           </div>
 
           {/* View toggle */}
-          <div className="flex items-center bg-white/[0.05] border border-border rounded-lg overflow-hidden">
+          <div className="flex items-center bg-muted/60 border border-border rounded-lg overflow-hidden">
             <button
               onClick={() => setViewMode("gallery")}
               className={`p-2 transition-colors ${
@@ -629,7 +629,7 @@ export default function AdminAssessmentsPage() {
           </p>
         </div>
         <div className="bg-muted/50 border border-border rounded-xl px-4 py-3">
-          <p className="text-xs text-white/25 uppercase tracking-wider">
+          <p className="text-xs text-muted-foreground/60 uppercase tracking-wider">
             Archived
           </p>
           <p className="text-lg md:text-xl font-semibold text-muted-foreground mt-1 tabular-nums">
@@ -660,7 +660,7 @@ export default function AdminAssessmentsPage() {
                 onClick={() => setSelectedAssessmentId(assessment.id)}
                 className={`
                   group relative bg-muted/50 border border-border rounded-2xl p-5
-                  hover:bg-white/[0.06] hover:border-border transition-all cursor-pointer
+                  hover:bg-muted/70 hover:border-border transition-all cursor-pointer
                   ${isInFlight ? "opacity-60 pointer-events-none" : ""}
                 `}
               >
@@ -741,20 +741,20 @@ export default function AdminAssessmentsPage() {
                     <span className={`px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider rounded-full ${
                       assessment.typeBadge === "Survey" ? "bg-purple-500/15 text-purple-300" :
                       assessment.typeBadge === "Diagnostic" ? "bg-blue-500/15 text-blue-300" :
-                      "bg-white/[0.06] text-muted-foreground"
+                      "bg-muted/70 text-muted-foreground"
                     }`}>
                       {assessment.typeBadge}
                     </span>
                   )}
                   {assessment.category && (
-                    <span className="px-2 py-0.5 text-[10px] text-white/25 bg-muted/50 rounded-full">
+                    <span className="px-2 py-0.5 text-[10px] text-muted-foreground/60 bg-muted/50 rounded-full">
                       {assessment.category}
                     </span>
                   )}
                 </div>
 
                 {/* Divider */}
-                <div className="border-t border-white/[0.06] mt-4 pt-3" />
+                <div className="border-t border-border/50 mt-4 pt-3" />
 
                 {/* Quick actions */}
                 <div className="flex items-center gap-1.5 flex-wrap">
@@ -853,7 +853,7 @@ export default function AdminAssessmentsPage() {
                         <span className={`px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider rounded-full ${
                           assessment.typeBadge === "Survey" ? "bg-purple-500/15 text-purple-300" :
                           assessment.typeBadge === "Diagnostic" ? "bg-blue-500/15 text-blue-300" :
-                          "bg-white/[0.06] text-muted-foreground"
+                          "bg-muted/70 text-muted-foreground"
                         }`}>
                           {assessment.typeBadge}
                         </span>
@@ -996,7 +996,7 @@ function DuplicateAssessmentModal({
         )}
 
         {/* Source preview */}
-        <div className="bg-muted/50 border border-white/[0.06] rounded-xl p-3 mb-5 flex items-center gap-3">
+        <div className="bg-muted/50 border border-border/50 rounded-xl p-3 mb-5 flex items-center gap-3">
           <span className="text-2xl">{source.icon}</span>
           <div>
             <p className="text-sm text-foreground/80 font-medium">{source.name}</p>
@@ -1017,7 +1017,7 @@ function DuplicateAssessmentModal({
           value={name}
           onChange={(e) => setName(e.target.value)}
           autoFocus
-          className="w-full bg-white/[0.05] border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder-white/25 outline-none focus:border-border transition-colors mb-1"
+          className="w-full bg-muted/60 border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder-white/25 outline-none focus:border-border transition-colors mb-1"
         />
         <p className="text-[11px] text-muted-foreground/50 mb-6 font-mono">
           ID: {generatedId}
@@ -1037,7 +1037,7 @@ function DuplicateAssessmentModal({
             disabled={submitting || !name.trim()}
             className={`px-5 py-2 text-sm font-medium rounded-xl border transition-all ${
               submitting || !name.trim()
-                ? "bg-white/[0.04] border-border text-white/25 cursor-not-allowed"
+                ? "bg-white/[0.04] border-border text-muted-foreground/60 cursor-not-allowed"
                 : "bg-white/[0.10] border-white/15 text-foreground hover:bg-white/[0.15]"
             }`}
           >

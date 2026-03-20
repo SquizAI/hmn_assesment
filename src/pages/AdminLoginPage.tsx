@@ -31,7 +31,8 @@ export default function AdminLoginPage() {
     <div className="min-h-screen flex flex-col">
       <header className="border-b border-border/50 px-6 py-4">
         <div className="max-w-5xl mx-auto flex items-center gap-3">
-          <img src="/hmn_logo.png" alt="HMN" className="h-8 w-auto" />
+          <img src="/hmn_logo.png" alt="HMN" className="hidden dark:block h-8 w-auto" />
+          <img src="/hmn_logo_grey.png" alt="HMN" className="block dark:hidden h-8 w-auto" />
           <span className="font-semibold text-foreground/90">Admin</span>
         </div>
       </header>
@@ -51,7 +52,7 @@ export default function AdminLoginPage() {
               onKeyDown={(e) => e.key === "Enter" && handleLogin()}
               placeholder="Password"
               autoFocus
-              className="w-full bg-muted border border-border rounded-xl px-4 py-3 text-foreground placeholder-white/20 focus:outline-none focus:border-white/30 transition-colors"
+              className="w-full bg-muted border border-border rounded-xl px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-border transition-colors"
             />
             {error && <p className="text-red-400 text-sm text-center">{error}</p>}
             <Button onClick={handleLogin} disabled={!password} loading={loading} className="w-full">

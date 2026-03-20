@@ -262,7 +262,7 @@ export default function AdminPreviewPage() {
 
             {/* Executive Summary */}
             {analysis.executiveSummary && (
-              <div className="bg-white/3 rounded-2xl border border-border p-6">
+              <div className="bg-muted/30 rounded-2xl border border-border p-6">
                 <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">Executive Summary</h3>
                 <p className="text-sm text-foreground/80 leading-relaxed">{analysis.executiveSummary}</p>
               </div>
@@ -270,7 +270,7 @@ export default function AdminPreviewPage() {
 
             {/* Dimension Scores */}
             {analysis.dimensionScores && analysis.dimensionScores.length > 0 && (
-              <div className="bg-white/3 rounded-2xl border border-border p-6">
+              <div className="bg-muted/30 rounded-2xl border border-border p-6">
                 <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">Dimension Scores</h3>
                 <div className="space-y-3">
                   {analysis.dimensionScores.map((dim) => (
@@ -293,11 +293,11 @@ export default function AdminPreviewPage() {
 
             {/* Recommendations */}
             {analysis.serviceRecommendations && analysis.serviceRecommendations.length > 0 && (
-              <div className="bg-white/3 rounded-2xl border border-border p-6">
+              <div className="bg-muted/30 rounded-2xl border border-border p-6">
                 <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">Recommendations</h3>
                 <div className="space-y-3">
                   {analysis.serviceRecommendations.map((rec, i) => (
-                    <div key={i} className="flex items-start gap-3 bg-white/3 rounded-xl p-3 border border-border/50">
+                    <div key={i} className="flex items-start gap-3 bg-muted/30 rounded-xl p-3 border border-border/50">
                       <span className="shrink-0 w-6 h-6 rounded-full bg-blue-500/20 text-blue-300 text-xs font-bold flex items-center justify-center">
                         {rec.tier}
                       </span>

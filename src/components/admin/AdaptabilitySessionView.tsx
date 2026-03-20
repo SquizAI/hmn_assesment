@@ -96,19 +96,19 @@ export default function AdaptabilitySessionView({ analysis }: AdaptabilitySessio
     <div className="space-y-6">
       {/* Overall Score + Key Metrics */}
       <div className="grid grid-cols-3 gap-3">
-        <div className="rounded-lg border border-border/50 bg-white/[0.02] p-3 text-center">
+        <div className="rounded-lg border border-border/50 bg-muted/30 p-3 text-center">
           <p className="text-2xl font-semibold text-foreground">
             {analysis.overallAdaptabilityScore}
           </p>
           <p className="text-[10px] text-muted-foreground/70 mt-1">Overall / 100</p>
         </div>
-        <div className="rounded-lg border border-border/50 bg-white/[0.02] p-3 text-center">
+        <div className="rounded-lg border border-border/50 bg-muted/30 p-3 text-center">
           <p className={`text-lg font-medium ${regulation.color}`}>
             {regulation.label}
           </p>
           <p className="text-[10px] text-muted-foreground/70 mt-1">Adaptive Regulation</p>
         </div>
-        <div className="rounded-lg border border-border/50 bg-white/[0.02] p-3 text-center">
+        <div className="rounded-lg border border-border/50 bg-muted/30 p-3 text-center">
           <p className="text-lg font-medium text-foreground/80 capitalize">
             {analysis.meaningStructure.classification.replace(/_/g, " ")}
           </p>
@@ -182,7 +182,7 @@ export default function AdaptabilitySessionView({ analysis }: AdaptabilitySessio
           Behavioral Markers
         </h4>
         {pillars.map((pillar) => (
-          <details key={pillar.key} className="rounded-lg border border-border/50 bg-white/[0.02]">
+          <details key={pillar.key} className="rounded-lg border border-border/50 bg-muted/30">
             <summary className="px-3 py-2 cursor-pointer text-muted-foreground text-xs hover:text-foreground/90 transition-colors">
               {pillar.label} — Content Markers
             </summary>
@@ -196,7 +196,7 @@ export default function AdaptabilitySessionView({ analysis }: AdaptabilitySessio
       </div>
 
       {/* Process Scores */}
-      <details className="rounded-lg border border-border/50 bg-white/[0.02]">
+      <details className="rounded-lg border border-border/50 bg-muted/30">
         <summary className="px-3 py-2 cursor-pointer text-muted-foreground text-xs hover:text-foreground/90 transition-colors">
           Process Markers
         </summary>
@@ -216,7 +216,7 @@ export default function AdaptabilitySessionView({ analysis }: AdaptabilitySessio
         </h4>
 
         {/* Adaptive Regulation Details */}
-        <div className="rounded-lg border border-border/50 bg-white/[0.02] p-3 space-y-2">
+        <div className="rounded-lg border border-border/50 bg-muted/30 p-3 space-y-2">
           <p className="text-muted-foreground text-xs font-medium">Adaptive Regulation</p>
           <div className="grid grid-cols-2 gap-2 text-[11px]">
             <div>
@@ -247,7 +247,7 @@ export default function AdaptabilitySessionView({ analysis }: AdaptabilitySessio
         </div>
 
         {/* System vs Individual */}
-        <div className="rounded-lg border border-border/50 bg-white/[0.02] p-3 space-y-1">
+        <div className="rounded-lg border border-border/50 bg-muted/30 p-3 space-y-1">
           <p className="text-muted-foreground text-xs font-medium">System vs. Individual</p>
           <p className="text-muted-foreground text-[11px] capitalize">
             {analysis.systemVsIndividual.classification.replace(/_/g, " ")}
@@ -256,7 +256,7 @@ export default function AdaptabilitySessionView({ analysis }: AdaptabilitySessio
         </div>
 
         {/* Cross-Pillar Observations */}
-        <details className="rounded-lg border border-border/50 bg-white/[0.02]">
+        <details className="rounded-lg border border-border/50 bg-muted/30">
           <summary className="px-3 py-2 cursor-pointer text-muted-foreground text-xs hover:text-foreground/90">
             Cross-Pillar Observations
           </summary>
@@ -309,7 +309,7 @@ export default function AdaptabilitySessionView({ analysis }: AdaptabilitySessio
       </div>
 
       {/* Intervention Routing */}
-      <details className="rounded-lg border border-border/50 bg-white/[0.02]">
+      <details className="rounded-lg border border-border/50 bg-muted/30">
         <summary className="px-3 py-2 cursor-pointer text-muted-foreground text-xs hover:text-foreground/90">
           Intervention Routing
         </summary>

@@ -218,7 +218,7 @@ export default function AdminCompanyDetailPage() {
           <h2 className="text-lg font-semibold text-foreground/90">{detail.company}</h2>
           <div className="flex items-center gap-2 mt-0.5">
             {detail.industries.map((ind) => (
-              <span key={ind} className="text-xs px-2 py-0.5 rounded-full bg-white/[0.05] border border-border text-muted-foreground">
+              <span key={ind} className="text-xs px-2 py-0.5 rounded-full bg-muted/60 border border-border text-muted-foreground">
                 {ind}
               </span>
             ))}
@@ -295,7 +295,7 @@ export default function AdminCompanyDetailPage() {
 
         {/* Right: Sessions Table */}
         <div className="bg-muted/50 rounded-2xl border border-border overflow-hidden">
-          <div className="px-5 py-4 border-b border-white/[0.06]">
+          <div className="px-5 py-4 border-b border-border/50">
             <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
               Sessions ({detail.sessions.length})
             </h3>
@@ -303,7 +303,7 @@ export default function AdminCompanyDetailPage() {
           <div className="overflow-y-auto max-h-[600px]">
             <table className="w-full">
               <thead>
-                <tr className="bg-white/[0.02]">
+                <tr className="bg-muted/30">
                   <th className="text-left text-xs text-muted-foreground uppercase tracking-wider px-4 py-2.5">Name</th>
                   <th className="text-left text-xs text-muted-foreground uppercase tracking-wider px-4 py-2.5">Status</th>
                   <th className="text-left text-xs text-muted-foreground uppercase tracking-wider px-4 py-2.5">Date</th>
@@ -332,7 +332,7 @@ export default function AdminCompanyDetailPage() {
                       {formatDate(session.createdAt)}
                     </td>
                     <td className="px-4 py-2.5">
-                      <svg className="w-4 h-4 text-white/15" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <svg className="w-4 h-4 text-muted-foreground/30" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
                       </svg>
                     </td>
@@ -347,7 +347,7 @@ export default function AdminCompanyDetailPage() {
       {/* Graph Intelligence Section */}
       <div className="bg-muted/50 rounded-2xl border border-border overflow-hidden">
         {/* Tab Header */}
-        <div className="flex items-center border-b border-white/[0.06] px-5">
+        <div className="flex items-center border-b border-border/50 px-5">
           {(["themes", "people", "recommendations", "benchmark"] as IntelTab[]).map((tab) => (
             <button
               key={tab}
@@ -437,7 +437,7 @@ export default function AdminCompanyDetailPage() {
                         <div
                           key={p.sessionId}
                           onClick={() => setSelectedSessionId(p.sessionId)}
-                          className="bg-muted/50 rounded-xl border border-border p-4 hover:bg-white/[0.06] cursor-pointer transition-colors"
+                          className="bg-muted/50 rounded-xl border border-border p-4 hover:bg-muted/70 cursor-pointer transition-colors"
                         >
                           <div className="flex items-center justify-between mb-2">
                             <span className="text-sm font-medium text-foreground/90 truncate">{p.name}</span>
@@ -466,13 +466,13 @@ export default function AdminCompanyDetailPage() {
                       {[...intel.recommendations]
                         .sort((a, b) => b.frequency - a.frequency)
                         .map((rec, idx) => (
-                          <div key={idx} className="flex items-start gap-3 p-3 rounded-xl bg-white/[0.02] border border-border/50">
+                          <div key={idx} className="flex items-start gap-3 p-3 rounded-xl bg-muted/30 border border-border/50">
                             <span className={`mt-0.5 text-xs font-bold px-2 py-0.5 rounded-full flex-shrink-0 ${
                               rec.tier === 1
                                 ? "bg-purple-500/15 text-purple-400 border border-purple-500/20"
                                 : rec.tier === 2
                                 ? "bg-blue-500/15 text-blue-400 border border-blue-500/20"
-                                : "bg-gray-500/15 text-gray-400 border border-gray-500/20"
+                                : "bg-gray-500/15 text-muted-foreground border border-gray-500/20"
                             }`}>
                               T{rec.tier}
                             </span>
@@ -541,7 +541,7 @@ export default function AdminCompanyDetailPage() {
                             </div>
                             <div className="flex justify-between mt-0.5">
                               <span className="text-[9px] text-purple-400/30">Company</span>
-                              <span className="text-[9px] text-white/15">Global</span>
+                              <span className="text-[9px] text-muted-foreground/30">Global</span>
                             </div>
                           </div>
                         );

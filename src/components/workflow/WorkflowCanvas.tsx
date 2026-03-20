@@ -44,7 +44,7 @@ const INPUT_TYPE_COLORS: Record<string, { bg: string; text: string }> = {
   slider: { bg: "bg-blue-500/20", text: "text-blue-300" },
   buttons: { bg: "bg-purple-500/20", text: "text-purple-300" },
   multi_select: { bg: "bg-violet-500/20", text: "text-violet-300" },
-  open_text: { bg: "bg-gray-500/20", text: "text-gray-300" },
+  open_text: { bg: "bg-gray-500/20", text: "text-muted-foreground" },
   voice: { bg: "bg-green-500/20", text: "text-green-300" },
 };
 
@@ -164,20 +164,20 @@ function SectionNode({ data }: NodeProps) {
   const expandable = data.expandable as boolean;
 
   return (
-    <div className="w-[220px] h-[60px] rounded-lg border border-white/[0.08] bg-[#0c0c14] flex items-center justify-between px-3">
+    <div className="w-[220px] h-[60px] rounded-lg border border-border/60 bg-[#0c0c14] flex items-center justify-between px-3">
       <Handle type="target" position={Position.Top} className="!bg-muted !w-2 !h-2 !border-0" />
       <Handle type="source" position={Position.Bottom} className="!bg-muted !w-2 !h-2 !border-0" />
 
       <div className="min-w-0 flex-1">
         <p className="text-[11px] font-medium text-muted-foreground truncate">{label}</p>
         {questionCount > 0 && (
-          <span className="text-[10px] text-white/25">{questionCount} question{questionCount !== 1 ? "s" : ""}</span>
+          <span className="text-[10px] text-muted-foreground/60">{questionCount} question{questionCount !== 1 ? "s" : ""}</span>
         )}
       </div>
 
       {expandable && (
         <svg
-          className="w-3.5 h-3.5 text-white/15 shrink-0"
+          className="w-3.5 h-3.5 text-muted-foreground/30 shrink-0"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -202,7 +202,7 @@ function QuestionNode({ data }: NodeProps) {
   const colors = INPUT_TYPE_COLORS[inputType] || { bg: "bg-muted", text: "text-muted-foreground" };
 
   return (
-    <div className="w-[260px] h-[50px] rounded-md border border-white/[0.06] bg-[#0a0a12] flex flex-col justify-center px-3 gap-1">
+    <div className="w-[260px] h-[50px] rounded-md border border-border/50 bg-[#0a0a12] flex flex-col justify-center px-3 gap-1">
       <Handle type="target" position={Position.Top} className="!bg-muted !w-1.5 !h-1.5 !border-0" />
 
       <div className="flex items-center justify-between gap-2">
@@ -234,12 +234,12 @@ function DimensionNode({ data }: NodeProps) {
   const questionCount = data.questionCount as number;
 
   return (
-    <div className="w-[180px] h-[50px] rounded-md border border-white/[0.06] bg-[#0a0a12] flex flex-col justify-center px-3 gap-1">
+    <div className="w-[180px] h-[50px] rounded-md border border-border/50 bg-[#0a0a12] flex flex-col justify-center px-3 gap-1">
       <Handle type="target" position={Position.Top} className="!bg-muted !w-1.5 !h-1.5 !border-0" />
 
       <div className="flex items-center justify-between gap-1.5">
         <span className="text-[10px] text-muted-foreground truncate flex-1">{label}</span>
-        <span className="text-[9px] text-white/25 tabular-nums shrink-0">{questionCount}q</span>
+        <span className="text-[9px] text-muted-foreground/60 tabular-nums shrink-0">{questionCount}q</span>
       </div>
 
       <div className="h-[3px] bg-white/[0.04] rounded-full overflow-hidden">
@@ -379,10 +379,10 @@ function WorkflowCanvasInner({
       {!assessment && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
           <div className="text-center space-y-3 px-8">
-            <div className="w-12 h-12 rounded-xl bg-white/[0.04] border border-white/[0.08] flex items-center justify-center mx-auto">
+            <div className="w-12 h-12 rounded-xl bg-white/[0.04] border border-border/60 flex items-center justify-center mx-auto">
               <span className="text-xl opacity-30">{"\uD83D\uDDFA\uFE0F"}</span>
             </div>
-            <p className="text-sm text-white/25 max-w-xs leading-relaxed">
+            <p className="text-sm text-muted-foreground/60 max-w-xs leading-relaxed">
               Start a conversation to begin building your assessment
             </p>
           </div>

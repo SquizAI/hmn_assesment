@@ -91,9 +91,9 @@ export default function AdminSettingsPage() {
               setSettings({ ...settings, retention_days: val === 0 ? null : val });
               setPreview(null);
             }}
-            className="w-full bg-muted border border-border rounded-lg px-4 py-2.5 text-sm text-foreground focus:border-white/30 focus:outline-none appearance-none"
+            className="w-full bg-muted border border-border rounded-lg px-4 py-2.5 text-sm text-foreground focus:border-border focus:outline-none appearance-none"
           >
-            {RETENTION_OPTIONS.map((opt) => <option key={opt.value} value={opt.value} className="bg-gray-900">{opt.label}</option>)}
+            {RETENTION_OPTIONS.map((opt) => <option key={opt.value} value={opt.value} className="bg-muted">{opt.label}</option>)}
           </select>
         </div>
 
@@ -122,7 +122,7 @@ export default function AdminSettingsPage() {
 
         <div className="flex items-center gap-3 pt-4 border-t border-border/50">
           <button onClick={handleSave} disabled={saving} className="px-5 py-2.5 text-sm font-medium rounded-lg bg-gradient-to-r from-purple-600 to-blue-600 text-foreground disabled:opacity-50 transition-all">{saving ? "Saving..." : "Save Settings"}</button>
-          <button onClick={() => setShowCleanupConfirm(true)} disabled={cleaning || !settings.retention_days} className="px-4 py-2.5 text-sm font-medium rounded-lg bg-muted text-foreground hover:bg-white/20 border border-border disabled:opacity-50 transition-colors">{cleaning ? "Cleaning..." : "Run Cleanup Now"}</button>
+          <button onClick={() => setShowCleanupConfirm(true)} disabled={cleaning || !settings.retention_days} className="px-4 py-2.5 text-sm font-medium rounded-lg bg-muted text-foreground hover:bg-muted/200 border border-border disabled:opacity-50 transition-colors">{cleaning ? "Cleaning..." : "Run Cleanup Now"}</button>
         </div>
       </div>
 

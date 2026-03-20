@@ -129,7 +129,7 @@ export default function ButtonSelect({ options, multiSelect = false, onChange, i
                 ${active ? "bg-white/15 border-white/40 shadow-lg shadow-white/5" : "bg-muted border-border hover:bg-muted hover:border-border"}`}>
               <div className="flex items-center gap-3">
                 <div className={`w-5 h-5 ${multiSelect ? "rounded-md" : "rounded-full"} border-2 flex items-center justify-center flex-shrink-0 transition-all
-                  ${active ? "border-white bg-white" : "border-white/30 group-hover:border-white/50"}`}>
+                  ${active ? "border-white bg-white" : "border-border group-hover:border-border/300"}`}>
                   {active && (
                     <svg className="w-3 h-3 text-black" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
@@ -149,7 +149,7 @@ export default function ButtonSelect({ options, multiSelect = false, onChange, i
                 onChange={(e) => handleOtherTextChange(e.target.value)}
                 placeholder="Please specify..."
                 autoFocus
-                className="mt-2 w-full bg-muted border border-border rounded-xl px-4 py-3 text-foreground text-sm placeholder-white/30 focus:outline-none focus:border-white/40 focus:bg-white/[0.08] transition-all"
+                className="mt-2 w-full bg-muted border border-border rounded-xl px-4 py-3 text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:border-white/40 focus:bg-white/[0.08] transition-all"
               />
             )}
           </div>

@@ -435,7 +435,7 @@ export default function AdminDashboardPage() {
             onClick={() => {
               if (graphStatus?.enabled && (graphStatus?.nodeCount ?? 0) === 0) handleSeed();
             }}
-            className={`bg-muted/50 border border-border rounded-2xl p-4 hover:bg-white/[0.05] transition-colors ${
+            className={`bg-muted/50 border border-border rounded-2xl p-4 hover:bg-muted/60 transition-colors ${
               graphStatus?.enabled && (graphStatus?.nodeCount ?? 0) === 0 ? "cursor-pointer" : ""
             }`}
           >
@@ -558,7 +558,7 @@ export default function AdminDashboardPage() {
                           {humanize(a.archetype)}
                         </span>
                         <span className="text-[10px] text-muted-foreground tabular-nums">{a.count}</span>
-                        <span className="text-[10px] text-white/25 tabular-nums w-8 text-right">{pct}%</span>
+                        <span className="text-[10px] text-muted-foreground/60 tabular-nums w-8 text-right">{pct}%</span>
                       </div>
                     );
                   })}
@@ -800,10 +800,10 @@ export default function AdminDashboardPage() {
                     >
                       {Math.round(b.avgScore)}
                     </span>
-                    <span className="text-[10px] text-white/25 tabular-nums w-4 text-right flex-shrink-0">
+                    <span className="text-[10px] text-muted-foreground/60 tabular-nums w-4 text-right flex-shrink-0">
                       {b.sessions}
                     </span>
-                    <span className="text-[9px] text-white/25 truncate w-16 text-right flex-shrink-0">
+                    <span className="text-[9px] text-muted-foreground/60 truncate w-16 text-right flex-shrink-0">
                       {humanize(b.topArchetype || "unknown")}
                     </span>
                   </div>

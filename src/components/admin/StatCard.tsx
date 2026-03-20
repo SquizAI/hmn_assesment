@@ -16,7 +16,7 @@ const COLOR_MAP: Record<string, string> = {
 
 export default function StatCard({ label, value, sub, color = "default" }: StatCardProps) {
   return (
-    <div className="bg-muted/50 border border-border rounded-2xl p-6 hover:bg-white/[0.05] transition-colors">
+    <div className="bg-muted/50 border border-border rounded-2xl p-6 hover:bg-muted/60 transition-colors">
       <div className="text-xs text-muted-foreground uppercase tracking-wider mb-2">{label}</div>
       <div className={`text-3xl font-bold tabular-nums ${COLOR_MAP[color]}`}>{value}</div>
       {sub && <div className="text-xs text-muted-foreground/70 mt-1">{sub}</div>}

@@ -11,14 +11,14 @@ interface FilterBarProps {
 }
 
 const selectClass = (active: boolean) =>
-  `appearance-none bg-white/[0.05] border rounded-lg text-xs text-foreground/90 px-2.5 py-1.5 outline-none transition-colors cursor-pointer ${
+  `appearance-none bg-muted/60 border rounded-lg text-xs text-foreground/90 px-2.5 py-1.5 outline-none transition-colors cursor-pointer ${
     active
       ? "border-purple-500/40 bg-purple-500/10"
       : "border-border hover:border-border"
   }`;
 
 const dateClass = (active: boolean) =>
-  `bg-white/[0.05] border rounded-lg text-xs text-foreground/90 px-2.5 py-1.5 outline-none transition-colors [color-scheme:dark] ${
+  `bg-muted/60 border rounded-lg text-xs text-foreground/90 px-2.5 py-1.5 outline-none transition-colors [color-scheme:dark] ${
     active
       ? "border-purple-500/40 bg-purple-500/10"
       : "border-border hover:border-border"

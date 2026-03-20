@@ -228,7 +228,7 @@ export default function SessionDrawer({ sessionId, onClose, onDelete }: SessionD
 
         {/* Tabs */}
         {!loading && session && (
-          <div className="flex border-b border-white/[0.06] px-4 sm:px-6 shrink-0">
+          <div className="flex border-b border-border/50 px-4 sm:px-6 shrink-0">
             {TABS.map((tab) => (
               <button
                 key={tab.id}
@@ -349,7 +349,7 @@ export default function SessionDrawer({ sessionId, onClose, onDelete }: SessionD
                             value={callPhone}
                             onChange={(e) => setCallPhone(e.target.value)}
                             placeholder="+1 (555) 123-4567"
-                            className="flex-1 bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder-white/30 focus:outline-none focus:border-border"
+                            className="flex-1 bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-border"
                           />
                           <button
                             onClick={handleInitiateCall}
@@ -379,7 +379,7 @@ export default function SessionDrawer({ sessionId, onClose, onDelete }: SessionD
                       className={`w-full rounded-lg px-4 py-2.5 text-sm font-medium transition-colors ${
                         deleteConfirm
                           ? "bg-red-600 text-foreground hover:bg-red-700"
-                          : "bg-white/[0.05] text-red-400 border border-red-500/20 hover:bg-red-500/10"
+                          : "bg-muted/60 text-red-400 border border-red-500/20 hover:bg-red-500/10"
                       }`}
                     >
                       {deleteConfirm ? "Confirm Delete?" : "Delete Session"}
@@ -431,7 +431,7 @@ export default function SessionDrawer({ sessionId, onClose, onDelete }: SessionD
                               <span className="text-muted-foreground">{ds.dimension}</span>
                               <span className="text-muted-foreground">{ds.score}</span>
                             </div>
-                            <div className="w-full h-2 bg-white/[0.06] rounded-full overflow-hidden">
+                            <div className="w-full h-2 bg-muted/70 rounded-full overflow-hidden">
                               <div
                                 className={`h-full rounded-full transition-all ${scoreBarColor(ds.score)}`}
                                 style={{ width: `${ds.score}%` }}
@@ -501,7 +501,7 @@ export default function SessionDrawer({ sessionId, onClose, onDelete }: SessionD
                         <div
                           key={resp.questionId}
                           className={`rounded-lg p-3 ${
-                            i % 2 === 0 ? "bg-white/[0.02]" : "bg-white/[0.04]"
+                            i % 2 === 0 ? "bg-muted/30" : "bg-white/[0.04]"
                           }`}
                         >
                           <p className="text-sm text-muted-foreground mb-1">{resp.questionText}</p>

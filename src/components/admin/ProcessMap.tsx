@@ -154,7 +154,7 @@ export default function ProcessMap({
               {idx < PHASES.length - 1 && (
                 <div
                   className={`absolute left-[15px] top-[36px] w-[2px] h-[calc(100%_-_12px)] ${
-                    isComplete ? "bg-purple-500/40" : "bg-white/[0.06]"
+                    isComplete ? "bg-purple-500/40" : "bg-muted/70"
                   }`}
                   style={isPending ? { backgroundImage: "repeating-linear-gradient(to bottom, transparent, transparent 3px, rgba(255,255,255,0.06) 3px, rgba(255,255,255,0.06) 6px)" } : undefined}
                 />
@@ -225,12 +225,12 @@ export default function ProcessMap({
       </div>
 
       {/* Footer: Phase counter */}
-      <div className="px-4 pb-4 pt-2 border-t border-white/[0.06]">
-        <div className="flex items-center justify-between text-[11px] text-white/25">
+      <div className="px-4 pb-4 pt-2 border-t border-border/50">
+        <div className="flex items-center justify-between text-[11px] text-muted-foreground/60">
           <span>Phase {currentIdx + 1} of {PHASES.length}</span>
           <span>{Math.round(((currentIdx) / PHASES.length) * 100)}%</span>
         </div>
-        <div className="mt-1.5 h-1 bg-white/[0.06] rounded-full overflow-hidden">
+        <div className="mt-1.5 h-1 bg-muted/70 rounded-full overflow-hidden">
           <div
             className="h-full bg-gradient-to-r from-purple-500/60 to-blue-500/60 rounded-full transition-all duration-500"
             style={{ width: `${(currentIdx / PHASES.length) * 100}%` }}

@@ -128,7 +128,7 @@ export default function SectionStepper({ sections, answeredQuestions, onQuestion
                         ? "bg-muted border border-border/50 text-muted-foreground/50"
                         : "bg-muted border border-border/50 text-muted-foreground/50 cursor-default"
                       }
-                      ${expandedSection === sp.section ? "ring-1 ring-white/20" : ""}
+                      ${expandedSection === sp.section ? "ring-1 ring-border" : ""}
                     `}
                   >
                     {/* Status icon */}

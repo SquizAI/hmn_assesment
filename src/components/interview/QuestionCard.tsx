@@ -387,7 +387,7 @@ export default function QuestionCard({ question, sessionId, onSubmit, onConversa
                   onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleTextSubmit(); } }}
                   placeholder={isRecording ? "Listening..." : "Type or tap the mic to speak..."}
                   rows={3}
-                  className={`w-full border rounded-xl px-4 py-3 text-foreground text-sm placeholder-white/30 focus:outline-none transition-all resize-none ${
+                  className={`w-full border rounded-xl px-4 py-3 text-foreground text-sm placeholder:text-muted-foreground focus:outline-none transition-all resize-none ${
                     isRecording
                       ? "bg-primary/10 border-primary/30 cursor-default"
                       : "bg-muted border-border focus:border-border focus:bg-white/[0.08]"
@@ -420,7 +420,7 @@ export default function QuestionCard({ question, sessionId, onSubmit, onConversa
                                 value={callPhone}
                                 onChange={(e) => setCallPhone(e.target.value)}
                                 placeholder="+1 (555) 123-4567"
-                                className="flex-1 bg-muted border border-border rounded-xl px-4 py-3 text-foreground text-sm placeholder-white/30 focus:outline-none focus:border-purple-500/40 transition-all"
+                                className="flex-1 bg-muted border border-border rounded-xl px-4 py-3 text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:border-purple-500/40 transition-all"
                               />
                               <button
                                 onClick={handleRequestCall}
