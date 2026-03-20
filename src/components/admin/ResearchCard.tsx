@@ -26,7 +26,7 @@ function SectionHeader({ label, count }: { label: string; count?: number }) {
     <div className="flex items-center gap-2 mb-2">
       <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{label}</h4>
       {count !== undefined && (
-        <span className="text-[10px] text-muted-foreground/70 bg-muted px-1.5 py-0.5 rounded-full">{count}</span>
+        <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full">{count}</span>
       )}
     </div>
   );
@@ -44,9 +44,9 @@ export default function ResearchCard({
   // No research — show trigger button
   if (!research || research.status === "no_results" || research.status === "error") {
     return (
-      <div className="bg-muted/50 rounded-2xl border border-border p-6 text-center space-y-3">
-        <div className="w-12 h-12 rounded-xl bg-muted/60 border border-border flex items-center justify-center mx-auto">
-          <svg className="w-6 h-6 text-muted-foreground/50" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+      <div className="bg-muted rounded-2xl border border-border p-6 text-center space-y-3">
+        <div className="w-12 h-12 rounded-xl bg-muted border border-border flex items-center justify-center mx-auto">
+          <svg className="w-6 h-6 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
           </svg>
         </div>
@@ -56,7 +56,7 @@ export default function ResearchCard({
              research?.status === "no_results" ? "No results found" :
              "No research data available"}
           </p>
-          <p className="text-xs text-muted-foreground/70 mt-1">
+          <p className="text-xs text-muted-foreground mt-1">
             Web scraping will search for public information about this person and their company.
           </p>
         </div>
@@ -91,7 +91,7 @@ export default function ResearchCard({
         {sources && sources.length > 0 && (
           <button
             onClick={() => setSourcesExpanded((e) => !e)}
-            className="text-[11px] text-muted-foreground/70 hover:text-muted-foreground transition-colors flex items-center gap-1"
+            className="text-[11px] text-muted-foreground hover:text-muted-foreground transition-colors flex items-center gap-1"
           >
             {sources.length} source{sources.length > 1 ? "s" : ""}
             <svg className={`w-3 h-3 transition-transform ${sourcesExpanded ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -102,7 +102,7 @@ export default function ResearchCard({
       </div>
 
       {sourcesExpanded && sources && (
-        <div className="bg-muted/50 rounded-xl border border-border/50 px-3 py-2 space-y-1">
+        <div className="bg-muted rounded-xl border border-border px-3 py-2 space-y-1">
           {sources.map((src, i) => (
             <a
               key={i}
@@ -119,7 +119,7 @@ export default function ResearchCard({
 
       {/* Person profile */}
       {showPersonProfile && personProfile && (
-        <div className="bg-muted/50 rounded-xl border border-border p-4 space-y-3">
+        <div className="bg-muted rounded-xl border border-border p-4 space-y-3">
           <SectionHeader label="Person Profile" />
 
           {personProfile.bio && (
@@ -128,7 +128,7 @@ export default function ResearchCard({
 
           {personProfile.knownRoles && personProfile.knownRoles.length > 0 && (
             <div>
-              <span className="text-[10px] text-muted-foreground/70 uppercase tracking-wider">Known Roles</span>
+              <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Known Roles</span>
               <div className="flex flex-wrap gap-1 mt-1">
                 {personProfile.knownRoles.map((role, i) => (
                   <span key={i} className="text-xs px-2 py-0.5 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-300">
@@ -141,14 +141,14 @@ export default function ResearchCard({
 
           {personProfile.linkedinSummary && (
             <div>
-              <span className="text-[10px] text-muted-foreground/70 uppercase tracking-wider">LinkedIn</span>
+              <span className="text-[10px] text-muted-foreground uppercase tracking-wider">LinkedIn</span>
               <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{personProfile.linkedinSummary}</p>
             </div>
           )}
 
           {personProfile.notableAchievements && personProfile.notableAchievements.length > 0 && (
             <div>
-              <span className="text-[10px] text-muted-foreground/70 uppercase tracking-wider">Notable Achievements</span>
+              <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Notable Achievements</span>
               <ul className="mt-1 space-y-1">
                 {personProfile.notableAchievements.map((a, i) => (
                   <li key={i} className="text-xs text-muted-foreground flex gap-2">
@@ -162,7 +162,7 @@ export default function ResearchCard({
 
           {personProfile.publicPresence && (
             <div className="flex items-center gap-2">
-              <span className="text-[10px] text-muted-foreground/70 uppercase tracking-wider">Public Presence</span>
+              <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Public Presence</span>
               <span className={`text-[10px] px-1.5 py-0.5 rounded-full border ${
                 personProfile.publicPresence === "high" ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/20" :
                 personProfile.publicPresence === "medium" ? "bg-amber-500/15 text-amber-400 border-amber-500/20" :
@@ -177,7 +177,7 @@ export default function ResearchCard({
 
       {/* Company profile */}
       {showCompanyProfile && companyProfile && (
-        <div className="bg-muted/50 rounded-xl border border-border p-4 space-y-3">
+        <div className="bg-muted rounded-xl border border-border p-4 space-y-3">
           <SectionHeader label="Company Profile" />
 
           {companyProfile.description && (
@@ -187,19 +187,19 @@ export default function ResearchCard({
           <div className="grid grid-cols-2 gap-3">
             {companyProfile.founded && (
               <div>
-                <span className="text-[10px] text-muted-foreground/70 uppercase tracking-wider block">Founded</span>
+                <span className="text-[10px] text-muted-foreground uppercase tracking-wider block">Founded</span>
                 <span className="text-xs text-muted-foreground">{companyProfile.founded}</span>
               </div>
             )}
             {companyProfile.size && (
               <div>
-                <span className="text-[10px] text-muted-foreground/70 uppercase tracking-wider block">Size</span>
+                <span className="text-[10px] text-muted-foreground uppercase tracking-wider block">Size</span>
                 <span className="text-xs text-muted-foreground">{companyProfile.size}</span>
               </div>
             )}
             {companyProfile.funding && (
               <div>
-                <span className="text-[10px] text-muted-foreground/70 uppercase tracking-wider block">Funding</span>
+                <span className="text-[10px] text-muted-foreground uppercase tracking-wider block">Funding</span>
                 <span className="text-xs text-muted-foreground">{companyProfile.funding}</span>
               </div>
             )}
@@ -207,7 +207,7 @@ export default function ResearchCard({
 
           {companyProfile.products && companyProfile.products.length > 0 && (
             <div>
-              <span className="text-[10px] text-muted-foreground/70 uppercase tracking-wider">Products</span>
+              <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Products</span>
               <div className="flex flex-wrap gap-1 mt-1">
                 {companyProfile.products.map((p, i) => (
                   <span key={i} className="text-xs px-2 py-0.5 rounded-lg bg-purple-500/10 border border-purple-500/20 text-purple-300">
@@ -220,7 +220,7 @@ export default function ResearchCard({
 
           {companyProfile.recentNews && companyProfile.recentNews.length > 0 && (
             <div>
-              <span className="text-[10px] text-muted-foreground/70 uppercase tracking-wider">Recent News</span>
+              <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Recent News</span>
               <ul className="mt-1 space-y-1">
                 {companyProfile.recentNews.map((n, i) => (
                   <li key={i} className="text-xs text-muted-foreground flex gap-2">
@@ -236,7 +236,7 @@ export default function ResearchCard({
 
       {/* Key insights */}
       {keyInsights && keyInsights.length > 0 && (
-        <div className="bg-muted/50 rounded-xl border border-border p-4 space-y-2">
+        <div className="bg-muted rounded-xl border border-border p-4 space-y-2">
           <SectionHeader label="Key Insights" count={keyInsights.length} />
           <ul className="space-y-1.5">
             {keyInsights.map((insight, i) => (
@@ -251,7 +251,7 @@ export default function ResearchCard({
 
       {/* Interview angles */}
       {interviewAngles && interviewAngles.length > 0 && (
-        <div className="bg-muted/50 rounded-xl border border-border p-4 space-y-2">
+        <div className="bg-muted rounded-xl border border-border p-4 space-y-2">
           <SectionHeader label="Interview Angles" count={interviewAngles.length} />
           <ul className="space-y-1.5">
             {interviewAngles.map((angle, i) => (
@@ -269,7 +269,7 @@ export default function ResearchCard({
         <button
           onClick={onTriggerResearch}
           disabled={triggerLoading}
-          className="w-full px-3 py-2 rounded-xl bg-muted/50 border border-border text-muted-foreground text-xs hover:bg-muted/70 hover:text-muted-foreground transition-all disabled:opacity-40"
+          className="w-full px-3 py-2 rounded-xl bg-muted border border-border text-muted-foreground text-xs hover:bg-muted hover:text-muted-foreground transition-all disabled:opacity-40"
         >
           {triggerLoading ? "Re-researching..." : "Re-research"}
         </button>

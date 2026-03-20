@@ -87,7 +87,7 @@ export default function ResumePage() {
   if (error) {
     return (
       <div className="min-h-screen flex flex-col bg-background">
-        <header className="border-b border-border/50 px-6 py-4">
+        <header className="border-b border-border px-6 py-4">
           <div className="max-w-5xl mx-auto flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-sm font-bold text-foreground">H</div>
             <span className="font-semibold text-foreground/90">HMN Cascade</span>
@@ -102,7 +102,7 @@ export default function ResumePage() {
               <h2 className="text-2xl font-semibold text-foreground">Link Unavailable</h2>
               <p className="text-muted-foreground">{error}</p>
             </div>
-            <button onClick={() => navigate("/")} className="px-6 py-2.5 text-sm font-medium rounded-lg bg-muted text-foreground hover:bg-muted/200 border border-border transition-colors">Start New Assessment</button>
+            <button onClick={() => navigate("/")} className="px-6 py-2.5 text-sm font-medium rounded-lg bg-muted text-foreground hover:bg-muted border border-border transition-colors">Start New Assessment</button>
           </div>
         </main>
       </div>
@@ -118,7 +118,7 @@ export default function ResumePage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      <header className="border-b border-border/50 px-6 py-4">
+      <header className="border-b border-border px-6 py-4">
         <div className="max-w-5xl mx-auto flex items-center gap-3">
           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-sm font-bold text-foreground">H</div>
           <span className="font-semibold text-foreground/90">HMN Cascade</span>
@@ -141,10 +141,10 @@ export default function ResumePage() {
               <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
                 <div className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full transition-all" style={{ width: `${session.progressPercent}%` }} />
               </div>
-              <p className="text-xs text-muted-foreground/70 mt-2">{session.answeredQuestions} of {session.totalQuestions} questions answered</p>
+              <p className="text-xs text-muted-foreground mt-2">{session.answeredQuestions} of {session.totalQuestions} questions answered</p>
             </div>
 
-            <div className="border-t border-border/50 divide-y divide-white/5">
+            <div className="border-t border-border divide-y divide-white/5">
               {[
                 { label: "Company", value: session.participant.company },
                 { label: "Role", value: session.participant.role },
@@ -164,7 +164,7 @@ export default function ResumePage() {
             {isAlreadyComplete ? (
               <>
                 <button onClick={() => navigate(`/analysis/${session.id}`)} className="w-full px-6 py-3 text-sm font-medium rounded-xl bg-gradient-to-r from-purple-600 to-blue-600 text-foreground transition-all">View Your Results</button>
-                <p className="text-center text-xs text-muted-foreground/70">This assessment is already complete.</p>
+                <p className="text-center text-xs text-muted-foreground">This assessment is already complete.</p>
               </>
             ) : (
               <>
@@ -176,8 +176,8 @@ export default function ResumePage() {
         </div>
       </main>
 
-      <footer className="border-t border-border/50 px-6 py-4">
-        <div className="max-w-5xl mx-auto text-center text-xs text-muted-foreground/50">HMN Cascade Assessment System</div>
+      <footer className="border-t border-border px-6 py-4">
+        <div className="max-w-5xl mx-auto text-center text-xs text-muted-foreground">HMN Cascade Assessment System</div>
       </footer>
     </div>
   );

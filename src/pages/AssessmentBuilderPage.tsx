@@ -357,11 +357,11 @@ export default function AssessmentBuilderPage() {
       onDrop={handleDrop}
     >
       {/* Top bar */}
-      <div className="shrink-0 flex items-center justify-between px-4 py-3 border-b border-border/50">
+      <div className="shrink-0 flex items-center justify-between px-4 py-3 border-b border-border">
         <div className="flex items-center gap-3">
           <button
             onClick={() => navigate("/admin/assessments")}
-            className="text-muted-foreground/70 hover:text-muted-foreground transition-colors"
+            className="text-muted-foreground hover:text-muted-foreground transition-colors"
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
@@ -372,14 +372,14 @@ export default function AssessmentBuilderPage() {
               {assessment ? assessment.name : "Assessment Developer"}
             </h1>
             {assessment && (
-              <p className="text-[11px] text-muted-foreground/70">{assessment.id}</p>
+              <p className="text-[11px] text-muted-foreground">{assessment.id}</p>
             )}
           </div>
         </div>
 
         <div className="flex items-center gap-2">
           {/* Chat width presets */}
-          <div className="flex items-center bg-muted/50 border border-border/50 rounded-lg overflow-hidden">
+          <div className="flex items-center bg-muted border border-border rounded-lg overflow-hidden">
             {([
               { w: 420, label: "S", title: "Narrow chat" },
               { w: 600, label: "M", title: "Medium chat" },
@@ -391,7 +391,7 @@ export default function AssessmentBuilderPage() {
                 className={`px-2 py-1.5 text-[10px] font-semibold transition-colors ${
                   Math.abs(chatWidth - preset.w) < 30
                     ? "bg-muted text-foreground/80"
-                    : "text-muted-foreground/60 hover:text-muted-foreground"
+                    : "text-muted-foreground hover:text-muted-foreground"
                 }`}
                 title={preset.title}
               >
@@ -402,7 +402,7 @@ export default function AssessmentBuilderPage() {
           {/* Fullscreen toggle */}
           <button
             onClick={() => setIsFullscreen((f) => !f)}
-            className="p-2 rounded-lg bg-muted/50 hover:bg-muted/70 border border-border/50 text-muted-foreground/70 hover:text-muted-foreground transition-all"
+            className="p-2 rounded-lg bg-muted hover:bg-muted border border-border text-muted-foreground hover:text-muted-foreground transition-all"
             title={isFullscreen ? "Exit fullscreen (Esc)" : "Fullscreen mode"}
           >
             {isFullscreen ? (
@@ -438,16 +438,16 @@ export default function AssessmentBuilderPage() {
           <div className={`absolute inset-y-0 -left-1 -right-1 ${isResizing ? "" : "group-hover:bg-muted"}`} />
           {/* Visible grip dots */}
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-            <div className="w-0.5 h-0.5 rounded-full bg-muted/300" />
-            <div className="w-0.5 h-0.5 rounded-full bg-muted/300" />
-            <div className="w-0.5 h-0.5 rounded-full bg-muted/300" />
+            <div className="w-0.5 h-0.5 rounded-full bg-muted" />
+            <div className="w-0.5 h-0.5 rounded-full bg-muted" />
+            <div className="w-0.5 h-0.5 rounded-full bg-muted" />
           </div>
         </div>
 
         {/* Right: AI Conversation */}
         <div
           style={{ width: chatWidth }}
-          className={`shrink-0 border-l border-border/50 flex flex-col min-w-0 relative ${isResizing ? "select-none" : ""}`}
+          className={`shrink-0 border-l border-border flex flex-col min-w-0 relative ${isResizing ? "select-none" : ""}`}
         >
           {/* Drag overlay */}
           {isDragging && (
@@ -459,7 +459,7 @@ export default function AssessmentBuilderPage() {
                   </svg>
                 </div>
                 <p className="text-purple-300 font-medium">Drop files to attach</p>
-                <p className="text-muted-foreground/70 text-xs">{ALLOWED_EXTENSIONS.join(", ")} — max {formatFileSize(MAX_FILE_SIZE)}</p>
+                <p className="text-muted-foreground text-xs">{ALLOWED_EXTENSIONS.join(", ")} — max {formatFileSize(MAX_FILE_SIZE)}</p>
               </div>
             </div>
           )}
@@ -487,13 +487,13 @@ export default function AssessmentBuilderPage() {
                     className="max-w-md mx-auto border-2 border-dashed border-border hover:border-purple-500/30 rounded-2xl p-6 cursor-pointer transition-all hover:bg-purple-500/5 group"
                   >
                     <div className="space-y-2">
-                      <svg className="w-7 h-7 text-muted-foreground/50 group-hover:text-purple-400/60 mx-auto transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <svg className="w-7 h-7 text-muted-foreground group-hover:text-purple-400/60 mx-auto transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m3.75 9v6m3-3H9m1.5-12H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
                       </svg>
                       <p className="text-sm text-muted-foreground group-hover:text-muted-foreground transition-colors">
                         Drop files here or click to browse
                       </p>
-                      <p className="text-[11px] text-muted-foreground/50">
+                      <p className="text-[11px] text-muted-foreground">
                         {ALLOWED_EXTENSIONS.map((e) => `.${e}`).join("  ")} — up to {MAX_FILES} files
                       </p>
                     </div>
@@ -516,8 +516,8 @@ export default function AssessmentBuilderPage() {
                             isActive
                               ? "bg-purple-500/10 border-purple-500/30 text-purple-300"
                               : isDisabled
-                                ? "bg-muted/30 border-border/50 text-muted-foreground/50 cursor-not-allowed"
-                                : "bg-muted/50 border-border text-muted-foreground hover:bg-white/[0.07] hover:text-foreground/90 hover:border-border"
+                                ? "bg-muted border-border text-muted-foreground cursor-not-allowed"
+                                : "bg-muted border-border text-muted-foreground hover:bg-white/[0.07] hover:text-foreground/90 hover:border-border"
                           }`}
                         >
                           {isActive ? (
@@ -564,8 +564,8 @@ export default function AssessmentBuilderPage() {
                             isActive
                               ? "bg-purple-500/10 border-purple-500/30 text-purple-300"
                               : isThinking
-                                ? "bg-muted/30 border-border/50 text-muted-foreground/50 cursor-not-allowed"
-                                : "bg-muted/50 border-border text-muted-foreground hover:bg-white/[0.07] hover:text-foreground/90"
+                                ? "bg-muted border-border text-muted-foreground cursor-not-allowed"
+                                : "bg-muted border-border text-muted-foreground hover:bg-white/[0.07] hover:text-foreground/90"
                           }`}
                         >
                           {isActive && (
@@ -599,13 +599,13 @@ export default function AssessmentBuilderPage() {
           </div>
 
           {/* Bottom bar: attachments + input */}
-          <div className="border-t border-border/50 shrink-0">
+          <div className="border-t border-border shrink-0">
             {/* Attached files bar */}
             {attachments.length > 0 && (
               <div className="px-6 pt-3 pb-0">
                 <div className="max-w-3xl mx-auto">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-[10px] text-muted-foreground/60 uppercase tracking-wider">Attached:</span>
+                    <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Attached:</span>
                     {attachments.map((att, i) => (
                       <div
                         key={i}
@@ -631,7 +631,7 @@ export default function AssessmentBuilderPage() {
                 {/* File upload button */}
                 <button
                   onClick={() => fileInputRef.current?.click()}
-                  className="p-3 bg-muted/50 hover:bg-muted/70 border border-border/60 rounded-xl text-muted-foreground/70 hover:text-muted-foreground transition-all shrink-0"
+                  className="p-3 bg-muted hover:bg-muted border border-border rounded-xl text-muted-foreground hover:text-muted-foreground transition-all shrink-0"
                   title="Attach files"
                 >
                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>

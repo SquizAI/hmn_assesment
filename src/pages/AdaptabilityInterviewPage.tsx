@@ -271,7 +271,7 @@ export default function AdaptabilityInterviewPage() {
           <div className="w-16 h-16 border-2 border-emerald-500/20 border-t-emerald-400 rounded-full animate-spin mx-auto" />
           <div className="space-y-2">
             <p className="text-muted-foreground text-lg">Preparing your Adaptability conversation...</p>
-            <p className="text-muted-foreground/70 text-sm">This is a reflective conversation, not a test.</p>
+            <p className="text-muted-foreground text-sm">This is a reflective conversation, not a test.</p>
           </div>
         </div>
       </div>
@@ -356,7 +356,7 @@ export default function AdaptabilityInterviewPage() {
               strengths-led report with a 90-day development plan tailored to
               your specific pattern.
             </p>
-            <p className="text-muted-foreground/70 text-sm">
+            <p className="text-muted-foreground text-sm">
               Remember: adaptability is a set of muscles, not a personality
               trait. The profile is a starting point, not a verdict.
             </p>
@@ -381,18 +381,18 @@ export default function AdaptabilityInterviewPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
       {/* Header with phase indicator */}
-      <div className="sticky top-0 z-10 bg-slate-950/80 backdrop-blur-xl border-b border-border/50">
+      <div className="sticky top-0 z-10 bg-slate-950/80 backdrop-blur-xl border-b border-border">
         <div className="max-w-2xl mx-auto px-6 py-3">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
               <span className="text-xs font-medium text-emerald-400/80">
                 {PHASE_LABELS[currentPhase]}
               </span>
-              <span className="text-xs text-muted-foreground/50">
+              <span className="text-xs text-muted-foreground">
                 {progress?.questionNumber}/{progress?.totalQuestions}
               </span>
             </div>
-            <span className="text-xs text-muted-foreground/50">
+            <span className="text-xs text-muted-foreground">
               Adaptability Index
             </span>
           </div>

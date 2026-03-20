@@ -119,7 +119,7 @@ export default function AdminCompaniesPage() {
   if (loading) {
     return (
       <div className="px-4 md:px-6 py-4 md:py-6 flex items-center justify-center h-full">
-        <span className="text-muted-foreground/70">Loading companies...</span>
+        <span className="text-muted-foreground">Loading companies...</span>
       </div>
     );
   }
@@ -150,12 +150,12 @@ export default function AdminCompaniesPage() {
           placeholder="Search companies or industries..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="bg-muted/60 border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-border transition-colors w-full sm:w-72"
+          className="bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-border transition-colors w-full sm:w-72"
         />
         <select
           value={sortBy}
           onChange={(e) => setSortBy(e.target.value as "activity" | "sessions" | "score")}
-          className="bg-muted/60 border border-border rounded-lg px-3 py-2 text-sm text-foreground outline-none focus:border-border transition-colors appearance-none cursor-pointer"
+          className="bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground outline-none focus:border-border transition-colors appearance-none cursor-pointer"
         >
           <option value="activity">Recent Activity</option>
           <option value="sessions">Most Sessions</option>
@@ -173,20 +173,20 @@ export default function AdminCompaniesPage() {
 
       {/* Company Cards */}
       {filtered.length === 0 ? (
-        <div className="text-center py-16 text-muted-foreground/70">No companies found</div>
+        <div className="text-center py-16 text-muted-foreground">No companies found</div>
       ) : (
         <div className="space-y-3">
           {filtered.map((company) => (
             <div
               key={company.company}
-              className={`bg-muted/50 rounded-2xl border overflow-hidden transition-colors ${
+              className={`bg-muted rounded-2xl border overflow-hidden transition-colors ${
                 shiftHeld ? "border-red-500/15 hover:border-red-500/30" : "border-border"
               }`}
             >
               {/* Company Header */}
               <div
                 onClick={() => setExpandedCompany(expandedCompany === company.company ? null : company.company)}
-                className="flex flex-wrap items-center gap-3 md:gap-4 px-4 md:px-5 py-3 md:py-4 cursor-pointer hover:bg-muted/30 transition-colors"
+                className="flex flex-wrap items-center gap-3 md:gap-4 px-4 md:px-5 py-3 md:py-4 cursor-pointer hover:bg-muted transition-colors"
               >
                 {/* Company icon */}
                 <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500/20 to-blue-500/20 border border-border flex items-center justify-center flex-shrink-0">
@@ -207,7 +207,7 @@ export default function AdminCompaniesPage() {
                   </div>
                   <div className="flex items-center gap-3 mt-0.5">
                     {company.industries.map((ind) => (
-                      <span key={ind} className="text-[11px] text-muted-foreground/70">{ind}</span>
+                      <span key={ind} className="text-[11px] text-muted-foreground">{ind}</span>
                     ))}
                   </div>
                 </div>
@@ -216,23 +216,23 @@ export default function AdminCompaniesPage() {
                 <div className="flex items-center gap-3 md:gap-6 flex-shrink-0 flex-wrap">
                   <div className="text-center">
                     <span className="text-lg font-semibold text-foreground/90">{company.sessionCount}</span>
-                    <p className="text-[10px] text-muted-foreground/70">Sessions</p>
+                    <p className="text-[10px] text-muted-foreground">Sessions</p>
                   </div>
                   <div className="text-center">
                     <span className="text-lg font-semibold text-foreground/90">{company.participantCount}</span>
-                    <p className="text-[10px] text-muted-foreground/70">People</p>
+                    <p className="text-[10px] text-muted-foreground">People</p>
                   </div>
                   <div className="text-center">
-                    <span className={`text-lg font-semibold ${company.averageScore ? scoreColor(company.averageScore) : "text-muted-foreground/70"}`}>
+                    <span className={`text-lg font-semibold ${company.averageScore ? scoreColor(company.averageScore) : "text-muted-foreground"}`}>
                       {company.averageScore ?? "\u2014"}
                     </span>
-                    <p className="text-[10px] text-muted-foreground/70">Avg Score</p>
+                    <p className="text-[10px] text-muted-foreground">Avg Score</p>
                   </div>
                   <div className="text-center">
                     <span className="text-lg font-semibold text-foreground/90">{company.completionRate}%</span>
-                    <p className="text-[10px] text-muted-foreground/70">Complete</p>
+                    <p className="text-[10px] text-muted-foreground">Complete</p>
                   </div>
-                  <span className="text-xs text-muted-foreground/50">{relativeDate(company.lastActivity)}</span>
+                  <span className="text-xs text-muted-foreground">{relativeDate(company.lastActivity)}</span>
                 </div>
 
                 {/* Delete button (shift mode) */}
@@ -260,7 +260,7 @@ export default function AdminCompaniesPage() {
                 {/* Chevron */}
                 {!shiftHeld && (
                   <svg
-                    className={`w-4 h-4 text-muted-foreground/50 transition-transform ${expandedCompany === company.company ? "rotate-180" : ""}`}
+                    className={`w-4 h-4 text-muted-foreground transition-transform ${expandedCompany === company.company ? "rotate-180" : ""}`}
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -273,8 +273,8 @@ export default function AdminCompaniesPage() {
 
               {/* Expanded: View detail link */}
               {expandedCompany === company.company && (
-                <div className="border-t border-border/50 px-5 py-3 flex items-center justify-between">
-                  <span className="text-xs text-muted-foreground/70">
+                <div className="border-t border-border px-5 py-3 flex items-center justify-between">
+                  <span className="text-xs text-muted-foreground">
                     {company.completedCount} completed, {company.analyzedCount} analyzed
                   </span>
                   <button

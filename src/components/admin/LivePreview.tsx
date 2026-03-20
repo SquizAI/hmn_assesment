@@ -36,8 +36,8 @@ export default function LivePreview({ assessment, currentPhase }: LivePreviewPro
   return (
     <div className="h-full flex flex-col">
       {/* Header */}
-      <div className="px-4 pt-5 pb-3 border-b border-border/50">
-        <h3 className="text-xs font-semibold text-muted-foreground/70 uppercase tracking-wider">
+      <div className="px-4 pt-5 pb-3 border-b border-border">
+        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
           Live Preview
         </h3>
         {assessment && (
@@ -90,10 +90,10 @@ export default function LivePreview({ assessment, currentPhase }: LivePreviewPro
 function EmptyPreview({ currentPhase }: { currentPhase: BuilderPhase }) {
   return (
     <div className="flex flex-col items-center justify-center h-full text-center px-6">
-      <div className="w-12 h-12 rounded-xl bg-white/[0.04] border border-border/60 flex items-center justify-center mb-3">
+      <div className="w-12 h-12 rounded-xl bg-white/[0.04] border border-border flex items-center justify-center mb-3">
         <span className="text-xl opacity-30">📋</span>
       </div>
-      <p className="text-sm text-muted-foreground/70 leading-relaxed">
+      <p className="text-sm text-muted-foreground leading-relaxed">
         {currentPhase === "purpose"
           ? "Your assessment will appear here as the AI builds it. Start by describing what you want to measure."
           : "Waiting for assessment data..."}
@@ -110,20 +110,20 @@ function PurposeSection({ assessment }: { assessment: AssessmentType }) {
   return (
     <div className="space-y-2">
       <SectionHeader label="Purpose" icon="🎯" />
-      <div className="bg-muted/50 border border-border/60 rounded-xl p-3 space-y-2">
+      <div className="bg-muted border border-border rounded-xl p-3 space-y-2">
         <div>
-          <span className="text-[10px] text-muted-foreground/60 uppercase tracking-wider">Name</span>
+          <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Name</span>
           <p className="text-sm text-foreground/90">{assessment.name || "—"}</p>
         </div>
         {assessment.description && (
           <div>
-            <span className="text-[10px] text-muted-foreground/60 uppercase tracking-wider">Description</span>
+            <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Description</span>
             <p className="text-xs text-muted-foreground leading-relaxed">{assessment.description}</p>
           </div>
         )}
         <div className="flex gap-4 text-[11px] text-muted-foreground">
           <span>{assessment.estimatedMinutes || 15} min</span>
-          <span className={`capitalize ${assessment.status === "active" ? "text-green-400" : assessment.status === "draft" ? "text-yellow-400" : "text-muted-foreground/70"}`}>
+          <span className={`capitalize ${assessment.status === "active" ? "text-green-400" : assessment.status === "draft" ? "text-yellow-400" : "text-muted-foreground"}`}>
             {assessment.status}
           </span>
         </div>
@@ -156,8 +156,8 @@ function FrameworkSection({ assessment }: { assessment: AssessmentType }) {
 
       {/* Phases → Sections tree */}
       {phases.length > 0 && (
-        <div className="bg-muted/50 border border-border/60 rounded-xl p-3 space-y-2">
-          <span className="text-[10px] text-muted-foreground/60 uppercase tracking-wider">
+        <div className="bg-muted border border-border rounded-xl p-3 space-y-2">
+          <span className="text-[10px] text-muted-foreground uppercase tracking-wider">
             Phases & Sections
           </span>
           {phases
@@ -174,7 +174,7 @@ function FrameworkSection({ assessment }: { assessment: AssessmentType }) {
                   </div>
                   {phaseSections.map((sec) => (
                     <div key={sec.id} className="ml-5 flex items-center gap-1.5 mt-0.5">
-                      <div className="w-1 h-1 rounded-full bg-muted/200" />
+                      <div className="w-1 h-1 rounded-full bg-muted" />
                       <span className="text-[11px] text-muted-foreground">{sec.label}</span>
                     </div>
                   ))}
@@ -186,8 +186,8 @@ function FrameworkSection({ assessment }: { assessment: AssessmentType }) {
 
       {/* Scoring Dimensions */}
       {dims.length > 0 && (
-        <div className="bg-muted/50 border border-border/60 rounded-xl p-3 space-y-2">
-          <span className="text-[10px] text-muted-foreground/60 uppercase tracking-wider">
+        <div className="bg-muted border border-border rounded-xl p-3 space-y-2">
+          <span className="text-[10px] text-muted-foreground uppercase tracking-wider">
             Scoring Dimensions
           </span>
           <div className="space-y-1.5">
@@ -196,11 +196,11 @@ function FrameworkSection({ assessment }: { assessment: AssessmentType }) {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
                     <span className="text-[11px] text-muted-foreground truncate">{dim.label}</span>
-                    <span className="text-[10px] text-muted-foreground/70 tabular-nums ml-2">
+                    <span className="text-[10px] text-muted-foreground tabular-nums ml-2">
                       {Math.round(dim.weight * 100)}%
                     </span>
                   </div>
-                  <div className="mt-0.5 h-1 bg-muted/70 rounded-full overflow-hidden">
+                  <div className="mt-0.5 h-1 bg-muted rounded-full overflow-hidden">
                     <div
                       className="h-full bg-gradient-to-r from-purple-500/50 to-blue-500/50 rounded-full transition-all duration-300"
                       style={{ width: `${dim.weight * 100}%` }}
@@ -249,13 +249,13 @@ function QuestionsSection({ assessment }: { assessment: AssessmentType }) {
       <SectionHeader label="Questions" icon="💬" count={questions.length} />
       {[...sectionMap.entries()].map(([sectionId, qs]) => (
         <div key={sectionId} className="space-y-1">
-          <span className="text-[10px] text-muted-foreground/60 uppercase tracking-wider pl-1">
+          <span className="text-[10px] text-muted-foreground uppercase tracking-wider pl-1">
             {sectionLabelMap.get(sectionId) || sectionId}
           </span>
           {qs.map((q, i) => (
             <div
               key={q.id}
-              className="bg-muted/50 border border-border/60 rounded-lg px-3 py-2 animate-in fade-in slide-in-from-bottom-1 duration-300"
+              className="bg-muted border border-border rounded-lg px-3 py-2 animate-in fade-in slide-in-from-bottom-1 duration-300"
               style={{ animationDelay: `${i * 50}ms` }}
             >
               <div className="flex items-start justify-between gap-2">
@@ -265,7 +265,7 @@ function QuestionsSection({ assessment }: { assessment: AssessmentType }) {
               {(q.weight > 0 || q.scoringDimensions?.length > 0) && (
                 <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                   {q.weight > 0 && (
-                    <span className="text-[10px] text-muted-foreground/60">
+                    <span className="text-[10px] text-muted-foreground">
                       w: {q.weight.toFixed(1)}
                     </span>
                   )}
@@ -311,7 +311,7 @@ function ScoringSection({ assessment }: { assessment: AssessmentType }) {
   return (
     <div className="space-y-2">
       <SectionHeader label="Scoring Coverage" icon="⚖️" />
-      <div className="bg-muted/50 border border-border/60 rounded-xl p-3 space-y-2">
+      <div className="bg-muted border border-border rounded-xl p-3 space-y-2">
         {totalWeight > 0 && Math.abs(totalWeight - 1) > 0.01 && (
           <div className="text-[10px] text-yellow-400/70 bg-yellow-500/10 border border-yellow-500/20 rounded-lg px-2 py-1">
             Weights sum to {totalWeight.toFixed(2)} (should be 1.0)
@@ -324,10 +324,10 @@ function ScoringSection({ assessment }: { assessment: AssessmentType }) {
               <span className="text-[11px] text-muted-foreground min-w-0 flex-1 truncate">
                 {dim.label}
               </span>
-              <span className="text-[10px] text-muted-foreground/60 tabular-nums w-8 text-right">
+              <span className="text-[10px] text-muted-foreground tabular-nums w-8 text-right">
                 {count}q
               </span>
-              <div className="w-16 h-1.5 bg-muted/70 rounded-full overflow-hidden">
+              <div className="w-16 h-1.5 bg-muted rounded-full overflow-hidden">
                 <div
                   className={`h-full rounded-full transition-all duration-300 ${
                     count === 0 ? "bg-red-500/40" : count < 3 ? "bg-yellow-500/40" : "bg-green-500/40"
@@ -360,7 +360,7 @@ function ReviewSection({ assessment }: { assessment: AssessmentType }) {
   return (
     <div className="space-y-2">
       <SectionHeader label="Summary" icon="✅" />
-      <div className="bg-muted/50 border border-border/60 rounded-xl p-3 space-y-3">
+      <div className="bg-muted border border-border rounded-xl p-3 space-y-3">
         <div className="grid grid-cols-2 gap-2">
           <StatBlock label="Questions" value={questions.length} />
           <StatBlock label="Dimensions" value={dims.length} />
@@ -370,14 +370,14 @@ function ReviewSection({ assessment }: { assessment: AssessmentType }) {
 
         {typeCounts.size > 0 && (
           <div>
-            <span className="text-[10px] text-muted-foreground/60 uppercase tracking-wider">
+            <span className="text-[10px] text-muted-foreground uppercase tracking-wider">
               Input Types
             </span>
             <div className="flex flex-wrap gap-1 mt-1">
               {[...typeCounts.entries()].map(([type, count]) => (
                 <span
                   key={type}
-                  className="text-[10px] px-2 py-0.5 rounded-full bg-muted/60 border border-border/60 text-muted-foreground"
+                  className="text-[10px] px-2 py-0.5 rounded-full bg-muted border border-border text-muted-foreground"
                 >
                   {INPUT_TYPE_LABELS[type]?.label || type} ({count})
                 </span>
@@ -400,7 +400,7 @@ function SectionHeader({ label, icon, count }: { label: string; icon: string; co
       <span className="text-sm">{icon}</span>
       <span className="text-xs font-medium text-muted-foreground">{label}</span>
       {count !== undefined && (
-        <span className="text-[10px] text-muted-foreground/60 tabular-nums">({count})</span>
+        <span className="text-[10px] text-muted-foreground tabular-nums">({count})</span>
       )}
     </div>
   );
@@ -408,17 +408,17 @@ function SectionHeader({ label, icon, count }: { label: string; icon: string; co
 
 function GhostPlaceholder({ text }: { text: string }) {
   return (
-    <div className="border border-dashed border-border/60 rounded-xl p-4 text-center">
-      <p className="text-[11px] text-muted-foreground/50 leading-relaxed">{text}</p>
+    <div className="border border-dashed border-border rounded-xl p-4 text-center">
+      <p className="text-[11px] text-muted-foreground leading-relaxed">{text}</p>
     </div>
   );
 }
 
 function StatBlock({ label, value }: { label: string; value: string | number }) {
   return (
-    <div className="bg-muted/30 border border-border/50 rounded-lg p-2 text-center">
+    <div className="bg-muted border border-border rounded-lg p-2 text-center">
       <div className="text-base font-semibold text-foreground/90 tabular-nums">{value}</div>
-      <div className="text-[10px] text-muted-foreground/70 mt-0.5">{label}</div>
+      <div className="text-[10px] text-muted-foreground mt-0.5">{label}</div>
     </div>
   );
 }

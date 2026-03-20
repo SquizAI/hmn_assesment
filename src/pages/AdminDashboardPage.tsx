@@ -348,7 +348,7 @@ export default function AdminDashboardPage() {
   if (loading) {
     return (
       <div className="px-4 md:px-6 py-4 md:py-6 flex items-center justify-center h-full">
-        <span className="text-muted-foreground/70">Loading...</span>
+        <span className="text-muted-foreground">Loading...</span>
       </div>
     );
   }
@@ -435,7 +435,7 @@ export default function AdminDashboardPage() {
             onClick={() => {
               if (graphStatus?.enabled && (graphStatus?.nodeCount ?? 0) === 0) handleSeed();
             }}
-            className={`bg-muted/50 border border-border rounded-2xl p-4 hover:bg-muted/60 transition-colors ${
+            className={`bg-muted border border-border rounded-2xl p-4 hover:bg-muted transition-colors ${
               graphStatus?.enabled && (graphStatus?.nodeCount ?? 0) === 0 ? "cursor-pointer" : ""
             }`}
           >
@@ -455,10 +455,10 @@ export default function AdminDashboardPage() {
               </div>
             )}
             {isGraphEnabled && (
-              <div className="text-[10px] text-muted-foreground/70 mt-0.5">{graphStatus!.nodeCount} nodes</div>
+              <div className="text-[10px] text-muted-foreground mt-0.5">{graphStatus!.nodeCount} nodes</div>
             )}
             {graphStatus?.enabled && (graphStatus?.nodeCount ?? 0) === 0 && (
-              <div className="text-[10px] text-muted-foreground/70 mt-0.5">
+              <div className="text-[10px] text-muted-foreground mt-0.5">
                 {seeding ? "Seeding..." : "Click to seed"}
               </div>
             )}
@@ -483,7 +483,7 @@ export default function AdminDashboardPage() {
         />
 
         {/* Archetype Distribution — Donut Chart */}
-        <div className="bg-muted/50 rounded-2xl border border-border p-4 md:p-6">
+        <div className="bg-muted rounded-2xl border border-border p-4 md:p-6">
           <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
             Archetype Distribution
           </h2>
@@ -494,7 +494,7 @@ export default function AdminDashboardPage() {
               ))}
             </div>
           ) : !isGraphEnabled || archetypes.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground/70 text-sm">
+            <div className="text-center py-8 text-muted-foreground text-sm">
               {isGraphEnabled ? "No archetype data yet" : "Graph not connected"}
             </div>
           ) : (
@@ -558,7 +558,7 @@ export default function AdminDashboardPage() {
                           {humanize(a.archetype)}
                         </span>
                         <span className="text-[10px] text-muted-foreground tabular-nums">{a.count}</span>
-                        <span className="text-[10px] text-muted-foreground/60 tabular-nums w-8 text-right">{pct}%</span>
+                        <span className="text-[10px] text-muted-foreground tabular-nums w-8 text-right">{pct}%</span>
                       </div>
                     );
                   })}
@@ -575,7 +575,7 @@ export default function AdminDashboardPage() {
       {/* ============================================ */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Company Leaderboard */}
-        <div className="bg-muted/50 rounded-2xl border border-border p-4 md:p-6">
+        <div className="bg-muted rounded-2xl border border-border p-4 md:p-6">
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
               Company Leaderboard
@@ -588,7 +588,7 @@ export default function AdminDashboardPage() {
             </button>
           </div>
           {companies.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground/70">No companies yet</div>
+            <div className="text-center py-8 text-muted-foreground">No companies yet</div>
           ) : (
             <div className="space-y-1.5">
               {companies.slice(0, 10).map((company, idx) => (
@@ -598,7 +598,7 @@ export default function AdminDashboardPage() {
                   className="flex items-center gap-2 px-2.5 py-2 rounded-xl hover:bg-muted cursor-pointer transition-colors"
                 >
                   {/* Rank */}
-                  <span className="text-[10px] text-muted-foreground/50 tabular-nums w-4 text-right flex-shrink-0">
+                  <span className="text-[10px] text-muted-foreground tabular-nums w-4 text-right flex-shrink-0">
                     {idx + 1}
                   </span>
                   {/* Avatar */}
@@ -610,7 +610,7 @@ export default function AdminDashboardPage() {
                   {/* Info */}
                   <div className="flex-1 min-w-0">
                     <span className="text-xs font-medium text-foreground/90 truncate block">{company.company}</span>
-                    <span className="text-[10px] text-muted-foreground/70">
+                    <span className="text-[10px] text-muted-foreground">
                       {company.sessionCount} session{company.sessionCount !== 1 ? "s" : ""} · {company.participantCount} people
                     </span>
                   </div>
@@ -631,7 +631,7 @@ export default function AdminDashboardPage() {
                   {company.hasResearch && (
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
                   )}
-                  <span className="text-[10px] text-muted-foreground/50 shrink-0 w-12 text-right">
+                  <span className="text-[10px] text-muted-foreground shrink-0 w-12 text-right">
                     {relativeDate(company.lastActivity)}
                   </span>
                 </div>
@@ -641,7 +641,7 @@ export default function AdminDashboardPage() {
         </div>
 
         {/* Theme Intelligence */}
-        <div className="bg-muted/50 rounded-2xl border border-border p-4 md:p-6">
+        <div className="bg-muted rounded-2xl border border-border p-4 md:p-6">
           <div className="flex items-center gap-2 mb-3">
             <svg className="w-4 h-4 text-purple-400/60" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456z" />
@@ -658,7 +658,7 @@ export default function AdminDashboardPage() {
             </div>
           ) : !isGraphEnabled ? (
             <div className="text-center py-8">
-              <p className="text-muted-foreground/70 text-sm">Connect Neo4j to see theme intelligence</p>
+              <p className="text-muted-foreground text-sm">Connect Neo4j to see theme intelligence</p>
               {graphStatus?.enabled && (
                 <button
                   onClick={handleSeed}
@@ -670,7 +670,7 @@ export default function AdminDashboardPage() {
               )}
             </div>
           ) : themes.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground/70 text-sm">No themes detected yet</div>
+            <div className="text-center py-8 text-muted-foreground text-sm">No themes detected yet</div>
           ) : (
             <div className="space-y-2">
               {themes.slice(0, 12).map((theme) => {
@@ -693,7 +693,7 @@ export default function AdminDashboardPage() {
                         style={{ width: `${(theme.frequency / maxFreq) * 100}%`, minWidth: "2px" }}
                       />
                     </div>
-                    <span className="text-[10px] text-muted-foreground/70 tabular-nums w-5 text-right flex-shrink-0">
+                    <span className="text-[10px] text-muted-foreground tabular-nums w-5 text-right flex-shrink-0">
                       {theme.frequency}
                     </span>
                     <span
@@ -722,7 +722,7 @@ export default function AdminDashboardPage() {
       {/* ============================================ */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Completion Funnel */}
-        <div className="bg-muted/50 rounded-2xl border border-border p-4 md:p-6">
+        <div className="bg-muted rounded-2xl border border-border p-4 md:p-6">
           <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
             Completion Funnel
           </h2>
@@ -748,7 +748,7 @@ export default function AdminDashboardPage() {
                   </div>
                   {convRate !== null && (
                     <div className="flex items-center gap-2 ml-20 mt-0.5">
-                      <span className="text-[9px] text-muted-foreground/50">
+                      <span className="text-[9px] text-muted-foreground">
                         {convRate}% conversion
                       </span>
                     </div>
@@ -760,7 +760,7 @@ export default function AdminDashboardPage() {
         </div>
 
         {/* Industry Benchmarks */}
-        <div className="bg-muted/50 rounded-2xl border border-border p-4 md:p-6">
+        <div className="bg-muted rounded-2xl border border-border p-4 md:p-6">
           <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
             Industry Benchmarks
           </h2>
@@ -771,7 +771,7 @@ export default function AdminDashboardPage() {
               ))}
             </div>
           ) : !isGraphEnabled || benchmarks.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground/70 text-sm">
+            <div className="text-center py-8 text-muted-foreground text-sm">
               {isGraphEnabled ? "No benchmark data yet" : "Graph not connected"}
             </div>
           ) : (
@@ -800,10 +800,10 @@ export default function AdminDashboardPage() {
                     >
                       {Math.round(b.avgScore)}
                     </span>
-                    <span className="text-[10px] text-muted-foreground/60 tabular-nums w-4 text-right flex-shrink-0">
+                    <span className="text-[10px] text-muted-foreground tabular-nums w-4 text-right flex-shrink-0">
                       {b.sessions}
                     </span>
-                    <span className="text-[9px] text-muted-foreground/60 truncate w-16 text-right flex-shrink-0">
+                    <span className="text-[9px] text-muted-foreground truncate w-16 text-right flex-shrink-0">
                       {humanize(b.topArchetype || "unknown")}
                     </span>
                   </div>

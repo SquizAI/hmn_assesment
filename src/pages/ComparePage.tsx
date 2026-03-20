@@ -45,7 +45,7 @@ function scoreCellBg(score: number): string {
 
 function deltaArrow(current: number, previous: number): React.ReactNode {
   const diff = current - previous;
-  if (diff === 0) return <span className="text-muted-foreground/70 text-xs ml-1">--</span>;
+  if (diff === 0) return <span className="text-muted-foreground text-xs ml-1">--</span>;
   if (diff > 0) return <span className="text-green-400 text-xs ml-1 inline-flex items-center"><svg className="w-3 h-3" viewBox="0 0 12 12" fill="currentColor"><path d="M6 2L10 8H2L6 2Z" /></svg>+{diff}</span>;
   return <span className="text-red-400 text-xs ml-1 inline-flex items-center"><svg className="w-3 h-3" viewBox="0 0 12 12" fill="currentColor"><path d="M6 10L2 4H10L6 10Z" /></svg>{diff}</span>;
 }
@@ -96,7 +96,7 @@ export default function ComparePage() {
     <div className="min-h-screen flex items-center justify-center px-6 bg-background">
       <div className="text-center space-y-4">
         <p className="text-muted-foreground">{error}</p>
-        <button onClick={() => navigate("/")} className="px-5 py-2.5 text-sm font-medium rounded-lg bg-muted text-foreground hover:bg-muted/200 border border-border transition-colors">Return Home</button>
+        <button onClick={() => navigate("/")} className="px-5 py-2.5 text-sm font-medium rounded-lg bg-muted text-foreground hover:bg-muted border border-border transition-colors">Return Home</button>
       </div>
     </div>
   );
@@ -105,7 +105,7 @@ export default function ComparePage() {
     <div className="min-h-screen flex items-center justify-center px-6 bg-background">
       <div className="text-center space-y-4">
         <p className="text-muted-foreground">No completed assessments found for this {email ? "email" : "company"}.</p>
-        <button onClick={() => navigate("/")} className="px-5 py-2.5 text-sm font-medium rounded-lg bg-muted text-foreground hover:bg-muted/200 border border-border transition-colors">Take an Assessment</button>
+        <button onClick={() => navigate("/")} className="px-5 py-2.5 text-sm font-medium rounded-lg bg-muted text-foreground hover:bg-muted border border-border transition-colors">Take an Assessment</button>
       </div>
     </div>
   );
@@ -119,7 +119,7 @@ export default function ComparePage() {
 
   return (
     <div className="min-h-screen pb-20 bg-background">
-      <header className="border-b border-border/50 px-6 py-4">
+      <header className="border-b border-border px-6 py-4">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-sm font-bold text-foreground">H</div>
@@ -156,12 +156,12 @@ export default function ComparePage() {
             </div>
           ) : (
             <div className="relative" style={{ height: chartHeight + 60 }}>
-              <div className="absolute left-0 top-0 bottom-10 flex flex-col justify-between text-xs text-muted-foreground/70 w-8">
+              <div className="absolute left-0 top-0 bottom-10 flex flex-col justify-between text-xs text-muted-foreground w-8">
                 <span>100</span><span>75</span><span>50</span><span>25</span><span>0</span>
               </div>
               <div className="absolute left-10 right-0 top-0" style={{ height: chartHeight }}>
                 {[0, 25, 50, 75, 100].map((val) => (
-                  <div key={val} className="absolute w-full border-t border-border/50" style={{ top: `${((100 - val) / 100) * chartHeight}px` }} />
+                  <div key={val} className="absolute w-full border-t border-border" style={{ top: `${((100 - val) / 100) * chartHeight}px` }} />
                 ))}
               </div>
               <div className="absolute left-10 right-0 top-0" style={{ height: chartHeight }}>
@@ -193,7 +193,7 @@ export default function ComparePage() {
                   );
                 })}
               </div>
-              <div className="absolute left-10 right-0 flex justify-between text-xs text-muted-foreground/70" style={{ top: chartHeight + 16 }}>
+              <div className="absolute left-10 right-0 flex justify-between text-xs text-muted-foreground" style={{ top: chartHeight + 16 }}>
                 {sessions.map((session) => <span key={session.sessionId} className="text-center">{formatShortDate(session.createdAt)}</span>)}
               </div>
             </div>
@@ -212,7 +212,7 @@ export default function ComparePage() {
             </thead>
             <tbody>
               {ALL_DIMENSIONS.map((dim) => (
-                <tr key={dim} className="border-b border-border/50">
+                <tr key={dim} className="border-b border-border">
                   <td className="py-3 px-3 text-foreground/80 font-medium">{DIMENSION_LABELS[dim]}</td>
                   {sessions.map((session, idx) => {
                     const score = session.dimensionScores[dim];
@@ -222,7 +222,7 @@ export default function ComparePage() {
                     const hasPrev = prevScore !== undefined && prevScore !== null;
                     return (
                       <td key={session.sessionId} className="py-3 px-3 text-center">
-                        {hasScore ? <span className={`inline-flex items-center justify-center px-2.5 py-1 rounded-lg text-sm font-semibold ${scoreCellBg(score)}`}>{score}{hasPrev && deltaArrow(score, prevScore)}</span> : <span className="text-muted-foreground/50">--</span>}
+                        {hasScore ? <span className={`inline-flex items-center justify-center px-2.5 py-1 rounded-lg text-sm font-semibold ${scoreCellBg(score)}`}>{score}{hasPrev && deltaArrow(score, prevScore)}</span> : <span className="text-muted-foreground">--</span>}
                       </td>
                     );
                   })}
@@ -238,7 +238,7 @@ export default function ComparePage() {
                   const hasPrev = prevScore !== null && prevScore !== undefined;
                   return (
                     <td key={session.sessionId} className="py-3 px-3 text-center">
-                      {hasScore ? <span className={`inline-flex items-center justify-center px-3 py-1.5 rounded-lg text-sm font-bold ${scoreCellBg(score)}`}>{score}{hasPrev && deltaArrow(score, prevScore)}</span> : <span className="text-muted-foreground/50">--</span>}
+                      {hasScore ? <span className={`inline-flex items-center justify-center px-3 py-1.5 rounded-lg text-sm font-bold ${scoreCellBg(score)}`}>{score}{hasPrev && deltaArrow(score, prevScore)}</span> : <span className="text-muted-foreground">--</span>}
                     </td>
                   );
                 })}
@@ -279,7 +279,7 @@ export default function ComparePage() {
               </thead>
               <tbody>
                 {allGapPatterns.map((pattern) => (
-                  <tr key={pattern} className="border-b border-border/50">
+                  <tr key={pattern} className="border-b border-border">
                     <td className="py-3 px-3 text-foreground/80 font-medium capitalize">{pattern.replace(/_/g, " ")}</td>
                     {sessions.map((session, idx) => {
                       const gap = session.gaps.find((g) => g.pattern === pattern);
@@ -292,7 +292,7 @@ export default function ComparePage() {
                             <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-orange-500/15" title={gap.description}><span className="text-orange-300 text-sm font-bold">{gap.severity}</span></span>
                           ) : isResolved ? (
                             <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-green-500/15"><svg className="w-4 h-4 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg></span>
-                          ) : <span className="text-muted-foreground/30">&mdash;</span>}
+                          ) : <span className="text-muted-foreground">&mdash;</span>}
                         </td>
                       );
                     })}
@@ -303,7 +303,7 @@ export default function ComparePage() {
             <div className="flex gap-6 mt-4 text-xs text-muted-foreground">
               <div className="flex items-center gap-2"><span className="inline-block w-4 h-4 rounded-full bg-orange-500/15 border border-orange-500/30" />Present (severity score)</div>
               <div className="flex items-center gap-2"><span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-green-500/15 border border-green-500/30"><svg className="w-2.5 h-2.5 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg></span>Resolved</div>
-              <div className="flex items-center gap-2"><span className="text-muted-foreground/30">&mdash;</span>Never detected</div>
+              <div className="flex items-center gap-2"><span className="text-muted-foreground">&mdash;</span>Never detected</div>
             </div>
           </section>
         )}
@@ -320,7 +320,7 @@ export default function ComparePage() {
                     <span className="text-2xl font-bold text-foreground">{session.overallScore ?? "--"}</span>
                     <span className="text-sm text-muted-foreground capitalize">{session.archetype?.replace(/_/g, " ") ?? "--"}</span>
                   </div>
-                  <div className="text-xs text-muted-foreground/70">
+                  <div className="text-xs text-muted-foreground">
                     {session.redFlagCount} red flag{session.redFlagCount !== 1 ? "s" : ""} &middot;{" "}
                     {session.greenLightCount} strength{session.greenLightCount !== 1 ? "s" : ""} &middot;{" "}
                     {session.gaps.length} gap{session.gaps.length !== 1 ? "s" : ""}

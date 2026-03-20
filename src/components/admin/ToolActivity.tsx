@@ -77,11 +77,11 @@ export default function ToolActivity({ events }: Props) {
   return (
     <div className="flex justify-start">
       <div className="max-w-[85%] w-full">
-        <div className="bg-muted/60 rounded-2xl rounded-bl-md border border-border/60 overflow-hidden">
+        <div className="bg-muted rounded-2xl rounded-bl-md border border-border overflow-hidden">
           {/* Header — always visible */}
           <button
             onClick={() => setExpanded((e) => !e)}
-            className="w-full flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors"
+            className="w-full flex items-center gap-3 px-4 py-3 hover:bg-muted transition-colors"
           >
             {/* Pulsing indicator */}
             <div className="relative flex-shrink-0">
@@ -95,7 +95,7 @@ export default function ToolActivity({ events }: Props) {
                 {totalCount === 0 ? thinkingMessage : `Building... ${completedCount}/${totalCount} steps`}
               </span>
               {totalCount > 0 && (
-                <span className="text-xs text-muted-foreground/70 ml-2">
+                <span className="text-xs text-muted-foreground ml-2">
                   {completedCount === totalCount ? "finishing up" : steps.find((s) => s.status === "running")?.displayName || "working"}
                 </span>
               )}
@@ -103,7 +103,7 @@ export default function ToolActivity({ events }: Props) {
 
             {/* Chevron */}
             <svg
-              className={`w-4 h-4 text-muted-foreground/70 transition-transform duration-200 ${expanded ? "rotate-180" : ""}`}
+              className={`w-4 h-4 text-muted-foreground transition-transform duration-200 ${expanded ? "rotate-180" : ""}`}
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -115,7 +115,7 @@ export default function ToolActivity({ events }: Props) {
 
           {/* Expanded tool list */}
           {expanded && steps.length > 0 && (
-            <div className="border-t border-border/50 px-4 py-2 space-y-1">
+            <div className="border-t border-border px-4 py-2 space-y-1">
               {steps.map((step, i) => (
                 <div
                   key={`${step.name}-${i}`}
@@ -155,7 +155,7 @@ export default function ToolActivity({ events }: Props) {
 
                   {/* Duration badge */}
                   {step.endTime && (
-                    <span className="text-[10px] text-muted-foreground/50 tabular-nums flex-shrink-0">
+                    <span className="text-[10px] text-muted-foreground tabular-nums flex-shrink-0">
                       {((step.endTime - step.startTime) / 1000).toFixed(1)}s
                     </span>
                   )}

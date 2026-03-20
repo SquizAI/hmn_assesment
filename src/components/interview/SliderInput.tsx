@@ -58,7 +58,7 @@ export default function SliderInput({ min, max, minLabel, maxLabel, value: initi
               className={`w-8 h-8 rounded-full text-xs font-medium transition-all duration-150 cursor-pointer
                 ${n === value
                   ? "bg-white text-black shadow-lg scale-110"
-                  : "bg-muted text-muted-foreground hover:bg-muted/200 hover:text-foreground"
+                  : "bg-muted text-muted-foreground hover:bg-muted hover:text-foreground"
                 }`}
             >
               {n}

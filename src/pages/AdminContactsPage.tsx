@@ -173,11 +173,11 @@ export default function AdminContactsPage() {
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={8} className="px-6 py-8 text-center text-muted-foreground/70 text-sm">Loading...</td></tr>
+                <tr><td colSpan={8} className="px-6 py-8 text-center text-muted-foreground text-sm">Loading...</td></tr>
               ) : contacts.length === 0 ? (
-                <tr><td colSpan={8} className="px-6 py-8 text-center text-muted-foreground/70 text-sm">No contacts found. Add contacts manually.</td></tr>
+                <tr><td colSpan={8} className="px-6 py-8 text-center text-muted-foreground text-sm">No contacts found. Add contacts manually.</td></tr>
               ) : contacts.map((contact) => (
-                <tr key={contact.id} className="border-b border-border/50 hover:bg-muted transition-colors">
+                <tr key={contact.id} className="border-b border-border hover:bg-muted transition-colors">
                   <td className="px-4 py-3"><input type="checkbox" checked={selectedIds.has(contact.id)} onChange={() => toggleSelect(contact.id)} className="rounded border-border bg-muted" /></td>
                   <td className="px-4 py-3"><p className="text-sm font-medium text-foreground">{contact.name}</p>{contact.role && <p className="text-xs text-muted-foreground">{contact.role}</p>}</td>
                   <td className="px-4 py-3 text-sm text-muted-foreground font-mono">{contact.phone}</td>
@@ -186,7 +186,7 @@ export default function AdminContactsPage() {
                   <td className="px-4 py-3"><div className="flex gap-1 flex-wrap">{(contact.tags || []).slice(0, 3).map((tag) => <span key={tag} className="px-1.5 py-0.5 text-[10px] bg-muted text-muted-foreground rounded">{tag}</span>)}</div></td>
                   <td className="px-4 py-3 text-sm text-muted-foreground">{formatDate(contact.created_at)}</td>
                   <td className="px-4 py-3 text-right">
-                    <button onClick={() => setDeleteTarget(contact.id)} title="Delete" className="p-1.5 text-muted-foreground/70 hover:text-red-400 transition-colors rounded-lg hover:bg-muted">
+                    <button onClick={() => setDeleteTarget(contact.id)} title="Delete" className="p-1.5 text-muted-foreground hover:text-red-400 transition-colors rounded-lg hover:bg-muted">
                       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" /></svg>
                     </button>
                   </td>
@@ -196,8 +196,8 @@ export default function AdminContactsPage() {
           </table>
         </div>
         {totalPages > 1 && (
-          <div className="flex items-center justify-between px-6 py-3 border-t border-border/50">
-            <p className="text-xs text-muted-foreground/70">Showing {(page - 1) * 50 + 1}-{Math.min(page * 50, total)} of {total}</p>
+          <div className="flex items-center justify-between px-6 py-3 border-t border-border">
+            <p className="text-xs text-muted-foreground">Showing {(page - 1) * 50 + 1}-{Math.min(page * 50, total)} of {total}</p>
             <div className="flex gap-1">
               <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1} className="px-3 py-1 text-xs rounded-lg bg-muted text-muted-foreground hover:bg-muted disabled:opacity-30 transition-colors">Prev</button>
               <button onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page === totalPages} className="px-3 py-1 text-xs rounded-lg bg-muted text-muted-foreground hover:bg-muted disabled:opacity-30 transition-colors">Next</button>

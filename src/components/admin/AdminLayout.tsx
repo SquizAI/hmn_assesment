@@ -149,14 +149,14 @@ export default function AdminLayout() {
       {/* Sidebar — hidden on mobile, slide-in when mobileOpen */}
       <aside
         className={`
-          fixed inset-y-0 left-0 z-50 bg-[#0a0a12] border-r border-border/50 flex flex-col transition-all duration-300
+          fixed inset-y-0 left-0 z-50 bg-[#0a0a12] border-r border-border flex flex-col transition-all duration-300
           md:static md:translate-x-0 md:z-auto
           ${collapsed ? "md:w-16 w-56" : "md:w-56 w-56"}
           ${mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
         `}
       >
         {/* Logo area */}
-        <div className={`border-b border-border/50 flex items-center ${collapsed ? "justify-center p-3" : "gap-3 p-4"}`}>
+        <div className={`border-b border-border flex items-center ${collapsed ? "justify-center p-3" : "gap-3 p-4"}`}>
           <img src="/hmn_logo.png" alt="HMN" className="h-7 w-7 object-contain shrink-0" />
           {!collapsed && <span className="font-semibold text-foreground/90 text-sm whitespace-nowrap">Cascade Admin</span>}
         </div>
@@ -173,12 +173,12 @@ export default function AdminLayout() {
               <div key={item.path}>
                 {showDivider && !collapsed && (
                   <div className="pt-3 pb-1 px-3">
-                    <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/50">
+                    <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                       {item.section === "outreach" ? "Outreach" : "Tools"}
                     </span>
                   </div>
                 )}
-                {showDivider && collapsed && <div className="my-2 mx-2 border-t border-border/50" />}
+                {showDivider && collapsed && <div className="my-2 mx-2 border-t border-border" />}
                 <Link
                   to={item.path}
                   className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all ${
@@ -193,7 +193,7 @@ export default function AdminLayout() {
                       <span className="flex-1">{item.label}</span>
                       {count !== undefined && count > 0 && (
                         <span className={`text-[11px] font-medium px-1.5 py-0.5 rounded-full ${
-                          active ? "bg-blue-500/20 text-blue-300" : "bg-muted text-muted-foreground/70"
+                          active ? "bg-blue-500/20 text-blue-300" : "bg-muted text-muted-foreground"
                         }`}>
                           {count}
                         </span>
@@ -207,7 +207,7 @@ export default function AdminLayout() {
         </nav>
 
         {/* AI Assistant — sticky footer in sidebar */}
-        <div className="p-2 border-t border-border/50">
+        <div className="p-2 border-t border-border">
           <button
             onClick={() => { setChatOpen((o) => !o); setMobileOpen(false); }}
             className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all ${
@@ -226,10 +226,10 @@ export default function AdminLayout() {
         </div>
 
         {/* Collapse toggle — desktop only */}
-        <div className="hidden md:block p-3 border-t border-border/50">
+        <div className="hidden md:block p-3 border-t border-border">
           <button
             onClick={() => setCollapsed(!collapsed)}
-            className="w-full flex items-center justify-center p-2 rounded-lg text-muted-foreground/50 hover:text-muted-foreground hover:bg-muted transition-all"
+            className="w-full flex items-center justify-center p-2 rounded-lg text-muted-foreground hover:text-muted-foreground hover:bg-muted transition-all"
           >
             {collapsed ? "→" : "←"}
           </button>
@@ -239,7 +239,7 @@ export default function AdminLayout() {
       {/* Main area */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Header */}
-        <header className="shrink-0 border-b border-border/50 px-4 md:px-6 py-3 flex items-center justify-between bg-background/80 backdrop-blur-md">
+        <header className="shrink-0 border-b border-border px-4 md:px-6 py-3 flex items-center justify-between bg-background/80 backdrop-blur-md">
           <div className="flex items-center gap-3">
             {/* Mobile hamburger */}
             <button
@@ -254,8 +254,8 @@ export default function AdminLayout() {
           </div>
           <div className="flex items-center gap-3 md:gap-4">
             <ThemeToggle />
-            <a href="/" className="text-muted-foreground/70 hover:text-muted-foreground text-xs md:text-sm transition-colors">View Site</a>
-            <button onClick={handleLogout} className="text-muted-foreground/70 hover:text-muted-foreground text-xs md:text-sm transition-colors">Logout</button>
+            <a href="/" className="text-muted-foreground hover:text-muted-foreground text-xs md:text-sm transition-colors">View Site</a>
+            <button onClick={handleLogout} className="text-muted-foreground hover:text-muted-foreground text-xs md:text-sm transition-colors">Logout</button>
           </div>
         </header>
 

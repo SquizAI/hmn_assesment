@@ -54,11 +54,11 @@ export default function QuestionEditPopover({ question, onSave, onClose }: Props
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-sm font-semibold text-foreground">Edit Question</h3>
-            <p className="text-[11px] text-muted-foreground/70 mt-0.5 font-mono">{question.id}</p>
+            <p className="text-[11px] text-muted-foreground mt-0.5 font-mono">{question.id}</p>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground/70 hover:text-muted-foreground transition-colors"
+            className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-muted-foreground transition-colors"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />

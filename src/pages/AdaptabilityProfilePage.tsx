@@ -77,7 +77,7 @@ export default function AdaptabilityProfilePage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 pb-20">
       {/* Header */}
-      <div className="border-b border-border/50 bg-slate-950/60 backdrop-blur-xl">
+      <div className="border-b border-border bg-slate-950/60 backdrop-blur-xl">
         <div className="max-w-3xl mx-auto px-6 py-8">
           <div className="space-y-2">
             <h1 className="text-2xl font-semibold text-foreground">
@@ -133,7 +133,7 @@ export default function AdaptabilityProfilePage() {
             {profile.pillarScores.map((ps) => (
               <div
                 key={ps.pillar}
-                className="rounded-xl border border-border/50 bg-muted/30 p-5"
+                className="rounded-xl border border-border bg-muted p-5"
               >
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-3">
@@ -172,7 +172,7 @@ export default function AdaptabilityProfilePage() {
           </div>
           {/* Overall score */}
           <div className="text-center pt-2">
-            <span className="text-muted-foreground/70 text-sm">Overall Adaptability: </span>
+            <span className="text-muted-foreground text-sm">Overall Adaptability: </span>
             <span className="text-muted-foreground font-mono">
               {analysis.overallAdaptabilityScore}/100
             </span>
@@ -228,7 +228,7 @@ export default function AdaptabilityProfilePage() {
               {profile.developmentEdges.map((de, i) => (
                 <div
                   key={i}
-                  className="rounded-xl border border-border/50 bg-muted/30 p-6 space-y-4"
+                  className="rounded-xl border border-border bg-muted p-6 space-y-4"
                 >
                   <div className="flex items-center gap-2">
                     <div
@@ -245,7 +245,7 @@ export default function AdaptabilityProfilePage() {
                   <p className="text-muted-foreground text-sm">
                     {de.observation}
                   </p>
-                  <div className="rounded-lg bg-muted/30 border border-border/50 p-4 space-y-2">
+                  <div className="rounded-lg bg-muted border border-border p-4 space-y-2">
                     <p className="text-muted-foreground text-sm">
                       <span className="text-muted-foreground">Why this matters:</span>{" "}
                       {de.whyItMatters}
@@ -254,7 +254,7 @@ export default function AdaptabilityProfilePage() {
                       {de.researchInsight}
                     </p>
                   </div>
-                  <p className="text-muted-foreground/70 text-xs">
+                  <p className="text-muted-foreground text-xs">
                     {de.normalization}
                   </p>
                   {de.domainSpecific && (
@@ -278,14 +278,14 @@ export default function AdaptabilityProfilePage() {
               {profile.developmentPlan.map((phase) => (
                 <div
                   key={phase.phase}
-                  className="rounded-xl border border-border/50 bg-muted/30 p-6 space-y-4"
+                  className="rounded-xl border border-border bg-muted p-6 space-y-4"
                 >
                   <div className="flex items-center justify-between">
                     <div>
                       <h3 className="text-foreground/90 font-medium">
                         Phase {phase.phase}: {phase.theme}
                       </h3>
-                      <span className="text-muted-foreground/70 text-xs">
+                      <span className="text-muted-foreground text-xs">
                         {phase.weekRange} &middot; {phase.timeCommitment}
                       </span>
                     </div>
@@ -305,9 +305,9 @@ export default function AdaptabilityProfilePage() {
                       </li>
                     ))}
                   </ul>
-                  <div className="rounded-lg bg-transparent border border-border/50 p-3 space-y-1">
+                  <div className="rounded-lg bg-transparent border border-border p-3 space-y-1">
                     <p className="text-muted-foreground text-xs">
-                      <span className="text-muted-foreground/70">You may experience:</span>{" "}
+                      <span className="text-muted-foreground">You may experience:</span>{" "}
                       {phase.expectedExperience}
                     </p>
                     <p className="text-muted-foreground text-xs italic">
@@ -333,7 +333,7 @@ export default function AdaptabilityProfilePage() {
         )}
 
         {/* Section 6: Re-assessment */}
-        <section className="rounded-xl border border-border/50 bg-muted/30 p-6 space-y-3">
+        <section className="rounded-xl border border-border bg-muted p-6 space-y-3">
           <h3 className="text-foreground/80 font-medium">Your Re-Assessment</h3>
           {profile.reassessmentDate && (
             <p className="text-muted-foreground text-sm">
@@ -343,7 +343,7 @@ export default function AdaptabilityProfilePage() {
           <p className="text-muted-foreground text-sm leading-relaxed">
             {profile.reassessmentNote}
           </p>
-          <p className="text-muted-foreground/70 text-xs italic">
+          <p className="text-muted-foreground text-xs italic">
             The goal isn't a perfect score — it's meaningful progress on your
             development edge.
           </p>
@@ -365,7 +365,7 @@ export default function AdaptabilityProfilePage() {
 
         {/* Footer */}
         <div className="text-center pt-4 space-y-4">
-          <p className="text-muted-foreground/50 text-xs">
+          <p className="text-muted-foreground text-xs">
             This assessment was AI-conducted using both content analysis and
             linguistic process signals. You may request a human review of your
             scores at any time.

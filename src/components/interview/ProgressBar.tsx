@@ -43,7 +43,7 @@ export default function ProgressBar({ questionNumber, totalQuestions, phase, sec
       <div className="flex items-center justify-between">
         <div>
           <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{pLabels[phase] || formatLabel(phase)}</span>
-          <span className="text-muted-foreground/50 mx-2">/</span>
+          <span className="text-muted-foreground mx-2">/</span>
           <span className="text-xs text-muted-foreground">{sLabels[section] || formatLabel(section)}</span>
         </div>
         <span className="text-xs text-muted-foreground">{questionNumber} of {totalQuestions}</span>

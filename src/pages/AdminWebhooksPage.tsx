@@ -102,7 +102,7 @@ export default function AdminWebhooksPage() {
 
   const getCampaignName = (id: string | null) => id ? campaigns.find((c) => c.id === id)?.name || "Unknown" : "No Campaign";
 
-  if (loading) return <div className="flex items-center justify-center h-full min-h-[60vh]"><div className="text-muted-foreground/70 text-sm">Loading webhooks...</div></div>;
+  if (loading) return <div className="flex items-center justify-center h-full min-h-[60vh]"><div className="text-muted-foreground text-sm">Loading webhooks...</div></div>;
 
   return (
     <div className="max-w-7xl mx-auto p-6">
@@ -137,7 +137,7 @@ export default function AdminWebhooksPage() {
               <label className="block text-xs text-muted-foreground mb-2">Events</label>
               <div className="flex flex-wrap gap-2">
                 {ALL_EVENTS.map((event) => (
-                  <button key={event.value} type="button" onClick={() => setFormEvents((prev) => prev.includes(event.value) ? prev.filter((e) => e !== event.value) : [...prev, event.value])} className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-all ${formEvents.includes(event.value) ? event.color : "bg-muted text-muted-foreground/70 border-border"}`}>
+                  <button key={event.value} type="button" onClick={() => setFormEvents((prev) => prev.includes(event.value) ? prev.filter((e) => e !== event.value) : [...prev, event.value])} className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-all ${formEvents.includes(event.value) ? event.color : "bg-muted text-muted-foreground border-border"}`}>
                     {event.label}
                   </button>
                 ))}
@@ -168,11 +168,11 @@ export default function AdminWebhooksPage() {
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {webhooks.map((wh) => (
-            <div key={wh.id} className={`bg-muted border rounded-2xl p-5 transition-all ${wh.is_active ? "border-border hover:border-border" : "border-border/50 opacity-60"}`}>
+            <div key={wh.id} className={`bg-muted border rounded-2xl p-5 transition-all ${wh.is_active ? "border-border hover:border-border" : "border-border opacity-60"}`}>
               <div className="flex items-start justify-between mb-3">
                 <div className="flex-1 min-w-0 mr-3">
                   <p className="text-sm font-mono text-foreground/90 truncate" title={wh.url}>{wh.url}</p>
-                  <p className="text-xs text-muted-foreground/70 mt-0.5">{getCampaignName(wh.campaign_id)}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{getCampaignName(wh.campaign_id)}</p>
                 </div>
                 <button onClick={() => handleToggle(wh)} className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors shrink-0 ${wh.is_active ? "bg-green-600" : "bg-muted"}`}>
                   <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${wh.is_active ? "translate-x-6" : "translate-x-1"}`} />
@@ -181,7 +181,7 @@ export default function AdminWebhooksPage() {
               <div className="flex flex-wrap gap-1.5 mb-4">
                 {wh.events.map((event) => <span key={event} className={`px-2 py-0.5 text-[10px] font-medium rounded-md border ${getEventColor(event)}`}>{getEventLabel(event)}</span>)}
               </div>
-              <div className="flex items-center gap-2 pt-2 border-t border-border/50">
+              <div className="flex items-center gap-2 pt-2 border-t border-border">
                 <button onClick={() => handleTest(wh.id)} disabled={testingId === wh.id} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-muted text-muted-foreground hover:bg-muted disabled:opacity-50 transition-all">{testingId === wh.id ? "Testing..." : "Test"}</button>
                 <button onClick={() => { setEditingWebhook(wh); setFormUrl(wh.url); setFormEvents([...wh.events]); setFormSecret(wh.secret || ""); setFormActive(wh.is_active); setShowForm(true); }} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-muted text-muted-foreground hover:bg-muted transition-all">Edit</button>
                 <button onClick={() => setDeleteTarget(wh.id)} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-muted text-red-400/60 hover:bg-red-500/10 hover:text-red-400 transition-all ml-auto">Delete</button>

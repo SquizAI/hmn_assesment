@@ -230,26 +230,26 @@ export default function AdminChatDrawer({ open, onClose }: Props) {
         `}
       >
         <div
-          className="h-full w-full sm:w-[440px] md:w-[440px] bg-[#0c0c16] border-l border-border/50 flex flex-col shadow-2xl shadow-black/40 md:shadow-none"
+          className="h-full w-full sm:w-[440px] md:w-[440px] bg-[#0c0c16] border-l border-border flex flex-col shadow-2xl shadow-black/40 md:shadow-none"
           onDragEnter={handleDragEnter}
           onDragLeave={handleDragLeave}
           onDragOver={handleDragOver}
           onDrop={handleDrop}
         >
         {/* Header */}
-        <div className="shrink-0 flex items-center justify-between px-4 py-3 border-b border-border/50">
+        <div className="shrink-0 flex items-center justify-between px-4 py-3 border-b border-border">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-purple-500/20 to-blue-500/20 border border-border flex items-center justify-center">
               <span className="text-sm">🤖</span>
             </div>
             <div>
               <h2 className="text-sm font-semibold text-foreground/90">Admin Assistant</h2>
-              <p className="text-[10px] text-muted-foreground/70">AI-powered admin tools</p>
+              <p className="text-[10px] text-muted-foreground">AI-powered admin tools</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-lg text-muted-foreground/70 hover:text-muted-foreground hover:bg-muted transition-all"
+            className="p-2 rounded-lg text-muted-foreground hover:text-muted-foreground hover:bg-muted transition-all"
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -267,7 +267,7 @@ export default function AdminChatDrawer({ open, onClose }: Props) {
                 </svg>
               </div>
               <p className="text-purple-300 font-medium text-sm">Drop files to attach</p>
-              <p className="text-muted-foreground/70 text-xs">{ALLOWED_EXTENSIONS.join(", ")} — max {formatFileSize(MAX_FILE_SIZE)}</p>
+              <p className="text-muted-foreground text-xs">{ALLOWED_EXTENSIONS.join(", ")} — max {formatFileSize(MAX_FILE_SIZE)}</p>
             </div>
           </div>
         )}
@@ -289,13 +289,13 @@ export default function AdminChatDrawer({ open, onClose }: Props) {
                   className="border-2 border-dashed border-border hover:border-purple-500/30 rounded-xl p-4 cursor-pointer transition-all hover:bg-purple-500/5 group"
                 >
                   <div className="space-y-1.5">
-                    <svg className="w-6 h-6 text-muted-foreground/50 group-hover:text-purple-400/60 mx-auto transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <svg className="w-6 h-6 text-muted-foreground group-hover:text-purple-400/60 mx-auto transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m3.75 9v6m3-3H9m1.5-12H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
                     </svg>
                     <p className="text-xs text-muted-foreground group-hover:text-muted-foreground transition-colors">
                       Drop CSV or files here
                     </p>
-                    <p className="text-[10px] text-muted-foreground/50">
+                    <p className="text-[10px] text-muted-foreground">
                       {ALLOWED_EXTENSIONS.map((e) => `.${e}`).join("  ")}
                     </p>
                   </div>
@@ -307,7 +307,7 @@ export default function AdminChatDrawer({ open, onClose }: Props) {
                     <button
                       key={action.label}
                       onClick={() => handleSend(action.label)}
-                      className="flex items-center gap-1.5 px-2.5 py-2 rounded-lg bg-muted/50 border border-border text-muted-foreground hover:bg-white/[0.07] hover:text-foreground/90 hover:border-border transition-all text-left"
+                      className="flex items-center gap-1.5 px-2.5 py-2 rounded-lg bg-muted border border-border text-muted-foreground hover:bg-white/[0.07] hover:text-foreground/90 hover:border-border transition-all text-left"
                     >
                       <span className="text-sm shrink-0">{action.icon}</span>
                       <span className="text-[11px] leading-tight">{action.label}</span>
@@ -337,12 +337,12 @@ export default function AdminChatDrawer({ open, onClose }: Props) {
         </div>
 
         {/* Bottom bar: attachments + input */}
-        <div className="border-t border-border/50 shrink-0">
+        <div className="border-t border-border shrink-0">
           {/* Attached files bar */}
           {attachments.length > 0 && (
             <div className="px-4 pt-2.5 pb-0">
               <div className="flex items-center gap-1.5 flex-wrap">
-                <span className="text-[10px] text-muted-foreground/60 uppercase tracking-wider">Attached:</span>
+                <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Attached:</span>
                 {attachments.map((att, i) => (
                   <div
                     key={i}
@@ -367,7 +367,7 @@ export default function AdminChatDrawer({ open, onClose }: Props) {
               {/* File upload button */}
               <button
                 onClick={() => fileInputRef.current?.click()}
-                className="p-2.5 bg-muted/50 hover:bg-muted/70 border border-border/60 rounded-lg text-muted-foreground/70 hover:text-muted-foreground transition-all shrink-0"
+                className="p-2.5 bg-muted hover:bg-muted border border-border rounded-lg text-muted-foreground hover:text-muted-foreground transition-all shrink-0"
                 title="Attach files"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>

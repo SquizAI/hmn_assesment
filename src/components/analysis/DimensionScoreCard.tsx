@@ -22,7 +22,7 @@ export default function DimensionScoreCard({ scores, dimLabels = {}, maxScore = 
               <span className="text-sm font-medium text-foreground">{dimLabels[s.dimension] || formatDimLabel(s.dimension)}</span>
               <div className="flex items-center gap-2">
                 <span className="text-lg font-bold text-foreground">{s.score}</span>
-                <span className="text-xs text-muted-foreground/70">/ {maxScore}</span>
+                <span className="text-xs text-muted-foreground">/ {maxScore}</span>
               </div>
             </div>
             <div className="h-2 w-full bg-muted rounded-full overflow-hidden">

@@ -31,7 +31,7 @@ export default function InsightCards({
     return (
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {[...Array(4)].map((_, i) => (
-          <div key={i} className="bg-muted/50 rounded-2xl border border-border p-4 h-24 animate-pulse" />
+          <div key={i} className="bg-muted rounded-2xl border border-border p-4 h-24 animate-pulse" />
         ))}
       </div>
     );
@@ -92,7 +92,7 @@ export default function InsightCards({
       {cards.map((card, i) => (
         <div
           key={i}
-          className={`bg-gradient-to-br ${card.color} rounded-2xl border border-border/60 p-4 hover:border-white/15 transition-colors`}
+          className={`bg-gradient-to-br ${card.color} rounded-2xl border border-border p-4 hover:border-white/15 transition-colors`}
         >
           <div className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1.5">{card.label}</div>
           <div className="text-lg font-bold text-foreground/90 truncate">{card.value}</div>

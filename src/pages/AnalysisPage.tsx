@@ -77,7 +77,7 @@ export default function AnalysisPage() {
 
   return (
     <div className="min-h-screen pb-20">
-      <header className="border-b border-border/50 px-6 py-4">
+      <header className="border-b border-border px-6 py-4">
         <div className="max-w-5xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3"><div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-sm font-bold">H</div><span className="font-semibold text-foreground/90">HMN Cascade</span></div>
           <div className="flex items-center gap-2">
@@ -142,7 +142,7 @@ export default function AnalysisPage() {
                 <div key={i} className="bg-muted border border-border rounded-xl p-5 space-y-3">
                   <div className="flex items-center gap-2"><span className="px-2 py-0.5 bg-blue-500/20 text-blue-300 rounded text-xs font-medium">Priority {d.priority}</span><span className="text-sm font-medium text-foreground capitalize">{d.module.replace(/_/g, " ")}</span></div>
                   <p className="text-sm text-muted-foreground">{d.reason}</p>
-                  {d.suggestedQuestions.length > 0 && <div className="space-y-1"><p className="text-xs text-muted-foreground/70 uppercase tracking-wider">Suggested Questions</p>{d.suggestedQuestions.map((q, j) => <p key={j} className="text-xs text-muted-foreground italic">&ldquo;{q}&rdquo;</p>)}</div>}
+                  {d.suggestedQuestions.length > 0 && <div className="space-y-1"><p className="text-xs text-muted-foreground uppercase tracking-wider">Suggested Questions</p>{d.suggestedQuestions.map((q, j) => <p key={j} className="text-xs text-muted-foreground italic">&ldquo;{q}&rdquo;</p>)}</div>}
                 </div>
               ))}
             </div>

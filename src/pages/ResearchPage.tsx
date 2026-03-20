@@ -256,7 +256,7 @@ export default function ResearchPage() {
                       />
                       <button
                         onClick={() => setEditedInsights(editedInsights.filter((_, j) => j !== i))}
-                        className="text-muted-foreground/50 hover:text-red-400/60 transition-colors flex-shrink-0"
+                        className="text-muted-foreground hover:text-red-400/60 transition-colors flex-shrink-0"
                         title="Remove insight"
                       >
                         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
@@ -270,7 +270,7 @@ export default function ResearchPage() {
             {/* Sources */}
             {research?.sources && research.sources.length > 0 && (
               <div className="text-center">
-                <p className="text-muted-foreground/70 text-xs">
+                <p className="text-muted-foreground text-xs">
                   Based on {research.sources.length} sources
                   {research.confidenceLevel && ` | Confidence: ${research.confidenceLevel}`}
                 </p>
@@ -289,7 +289,7 @@ export default function ResearchPage() {
                   Not me / Not accurate
                 </Button>
               </div>
-              <button onClick={handleSkip} className="text-muted-foreground/70 text-xs hover:text-muted-foreground transition-colors">
+              <button onClick={handleSkip} className="text-muted-foreground text-xs hover:text-muted-foreground transition-colors">
                 Skip research and start interview
               </button>
             </div>

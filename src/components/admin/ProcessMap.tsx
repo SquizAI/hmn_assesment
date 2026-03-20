@@ -133,7 +133,7 @@ export default function ProcessMap({
     <div className="h-full flex flex-col">
       {/* Header */}
       <div className="px-4 pt-5 pb-4">
-        <h3 className="text-xs font-semibold text-muted-foreground/70 uppercase tracking-wider">
+        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
           Cascade Methodology
         </h3>
       </div>
@@ -154,7 +154,7 @@ export default function ProcessMap({
               {idx < PHASES.length - 1 && (
                 <div
                   className={`absolute left-[15px] top-[36px] w-[2px] h-[calc(100%_-_12px)] ${
-                    isComplete ? "bg-purple-500/40" : "bg-muted/70"
+                    isComplete ? "bg-purple-500/40" : "bg-muted"
                   }`}
                   style={isPending ? { backgroundImage: "repeating-linear-gradient(to bottom, transparent, transparent 3px, rgba(255,255,255,0.06) 3px, rgba(255,255,255,0.06) 6px)" } : undefined}
                 />
@@ -176,7 +176,7 @@ export default function ProcessMap({
                     shrink-0 w-[30px] h-[30px] rounded-lg flex items-center justify-center text-sm
                     ${isComplete ? "bg-purple-500/20 text-purple-300" : ""}
                     ${isActive ? "bg-purple-500/30 text-purple-200" : ""}
-                    ${isPending ? "bg-white/[0.04] text-muted-foreground/50" : ""}
+                    ${isPending ? "bg-white/[0.04] text-muted-foreground" : ""}
                   `}
                 >
                   {isComplete ? (
@@ -193,7 +193,7 @@ export default function ProcessMap({
                   <div className="flex items-center gap-2">
                     <span
                       className={`text-sm font-medium leading-tight ${
-                        isActive ? "text-foreground" : isComplete ? "text-foreground/80" : "text-muted-foreground/70"
+                        isActive ? "text-foreground" : isComplete ? "text-foreground/80" : "text-muted-foreground"
                       }`}
                     >
                       {phase.label}
@@ -225,12 +225,12 @@ export default function ProcessMap({
       </div>
 
       {/* Footer: Phase counter */}
-      <div className="px-4 pb-4 pt-2 border-t border-border/50">
-        <div className="flex items-center justify-between text-[11px] text-muted-foreground/60">
+      <div className="px-4 pb-4 pt-2 border-t border-border">
+        <div className="flex items-center justify-between text-[11px] text-muted-foreground">
           <span>Phase {currentIdx + 1} of {PHASES.length}</span>
           <span>{Math.round(((currentIdx) / PHASES.length) * 100)}%</span>
         </div>
-        <div className="mt-1.5 h-1 bg-muted/70 rounded-full overflow-hidden">
+        <div className="mt-1.5 h-1 bg-muted rounded-full overflow-hidden">
           <div
             className="h-full bg-gradient-to-r from-purple-500/60 to-blue-500/60 rounded-full transition-all duration-500"
             style={{ width: `${(currentIdx / PHASES.length) * 100}%` }}

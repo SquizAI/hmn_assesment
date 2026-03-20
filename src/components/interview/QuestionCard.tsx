@@ -341,7 +341,7 @@ export default function QuestionCard({ question, sessionId, onSubmit, onConversa
             </button>
           ) : <div />}
           {onSkip && (
-            <button onClick={onSkip} className="text-sm text-muted-foreground/70 hover:text-muted-foreground transition-colors">
+            <button onClick={onSkip} className="text-sm text-muted-foreground hover:text-muted-foreground transition-colors">
               Skip this question
             </button>
           )}
@@ -409,7 +409,7 @@ export default function QuestionCard({ question, sessionId, onSubmit, onConversa
                       <div className="pt-2">
                         <div className="flex items-center gap-3 mb-3">
                           <div className="flex-1 h-px bg-muted" />
-                          <span className="text-xs text-muted-foreground/70 uppercase tracking-wider">or take this assessment by phone</span>
+                          <span className="text-xs text-muted-foreground uppercase tracking-wider">or take this assessment by phone</span>
                           <div className="flex-1 h-px bg-muted" />
                         </div>
                         {callStatus === "idle" ? (
@@ -461,7 +461,7 @@ export default function QuestionCard({ question, sessionId, onSubmit, onConversa
                     {/* Deepgram mic button — speech-to-text dictation */}
                     <div className="flex items-center gap-3">
                       <div className="flex-1 h-px bg-muted" />
-                      <span className="text-xs text-muted-foreground/70 uppercase tracking-wider">or dictate</span>
+                      <span className="text-xs text-muted-foreground uppercase tracking-wider">or dictate</span>
                       <div className="flex-1 h-px bg-muted" />
                     </div>
                     <VoiceRecorder
@@ -474,7 +474,7 @@ export default function QuestionCard({ question, sessionId, onSubmit, onConversa
                     />
 
                     {/* Hint */}
-                    <p className="text-center text-muted-foreground/70 text-xs">
+                    <p className="text-center text-muted-foreground text-xs">
                       {question.inputType === "ai_conversation"
                         ? "Enter your phone number for a voice assessment, or type / dictate your responses"
                         : "Tap the mic or press Space to speak \u00B7 Live transcription as you talk"}

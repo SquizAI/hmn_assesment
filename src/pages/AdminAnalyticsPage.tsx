@@ -91,7 +91,7 @@ function KPICard({ label, value, sub, trend }: { label: string; value: string | 
       <div className="flex items-end gap-2">
         <p className="text-3xl font-bold text-foreground">{value}</p>
         {trend && (
-          <span className={`text-xs mb-1 ${trend === "up" ? "text-green-400" : trend === "down" ? "text-red-400" : "text-muted-foreground/70"}`}>
+          <span className={`text-xs mb-1 ${trend === "up" ? "text-green-400" : trend === "down" ? "text-red-400" : "text-muted-foreground"}`}>
             {trend === "up" ? "\u2191" : trend === "down" ? "\u2193" : "\u2014"}
           </span>
         )}
@@ -126,10 +126,10 @@ function RankedList({ items, label }: { items: { name: string; value: number }[]
   const max = Math.max(...items.map((d) => d.value), 1);
   return (
     <div className="space-y-2.5">
-      {label && <h4 className="text-xs text-muted-foreground/70 uppercase tracking-wider mb-3">{label}</h4>}
+      {label && <h4 className="text-xs text-muted-foreground uppercase tracking-wider mb-3">{label}</h4>}
       {items.map((item, i) => (
         <div key={i} className="flex items-center gap-3">
-          <span className="text-xs text-muted-foreground/70 w-5 text-right shrink-0">{i + 1}</span>
+          <span className="text-xs text-muted-foreground w-5 text-right shrink-0">{i + 1}</span>
           <div className="flex-1 min-w-0">
             <div className="flex justify-between mb-1">
               <span className="text-sm text-foreground/80 truncate">{item.name}</span>
@@ -144,14 +144,14 @@ function RankedList({ items, label }: { items: { name: string; value: number }[]
           </div>
         </div>
       ))}
-      {items.length === 0 && <p className="text-sm text-muted-foreground/70">No data</p>}
+      {items.length === 0 && <p className="text-sm text-muted-foreground">No data</p>}
     </div>
   );
 }
 
 // Sparkline-style mini area chart (pure CSS/divs)
 function MiniTimeline({ data }: { data: { date: string; count: number }[] }) {
-  if (data.length === 0) return <p className="text-sm text-muted-foreground/70">No timeline data</p>;
+  if (data.length === 0) return <p className="text-sm text-muted-foreground">No timeline data</p>;
   const max = Math.max(...data.map((d) => d.count), 1);
   return (
     <div>
@@ -172,8 +172,8 @@ function MiniTimeline({ data }: { data: { date: string; count: number }[] }) {
         ))}
       </div>
       <div className="flex justify-between mt-2">
-        <span className="text-[10px] text-muted-foreground/60">{data[0]?.date}</span>
-        <span className="text-[10px] text-muted-foreground/60">{data[data.length - 1]?.date}</span>
+        <span className="text-[10px] text-muted-foreground">{data[0]?.date}</span>
+        <span className="text-[10px] text-muted-foreground">{data[data.length - 1]?.date}</span>
       </div>
     </div>
   );
@@ -263,7 +263,7 @@ export default function AdminAnalyticsPage() {
           <button
             onClick={() => handleExport("sessions")}
             disabled={exporting}
-            className="px-4 py-2 text-sm font-medium rounded-lg bg-muted text-foreground hover:bg-muted/200 border border-border disabled:opacity-50 transition-colors"
+            className="px-4 py-2 text-sm font-medium rounded-lg bg-muted text-foreground hover:bg-muted border border-border disabled:opacity-50 transition-colors"
           >
             Export Assessments
           </button>
@@ -286,7 +286,7 @@ export default function AdminAnalyticsPage() {
       </div>
 
       {/* View Tabs */}
-      <div className="flex items-center gap-1 mb-6 border-b border-border/50 overflow-x-auto">
+      <div className="flex items-center gap-1 mb-6 border-b border-border overflow-x-auto">
         {VIEW_TABS.map((tab) => (
           <button
             key={tab.value}
@@ -308,7 +308,7 @@ export default function AdminAnalyticsPage() {
         {activeFilterCount > 0 && (
           <div className="ml-auto flex items-center gap-2 px-3 shrink-0">
             <span className="text-[10px] text-purple-400">{activeFilterCount} filter{activeFilterCount > 1 ? "s" : ""} active</span>
-            <button onClick={clearFilters} className="text-[10px] text-muted-foreground/70 hover:text-muted-foreground underline">
+            <button onClick={clearFilters} className="text-[10px] text-muted-foreground hover:text-muted-foreground underline">
               Clear
             </button>
           </div>
@@ -382,7 +382,7 @@ export default function AdminAnalyticsPage() {
                 <div className="bg-muted border border-border rounded-2xl p-6">
                   <h3 className="text-base font-semibold text-foreground mb-5">Score Distribution</h3>
                   {data.score_distribution.length === 0 ? (
-                    <p className="text-sm text-muted-foreground/70">No data</p>
+                    <p className="text-sm text-muted-foreground">No data</p>
                   ) : (
                     <div className="flex items-end gap-2 h-32">
                       {data.score_distribution.map((item, i) => {
@@ -415,7 +415,7 @@ export default function AdminAnalyticsPage() {
                     </button>
                   </div>
                   {data.archetype_distribution.length === 0 ? (
-                    <p className="text-sm text-muted-foreground/70">No data</p>
+                    <p className="text-sm text-muted-foreground">No data</p>
                   ) : (
                     <HBarChart
                       items={data.archetype_distribution.slice(0, 5).map((d) => ({ label: d.archetype, value: d.count }))}
@@ -431,7 +431,7 @@ export default function AdminAnalyticsPage() {
                     </button>
                   </div>
                   {data.dimension_averages.length === 0 ? (
-                    <p className="text-sm text-muted-foreground/70">No data</p>
+                    <p className="text-sm text-muted-foreground">No data</p>
                   ) : (
                     <div className="space-y-3">
                       {[...data.dimension_averages].sort((a, b) => b.average - a.average).slice(0, 5).map((dim) => (
@@ -476,7 +476,7 @@ export default function AdminAnalyticsPage() {
                   Name {dimSortBy === "name" ? (dimSortDir === "desc" ? "\u2193" : "\u2191") : ""}
                 </button>
                 <div className="flex-1" />
-                <span className="text-xs text-muted-foreground/70">{sortedDimensions.length} dimensions</span>
+                <span className="text-xs text-muted-foreground">{sortedDimensions.length} dimensions</span>
               </div>
 
               {/* Dimension cards — full width comparison */}
@@ -488,9 +488,9 @@ export default function AdminAnalyticsPage() {
                       <div className="flex items-center justify-between mb-1.5">
                         <span className="text-sm text-foreground/80 group-hover:text-foreground/90 transition-colors">{dim.label}</span>
                         <div className="flex items-center gap-2">
-                          <span className="text-[10px] text-muted-foreground/60">n={dim.count}</span>
+                          <span className="text-[10px] text-muted-foreground">n={dim.count}</span>
                           <span className={`text-sm font-semibold ${getScoreTextColor(dim.average)}`}>
-                            {dim.average}<span className="text-muted-foreground/50 font-normal text-xs">/100</span>
+                            {dim.average}<span className="text-muted-foreground font-normal text-xs">/100</span>
                           </span>
                         </div>
                       </div>
@@ -571,7 +571,7 @@ export default function AdminAnalyticsPage() {
                     onChange={(e) => setScoreRange([Number(e.target.value), scoreRange[1]])}
                     className="w-16 bg-muted border border-border rounded-lg px-2 py-1.5 text-xs text-foreground text-center focus:outline-none focus:border-border"
                   />
-                  <span className="text-muted-foreground/50">to</span>
+                  <span className="text-muted-foreground">to</span>
                   <input
                     type="number"
                     min={0}
@@ -582,7 +582,7 @@ export default function AdminAnalyticsPage() {
                   />
                 </div>
                 {(scoreRange[0] !== 0 || scoreRange[1] !== 100) && (
-                  <button onClick={() => setScoreRange([0, 100])} className="text-[10px] text-muted-foreground/70 hover:text-muted-foreground underline">
+                  <button onClick={() => setScoreRange([0, 100])} className="text-[10px] text-muted-foreground hover:text-muted-foreground underline">
                     Reset
                   </button>
                 )}
@@ -593,7 +593,7 @@ export default function AdminAnalyticsPage() {
                 <div className="bg-muted border border-border rounded-2xl p-6">
                   <h3 className="text-base font-semibold text-foreground mb-5">Archetype Distribution</h3>
                   {data.archetype_distribution.length === 0 ? (
-                    <p className="text-sm text-muted-foreground/70">No data</p>
+                    <p className="text-sm text-muted-foreground">No data</p>
                   ) : (
                     <>
                       <HBarChart
@@ -601,7 +601,7 @@ export default function AdminAnalyticsPage() {
                         maxValue={Math.max(...data.archetype_distribution.map((d) => d.count), 1)}
                       />
                       {/* Donut-style percentages */}
-                      <div className="mt-5 pt-4 border-t border-border/50">
+                      <div className="mt-5 pt-4 border-t border-border">
                         <div className="flex flex-wrap gap-3">
                           {data.archetype_distribution.map((a) => {
                             const pct = data.kpi.total_assessments ? Math.round((a.count / data.kpi.total_assessments) * 100) : 0;
@@ -609,7 +609,7 @@ export default function AdminAnalyticsPage() {
                               <div
                                 key={a.archetype}
                                 className={`px-3 py-2 rounded-lg border transition-colors cursor-default ${
-                                  selectedArchetype === a.archetype ? "bg-purple-500/15 border-purple-500/30" : "bg-muted/50 border-border/50"
+                                  selectedArchetype === a.archetype ? "bg-purple-500/15 border-purple-500/30" : "bg-muted border-border"
                                 }`}
                               >
                                 <p className="text-lg font-bold text-foreground">{pct}%</p>
@@ -625,7 +625,7 @@ export default function AdminAnalyticsPage() {
                 <div className="bg-muted border border-border rounded-2xl p-6">
                   <h3 className="text-base font-semibold text-foreground mb-5">Score Distribution</h3>
                   {data.score_distribution.length === 0 ? (
-                    <p className="text-sm text-muted-foreground/70">No data</p>
+                    <p className="text-sm text-muted-foreground">No data</p>
                   ) : (
                     <div className="flex items-end gap-3 h-48">
                       {data.score_distribution.map((item, i) => {
@@ -662,20 +662,20 @@ export default function AdminAnalyticsPage() {
               <div className="bg-muted border border-border rounded-2xl p-6">
                 <h3 className="text-base font-semibold text-foreground mb-5">Assessment Volume Over Time</h3>
                 {data.assessments_over_time.length === 0 ? (
-                  <p className="text-sm text-muted-foreground/70">No timeline data for this period</p>
+                  <p className="text-sm text-muted-foreground">No timeline data for this period</p>
                 ) : (
                   <>
                     <MiniTimeline data={data.assessments_over_time} />
                     {/* Summary stats */}
-                    <div className="mt-5 pt-4 border-t border-border/50 grid grid-cols-3 gap-4">
+                    <div className="mt-5 pt-4 border-t border-border grid grid-cols-3 gap-4">
                       <div>
-                        <p className="text-[10px] text-muted-foreground/70 uppercase tracking-wider">Total</p>
+                        <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Total</p>
                         <p className="text-lg font-bold text-foreground">
                           {data.assessments_over_time.reduce((s, d) => s + d.count, 0)}
                         </p>
                       </div>
                       <div>
-                        <p className="text-[10px] text-muted-foreground/70 uppercase tracking-wider">Peak Day</p>
+                        <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Peak Day</p>
                         <p className="text-lg font-bold text-foreground">
                           {Math.max(...data.assessments_over_time.map((d) => d.count))}
                         </p>
@@ -684,7 +684,7 @@ export default function AdminAnalyticsPage() {
                         </p>
                       </div>
                       <div>
-                        <p className="text-[10px] text-muted-foreground/70 uppercase tracking-wider">Daily Avg</p>
+                        <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Daily Avg</p>
                         <p className="text-lg font-bold text-foreground">
                           {data.assessments_over_time.length
                             ? (data.assessments_over_time.reduce((s, d) => s + d.count, 0) / data.assessments_over_time.length).toFixed(1)
@@ -721,7 +721,7 @@ export default function AdminAnalyticsPage() {
                         {[...data.assessments_over_time].reverse().slice(0, 20).map((d) => {
                           const max = Math.max(...data.assessments_over_time.map((x) => x.count), 1);
                           return (
-                            <tr key={d.date} className="border-b border-border/50 hover:bg-muted/50">
+                            <tr key={d.date} className="border-b border-border hover:bg-muted">
                               <td className="py-2 px-3 text-foreground/80">{d.date}</td>
                               <td className="py-2 px-3 text-right text-muted-foreground">{d.count}</td>
                               <td className="py-2 px-3">
@@ -794,19 +794,19 @@ export default function AdminAnalyticsPage() {
                 <h3 className="text-base font-semibold text-foreground mb-2">Quick Insights</h3>
                 <p className="text-xs text-muted-foreground mb-5">Summary metrics for the selected period</p>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                  <div className="bg-muted/50 rounded-xl p-4 border border-border/50">
+                  <div className="bg-muted rounded-xl p-4 border border-border">
                     <p className="text-2xl font-bold text-foreground">{data.top_gaps.length}</p>
                     <p className="text-[10px] text-muted-foreground mt-1">Unique Gaps</p>
                   </div>
-                  <div className="bg-muted/50 rounded-xl p-4 border border-border/50">
+                  <div className="bg-muted rounded-xl p-4 border border-border">
                     <p className="text-2xl font-bold text-foreground">{data.industry_breakdown.length}</p>
                     <p className="text-[10px] text-muted-foreground mt-1">Companies</p>
                   </div>
-                  <div className="bg-muted/50 rounded-xl p-4 border border-border/50">
+                  <div className="bg-muted rounded-xl p-4 border border-border">
                     <p className="text-2xl font-bold text-foreground">{data.archetype_distribution.length}</p>
                     <p className="text-[10px] text-muted-foreground mt-1">Archetypes</p>
                   </div>
-                  <div className="bg-muted/50 rounded-xl p-4 border border-border/50">
+                  <div className="bg-muted rounded-xl p-4 border border-border">
                     <p className="text-2xl font-bold text-foreground">{data.dimension_averages.length}</p>
                     <p className="text-[10px] text-muted-foreground mt-1">Dimensions</p>
                   </div>

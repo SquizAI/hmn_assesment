@@ -47,7 +47,7 @@ function AudioPlayer({ src }: { src: string }) {
 }
 
 function TranscriptViewer({ messages }: { messages: Array<{ role: string; message: string }> | null }) {
-  if (!messages || messages.length === 0) return <p className="text-xs text-muted-foreground/70">No transcript available</p>;
+  if (!messages || messages.length === 0) return <p className="text-xs text-muted-foreground">No transcript available</p>;
   return (
     <div className="space-y-2 max-h-60 overflow-y-auto">
       {messages.map((msg, i) => (
@@ -108,12 +108,12 @@ export default function AdminCallsPage() {
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={7} className="px-6 py-8 text-center text-muted-foreground/70 text-sm">Loading...</td></tr>
+                <tr><td colSpan={7} className="px-6 py-8 text-center text-muted-foreground text-sm">Loading...</td></tr>
               ) : calls.length === 0 ? (
-                <tr><td colSpan={7} className="px-6 py-8 text-center text-muted-foreground/70 text-sm">No calls found.</td></tr>
+                <tr><td colSpan={7} className="px-6 py-8 text-center text-muted-foreground text-sm">No calls found.</td></tr>
               ) : calls.map((call) => (
                 <>
-                  <tr key={call.id} onClick={() => setExpandedId(expandedId === call.id ? null : call.id)} className="border-b border-border/50 hover:bg-muted cursor-pointer transition-all">
+                  <tr key={call.id} onClick={() => setExpandedId(expandedId === call.id ? null : call.id)} className="border-b border-border hover:bg-muted cursor-pointer transition-all">
                     <td className="px-6 py-4">
                       <p className="text-sm font-medium text-foreground">{call.contact?.name || "Unknown"}</p>
                       {call.contact?.company && <p className="text-xs text-muted-foreground">{call.contact.company}</p>}
@@ -127,7 +127,7 @@ export default function AdminCallsPage() {
                           <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19.114 5.636a9 9 0 010 12.728M16.463 8.288a5.25 5.25 0 010 7.424M6.75 8.25l4.72-4.72a.75.75 0 011.28.53v15.88a.75.75 0 01-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.01 9.01 0 012.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75z" /></svg>
                           Available
                         </span>
-                      ) : <span className="text-xs text-muted-foreground/50">&mdash;</span>}
+                      ) : <span className="text-xs text-muted-foreground">&mdash;</span>}
                     </td>
                     <td className="px-6 py-4">
                       {call.analysis_status === "completed" && call.session_id ? (
@@ -138,11 +138,11 @@ export default function AdminCallsPage() {
                   </tr>
                   {expandedId === call.id && (
                     <tr key={`${call.id}-expanded`}>
-                      <td colSpan={7} className="px-6 py-4 bg-muted/30">
+                      <td colSpan={7} className="px-6 py-4 bg-muted">
                         <div className="max-w-3xl space-y-4">
                           <div>
                             <h4 className="text-sm font-medium text-foreground/80 mb-2">Recording</h4>
-                            {call.recording_url ? <AudioPlayer src={call.recording_url} /> : <p className="text-xs text-muted-foreground/70">No recording available</p>}
+                            {call.recording_url ? <AudioPlayer src={call.recording_url} /> : <p className="text-xs text-muted-foreground">No recording available</p>}
                           </div>
                           <div>
                             <h4 className="text-sm font-medium text-foreground/80 mb-2">Transcript</h4>
@@ -158,8 +158,8 @@ export default function AdminCallsPage() {
           </table>
         </div>
         {totalPages > 1 && (
-          <div className="flex items-center justify-between px-6 py-3 border-t border-border/50">
-            <p className="text-xs text-muted-foreground/70">Showing {(page - 1) * 50 + 1}-{Math.min(page * 50, total)} of {total}</p>
+          <div className="flex items-center justify-between px-6 py-3 border-t border-border">
+            <p className="text-xs text-muted-foreground">Showing {(page - 1) * 50 + 1}-{Math.min(page * 50, total)} of {total}</p>
             <div className="flex gap-1">
               <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1} className="px-3 py-1 text-xs rounded-lg bg-muted text-muted-foreground hover:bg-muted disabled:opacity-30 transition-colors">Prev</button>
               <button onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page === totalPages} className="px-3 py-1 text-xs rounded-lg bg-muted text-muted-foreground hover:bg-muted disabled:opacity-30 transition-colors">Next</button>

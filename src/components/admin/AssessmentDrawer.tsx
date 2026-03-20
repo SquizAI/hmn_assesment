@@ -484,7 +484,7 @@ export default function AssessmentDrawer({
                       value={getField("description")}
                       onChange={(e) => setEdit("description", e.target.value)}
                       rows={3}
-                      className="w-full bg-muted/30 border border-border rounded-xl px-4 py-3 text-sm text-foreground/90 placeholder:text-muted-foreground outline-none focus:border-border transition-colors resize-none"
+                      className="w-full bg-muted border border-border rounded-xl px-4 py-3 text-sm text-foreground/90 placeholder:text-muted-foreground outline-none focus:border-border transition-colors resize-none"
                       placeholder="Assessment description..."
                     />
                   </div>
@@ -505,7 +505,7 @@ export default function AssessmentDrawer({
                     ].map((stat) => (
                       <div
                         key={stat.label}
-                        className="bg-muted/30 border border-border rounded-xl p-3 text-center"
+                        className="bg-muted border border-border rounded-xl p-3 text-center"
                       >
                         <div className="text-lg font-semibold text-foreground">
                           {stat.value}
@@ -535,7 +535,7 @@ export default function AssessmentDrawer({
                                 : s === "active"
                                   ? "bg-green-500/20 text-green-300 border-green-500/30"
                                   : "bg-gray-500/20 text-muted-foreground border-gray-500/30"
-                              : "bg-muted/30 text-muted-foreground border-border hover:bg-white/6 hover:text-muted-foreground"
+                              : "bg-muted text-muted-foreground border-border hover:bg-white/6 hover:text-muted-foreground"
                           } ${statusUpdating ? "opacity-50 cursor-not-allowed" : ""}`}
                         >
                           {s.charAt(0).toUpperCase() + s.slice(1)}
@@ -549,7 +549,7 @@ export default function AssessmentDrawer({
                     <label className="block text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
                       Structure
                     </label>
-                    <div className="bg-muted/30 border border-border rounded-xl p-4 space-y-3">
+                    <div className="bg-muted border border-border rounded-xl p-4 space-y-3">
                       {(assessment.phases || [])
                         .sort((a, b) => a.order - b.order)
                         .map((phase) => {
@@ -576,7 +576,7 @@ export default function AssessmentDrawer({
                                 <h4 className="text-sm font-medium text-foreground/90">
                                   {phase.label}
                                 </h4>
-                                <span className="text-xs text-muted-foreground/70">
+                                <span className="text-xs text-muted-foreground">
                                   {phaseQuestionCount} questions
                                 </span>
                               </div>
@@ -589,7 +589,7 @@ export default function AssessmentDrawer({
                                     <span className="text-muted-foreground">
                                       {sec.label}
                                     </span>
-                                    <span className="text-muted-foreground/60">
+                                    <span className="text-muted-foreground">
                                       {(assessment.questions || []).filter(
                                         (q) => q.section === sec.id,
                                       ).length}{" "}
@@ -634,7 +634,7 @@ export default function AssessmentDrawer({
                         setDupName(`${assessment.name} (Copy)`);
                         setShowDuplicate(true);
                       }}
-                      className="w-full bg-muted/30 border border-border rounded-xl px-4 py-3 text-sm text-muted-foreground hover:bg-white/6 hover:text-foreground/90 transition-colors text-left flex items-center gap-3"
+                      className="w-full bg-muted border border-border rounded-xl px-4 py-3 text-sm text-muted-foreground hover:bg-white/6 hover:text-foreground/90 transition-colors text-left flex items-center gap-3"
                     >
                       <svg
                         className="w-4 h-4 shrink-0"
@@ -654,16 +654,16 @@ export default function AssessmentDrawer({
                   </div>
 
                   {/* Timestamps */}
-                  <div className="bg-muted/30 border border-border rounded-xl p-4">
+                  <div className="bg-muted border border-border rounded-xl p-4">
                     <div className="grid grid-cols-2 gap-4 text-xs">
                       <div>
-                        <span className="text-muted-foreground/70">Created</span>
+                        <span className="text-muted-foreground">Created</span>
                         <p className="text-muted-foreground mt-0.5">
                           {formatDate(assessment.createdAt)}
                         </p>
                       </div>
                       <div>
-                        <span className="text-muted-foreground/70">Last Updated</span>
+                        <span className="text-muted-foreground">Last Updated</span>
                         <p className="text-muted-foreground mt-0.5">
                           {formatDate(assessment.updatedAt)}
                         </p>
@@ -718,7 +718,7 @@ export default function AssessmentDrawer({
                           <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                             {section?.label || sectionId}
                           </h4>
-                          <span className="text-[10px] text-muted-foreground/60">
+                          <span className="text-[10px] text-muted-foreground">
                             ({questions.length})
                           </span>
                           <div className="flex-1 h-px bg-muted" />
@@ -735,7 +735,7 @@ export default function AssessmentDrawer({
                             return (
                               <div
                                 key={question.id}
-                                className={`bg-muted/30 border rounded-xl transition-colors cursor-pointer ${
+                                className={`bg-muted border rounded-xl transition-colors cursor-pointer ${
                                   isModified
                                     ? "border-purple-500/30 border-l-2 border-l-purple-500/60"
                                     : isExpanded
@@ -767,7 +767,7 @@ export default function AssessmentDrawer({
                                           displayInputType
                                         ] || displayInputType}
                                       </span>
-                                      <span className="text-[10px] text-muted-foreground/70">
+                                      <span className="text-[10px] text-muted-foreground">
                                         weight: {displayWeight}
                                       </span>
                                       {isModified && (
@@ -780,14 +780,14 @@ export default function AssessmentDrawer({
                                         .map((dim) => (
                                           <span
                                             key={dim}
-                                            className="text-[10px] bg-muted text-muted-foreground/70 px-1.5 py-0.5 rounded"
+                                            className="text-[10px] bg-muted text-muted-foreground px-1.5 py-0.5 rounded"
                                           >
                                             {dim}
                                           </span>
                                         ))}
                                       {question.scoringDimensions.length >
                                         3 && (
-                                        <span className="text-[10px] text-muted-foreground/50">
+                                        <span className="text-[10px] text-muted-foreground">
                                           +
                                           {question.scoringDimensions
                                             .length - 3}
@@ -797,7 +797,7 @@ export default function AssessmentDrawer({
                                   </div>
                                   {/* Expand chevron */}
                                   <svg
-                                    className={`w-4 h-4 text-muted-foreground/50 shrink-0 mt-1 transition-transform ${
+                                    className={`w-4 h-4 text-muted-foreground shrink-0 mt-1 transition-transform ${
                                       isExpanded ? "rotate-180" : ""
                                     }`}
                                     fill="none"
@@ -827,7 +827,7 @@ export default function AssessmentDrawer({
                                         </span>
                                         <button
                                           onClick={() => revertQuestion(question.id)}
-                                          className="text-[11px] text-muted-foreground/70 hover:text-muted-foreground transition-colors"
+                                          className="text-[11px] text-muted-foreground hover:text-muted-foreground transition-colors"
                                         >
                                           Revert
                                         </button>
@@ -897,9 +897,9 @@ export default function AssessmentDrawer({
                                     </div>
 
                                     {/* Read-only metadata */}
-                                    <div className="grid grid-cols-3 gap-3 text-xs pt-2 border-t border-border/50">
+                                    <div className="grid grid-cols-3 gap-3 text-xs pt-2 border-t border-border">
                                       <div>
-                                        <span className="text-muted-foreground/70">
+                                        <span className="text-muted-foreground">
                                           ID
                                         </span>
                                         <p className="text-muted-foreground font-mono mt-0.5 break-all text-[10px]">
@@ -907,7 +907,7 @@ export default function AssessmentDrawer({
                                         </p>
                                       </div>
                                       <div>
-                                        <span className="text-muted-foreground/70">
+                                        <span className="text-muted-foreground">
                                           Phase
                                         </span>
                                         <p className="text-muted-foreground mt-0.5">
@@ -917,7 +917,7 @@ export default function AssessmentDrawer({
                                         </p>
                                       </div>
                                       <div>
-                                        <span className="text-muted-foreground/70">
+                                        <span className="text-muted-foreground">
                                           Section
                                         </span>
                                         <p className="text-muted-foreground mt-0.5">
@@ -929,7 +929,7 @@ export default function AssessmentDrawer({
                                     {/* Scoring dimensions */}
                                     {question.scoringDimensions.length > 0 && (
                                       <div>
-                                        <span className="text-[11px] text-muted-foreground/70">
+                                        <span className="text-[11px] text-muted-foreground">
                                           Scoring Dimensions
                                         </span>
                                         <div className="flex flex-wrap gap-1.5 mt-1">
@@ -951,7 +951,7 @@ export default function AssessmentDrawer({
                                     {question.tags &&
                                       question.tags.length > 0 && (
                                         <div>
-                                          <span className="text-[11px] text-muted-foreground/70">
+                                          <span className="text-[11px] text-muted-foreground">
                                             Tags
                                           </span>
                                           <div className="flex flex-wrap gap-1.5 mt-1">
@@ -1005,7 +1005,7 @@ export default function AssessmentDrawer({
                       return (
                         <div
                           key={dim.id}
-                          className="bg-muted/30 border border-border rounded-xl p-4"
+                          className="bg-muted border border-border rounded-xl p-4"
                         >
                           <div className="flex items-start justify-between gap-3 mb-2">
                             <div className="min-w-0 flex-1">
@@ -1028,7 +1028,7 @@ export default function AssessmentDrawer({
                             />
                           </div>
                           {/* Linked questions count */}
-                          <div className="mt-2 text-[10px] text-muted-foreground/60">
+                          <div className="mt-2 text-[10px] text-muted-foreground">
                             {
                               assessment.questions.filter((q) =>
                                 q.scoringDimensions.includes(dim.id),
@@ -1062,7 +1062,7 @@ export default function AssessmentDrawer({
                           parseInt(e.target.value, 10) || 0,
                         )
                       }
-                      className="w-full bg-muted/30 border border-border rounded-xl px-4 py-3 text-sm text-foreground/90 outline-none focus:border-border transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      className="w-full bg-muted border border-border rounded-xl px-4 py-3 text-sm text-foreground/90 outline-none focus:border-border transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     />
                   </div>
 
@@ -1075,7 +1075,7 @@ export default function AssessmentDrawer({
                       type="text"
                       value={getField("icon")}
                       onChange={(e) => setEdit("icon", e.target.value)}
-                      className="w-full bg-muted/30 border border-border rounded-xl px-4 py-3 text-2xl outline-none focus:border-border transition-colors"
+                      className="w-full bg-muted border border-border rounded-xl px-4 py-3 text-2xl outline-none focus:border-border transition-colors"
                       maxLength={4}
                     />
                   </div>
@@ -1087,30 +1087,30 @@ export default function AssessmentDrawer({
                     </label>
                     <div
                       onClick={() => handleCopyId(assessment.id)}
-                      className="w-full bg-muted/30 border border-border rounded-xl px-4 py-3 text-sm text-muted-foreground font-mono cursor-pointer hover:bg-muted transition-colors flex items-center justify-between"
+                      className="w-full bg-muted border border-border rounded-xl px-4 py-3 text-sm text-muted-foreground font-mono cursor-pointer hover:bg-muted transition-colors flex items-center justify-between"
                       title="Click to copy"
                     >
                       <span className="truncate">{assessment.id}</span>
-                      <span className="text-[10px] text-muted-foreground/60 shrink-0 ml-2">
+                      <span className="text-[10px] text-muted-foreground shrink-0 ml-2">
                         {copied ? "Copied!" : "Click to copy"}
                       </span>
                     </div>
                   </div>
 
                   {/* Timestamps */}
-                  <div className="bg-muted/30 border border-border rounded-xl p-4">
+                  <div className="bg-muted border border-border rounded-xl p-4">
                     <label className="block text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">
                       Timestamps
                     </label>
                     <div className="grid grid-cols-2 gap-4 text-xs">
                       <div>
-                        <span className="text-muted-foreground/70">Created</span>
+                        <span className="text-muted-foreground">Created</span>
                         <p className="text-muted-foreground mt-0.5">
                           {formatDate(assessment.createdAt)}
                         </p>
                       </div>
                       <div>
-                        <span className="text-muted-foreground/70">Last Updated</span>
+                        <span className="text-muted-foreground">Last Updated</span>
                         <p className="text-muted-foreground mt-0.5">
                           {formatDate(assessment.updatedAt)}
                         </p>
@@ -1138,7 +1138,7 @@ export default function AssessmentDrawer({
                         className={`w-full rounded-lg px-4 py-2.5 text-sm font-medium transition-colors ${
                           archiveConfirm
                             ? "bg-red-600 text-foreground hover:bg-red-700"
-                            : "bg-muted/30 text-red-400 border border-red-500/20 hover:bg-red-500/10"
+                            : "bg-muted text-red-400 border border-red-500/20 hover:bg-red-500/10"
                         }`}
                       >
                         {archiveConfirm
@@ -1146,7 +1146,7 @@ export default function AssessmentDrawer({
                           : "Archive Assessment"}
                       </button>
                     ) : (
-                      <div className="text-xs text-muted-foreground/70">
+                      <div className="text-xs text-muted-foreground">
                         This assessment is already archived. Change status
                         above to reactivate.
                       </div>
@@ -1172,7 +1172,7 @@ export default function AssessmentDrawer({
                   <div className="flex gap-2">
                     <button
                       onClick={handleDiscard}
-                      className="px-4 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground/80 bg-muted/30 border border-border hover:bg-white/6 transition-colors"
+                      className="px-4 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground/80 bg-muted border border-border hover:bg-white/6 transition-colors"
                     >
                       Discard
                     </button>
@@ -1239,7 +1239,7 @@ export default function AssessmentDrawer({
               value={dupName}
               onChange={(e) => setDupName(e.target.value)}
               autoFocus
-              className="w-full bg-muted/30 border border-border rounded-xl px-4 py-3 text-sm text-foreground/90 outline-none focus:border-border transition-colors mb-4"
+              className="w-full bg-muted border border-border rounded-xl px-4 py-3 text-sm text-foreground/90 outline-none focus:border-border transition-colors mb-4"
               placeholder="Assessment name..."
               onKeyDown={(e) => {
                 if (e.key === "Enter") handleDuplicate();
@@ -1248,7 +1248,7 @@ export default function AssessmentDrawer({
             <div className="flex gap-2 justify-end">
               <button
                 onClick={() => setShowDuplicate(false)}
-                className="px-4 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground/80 bg-muted/30 border border-border hover:bg-white/6 transition-colors"
+                className="px-4 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground/80 bg-muted border border-border hover:bg-white/6 transition-colors"
               >
                 Cancel
               </button>

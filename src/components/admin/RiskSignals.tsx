@@ -13,7 +13,7 @@ interface RiskSignalsProps {
 export default function RiskSignals({ redFlags, greenLights, loading }: RiskSignalsProps) {
   if (loading) {
     return (
-      <div className="bg-muted/50 rounded-2xl border border-border p-6">
+      <div className="bg-muted rounded-2xl border border-border p-6">
         <div className="h-4 w-28 bg-muted rounded animate-pulse mb-4" />
         <div className="space-y-3">
           {[...Array(4)].map((_, i) => (
@@ -28,11 +28,11 @@ export default function RiskSignals({ redFlags, greenLights, loading }: RiskSign
 
   if (!hasData) {
     return (
-      <div className="bg-muted/50 rounded-2xl border border-border p-6">
+      <div className="bg-muted rounded-2xl border border-border p-6">
         <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-4">
           Risk Signals
         </h2>
-        <div className="h-32 flex items-center justify-center text-muted-foreground/70 text-sm">
+        <div className="h-32 flex items-center justify-center text-muted-foreground text-sm">
           No risk signals detected yet
         </div>
       </div>
@@ -44,7 +44,7 @@ export default function RiskSignals({ redFlags, greenLights, loading }: RiskSign
   const sortedLights = [...greenLights].sort((a, b) => b.frequency - a.frequency).slice(0, 6);
 
   return (
-    <div className="bg-muted/50 rounded-2xl border border-border p-4 md:p-6">
+    <div className="bg-muted rounded-2xl border border-border p-4 md:p-6">
       <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
         Risk Signals
       </h2>

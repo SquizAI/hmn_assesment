@@ -228,7 +228,7 @@ export default function SessionDrawer({ sessionId, onClose, onDelete }: SessionD
 
         {/* Tabs */}
         {!loading && session && (
-          <div className="flex border-b border-border/50 px-4 sm:px-6 shrink-0">
+          <div className="flex border-b border-border px-4 sm:px-6 shrink-0">
             {TABS.map((tab) => (
               <button
                 key={tab.id}
@@ -236,7 +236,7 @@ export default function SessionDrawer({ sessionId, onClose, onDelete }: SessionD
                 className={`px-3 py-2.5 text-xs font-medium transition-colors relative ${
                   activeTab === tab.id
                     ? "text-foreground/90"
-                    : "text-muted-foreground/70 hover:text-muted-foreground"
+                    : "text-muted-foreground hover:text-muted-foreground"
                 }`}
               >
                 {tab.label}
@@ -258,14 +258,14 @@ export default function SessionDrawer({ sessionId, onClose, onDelete }: SessionD
               <div className="w-8 h-8 border-2 border-border border-t-white/60 rounded-full animate-spin" />
             </div>
           ) : !session ? (
-            <div className="text-center text-muted-foreground/70 py-24">Session not found</div>
+            <div className="text-center text-muted-foreground py-24">Session not found</div>
           ) : (
             <div className="px-4 sm:px-6 py-6 space-y-6">
               {/* Details Tab */}
               {activeTab === "details" && (
                 <>
                   {/* Participant Info Card */}
-                  <div className="bg-muted/50 rounded-xl p-4 space-y-3">
+                  <div className="bg-muted rounded-xl p-4 space-y-3">
                     <div className="flex items-start justify-between">
                       <div>
                         <h3 className="text-lg font-semibold text-foreground">
@@ -278,30 +278,30 @@ export default function SessionDrawer({ sessionId, onClose, onDelete }: SessionD
 
                     <div className="grid grid-cols-2 gap-3 text-sm">
                       <div>
-                        <span className="text-muted-foreground/70">Company</span>
+                        <span className="text-muted-foreground">Company</span>
                         <p className="text-foreground/80">{session.participant.company}</p>
                       </div>
                       <div>
-                        <span className="text-muted-foreground/70">Industry</span>
+                        <span className="text-muted-foreground">Industry</span>
                         <p className="text-foreground/80">{session.participant.industry}</p>
                       </div>
                       <div>
-                        <span className="text-muted-foreground/70">Team Size</span>
+                        <span className="text-muted-foreground">Team Size</span>
                         <p className="text-foreground/80">{session.participant.teamSize}</p>
                       </div>
                       <div>
-                        <span className="text-muted-foreground/70">Email</span>
+                        <span className="text-muted-foreground">Email</span>
                         <p className="text-foreground/80">{session.participant.email}</p>
                       </div>
                     </div>
 
-                    <div className="text-xs text-muted-foreground/50 pt-1">
+                    <div className="text-xs text-muted-foreground pt-1">
                       Created {formatTimestamp(session.createdAt)}
                     </div>
                   </div>
 
                   {/* Call Participant */}
-                  <div className="bg-muted/50 rounded-xl p-4 space-y-3">
+                  <div className="bg-muted rounded-xl p-4 space-y-3">
                     <p className="text-sm text-muted-foreground font-medium">Call Participant</p>
 
                     {callStatus?.vapiCallId ? (
@@ -336,7 +336,7 @@ export default function SessionDrawer({ sessionId, onClose, onDelete }: SessionD
                         )}
                         <button
                           onClick={() => { setCallStatus(null); setCallPhone(""); }}
-                          className="text-xs text-muted-foreground/70 hover:text-muted-foreground transition-colors"
+                          className="text-xs text-muted-foreground hover:text-muted-foreground transition-colors"
                         >
                           Call again
                         </button>
@@ -367,7 +367,7 @@ export default function SessionDrawer({ sessionId, onClose, onDelete }: SessionD
                         {callError && (
                           <p className="text-red-400 text-xs">{callError}</p>
                         )}
-                        <p className="text-muted-foreground/50 text-xs">Vappy will call and run the full assessment via voice</p>
+                        <p className="text-muted-foreground text-xs">Vappy will call and run the full assessment via voice</p>
                       </div>
                     )}
                   </div>
@@ -379,7 +379,7 @@ export default function SessionDrawer({ sessionId, onClose, onDelete }: SessionD
                       className={`w-full rounded-lg px-4 py-2.5 text-sm font-medium transition-colors ${
                         deleteConfirm
                           ? "bg-red-600 text-foreground hover:bg-red-700"
-                          : "bg-muted/60 text-red-400 border border-red-500/20 hover:bg-red-500/10"
+                          : "bg-muted text-red-400 border border-red-500/20 hover:bg-red-500/10"
                       }`}
                     >
                       {deleteConfirm ? "Confirm Delete?" : "Delete Session"}
@@ -395,15 +395,15 @@ export default function SessionDrawer({ sessionId, onClose, onDelete }: SessionD
                     session.adaptabilityAnalysis ? (
                       <AdaptabilitySessionView analysis={session.adaptabilityAnalysis} />
                     ) : (
-                      <div className="text-center py-12 text-muted-foreground/70">
+                      <div className="text-center py-12 text-muted-foreground">
                         <p>No adaptability analysis available yet</p>
-                        <p className="text-xs mt-1 text-muted-foreground/50">Complete the session to generate analysis</p>
+                        <p className="text-xs mt-1 text-muted-foreground">Complete the session to generate analysis</p>
                       </div>
                     )
                   ) : session.analysis ? (
                     <div className="space-y-4">
                       {/* Overall Score */}
-                      <div className="bg-muted/50 rounded-xl p-4 flex items-center gap-4">
+                      <div className="bg-muted rounded-xl p-4 flex items-center gap-4">
                         <div
                           className={`text-4xl font-bold ${scoreColor(
                             session.analysis.overallReadinessScore
@@ -423,7 +423,7 @@ export default function SessionDrawer({ sessionId, onClose, onDelete }: SessionD
                       </div>
 
                       {/* Dimension Scores */}
-                      <div className="bg-muted/50 rounded-xl p-4 space-y-3">
+                      <div className="bg-muted rounded-xl p-4 space-y-3">
                         <p className="text-sm text-muted-foreground font-medium">Dimension Scores</p>
                         {session.analysis.dimensionScores.map((ds) => (
                           <div key={ds.dimension}>
@@ -431,7 +431,7 @@ export default function SessionDrawer({ sessionId, onClose, onDelete }: SessionD
                               <span className="text-muted-foreground">{ds.dimension}</span>
                               <span className="text-muted-foreground">{ds.score}</span>
                             </div>
-                            <div className="w-full h-2 bg-muted/70 rounded-full overflow-hidden">
+                            <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
                               <div
                                 className={`h-full rounded-full transition-all ${scoreBarColor(ds.score)}`}
                                 style={{ width: `${ds.score}%` }}
@@ -472,9 +472,9 @@ export default function SessionDrawer({ sessionId, onClose, onDelete }: SessionD
                       )}
                     </div>
                   ) : (
-                    <div className="text-center py-12 text-muted-foreground/70">
+                    <div className="text-center py-12 text-muted-foreground">
                       <p>No analysis available yet</p>
-                      <p className="text-xs mt-1 text-muted-foreground/50">Complete the session to generate analysis</p>
+                      <p className="text-xs mt-1 text-muted-foreground">Complete the session to generate analysis</p>
                     </div>
                   )}
                 </>
@@ -501,7 +501,7 @@ export default function SessionDrawer({ sessionId, onClose, onDelete }: SessionD
                         <div
                           key={resp.questionId}
                           className={`rounded-lg p-3 ${
-                            i % 2 === 0 ? "bg-muted/30" : "bg-white/[0.04]"
+                            i % 2 === 0 ? "bg-muted" : "bg-white/[0.04]"
                           }`}
                         >
                           <p className="text-sm text-muted-foreground mb-1">{resp.questionText}</p>
@@ -516,14 +516,14 @@ export default function SessionDrawer({ sessionId, onClose, onDelete }: SessionD
                               return raw;
                             })()}
                           </p>
-                          <p className="text-xs text-muted-foreground/50 mt-1">
+                          <p className="text-xs text-muted-foreground mt-1">
                             {formatTimestamp(resp.timestamp)}
                           </p>
                         </div>
                       ))}
                     </div>
                   ) : (
-                    <div className="text-center py-12 text-muted-foreground/70">No responses yet</div>
+                    <div className="text-center py-12 text-muted-foreground">No responses yet</div>
                   )}
                 </>
               )}

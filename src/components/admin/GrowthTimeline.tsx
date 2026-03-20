@@ -68,7 +68,7 @@ export default function GrowthTimeline({ data, loading }: GrowthTimelineProps) {
 
   if (loading) {
     return (
-      <div className="bg-muted/50 rounded-2xl border border-border p-6">
+      <div className="bg-muted rounded-2xl border border-border p-6">
         <div className="h-4 w-32 bg-muted rounded animate-pulse mb-4" />
         <div className="h-48 bg-muted rounded animate-pulse" />
       </div>
@@ -77,11 +77,11 @@ export default function GrowthTimeline({ data, loading }: GrowthTimelineProps) {
 
   if (data.length === 0) {
     return (
-      <div className="bg-muted/50 rounded-2xl border border-border p-6">
+      <div className="bg-muted rounded-2xl border border-border p-6">
         <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-4">
           Growth Timeline
         </h2>
-        <div className="h-48 flex items-center justify-center text-muted-foreground/70 text-sm">
+        <div className="h-48 flex items-center justify-center text-muted-foreground text-sm">
           No timeline data yet
         </div>
       </div>
@@ -95,7 +95,7 @@ export default function GrowthTimeline({ data, loading }: GrowthTimelineProps) {
     : 100;
 
   return (
-    <div className="bg-muted/50 rounded-2xl border border-border p-4 md:p-6">
+    <div className="bg-muted rounded-2xl border border-border p-4 md:p-6">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
           Growth Timeline
@@ -185,7 +185,7 @@ export default function GrowthTimeline({ data, loading }: GrowthTimelineProps) {
         {/* Y-axis labels */}
         <div className="absolute left-0 top-0 bottom-0 w-8 flex flex-col justify-between pointer-events-none" style={{ paddingTop: '4%', paddingBottom: '4%' }}>
           {[...yLabels].reverse().map((yl, i) => (
-            <span key={i} className="text-[9px] text-muted-foreground/60 tabular-nums text-right pr-1">
+            <span key={i} className="text-[9px] text-muted-foreground tabular-nums text-right pr-1">
               {yl.label}
             </span>
           ))}
@@ -194,7 +194,7 @@ export default function GrowthTimeline({ data, loading }: GrowthTimelineProps) {
         {/* X-axis labels */}
         <div className="absolute bottom-0 left-8 right-0 flex justify-between pointer-events-none px-1">
           {xLabels.map((xl, i) => (
-            <span key={i} className="text-[9px] text-muted-foreground/60 tabular-nums">
+            <span key={i} className="text-[9px] text-muted-foreground tabular-nums">
               {xl.label}
             </span>
           ))}

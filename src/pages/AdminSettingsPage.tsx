@@ -65,7 +65,7 @@ export default function AdminSettingsPage() {
     finally { setCleaning(false); }
   };
 
-  if (loading) return <div className="flex items-center justify-center h-full min-h-[60vh]"><div className="text-muted-foreground/70 text-sm">Loading settings...</div></div>;
+  if (loading) return <div className="flex items-center justify-center h-full min-h-[60vh]"><div className="text-muted-foreground text-sm">Loading settings...</div></div>;
 
   return (
     <div className="max-w-3xl mx-auto p-6">
@@ -105,7 +105,7 @@ export default function AdminSettingsPage() {
         </div>
 
         {settings.last_cleanup_at && (
-          <p className="text-xs text-muted-foreground/70">Last cleanup: {new Date(settings.last_cleanup_at).toLocaleString()}</p>
+          <p className="text-xs text-muted-foreground">Last cleanup: {new Date(settings.last_cleanup_at).toLocaleString()}</p>
         )}
 
         {settings.retention_days && (
@@ -120,9 +120,9 @@ export default function AdminSettingsPage() {
           </div>
         )}
 
-        <div className="flex items-center gap-3 pt-4 border-t border-border/50">
+        <div className="flex items-center gap-3 pt-4 border-t border-border">
           <button onClick={handleSave} disabled={saving} className="px-5 py-2.5 text-sm font-medium rounded-lg bg-gradient-to-r from-purple-600 to-blue-600 text-foreground disabled:opacity-50 transition-all">{saving ? "Saving..." : "Save Settings"}</button>
-          <button onClick={() => setShowCleanupConfirm(true)} disabled={cleaning || !settings.retention_days} className="px-4 py-2.5 text-sm font-medium rounded-lg bg-muted text-foreground hover:bg-muted/200 border border-border disabled:opacity-50 transition-colors">{cleaning ? "Cleaning..." : "Run Cleanup Now"}</button>
+          <button onClick={() => setShowCleanupConfirm(true)} disabled={cleaning || !settings.retention_days} className="px-4 py-2.5 text-sm font-medium rounded-lg bg-muted text-foreground hover:bg-muted border border-border disabled:opacity-50 transition-colors">{cleaning ? "Cleaning..." : "Run Cleanup Now"}</button>
         </div>
       </div>
 

@@ -28,7 +28,7 @@ export default function GapAnalysisGrid({ gaps, dimensionScores, dimLabels = {} 
               <span className="text-muted-foreground">
                 {dimLabels[g.dimension1] || formatDimLabel(g.dimension1)}: <strong className="text-foreground">{s1?.score ?? "?"}</strong>
               </span>
-              <span className="text-muted-foreground/50">vs</span>
+              <span className="text-muted-foreground">vs</span>
               <span className="text-muted-foreground">
                 {dimLabels[g.dimension2] || formatDimLabel(g.dimension2)}: <strong className="text-foreground">{s2?.score ?? "?"}</strong>
               </span>

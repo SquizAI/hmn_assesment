@@ -17,8 +17,8 @@ export default function Button({
 
   const variants: Record<string, string> = {
     primary: "bg-primary text-primary-foreground shadow-[0_4px_14px_0_theme(colors.primary.500/30)] hover:shadow-[0_6px_20px_theme(colors.primary.500/40)] hover:bg-primary/90 focus:ring-primary/50",
-    secondary: "bg-card/80 backdrop-blur-md text-foreground hover:bg-card/100 focus:ring-muted-foreground/50 border border-border/50 shadow-inner",
-    ghost: "bg-transparent text-foreground/80 hover:text-foreground hover:bg-muted/50 focus:ring-muted-foreground/30 !shadow-none",
+    secondary: "bg-card/80 backdrop-blur-md text-foreground hover:bg-card/100 focus:ring-muted-foreground/50 border border-border shadow-inner",
+    ghost: "bg-transparent text-foreground/80 hover:text-foreground hover:bg-muted focus:ring-muted-foreground/30 !shadow-none",
     danger: "bg-red-500/10 text-red-500 hover:bg-red-500/20 focus:ring-red-500/50 border border-red-500/20 hover:border-red-500/30",
   };
 

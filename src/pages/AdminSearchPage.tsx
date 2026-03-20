@@ -61,9 +61,9 @@ export default function AdminSearchPage() {
       </div>
 
       <div className="relative mb-6">
-        <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground/70" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>
+        <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>
         <input ref={inputRef} type="text" value={inputValue} onChange={(e) => setInputValue(e.target.value)} placeholder="Search by name, company, email, industry..." className="w-full bg-muted border border-border rounded-xl pl-12 pr-4 py-3.5 text-foreground placeholder:text-muted-foreground text-base focus:border-purple-500/50 focus:outline-none focus:ring-1 focus:ring-purple-500/20 transition-all" />
-        {inputValue && <button onClick={() => { setInputValue(""); inputRef.current?.focus(); }} className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground/70 hover:text-muted-foreground"><svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></button>}
+        {inputValue && <button onClick={() => { setInputValue(""); inputRef.current?.focus(); }} className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground"><svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></button>}
       </div>
 
       <div className="flex gap-1 mb-6 p-1 bg-muted rounded-xl w-fit">
@@ -71,7 +71,7 @@ export default function AdminSearchPage() {
           const count = tab.value === "all" ? totalAll : tab.value === "sessions" ? data?.sessions.total || 0 : tab.value === "contacts" ? data?.contacts.total || 0 : data?.calls.total || 0;
           return (
             <button key={tab.value} onClick={() => { setActiveTab(tab.value); setPage(1); }} className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${activeTab === tab.value ? "bg-muted text-foreground" : "text-muted-foreground hover:text-muted-foreground"}`}>
-              {tab.label}{data && query && <span className="ml-1.5 text-xs text-muted-foreground/70">{count}</span>}
+              {tab.label}{data && query && <span className="ml-1.5 text-xs text-muted-foreground">{count}</span>}
             </button>
           );
         })}
@@ -80,14 +80,14 @@ export default function AdminSearchPage() {
       {loading ? (
         <div className="space-y-3">{[1,2,3].map((i) => <div key={i} className="bg-muted border border-border rounded-xl p-4 animate-pulse"><div className="h-4 w-40 bg-muted rounded" /></div>)}</div>
       ) : !query.trim() ? (
-        <div className="text-center py-20"><p className="text-muted-foreground/70 text-sm">Start typing to search across all records</p></div>
+        <div className="text-center py-20"><p className="text-muted-foreground text-sm">Start typing to search across all records</p></div>
       ) : data && totalAll === 0 ? (
-        <div className="text-center py-20"><p className="text-muted-foreground/70 text-sm">No results found for "{query}"</p></div>
+        <div className="text-center py-20"><p className="text-muted-foreground text-sm">No results found for "{query}"</p></div>
       ) : (
         <div className="space-y-8">
           {(activeTab === "all" || activeTab === "sessions") && data && data.sessions.results.length > 0 && (
             <div>
-              <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">Sessions <span className="ml-2 text-muted-foreground/70 font-normal normal-case">({data.sessions.total})</span></h2>
+              <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">Sessions <span className="ml-2 text-muted-foreground font-normal normal-case">({data.sessions.total})</span></h2>
               <div className="space-y-2">
                 {data.sessions.results.map((s) => (
                   <Link key={s.id} to={`/analysis/${s.id}`} className="block bg-muted border border-border rounded-xl p-4 hover:bg-white/[0.08] transition-all">
@@ -99,7 +99,7 @@ export default function AdminSearchPage() {
                       <div className="flex items-center gap-3">
                         {s.overall_score !== null && <span className="text-sm font-semibold text-foreground/80">{Math.round(s.overall_score)}</span>}
                         {s.archetype && <span className="px-2 py-0.5 text-[10px] font-medium bg-purple-500/10 text-purple-300 rounded-full">{s.archetype}</span>}
-                        <span className="text-xs text-muted-foreground/70">{formatDate(s.created_at)}</span>
+                        <span className="text-xs text-muted-foreground">{formatDate(s.created_at)}</span>
                       </div>
                     </div>
                   </Link>
@@ -109,7 +109,7 @@ export default function AdminSearchPage() {
           )}
           {(activeTab === "all" || activeTab === "contacts") && data && data.contacts.results.length > 0 && (
             <div>
-              <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">Contacts <span className="ml-2 text-muted-foreground/70 font-normal normal-case">({data.contacts.total})</span></h2>
+              <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">Contacts <span className="ml-2 text-muted-foreground font-normal normal-case">({data.contacts.total})</span></h2>
               <div className="space-y-2">
                 {data.contacts.results.map((c) => (
                   <div key={c.id} className="bg-muted border border-border rounded-xl p-4">
@@ -117,10 +117,10 @@ export default function AdminSearchPage() {
                       <div className="flex-1 min-w-0">
                         <span className="text-sm font-medium text-foreground">{c.name}</span>
                         {c.company && <span className="ml-3 text-xs text-muted-foreground">{c.company}</span>}
-                        <div className="mt-1"><span className="text-xs text-muted-foreground/70 font-mono">{c.phone}</span>{c.email && <span className="ml-3 text-xs text-muted-foreground/70">{c.email}</span>}</div>
+                        <div className="mt-1"><span className="text-xs text-muted-foreground font-mono">{c.phone}</span>{c.email && <span className="ml-3 text-xs text-muted-foreground">{c.email}</span>}</div>
                       </div>
                       <StatusBadge status={c.status} size="sm" />
-                      <span className="text-xs text-muted-foreground/70">{formatDate(c.created_at)}</span>
+                      <span className="text-xs text-muted-foreground">{formatDate(c.created_at)}</span>
                     </div>
                   </div>
                 ))}
@@ -129,18 +129,18 @@ export default function AdminSearchPage() {
           )}
           {(activeTab === "all" || activeTab === "calls") && data && data.calls.results.length > 0 && (
             <div>
-              <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">Calls <span className="ml-2 text-muted-foreground/70 font-normal normal-case">({data.calls.total})</span></h2>
+              <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">Calls <span className="ml-2 text-muted-foreground font-normal normal-case">({data.calls.total})</span></h2>
               <div className="space-y-2">
                 {data.calls.results.map((call) => (
                   <Link key={call.id} to="/admin/calls" className="block bg-muted border border-border rounded-xl p-4 hover:bg-white/[0.08] transition-all">
                     <div className="flex items-center gap-4">
                       <div className="flex-1 min-w-0">
                         <span className="text-sm font-medium text-foreground">{call.contact_name || "Unknown"}</span>
-                        {call.transcript_snippet && <p className="text-xs text-muted-foreground/70 mt-1 line-clamp-2">{call.transcript_snippet}</p>}
+                        {call.transcript_snippet && <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{call.transcript_snippet}</p>}
                       </div>
                       <StatusBadge status={call.status} size="sm" />
                       <span className="text-xs text-muted-foreground font-mono">{formatDuration(call.duration_seconds)}</span>
-                      <span className="text-xs text-muted-foreground/70">{formatDate(call.created_at)}</span>
+                      <span className="text-xs text-muted-foreground">{formatDate(call.created_at)}</span>
                     </div>
                   </Link>
                 ))}

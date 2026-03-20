@@ -172,7 +172,7 @@ export default function AddCompanyModal({ open, onClose, onCreated }: Props) {
       {/* Modal */}
       <div className="relative w-full max-w-lg bg-[#0d0d1a] border border-border rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
         {/* Header */}
-        <div className="px-6 py-4 border-b border-border/50 flex items-center justify-between shrink-0">
+        <div className="px-6 py-4 border-b border-border flex items-center justify-between shrink-0">
           <div>
             <h2 className="text-base font-semibold text-foreground/90">
               {result ? "Done!" : step === "company" ? "New Company" : step === "employees" ? "Add Employees" : "Review & Send"}
@@ -184,7 +184,7 @@ export default function AddCompanyModal({ open, onClose, onCreated }: Props) {
                     <div className={`w-2 h-2 rounded-full transition-colors ${
                       s === step ? "bg-purple-400" : (["company", "employees", "review"].indexOf(step) > i ? "bg-purple-400/40" : "bg-muted")
                     }`} />
-                    <span className={`text-[10px] ${s === step ? "text-muted-foreground" : "text-muted-foreground/50"}`}>
+                    <span className={`text-[10px] ${s === step ? "text-muted-foreground" : "text-muted-foreground"}`}>
                       {s === "company" ? "Company" : s === "employees" ? "People" : "Review"}
                     </span>
                     {i < 2 && <div className="w-4 h-px bg-muted" />}
@@ -193,7 +193,7 @@ export default function AddCompanyModal({ open, onClose, onCreated }: Props) {
               </div>
             )}
           </div>
-          <button onClick={onClose} className="p-1 text-muted-foreground/70 hover:text-muted-foreground transition-colors">
+          <button onClick={onClose} className="p-1 text-muted-foreground hover:text-muted-foreground transition-colors">
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
             </svg>
@@ -255,7 +255,7 @@ export default function AddCompanyModal({ open, onClose, onCreated }: Props) {
                   placeholder="acme.com"
                   className="w-full bg-muted border border-border rounded-xl px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-purple-500/40 transition-colors"
                 />
-                <p className="text-[11px] text-muted-foreground/50 mt-1">Auto-detected from employee emails</p>
+                <p className="text-[11px] text-muted-foreground mt-1">Auto-detected from employee emails</p>
               </div>
               <div>
                 <label className="block text-xs text-muted-foreground mb-1.5">Industry (optional)</label>
@@ -277,7 +277,7 @@ export default function AddCompanyModal({ open, onClose, onCreated }: Props) {
                 <p className="text-xs text-muted-foreground">
                   Add employees for <span className="text-muted-foreground font-medium">{companyName}</span>
                 </p>
-                <span className="text-[10px] text-muted-foreground/50 bg-muted px-2 py-0.5 rounded-full">
+                <span className="text-[10px] text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
                   Tip: paste CSV data
                 </span>
               </div>
@@ -321,7 +321,7 @@ export default function AddCompanyModal({ open, onClose, onCreated }: Props) {
                     </div>
                     <button
                       onClick={() => removeEmployee(i)}
-                      className={`p-2 text-muted-foreground/40 hover:text-red-400 transition-colors shrink-0 ${employees.length <= 1 ? "invisible" : ""}`}
+                      className={`p-2 text-muted-foreground hover:text-red-400 transition-colors shrink-0 ${employees.length <= 1 ? "invisible" : ""}`}
                     >
                       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -343,7 +343,7 @@ export default function AddCompanyModal({ open, onClose, onCreated }: Props) {
               </button>
 
               {/* Assessment selection */}
-              <div className="pt-2 border-t border-border/50">
+              <div className="pt-2 border-t border-border">
                 <label className="block text-xs text-muted-foreground mb-1.5">Assessment *</label>
                 <select
                   value={selectedAssessment}
@@ -378,7 +378,7 @@ export default function AddCompanyModal({ open, onClose, onCreated }: Props) {
           {!result && step === "review" && (
             <div className="space-y-4">
               {/* Company summary */}
-              <div className="bg-muted/50 rounded-xl border border-border p-4">
+              <div className="bg-muted rounded-xl border border-border p-4">
                 <div className="flex items-center gap-3">
                   {domain && (
                     <img
@@ -390,7 +390,7 @@ export default function AddCompanyModal({ open, onClose, onCreated }: Props) {
                   )}
                   <div>
                     <h3 className="text-sm font-semibold text-foreground/90">{companyName}</h3>
-                    <p className="text-xs text-muted-foreground/70">
+                    <p className="text-xs text-muted-foreground">
                       {domain && `${domain} · `}
                       {industry || "No industry specified"}
                     </p>
@@ -399,8 +399,8 @@ export default function AddCompanyModal({ open, onClose, onCreated }: Props) {
               </div>
 
               {/* Employee list */}
-              <div className="bg-muted/50 rounded-xl border border-border overflow-hidden">
-                <div className="px-4 py-2.5 border-b border-border/50">
+              <div className="bg-muted rounded-xl border border-border overflow-hidden">
+                <div className="px-4 py-2.5 border-b border-border">
                   <span className="text-xs text-muted-foreground">
                     {validEmployees.length} employee{validEmployees.length !== 1 ? "s" : ""}
                   </span>
@@ -410,9 +410,9 @@ export default function AddCompanyModal({ open, onClose, onCreated }: Props) {
                     <div key={i} className="px-4 py-2 flex items-center justify-between">
                       <div>
                         <span className="text-sm text-foreground/90">{emp.name}</span>
-                        <span className="text-xs text-muted-foreground/70 ml-2">{emp.email}</span>
+                        <span className="text-xs text-muted-foreground ml-2">{emp.email}</span>
                       </div>
-                      {emp.role && <span className="text-xs text-muted-foreground/50">{emp.role}</span>}
+                      {emp.role && <span className="text-xs text-muted-foreground">{emp.role}</span>}
                     </div>
                   ))}
                 </div>
@@ -426,7 +426,7 @@ export default function AddCompanyModal({ open, onClose, onCreated }: Props) {
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">Send emails</span>
-                  <span className={sendEmail ? "text-green-400" : "text-muted-foreground/70"}>
+                  <span className={sendEmail ? "text-green-400" : "text-muted-foreground"}>
                     {sendEmail ? "Yes" : "No"}
                   </span>
                 </div>
@@ -443,7 +443,7 @@ export default function AddCompanyModal({ open, onClose, onCreated }: Props) {
 
         {/* Footer */}
         {!result && (
-          <div className="px-6 py-4 border-t border-border/50 flex items-center justify-between shrink-0">
+          <div className="px-6 py-4 border-t border-border flex items-center justify-between shrink-0">
             <button
               onClick={() => {
                 if (step === "company") onClose();

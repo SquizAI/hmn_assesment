@@ -266,8 +266,8 @@ export default function VoiceRecorder({ onTranscription, onPartialTranscription,
           ${isRecording
             ? "bg-red-500 hover:bg-red-600 shadow-lg shadow-red-500/30"
             : isTranscribing
-            ? "bg-muted/200 cursor-not-allowed"
-            : "bg-muted hover:bg-muted/200 border-2 border-border hover:border-border/300"
+            ? "bg-muted cursor-not-allowed"
+            : "bg-muted hover:bg-muted border-2 border-border hover:border-border"
           }`}
       >
         {isTranscribing ? (
@@ -308,7 +308,7 @@ export default function VoiceRecorder({ onTranscription, onPartialTranscription,
       {/* Live Transcription Preview */}
       {!hideTranscriptionPreview && (finalText || partialText) && (
         <div className="w-full max-w-sm bg-muted border border-border rounded-xl px-4 py-3 text-sm">
-          <p className="text-muted-foreground/70 text-xs mb-1 uppercase tracking-wider">Live transcription</p>
+          <p className="text-muted-foreground text-xs mb-1 uppercase tracking-wider">Live transcription</p>
           <p className="text-foreground/90 leading-relaxed">
             {finalText}
             {partialText && <span className="text-muted-foreground italic"> {partialText}</span>}

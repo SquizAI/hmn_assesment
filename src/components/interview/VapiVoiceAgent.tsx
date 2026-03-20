@@ -195,7 +195,7 @@ export default function VapiVoiceAgent({
                     : "text-foreground/80 pl-4 border-l-2 border-purple-500/30"
                 }`}
               >
-                <span className="text-[10px] uppercase tracking-wider text-muted-foreground/70 block mb-0.5">
+                <span className="text-[10px] uppercase tracking-wider text-muted-foreground block mb-0.5">
                   {t.role === "user" ? "You" : "Kascade"}
                 </span>
                 {t.text}

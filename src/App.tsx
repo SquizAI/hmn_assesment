@@ -33,7 +33,7 @@ const ComparePage = lazy(() => import("./pages/ComparePage"));
 function LazyFallback() {
   return (
     <div className="flex items-center justify-center h-full min-h-[60vh]">
-      <div className="text-muted-foreground/70 text-sm">Loading...</div>
+      <div className="text-muted-foreground text-sm">Loading...</div>
     </div>
   );
 }

@@ -11,14 +11,14 @@ interface FilterBarProps {
 }
 
 const selectClass = (active: boolean) =>
-  `appearance-none bg-muted/60 border rounded-lg text-xs text-foreground/90 px-2.5 py-1.5 outline-none transition-colors cursor-pointer ${
+  `appearance-none bg-muted border rounded-lg text-xs text-foreground/90 px-2.5 py-1.5 outline-none transition-colors cursor-pointer ${
     active
       ? "border-purple-500/40 bg-purple-500/10"
       : "border-border hover:border-border"
   }`;
 
 const dateClass = (active: boolean) =>
-  `bg-muted/60 border rounded-lg text-xs text-foreground/90 px-2.5 py-1.5 outline-none transition-colors [color-scheme:dark] ${
+  `bg-muted border rounded-lg text-xs text-foreground/90 px-2.5 py-1.5 outline-none transition-colors [color-scheme:dark] ${
     active
       ? "border-purple-500/40 bg-purple-500/10"
       : "border-border hover:border-border"
@@ -90,7 +90,7 @@ export default function FilterBar({
   }, [onChange]);
 
   return (
-    <div className="bg-muted/50 rounded-2xl border border-border px-4 py-3 flex flex-wrap items-center gap-2.5">
+    <div className="bg-muted rounded-2xl border border-border px-4 py-3 flex flex-wrap items-center gap-2.5">
       {/* Company */}
       <select
         value={filters.company ?? ""}

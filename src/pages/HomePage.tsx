@@ -159,7 +159,7 @@ export default function HomePage() {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       {/* Header */}
-      <header className="border-b border-border/50 px-4 sm:px-6 py-4">
+      <header className="border-b border-border px-4 sm:px-6 py-4">
         <div className="max-w-5xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             <img src="/hmn_logo.png" alt="HMN" className="hidden dark:block h-8 w-auto" />
@@ -171,7 +171,7 @@ export default function HomePage() {
             {!inviteToken && !showSignIn && (
               <button
                 onClick={() => setShowSignIn(true)}
-                className="text-muted-foreground/70 hover:text-muted-foreground text-sm transition-colors"
+                className="text-muted-foreground hover:text-muted-foreground text-sm transition-colors"
               >
                 Continue Assessment
               </button>
@@ -222,7 +222,7 @@ export default function HomePage() {
           <div className="w-full max-w-md space-y-8">
             <div className="text-center space-y-2">
               <h2 className="text-2xl font-semibold text-foreground">Welcome back</h2>
-              <p className="text-muted-foreground/70 text-sm">Enter your email to find your assessment.</p>
+              <p className="text-muted-foreground text-sm">Enter your email to find your assessment.</p>
             </div>
             {!signInSessions ? (
               <div className="space-y-4">
@@ -235,7 +235,7 @@ export default function HomePage() {
                     onKeyDown={(e) => e.key === "Enter" && handleSignIn()}
                     placeholder="you@company.com"
                     autoFocus
-                    className="w-full bg-background/50 backdrop-blur-md border border-border/50 rounded-xl px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-transparent transition-all shadow-sm"
+                    className="w-full bg-background/50 backdrop-blur-md border border-border rounded-xl px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-transparent transition-all shadow-sm"
                   />
                 </div>
                 {signInError && <p className="text-yellow-400/80 text-sm text-center">{signInError}</p>}
@@ -254,7 +254,7 @@ export default function HomePage() {
                     <button
                       key={s.id}
                       onClick={() => handleResumeSession(s)}
-                      className="w-full text-left bg-muted/50 border border-border rounded-xl p-4 hover:bg-muted/70 hover:border-border transition-all"
+                      className="w-full text-left bg-muted border border-border rounded-xl p-4 hover:bg-muted hover:border-border transition-all"
                     >
                       <div className="flex items-center justify-between mb-1">
                         <span className="text-foreground font-medium">{s.participantName}</span>
@@ -263,14 +263,14 @@ export default function HomePage() {
                         </span>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className="text-xs text-muted-foreground/70">{s.participantCompany} — {formatDate(s.createdAt)}</span>
+                        <span className="text-xs text-muted-foreground">{s.participantCompany} — {formatDate(s.createdAt)}</span>
                         {s.score != null && (
                           <span className={`text-xs font-semibold ${s.score >= 70 ? "text-green-400" : s.score >= 45 ? "text-yellow-400" : "text-red-400"}`}>
                             {s.score}/100
                           </span>
                         )}
                       </div>
-                      <div className="text-xs text-muted-foreground/50 mt-1">
+                      <div className="text-xs text-muted-foreground mt-1">
                         {s.status === "analyzed" ? "View your results" : s.status === "completed" ? "View analysis" : "Continue where you left off"}
                       </div>
                     </button>
@@ -291,7 +291,7 @@ export default function HomePage() {
               {assessmentName && (
                 <p className="text-muted-foreground text-sm">{assessmentName}</p>
               )}
-              <p className="text-muted-foreground/70 text-xs">Please confirm your details and begin.</p>
+              <p className="text-muted-foreground text-xs">Please confirm your details and begin.</p>
             </div>
             <div className="space-y-4">
               {([
@@ -311,7 +311,7 @@ export default function HomePage() {
                     value={f.value}
                     onChange={(e) => f.set(e.target.value)}
                     placeholder={f.ph}
-                    className="w-full bg-background/50 backdrop-blur-md border border-border/50 rounded-xl px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-transparent transition-all shadow-sm"
+                    className="w-full bg-background/50 backdrop-blur-md border border-border rounded-xl px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-transparent transition-all shadow-sm"
                   />
                 </div>
               ))}
@@ -337,7 +337,7 @@ export default function HomePage() {
               </div>
               <div className="space-y-3">
                 <h1 className="text-3xl sm:text-5xl font-bold tracking-tight">
-                  <span className="bg-gradient-to-r from-foreground via-foreground/90 to-foreground/60 bg-clip-text text-transparent">
+                  <span className="bg-gradient-to-r from-foreground via-foreground/90 to-foreground/80 bg-clip-text text-transparent">
                     Cascade Assessments
                   </span>
                 </h1>
@@ -347,15 +347,15 @@ export default function HomePage() {
               </div>
             </div>
 
-            <div className="bg-card/60 backdrop-blur-2xl border border-border/50 shadow-2xl rounded-3xl p-6 sm:p-8 max-w-sm mx-auto ring-1 ring-border/30">
+            <div className="bg-card/70 backdrop-blur-2xl border border-border shadow-[0_8px_30px_rgb(0,0,0,0.06)] dark:shadow-[0_8px_30px_rgba(255,255,255,0.03)] rounded-3xl p-6 sm:p-8 max-w-sm mx-auto ring-1 ring-black/5 dark:ring-white/5">
               <div className="space-y-3">
                 <div className="w-10 h-10 rounded-xl bg-muted border border-border flex items-center justify-center mx-auto">
                   <svg className="w-5 h-5 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
                   </svg>
                 </div>
-                <h3 className="text-sm font-medium text-foreground/80">Invitation Required</h3>
-                <p className="text-xs text-muted-foreground/70 leading-relaxed">
+                <h3 className="text-sm font-medium text-foreground">Invitation Required</h3>
+                <p className="text-xs text-muted-foreground leading-relaxed">
                   Assessments are available by invitation only. Check your email for an invitation link from your organization.
                 </p>
               </div>
@@ -363,7 +363,7 @@ export default function HomePage() {
 
             <button
               onClick={() => setShowSignIn(true)}
-              className="text-muted-foreground/70 hover:text-muted-foreground text-sm transition-colors"
+              className="text-muted-foreground hover:text-muted-foreground text-sm transition-colors"
             >
               Already started? Continue your assessment
             </button>
@@ -371,8 +371,8 @@ export default function HomePage() {
         )}
       </main>
 
-      <footer className="border-t border-border/50 px-4 sm:px-6 py-4">
-        <div className="max-w-5xl mx-auto text-center text-xs text-muted-foreground/50">
+      <footer className="border-t border-border px-4 sm:px-6 py-4">
+        <div className="max-w-5xl mx-auto text-center text-xs text-muted-foreground">
           beHMN Assessment Platform
         </div>
       </footer>

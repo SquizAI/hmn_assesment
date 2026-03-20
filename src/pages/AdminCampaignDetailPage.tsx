@@ -74,7 +74,7 @@ export default function AdminCampaignDetailPage() {
   };
 
   if (loading || !campaign) {
-    return <div className="flex items-center justify-center h-full min-h-[60vh]"><div className="text-muted-foreground/70 text-sm">Loading...</div></div>;
+    return <div className="flex items-center justify-center h-full min-h-[60vh]"><div className="text-muted-foreground text-sm">Loading...</div></div>;
   }
 
   const progress = campaign.total_contacts > 0 ? Math.round((campaign.calls_completed / campaign.total_contacts) * 100) : 0;
@@ -133,7 +133,7 @@ export default function AdminCampaignDetailPage() {
 
       {/* Contact List */}
       <div className="bg-muted border border-border rounded-2xl overflow-hidden">
-        <div className="px-6 py-4 border-b border-border/50">
+        <div className="px-6 py-4 border-b border-border">
           <h2 className="text-sm font-semibold text-foreground/80">Contacts ({contacts.length})</h2>
         </div>
         <table className="w-full">
@@ -147,10 +147,10 @@ export default function AdminCampaignDetailPage() {
           </thead>
           <tbody>
             {contacts.length === 0 ? (
-              <tr><td colSpan={4} className="px-6 py-8 text-center text-muted-foreground/70 text-sm">No contacts in this campaign yet.</td></tr>
+              <tr><td colSpan={4} className="px-6 py-8 text-center text-muted-foreground text-sm">No contacts in this campaign yet.</td></tr>
             ) : (
               contacts.map((c) => (
-                <tr key={c.id} className="border-b border-border/50 hover:bg-muted transition-colors">
+                <tr key={c.id} className="border-b border-border hover:bg-muted transition-colors">
                   <td className="px-6 py-3 text-sm text-foreground">{c.name}</td>
                   <td className="px-6 py-3 text-sm text-muted-foreground font-mono">{c.phone}</td>
                   <td className="px-6 py-3 text-sm text-muted-foreground">{c.company || "\u2014"}</td>

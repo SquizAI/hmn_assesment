@@ -116,7 +116,7 @@ export default function DimensionRadar({ dimensions, loading, mode = "ai-readine
 
   if (loading) {
     return (
-      <div className="bg-muted/50 rounded-2xl border border-border p-6">
+      <div className="bg-muted rounded-2xl border border-border p-6">
         <div className="h-4 w-28 bg-muted rounded animate-pulse mb-4" />
         <div className="h-52 bg-muted rounded-full animate-pulse mx-auto w-52" />
       </div>
@@ -128,11 +128,11 @@ export default function DimensionRadar({ dimensions, loading, mode = "ai-readine
 
   if (dimensions.length === 0) {
     return (
-      <div className="bg-muted/50 rounded-2xl border border-border p-6">
+      <div className="bg-muted rounded-2xl border border-border p-6">
         <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-4">
           {title}
         </h2>
-        <div className="h-52 flex items-center justify-center text-muted-foreground/70 text-sm">
+        <div className="h-52 flex items-center justify-center text-muted-foreground text-sm">
           No dimension data yet
         </div>
       </div>
@@ -140,7 +140,7 @@ export default function DimensionRadar({ dimensions, loading, mode = "ai-readine
   }
 
   return (
-    <div className="bg-muted/50 rounded-2xl border border-border p-4 md:p-6">
+    <div className="bg-muted rounded-2xl border border-border p-4 md:p-6">
       <div className="flex items-center justify-between mb-3">
         <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
           {title}

@@ -29,7 +29,7 @@ export default function AdminLoginPage() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <header className="border-b border-border/50 px-6 py-4">
+      <header className="border-b border-border px-6 py-4">
         <div className="max-w-5xl mx-auto flex items-center gap-3">
           <img src="/hmn_logo.png" alt="HMN" className="hidden dark:block h-8 w-auto" />
           <img src="/hmn_logo_grey.png" alt="HMN" className="block dark:hidden h-8 w-auto" />
@@ -61,7 +61,7 @@ export default function AdminLoginPage() {
           </div>
 
           <div className="text-center">
-            <a href="/" className="text-muted-foreground/70 hover:text-muted-foreground text-sm transition-colors">Back to assessments</a>
+            <a href="/" className="text-muted-foreground hover:text-muted-foreground text-sm transition-colors">Back to assessments</a>
           </div>
         </div>
       </main>
