@@ -30,17 +30,17 @@ interface GraphVisualizationProps {
 // ============================================================
 
 const NODE_COLORS: Record<string, string> = {
-  Company: "#a855f7",
+  Company: "#3b82f6", // Removed purple, matched to blue
   Participant: "#3b82f6",
   Session: "#22c55e",
   Assessment: "#0ea5e9",
   Theme: "#f59e0b",
   Archetype: "#06b6d4",
-  ScoringDimension: "#6366f1",
+  ScoringDimension: "#2563eb", // Deep blue
   Recommendation: "#f43f5e",
   RedFlag: "#ef4444",
   GreenLight: "#10b981",
-  Tool: "#e879f9",
+  Tool: "#0ea5e9", // Eradicated fuchsia
   PainPoint: "#fb923c",
   Goal: "#facc15",
   Quote: "#94a3b8",
@@ -64,17 +64,17 @@ const NODE_SIZES: Record<string, number> = {
 };
 
 const LINK_COLORS: Record<string, string> = {
-  WORKS_AT: "rgba(168,85,247,0.4)",
+  WORKS_AT: "rgba(59,130,246,0.4)", // Blue
   COMPLETED: "rgba(59,130,246,0.4)",
   FOR_ASSESSMENT: "rgba(14,165,233,0.3)",
-  SCORED: "rgba(99,102,241,0.3)",
+  SCORED: "rgba(37,99,235,0.3)", // Royal Blue
   CLASSIFIED_AS: "rgba(6,182,212,0.4)",
   SURFACED: "rgba(245,158,11,0.4)",
   TRIGGERED: "rgba(244,63,94,0.3)",
   FLAGGED: "rgba(239,68,68,0.4)",
   HIGHLIGHTED: "rgba(16,185,129,0.4)",
-  RELATES_TO: "rgba(255,255,255,0.12)",
-  USES_TOOL: "rgba(232,121,249,0.3)",
+  RELATES_TO: "rgba(255,255,255,0.12)", // Will be inverted in logic
+  USES_TOOL: "rgba(14,165,233,0.3)", // Light Blue
   HAS_PAIN_POINT: "rgba(251,146,60,0.3)",
   HAS_GOAL: "rgba(250,204,21,0.3)",
   QUOTED: "rgba(148,163,184,0.3)",
@@ -116,6 +116,17 @@ export default function GraphVisualization({ nodes: rawNodes, edges: rawEdges, l
   const [showFilters, setShowFilters] = useState(false);
   const [showEdgeFilters, setShowEdgeFilters] = useState(false);
   const [dimensions, setDimensions] = useState({ width: 800, height: 500 });
+  const [isDarkTheme, setIsDarkTheme] = useState(true);
+
+  // Sync theme
+  useEffect(() => {
+    setIsDarkTheme(document.documentElement.classList.contains("dark"));
+    const observer = new MutationObserver(() => {
+      setIsDarkTheme(document.documentElement.classList.contains("dark"));
+    });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+    return () => observer.disconnect();
+  }, []);
 
   // Initialize active types from data
   useEffect(() => {
@@ -216,15 +227,22 @@ export default function GraphVisualization({ nodes: rawNodes, edges: rawEdges, l
 
     const links = rawEdges
       .filter((e) => filteredIds.has(e.source) && filteredIds.has(e.target) && activeEdgeTypes.has(e.type))
-      .map((e) => ({
-        source: e.source,
-        target: e.target,
-        relType: e.type,
-        color: LINK_COLORS[e.type] || "rgba(255,255,255,0.08)",
-      }));
+      .map((e) => {
+        let baseColor = LINK_COLORS[e.type] || "rgba(255,255,255,0.08)";
+        if (!isDarkTheme) {
+          if (baseColor === "rgba(255,255,255,0.12)") baseColor = "rgba(0,0,0,0.15)";
+          if (baseColor === "rgba(255,255,255,0.08)") baseColor = "rgba(0,0,0,0.1)";
+        }
+        return {
+          source: e.source,
+          target: e.target,
+          relType: e.type,
+          color: baseColor,
+        };
+      });
 
     return { nodes, links };
-  }, [rawNodes, rawEdges, activeNodeTypes, activeEdgeTypes, searchMatchIds]);
+  }, [rawNodes, rawEdges, activeNodeTypes, activeEdgeTypes, searchMatchIds, isDarkTheme]);
 
   // Node type counts for filter bar
   const nodeTypeList = useMemo(() => {
@@ -287,8 +305,8 @@ export default function GraphVisualization({ nodes: rawNodes, edges: rawEdges, l
       canvas.height = 64;
       ctx.font = "bold 22px var(--font-sans), sans-serif";
       ctx.textAlign = "center";
-      const isDark = document.documentElement.classList.contains("dark");
-      const textColor = isDark ? "255,255,255" : "0,0,0";
+      
+      const textColor = isDarkTheme ? "255,255,255" : "15,23,42"; // Dark slate for light mode
       ctx.fillStyle = isDimmed ? `rgba(${textColor},0.15)` : `rgba(${textColor},0.85)`;
       ctx.fillText(displayLabel, 128, 40);
 
@@ -302,7 +320,7 @@ export default function GraphVisualization({ nodes: rawNodes, edges: rawEdges, l
 
       return group;
     },
-    [connectedSet, searchMatchIds],
+    [connectedSet, searchMatchIds, isDarkTheme]
   );
 
   const handleNodeClick = useCallback((node: Record<string, unknown>) => {
@@ -529,13 +547,13 @@ export default function GraphVisualization({ nodes: rawNodes, edges: rawEdges, l
             backgroundColor="rgba(0,0,0,0)"
             nodeThreeObject={nodeThreeObject}
             nodeThreeObjectExtend={false}
-            linkColor={(link: Record<string, unknown>) => (link.color as string) || "rgba(255,255,255,0.08)"}
+            linkColor={(link: Record<string, unknown>) => (link.color as string) || (isDarkTheme ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.1)")}
             linkWidth={0.5}
             linkOpacity={0.6}
             linkDirectionalParticles={2}
             linkDirectionalParticleWidth={0.8}
             linkDirectionalParticleSpeed={0.005}
-            linkDirectionalParticleColor={(link: Record<string, unknown>) => (link.color as string) || "rgba(255,255,255,0.3)"}
+            linkDirectionalParticleColor={(link: Record<string, unknown>) => (link.color as string) || (isDarkTheme ? "rgba(255,255,255,0.3)" : "rgba(0,0,0,0.3)")}
             onNodeClick={handleNodeClick}
             enableNavigationControls
             showNavInfo={false}
