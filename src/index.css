@@ -1,6 +1,9 @@
 @import "tailwindcss";
 
 @theme {
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-heading: "Outfit", system-ui, sans-serif;
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-muted: var(--muted);
@@ -40,11 +43,50 @@ body {
   margin: 0;
   background: var(--background);
   color: var(--foreground);
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-family: var(--font-sans);
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
   transition: background-color 0.3s ease, color 0.3s ease;
+  position: relative;
+  overflow-x: hidden;
+  z-index: 0;
 }
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+}
+
+body::before, body::after {
+  content: "";
+  position: fixed;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: -1;
+  filter: blur(140px);
+  transition: opacity 0.5s ease-in-out;
+}
+
+body::before {
+  top: -15%;
+  left: -10%;
+  width: 50vw;
+  height: 50vw;
+  background: var(--primary);
+  opacity: 0.08;
+}
+
+body::after {
+  bottom: -15%;
+  right: -10%;
+  width: 60vw;
+  height: 60vw;
+  background: #8b5cf6;
+  opacity: 0.05;
+}
+
+.dark body::before { opacity: 0.15; }
+.dark body::after { opacity: 0.1; }
+
 
 html {
   scroll-behavior: smooth;

@@ -234,7 +234,7 @@ export default function HomePage() {
                     onKeyDown={(e) => e.key === "Enter" && handleSignIn()}
                     placeholder="you@company.com"
                     autoFocus
-                    className="w-full bg-muted border border-border rounded-xl px-4 py-3 text-foreground placeholder-white/20 focus:outline-none focus:border-white/30 transition-colors"
+                    className="w-full bg-background/50 backdrop-blur-md border border-border/50 rounded-xl px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-transparent transition-all shadow-sm"
                   />
                 </div>
                 {signInError && <p className="text-yellow-400/80 text-sm text-center">{signInError}</p>}
@@ -310,7 +310,7 @@ export default function HomePage() {
                     value={f.value}
                     onChange={(e) => f.set(e.target.value)}
                     placeholder={f.ph}
-                    className="w-full bg-muted border border-border rounded-xl px-4 py-3 text-foreground placeholder-white/20 focus:outline-none focus:border-white/30 transition-colors"
+                    className="w-full bg-background/50 backdrop-blur-md border border-border/50 rounded-xl px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-transparent transition-all shadow-sm"
                   />
                 </div>
               ))}
@@ -335,7 +335,7 @@ export default function HomePage() {
               </div>
               <div className="space-y-3">
                 <h1 className="text-3xl sm:text-5xl font-bold tracking-tight">
-                  <span className="bg-gradient-to-r from-white via-white to-white/60 bg-clip-text text-transparent">
+                  <span className="bg-gradient-to-r from-foreground via-foreground/90 to-foreground/60 bg-clip-text text-transparent">
                     Cascade Assessments
                   </span>
                 </h1>
@@ -345,7 +345,7 @@ export default function HomePage() {
               </div>
             </div>
 
-            <div className="bg-muted/50 border border-border rounded-2xl p-6 sm:p-8 max-w-sm mx-auto">
+            <div className="bg-card/60 backdrop-blur-2xl border border-border/50 shadow-2xl rounded-3xl p-6 sm:p-8 max-w-sm mx-auto ring-1 ring-white/5">
               <div className="space-y-3">
                 <div className="w-10 h-10 rounded-xl bg-muted border border-border flex items-center justify-center mx-auto">
                   <svg className="w-5 h-5 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
