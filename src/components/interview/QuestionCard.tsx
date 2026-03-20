@@ -320,7 +320,7 @@ export default function QuestionCard({ question, sessionId, onSubmit, onConversa
                 <span className="text-red-300 text-sm">{conversationError}</span>
                 <button
                   onClick={handleRetry}
-                  className="px-3 py-1 rounded-lg bg-muted hover:bg-white/15 text-foreground/90 text-xs font-medium transition-colors shrink-0"
+                  className="px-3 py-1 rounded-lg bg-muted hover:bg-foreground/15 text-foreground/90 text-xs font-medium transition-colors shrink-0"
                 >
                   Retry
                 </button>
@@ -390,7 +390,7 @@ export default function QuestionCard({ question, sessionId, onSubmit, onConversa
                   className={`w-full border rounded-xl px-4 py-3 text-foreground text-sm placeholder:text-muted-foreground focus:outline-none transition-all resize-none ${
                     isRecording
                       ? "bg-primary/10 border-primary/30 cursor-default"
-                      : "bg-muted border-border focus:border-border focus:bg-white/[0.08]"
+                      : "bg-muted border-border focus:border-border focus:bg-foreground/[0.08]"
                   }`} />
 
                 {/* Send button */}

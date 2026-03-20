@@ -312,7 +312,7 @@ export default function VoiceRecorder({ onTranscription, onPartialTranscription,
           <p className="text-foreground/90 leading-relaxed">
             {finalText}
             {partialText && <span className="text-muted-foreground italic"> {partialText}</span>}
-            {isRecording && <span className="inline-block w-0.5 h-4 bg-white/60 ml-0.5 animate-pulse align-text-bottom" />}
+            {isRecording && <span className="inline-block w-0.5 h-4 bg-foreground/60 ml-0.5 animate-pulse align-text-bottom" />}
           </p>
         </div>
       )}

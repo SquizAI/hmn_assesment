@@ -536,6 +536,7 @@ function filterDeducibleQuestions(available: Array<Record<string, unknown>>, ses
   const participant = session.participant as { role: string; teamSize: string };
   const r = participant.role?.toLowerCase() || "";
   const size = participant.teamSize || "";
+  const responses = session.responses as Array<{ questionId: string; answer: unknown }>;
 
   return available.filter((q) => {
     // Skip direct reports for tiny teams — it's obvious
@@ -543,6 +544,22 @@ function filterDeducibleQuestions(available: Array<Record<string, unknown>>, ses
 
     // Skip tech leadership question for small companies with CEO/Founder
     if (q.id === "team_tech_leadership" && size === "1-10" && (r.includes("ceo") || r.includes("founder"))) return false;
+
+    // Handle showCondition — skip questions whose display conditions aren't met
+    const condition = q.showCondition as { questionId: string; operator: string; value: unknown } | undefined;
+    if (condition?.questionId) {
+      const depResponse = responses.find((resp) => resp.questionId === condition.questionId);
+      if (!depResponse) return false; // Dependency not yet answered — skip for now
+      const depAnswer = depResponse.answer;
+
+      if (condition.operator === "in" && Array.isArray(condition.value)) {
+        if (!(condition.value as string[]).includes(String(depAnswer))) return false;
+      } else if (condition.operator === "equals") {
+        if (String(depAnswer) !== String(condition.value)) return false;
+      } else if (condition.operator === "not_equals") {
+        if (String(depAnswer) === String(condition.value)) return false;
+      }
+    }
 
     return true;
   });

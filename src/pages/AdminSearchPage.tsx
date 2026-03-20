@@ -90,7 +90,7 @@ export default function AdminSearchPage() {
               <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">Sessions <span className="ml-2 text-muted-foreground font-normal normal-case">({data.sessions.total})</span></h2>
               <div className="space-y-2">
                 {data.sessions.results.map((s) => (
-                  <Link key={s.id} to={`/analysis/${s.id}`} className="block bg-muted border border-border rounded-xl p-4 hover:bg-white/[0.08] transition-all">
+                  <Link key={s.id} to={`/analysis/${s.id}`} className="block bg-muted border border-border rounded-xl p-4 hover:bg-foreground/[0.08] transition-all">
                     <div className="flex items-center gap-4">
                       <div className="flex-1 min-w-0">
                         <span className="text-sm font-medium text-foreground">{s.participant_name}</span>
@@ -132,7 +132,7 @@ export default function AdminSearchPage() {
               <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">Calls <span className="ml-2 text-muted-foreground font-normal normal-case">({data.calls.total})</span></h2>
               <div className="space-y-2">
                 {data.calls.results.map((call) => (
-                  <Link key={call.id} to="/admin/calls" className="block bg-muted border border-border rounded-xl p-4 hover:bg-white/[0.08] transition-all">
+                  <Link key={call.id} to="/admin/calls" className="block bg-muted border border-border rounded-xl p-4 hover:bg-foreground/[0.08] transition-all">
                     <div className="flex items-center gap-4">
                       <div className="flex-1 min-w-0">
                         <span className="text-sm font-medium text-foreground">{call.contact_name || "Unknown"}</span>

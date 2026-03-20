@@ -70,8 +70,8 @@ function FilterTab({
         relative px-4 py-2 text-sm font-medium rounded-lg transition-all
         ${
           active
-            ? "bg-white/[0.08] text-foreground border border-white/15"
-            : "text-muted-foreground hover:text-muted-foreground hover:bg-white/[0.04] border border-transparent"
+            ? "bg-foreground/[0.08] text-foreground border border-foreground/15"
+            : "text-muted-foreground hover:text-muted-foreground hover:bg-foreground/[0.04] border border-transparent"
         }
       `}
     >
@@ -171,7 +171,7 @@ function EmptyState({
       </p>
       <button
         onClick={onCreate}
-        className="px-5 py-2.5 text-sm font-medium rounded-xl bg-white/[0.08] border border-white/15 text-foreground hover:bg-white/[0.12] transition-colors"
+        className="px-5 py-2.5 text-sm font-medium rounded-xl bg-foreground/[0.08] border border-foreground/15 text-foreground hover:bg-foreground/[0.12] transition-colors"
       >
         + Create Assessment
       </button>
@@ -404,7 +404,7 @@ export default function AdminAssessmentsPage() {
   if (loading) {
     return (
       <div className="px-4 md:px-6 py-6 flex flex-col items-center justify-center min-h-[500px] gap-3">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white/40" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-foreground/40" />
         <span className="text-muted-foreground text-sm">Loading assessments...</span>
       </div>
     );
@@ -418,7 +418,7 @@ export default function AdminAssessmentsPage() {
         <p className="text-muted-foreground text-sm">{error}</p>
         <button
           onClick={loadAssessments}
-          className="px-4 py-2 text-sm rounded-xl bg-muted border border-border text-foreground hover:bg-white/[0.10] transition-colors"
+          className="px-4 py-2 text-sm rounded-xl bg-muted border border-border text-foreground hover:bg-foreground/[0.10] transition-colors"
         >
           Retry
         </button>
@@ -531,7 +531,7 @@ export default function AdminAssessmentsPage() {
 
           {/* Sort dropdown */}
           <div className="relative group">
-            <button className="bg-muted border border-border rounded-lg px-3 py-2 text-sm text-muted-foreground hover:bg-white/[0.08] transition-colors flex items-center gap-1">
+            <button className="bg-muted border border-border rounded-lg px-3 py-2 text-sm text-muted-foreground hover:bg-foreground/[0.08] transition-colors flex items-center gap-1">
               <svg
                 className="w-4 h-4"
                 fill="none"
@@ -562,7 +562,7 @@ export default function AdminAssessmentsPage() {
                   className={`block w-full text-left px-4 py-2 text-sm transition-colors ${
                     sortKey === key
                       ? "text-foreground bg-muted"
-                      : "text-muted-foreground hover:bg-white/[0.04]"
+                      : "text-muted-foreground hover:bg-foreground/[0.04]"
                   }`}
                 >
                   {label}
@@ -577,7 +577,7 @@ export default function AdminAssessmentsPage() {
             <button
               onClick={() => setViewMode("gallery")}
               className={`p-2 transition-colors ${
-                viewMode === "gallery" ? "bg-white/[0.08] text-foreground/80" : "text-muted-foreground hover:text-muted-foreground"
+                viewMode === "gallery" ? "bg-foreground/[0.08] text-foreground/80" : "text-muted-foreground hover:text-muted-foreground"
               }`}
               title="Gallery view"
             >
@@ -588,7 +588,7 @@ export default function AdminAssessmentsPage() {
             <button
               onClick={() => setViewMode("list")}
               className={`p-2 transition-colors ${
-                viewMode === "list" ? "bg-white/[0.08] text-foreground/80" : "text-muted-foreground hover:text-muted-foreground"
+                viewMode === "list" ? "bg-foreground/[0.08] text-foreground/80" : "text-muted-foreground hover:text-muted-foreground"
               }`}
               title="List view"
             >
@@ -818,7 +818,7 @@ export default function AdminAssessmentsPage() {
                       e.stopPropagation();
                       setSelectedAssessmentId(assessment.id);
                     }}
-                    className="ml-auto px-2.5 py-1 text-xs rounded-lg border transition-colors bg-white/[0.04] border-border text-muted-foreground hover:bg-white/[0.08] hover:text-muted-foreground"
+                    className="ml-auto px-2.5 py-1 text-xs rounded-lg border transition-colors bg-foreground/[0.04] border-border text-muted-foreground hover:bg-foreground/[0.08] hover:text-muted-foreground"
                   >
                     View Details
                   </button>
@@ -837,7 +837,7 @@ export default function AdminAssessmentsPage() {
                 <div
                   key={assessment.id}
                   onClick={() => setSelectedAssessmentId(assessment.id)}
-                  className={`group flex items-center gap-4 px-4 py-3 hover:bg-white/[0.04] transition-colors cursor-pointer ${
+                  className={`group flex items-center gap-4 px-4 py-3 hover:bg-foreground/[0.04] transition-colors cursor-pointer ${
                     isInFlight ? "opacity-60 pointer-events-none" : ""
                   }`}
                 >
@@ -1028,7 +1028,7 @@ function DuplicateAssessmentModal({
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 text-sm rounded-xl border border-border text-muted-foreground hover:bg-white/[0.04] transition-colors"
+            className="px-4 py-2 text-sm rounded-xl border border-border text-muted-foreground hover:bg-foreground/[0.04] transition-colors"
           >
             Cancel
           </button>
@@ -1037,8 +1037,8 @@ function DuplicateAssessmentModal({
             disabled={submitting || !name.trim()}
             className={`px-5 py-2 text-sm font-medium rounded-xl border transition-all ${
               submitting || !name.trim()
-                ? "bg-white/[0.04] border-border text-muted-foreground cursor-not-allowed"
-                : "bg-white/[0.10] border-white/15 text-foreground hover:bg-white/[0.15]"
+                ? "bg-foreground/[0.04] border-border text-muted-foreground cursor-not-allowed"
+                : "bg-foreground/[0.10] border-foreground/15 text-foreground hover:bg-foreground/[0.15]"
             }`}
           >
             {submitting ? "Duplicating..." : "Duplicate"}

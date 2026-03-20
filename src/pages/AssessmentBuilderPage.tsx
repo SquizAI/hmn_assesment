@@ -517,7 +517,7 @@ export default function AssessmentBuilderPage() {
                               ? "bg-purple-500/10 border-purple-500/30 text-purple-300"
                               : isDisabled
                                 ? "bg-muted border-border text-muted-foreground cursor-not-allowed"
-                                : "bg-muted border-border text-muted-foreground hover:bg-white/[0.07] hover:text-foreground/90 hover:border-border"
+                                : "bg-muted border-border text-muted-foreground hover:bg-foreground/[0.07] hover:text-foreground/90 hover:border-border"
                           }`}
                         >
                           {isActive ? (
@@ -565,7 +565,7 @@ export default function AssessmentBuilderPage() {
                               ? "bg-purple-500/10 border-purple-500/30 text-purple-300"
                               : isThinking
                                 ? "bg-muted border-border text-muted-foreground cursor-not-allowed"
-                                : "bg-muted border-border text-muted-foreground hover:bg-white/[0.07] hover:text-foreground/90"
+                                : "bg-muted border-border text-muted-foreground hover:bg-foreground/[0.07] hover:text-foreground/90"
                           }`}
                         >
                           {isActive && (

@@ -535,7 +535,7 @@ export default function AssessmentDrawer({
                                 : s === "active"
                                   ? "bg-green-500/20 text-green-300 border-green-500/30"
                                   : "bg-gray-500/20 text-muted-foreground border-gray-500/30"
-                              : "bg-muted text-muted-foreground border-border hover:bg-white/6 hover:text-muted-foreground"
+                              : "bg-muted text-muted-foreground border-border hover:bg-foreground/6 hover:text-muted-foreground"
                           } ${statusUpdating ? "opacity-50 cursor-not-allowed" : ""}`}
                         >
                           {s.charAt(0).toUpperCase() + s.slice(1)}
@@ -634,7 +634,7 @@ export default function AssessmentDrawer({
                         setDupName(`${assessment.name} (Copy)`);
                         setShowDuplicate(true);
                       }}
-                      className="w-full bg-muted border border-border rounded-xl px-4 py-3 text-sm text-muted-foreground hover:bg-white/6 hover:text-foreground/90 transition-colors text-left flex items-center gap-3"
+                      className="w-full bg-muted border border-border rounded-xl px-4 py-3 text-sm text-muted-foreground hover:bg-foreground/6 hover:text-foreground/90 transition-colors text-left flex items-center gap-3"
                     >
                       <svg
                         className="w-4 h-4 shrink-0"
@@ -740,7 +740,7 @@ export default function AssessmentDrawer({
                                     ? "border-purple-500/30 border-l-2 border-l-purple-500/60"
                                     : isExpanded
                                       ? "border-border"
-                                      : "border-border hover:border-white/15"
+                                      : "border-border hover:border-foreground/15"
                                 }`}
                                 onClick={() =>
                                   setExpandedQuestion(
@@ -1021,7 +1021,7 @@ export default function AssessmentDrawer({
                             </span>
                           </div>
                           {/* Weight bar */}
-                          <div className="w-full h-2 bg-white/6 rounded-full overflow-hidden">
+                          <div className="w-full h-2 bg-foreground/6 rounded-full overflow-hidden">
                             <div
                               className="h-full rounded-full bg-linear-to-r from-blue-500/80 to-purple-500/80 transition-all duration-500"
                               style={{ width: `${pct}%` }}
@@ -1172,14 +1172,14 @@ export default function AssessmentDrawer({
                   <div className="flex gap-2">
                     <button
                       onClick={handleDiscard}
-                      className="px-4 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground/80 bg-muted border border-border hover:bg-white/6 transition-colors"
+                      className="px-4 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground/80 bg-muted border border-border hover:bg-foreground/6 transition-colors"
                     >
                       Discard
                     </button>
                     <button
                       onClick={handleSave}
                       disabled={saving}
-                      className="px-5 py-2 rounded-lg text-sm font-medium bg-white text-black hover:bg-white/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                      className="px-5 py-2 rounded-lg text-sm font-medium bg-white text-black hover:bg-foreground/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                     >
                       {saving ? (
                         <>
@@ -1248,14 +1248,14 @@ export default function AssessmentDrawer({
             <div className="flex gap-2 justify-end">
               <button
                 onClick={() => setShowDuplicate(false)}
-                className="px-4 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground/80 bg-muted border border-border hover:bg-white/6 transition-colors"
+                className="px-4 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground/80 bg-muted border border-border hover:bg-foreground/6 transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleDuplicate}
                 disabled={duplicating || !dupName.trim()}
-                className="px-5 py-2 rounded-lg text-sm font-medium bg-white text-black hover:bg-white/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                className="px-5 py-2 rounded-lg text-sm font-medium bg-white text-black hover:bg-foreground/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
               >
                 {duplicating ? (
                   <>

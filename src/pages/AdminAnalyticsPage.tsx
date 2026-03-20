@@ -86,7 +86,7 @@ async function downloadCsv(url: string, filename: string) {
 
 function KPICard({ label, value, sub, trend }: { label: string; value: string | number; sub?: string; trend?: "up" | "down" | "neutral" }) {
   return (
-    <div className="bg-muted border border-border rounded-xl p-5 hover:bg-white/[0.07] transition-colors group">
+    <div className="bg-muted border border-border rounded-xl p-5 hover:bg-foreground/[0.07] transition-colors group">
       <p className="text-sm text-muted-foreground mb-1">{label}</p>
       <div className="flex items-end gap-2">
         <p className="text-3xl font-bold text-foreground">{value}</p>

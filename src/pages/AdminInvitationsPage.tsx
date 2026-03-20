@@ -542,7 +542,7 @@ export default function AdminInvitationsPage() {
         <div className="sm:ml-auto flex items-center gap-2">
           <button
             onClick={() => setShowCsvModal(true)}
-            className="px-4 py-2 text-sm font-medium rounded-xl transition-all border border-white/15 text-muted-foreground hover:bg-muted hover:text-foreground/90"
+            className="px-4 py-2 text-sm font-medium rounded-xl transition-all border border-foreground/15 text-muted-foreground hover:bg-muted hover:text-foreground/90"
           >
             Bulk Import
           </button>
@@ -600,7 +600,7 @@ export default function AdminInvitationsPage() {
               filtered.map((inv) => (
                 <tr
                   key={inv.id}
-                  className="hover:bg-white/[0.04] cursor-pointer transition-colors border-t border-border"
+                  className="hover:bg-foreground/[0.04] cursor-pointer transition-colors border-t border-border"
                 >
                   <td className="px-3 md:px-4 py-3">
                     <div className="font-medium text-foreground text-sm">
@@ -669,7 +669,7 @@ export default function AdminInvitationsPage() {
                           e.stopPropagation();
                           handleCopyLink(inv);
                         }}
-                        className="px-2 md:px-2.5 py-1 text-xs rounded-lg border transition-colors bg-white/[0.04] border-border text-muted-foreground hover:bg-white/[0.08] hover:text-muted-foreground"
+                        className="px-2 md:px-2.5 py-1 text-xs rounded-lg border transition-colors bg-foreground/[0.04] border-border text-muted-foreground hover:bg-foreground/[0.08] hover:text-muted-foreground"
                       >
                         {copiedId === inv.id ? "Copied!" : "Copy"}
                       </button>
@@ -766,8 +766,8 @@ export default function AdminInvitationsPage() {
                         }}
                         className={`w-full text-left px-3 py-3 flex items-start gap-3 transition-colors border-b border-border last:border-b-0 ${
                           form.assessmentId === a.id
-                            ? "bg-white/[0.08]"
-                            : "hover:bg-white/[0.04]"
+                            ? "bg-foreground/[0.08]"
+                            : "hover:bg-foreground/[0.04]"
                         }`}
                       >
                         <span className="text-xl leading-none mt-0.5">{a.icon || "\u{1F4CB}"}</span>
@@ -936,7 +936,7 @@ export default function AdminInvitationsPage() {
               <button
                 type="button"
                 onClick={() => setShowCreateModal(false)}
-                className="px-4 py-2 text-sm rounded-xl border border-border text-muted-foreground hover:bg-white/[0.04] transition-colors"
+                className="px-4 py-2 text-sm rounded-xl border border-border text-muted-foreground hover:bg-foreground/[0.04] transition-colors"
               >
                 Cancel
               </button>
@@ -945,8 +945,8 @@ export default function AdminInvitationsPage() {
                 disabled={creating}
                 className={`px-5 py-2 text-sm font-medium rounded-xl border transition-all ${
                   creating
-                    ? "bg-white/[0.04] border-border text-muted-foreground cursor-not-allowed"
-                    : "bg-white/[0.10] border-white/15 text-foreground hover:bg-white/[0.15]"
+                    ? "bg-foreground/[0.04] border-border text-muted-foreground cursor-not-allowed"
+                    : "bg-foreground/[0.10] border-foreground/15 text-foreground hover:bg-foreground/[0.15]"
                 }`}
               >
                 {creating ? "Creating..." : sendEmailOnCreate ? "Create & Send Email" : "Create & Copy Link"}
@@ -973,7 +973,7 @@ export default function AdminInvitationsPage() {
               <button
                 type="button"
                 onClick={() => setDeleteTargetId(null)}
-                className="px-4 py-2 text-sm rounded-xl border border-border text-muted-foreground hover:bg-white/[0.04] transition-colors"
+                className="px-4 py-2 text-sm rounded-xl border border-border text-muted-foreground hover:bg-foreground/[0.04] transition-colors"
               >
                 Cancel
               </button>

@@ -71,8 +71,8 @@ function StatCard({ label, value, active, onClick }: { label: string; value: num
       onClick={onClick}
       className={`flex flex-col items-center px-4 py-2.5 rounded-xl border transition-all min-w-[80px] ${
         active
-          ? "bg-white/[0.08] border-border text-foreground"
-          : "bg-muted border-border text-muted-foreground hover:bg-muted hover:border-border"
+          ? "bg-foreground/[0.05] border-foreground/[0.1] text-foreground shadow-sm"
+          : "bg-muted border-border text-muted-foreground hover:bg-muted hover:border-foreground/[0.1]"
       }`}
     >
       <span className="text-lg font-semibold">{value}</span>
@@ -247,7 +247,7 @@ export default function AdminSessionsPage() {
   };
 
   const selectCls =
-    "bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground outline-none focus:border-border transition-colors appearance-none cursor-pointer";
+    "bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground outline-none focus:border-foreground/20 transition-colors appearance-none cursor-pointer";
 
   return (
     <div className="px-4 md:px-6 py-6">
@@ -307,7 +307,7 @@ export default function AdminSessionsPage() {
         <div className="sm:ml-auto relative" ref={exportRef}>
           <button
             onClick={() => setExportOpen(!exportOpen)}
-            className="w-full sm:w-auto bg-muted border border-border rounded-lg px-4 py-2 text-sm text-foreground hover:bg-white/[0.08] transition-colors"
+            className="w-full sm:w-auto bg-muted border border-border rounded-lg px-4 py-2 text-sm text-foreground hover:bg-foreground/[0.05] transition-colors"
           >
             Export
           </button>
@@ -392,7 +392,7 @@ export default function AdminSessionsPage() {
                   <tr
                     key={session.id}
                     onClick={() => handleRowClick(session.id)}
-                    className={`hover:bg-white/[0.04] cursor-pointer transition-colors border-t border-border ${
+                    className={`hover:bg-foreground/[0.02] cursor-pointer transition-colors border-t border-border ${
                       shiftHeld ? "hover:bg-red-500/[0.04]" : ""
                     }`}
                   >

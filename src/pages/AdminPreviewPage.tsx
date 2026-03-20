@@ -333,7 +333,7 @@ export default function AdminPreviewPage() {
             <button
               onClick={handleAnalyze}
               disabled={isAnalyzing}
-              className="px-6 py-3 rounded-xl text-sm font-medium bg-muted border border-white/15 text-foreground hover:bg-white/15 transition-colors disabled:opacity-50"
+              className="px-6 py-3 rounded-xl text-sm font-medium bg-muted border border-foreground/15 text-foreground hover:bg-foreground/15 transition-colors disabled:opacity-50"
             >
               {isAnalyzing ? "Analyzing..." : "Generate Analysis"}
             </button>

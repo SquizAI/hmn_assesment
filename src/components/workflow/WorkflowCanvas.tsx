@@ -213,7 +213,7 @@ function QuestionNode({ data }: NodeProps) {
       </div>
 
       {weight > 0 && (
-        <div className="h-[3px] bg-white/[0.04] rounded-full overflow-hidden">
+        <div className="h-[3px] bg-foreground/[0.04] rounded-full overflow-hidden">
           <div
             className="h-full bg-gradient-to-r from-purple-500/40 to-blue-500/40 rounded-full"
             style={{ width: `${Math.min(weight * 100, 100)}%` }}
@@ -242,7 +242,7 @@ function DimensionNode({ data }: NodeProps) {
         <span className="text-[9px] text-muted-foreground tabular-nums shrink-0">{questionCount}q</span>
       </div>
 
-      <div className="h-[3px] bg-white/[0.04] rounded-full overflow-hidden">
+      <div className="h-[3px] bg-foreground/[0.04] rounded-full overflow-hidden">
         <div
           className="h-full bg-gradient-to-r from-purple-500/50 to-blue-500/50 rounded-full"
           style={{ width: `${Math.min(weight * 100, 100)}%` }}
@@ -379,7 +379,7 @@ function WorkflowCanvasInner({
       {!assessment && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
           <div className="text-center space-y-3 px-8">
-            <div className="w-12 h-12 rounded-xl bg-white/[0.04] border border-border flex items-center justify-center mx-auto">
+            <div className="w-12 h-12 rounded-xl bg-foreground/[0.04] border border-border flex items-center justify-center mx-auto">
               <span className="text-xl opacity-30">{"\uD83D\uDDFA\uFE0F"}</span>
             </div>
             <p className="text-sm text-muted-foreground max-w-xs leading-relaxed">

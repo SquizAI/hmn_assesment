@@ -92,7 +92,7 @@ export default function InsightCards({
       {cards.map((card, i) => (
         <div
           key={i}
-          className={`bg-gradient-to-br ${card.color} rounded-2xl border border-border p-4 hover:border-white/15 transition-colors`}
+          className={`bg-gradient-to-br ${card.color} rounded-2xl border border-border p-4 hover:border-foreground/15 transition-colors`}
         >
           <div className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1.5">{card.label}</div>
           <div className="text-lg font-bold text-foreground/90 truncate">{card.value}</div>

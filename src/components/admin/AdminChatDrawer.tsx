@@ -307,7 +307,7 @@ export default function AdminChatDrawer({ open, onClose }: Props) {
                     <button
                       key={action.label}
                       onClick={() => handleSend(action.label)}
-                      className="flex items-center gap-1.5 px-2.5 py-2 rounded-lg bg-muted border border-border text-muted-foreground hover:bg-white/[0.07] hover:text-foreground/90 hover:border-border transition-all text-left"
+                      className="flex items-center gap-1.5 px-2.5 py-2 rounded-lg bg-muted border border-border text-muted-foreground hover:bg-foreground/[0.07] hover:text-foreground/90 hover:border-border transition-all text-left"
                     >
                       <span className="text-sm shrink-0">{action.icon}</span>
                       <span className="text-[11px] leading-tight">{action.label}</span>

@@ -166,7 +166,7 @@ export default function ProcessMap({
                 className={`
                   relative w-full text-left flex items-start gap-3 px-2 py-2.5 rounded-xl transition-all
                   ${isActive ? "bg-purple-500/10 border border-purple-500/20" : "border border-transparent"}
-                  ${canClick ? "hover:bg-white/[0.04] cursor-pointer" : "cursor-default"}
+                  ${canClick ? "hover:bg-foreground/[0.04] cursor-pointer" : "cursor-default"}
                   ${isPending ? "opacity-40" : ""}
                 `}
               >
@@ -176,7 +176,7 @@ export default function ProcessMap({
                     shrink-0 w-[30px] h-[30px] rounded-lg flex items-center justify-center text-sm
                     ${isComplete ? "bg-purple-500/20 text-purple-300" : ""}
                     ${isActive ? "bg-purple-500/30 text-purple-200" : ""}
-                    ${isPending ? "bg-white/[0.04] text-muted-foreground" : ""}
+                    ${isPending ? "bg-foreground/[0.04] text-muted-foreground" : ""}
                   `}
                 >
                   {isComplete ? (

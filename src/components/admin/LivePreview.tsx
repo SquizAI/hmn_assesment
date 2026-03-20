@@ -90,7 +90,7 @@ export default function LivePreview({ assessment, currentPhase }: LivePreviewPro
 function EmptyPreview({ currentPhase }: { currentPhase: BuilderPhase }) {
   return (
     <div className="flex flex-col items-center justify-center h-full text-center px-6">
-      <div className="w-12 h-12 rounded-xl bg-white/[0.04] border border-border flex items-center justify-center mb-3">
+      <div className="w-12 h-12 rounded-xl bg-foreground/[0.04] border border-border flex items-center justify-center mb-3">
         <span className="text-xl opacity-30">📋</span>
       </div>
       <p className="text-sm text-muted-foreground leading-relaxed">

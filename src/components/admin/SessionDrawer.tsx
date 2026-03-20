@@ -501,7 +501,7 @@ export default function SessionDrawer({ sessionId, onClose, onDelete }: SessionD
                         <div
                           key={resp.questionId}
                           className={`rounded-lg p-3 ${
-                            i % 2 === 0 ? "bg-muted" : "bg-white/[0.04]"
+                            i % 2 === 0 ? "bg-muted" : "bg-foreground/[0.04]"
                           }`}
                         >
                           <p className="text-sm text-muted-foreground mb-1">{resp.questionText}</p>

@@ -166,7 +166,7 @@ export default function ToolActivity({ events }: Props) {
 
           {/* Progress bar */}
           {totalCount > 0 && (
-            <div className="h-0.5 bg-white/[0.04]">
+            <div className="h-0.5 bg-foreground/[0.04]">
               <div
                 className="h-full bg-gradient-to-r from-purple-500 to-blue-500 transition-all duration-500 ease-out"
                 style={{ width: `${(completedCount / totalCount) * 100}%` }}

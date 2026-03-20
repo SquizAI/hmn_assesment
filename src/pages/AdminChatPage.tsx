@@ -256,7 +256,7 @@ export default function AdminChatPage() {
                   <button
                     key={action.label}
                     onClick={() => handleSend(action.label)}
-                    className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-muted border border-border text-muted-foreground text-sm hover:bg-white/[0.07] hover:text-foreground/90 hover:border-border transition-all text-left"
+                    className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-muted border border-border text-muted-foreground text-sm hover:bg-foreground/[0.07] hover:text-foreground/90 hover:border-border transition-all text-left"
                   >
                     <span className="text-base">{action.icon}</span>
                     <span className="text-xs">{action.label}</span>

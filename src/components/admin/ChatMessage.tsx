@@ -61,7 +61,7 @@ export default function ChatMessage({ role, content, onAction, isLatest, toolCal
           <div key={`table-${elements.length}`} className="overflow-x-auto my-3">
             <table className="w-full text-sm border-collapse">
               <thead>
-                <tr className="bg-white/[0.04]">
+                <tr className="bg-foreground/[0.04]">
                   {tableRows[0].map((cell, i) => (
                     <th key={i} className="text-left px-3 py-2 border-b border-border text-foreground/80 font-semibold text-xs uppercase tracking-wider">{cell.trim()}</th>
                   ))}

@@ -200,7 +200,7 @@ export default function AdminCampaignsPage() {
           {campaigns.map((campaign) => {
             const progress = getProgress(campaign);
             return (
-              <div key={campaign.id} onClick={() => navigate(`/admin/campaigns/${campaign.id}`)} className="bg-muted border border-border rounded-2xl p-6 hover:bg-white/[0.07] hover:border-border transition-all cursor-pointer group">
+              <div key={campaign.id} onClick={() => navigate(`/admin/campaigns/${campaign.id}`)} className="bg-muted border border-border rounded-2xl p-6 hover:bg-foreground/[0.07] hover:border-border transition-all cursor-pointer group">
                 <div className="flex items-start justify-between mb-4">
                   <h3 className="text-base font-semibold text-foreground group-hover:text-foreground/90 truncate pr-2">{campaign.name}</h3>
                   <StatusBadge status={campaign.status} size="sm" />

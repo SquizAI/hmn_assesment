@@ -315,7 +315,7 @@ export default function AdminCompanyDetailPage() {
                   <tr
                     key={session.id}
                     onClick={() => setSelectedSessionId(session.id)}
-                    className="hover:bg-white/[0.04] cursor-pointer transition-colors border-t border-border"
+                    className="hover:bg-foreground/[0.04] cursor-pointer transition-colors border-t border-border"
                   >
                     <td className="px-4 py-2.5">
                       <div className="flex items-center gap-2">

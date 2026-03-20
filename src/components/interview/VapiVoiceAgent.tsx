@@ -310,7 +310,7 @@ export default function VapiVoiceAgent({
                 ))}
               </div>
             ) : (
-              <div className="w-5 h-5 rounded-sm bg-white/80" />
+              <div className="w-5 h-5 rounded-sm bg-foreground/80" />
             )}
           </button>
 

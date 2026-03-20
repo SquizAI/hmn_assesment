@@ -360,7 +360,7 @@ export default function CsvUploadModal({ assessments, onClose, onComplete }: Pro
                     Drag & drop your CSV file here
                   </p>
                   <p className="text-xs text-muted-foreground mb-4">or</p>
-                  <label className="inline-block px-4 py-2 text-sm font-medium rounded-xl border border-white/15 text-foreground/80 hover:bg-muted cursor-pointer transition-colors">
+                  <label className="inline-block px-4 py-2 text-sm font-medium rounded-xl border border-foreground/15 text-foreground/80 hover:bg-muted cursor-pointer transition-colors">
                     Browse Files
                     <input
                       type="file"
@@ -604,7 +604,7 @@ export default function CsvUploadModal({ assessments, onClose, onComplete }: Pro
               {step !== "importing" && step !== "results" && (
                 <button
                   onClick={onClose}
-                  className="px-4 py-2 text-sm rounded-xl border border-border text-muted-foreground hover:bg-white/[0.04] transition-colors"
+                  className="px-4 py-2 text-sm rounded-xl border border-border text-muted-foreground hover:bg-foreground/[0.04] transition-colors"
                 >
                   Cancel
                 </button>
@@ -615,8 +615,8 @@ export default function CsvUploadModal({ assessments, onClose, onComplete }: Pro
                   disabled={!requiredFieldsMapped}
                   className={`px-5 py-2 text-sm font-medium rounded-xl border transition-all ${
                     requiredFieldsMapped
-                      ? "bg-white/[0.10] border-white/15 text-foreground hover:bg-white/[0.15]"
-                      : "bg-white/[0.04] border-border text-muted-foreground cursor-not-allowed"
+                      ? "bg-foreground/[0.10] border-foreground/15 text-foreground hover:bg-foreground/[0.15]"
+                      : "bg-foreground/[0.04] border-border text-muted-foreground cursor-not-allowed"
                   }`}
                 >
                   Preview &rarr;
@@ -629,7 +629,7 @@ export default function CsvUploadModal({ assessments, onClose, onComplete }: Pro
                   className={`px-5 py-2 text-sm font-medium rounded-xl border transition-all ${
                     validRows.length > 0 && assessmentId
                       ? "bg-gradient-to-r from-purple-500/20 to-blue-500/20 border-purple-500/20 text-purple-200 hover:from-purple-500/30 hover:to-blue-500/30 hover:text-foreground"
-                      : "bg-white/[0.04] border-border text-muted-foreground cursor-not-allowed"
+                      : "bg-foreground/[0.04] border-border text-muted-foreground cursor-not-allowed"
                   }`}
                 >
                   Import {validRows.length} invitation{validRows.length !== 1 ? "s" : ""}
@@ -639,7 +639,7 @@ export default function CsvUploadModal({ assessments, onClose, onComplete }: Pro
               {step === "results" && (
                 <button
                   onClick={() => { onComplete(); onClose(); }}
-                  className="px-5 py-2 text-sm font-medium rounded-xl border bg-white/[0.10] border-white/15 text-foreground hover:bg-white/[0.15] transition-all"
+                  className="px-5 py-2 text-sm font-medium rounded-xl border bg-foreground/[0.10] border-foreground/15 text-foreground hover:bg-foreground/[0.15] transition-all"
                 >
                   Done
                 </button>

@@ -149,16 +149,16 @@ export default function AdminLayout() {
       {/* Sidebar — hidden on mobile, slide-in when mobileOpen */}
       <aside
         className={`
-          fixed inset-y-0 left-0 z-50 bg-[#0a0a12] border-r border-border flex flex-col transition-all duration-300
+          fixed inset-y-0 left-0 z-50 bg-gradient-to-b from-blue-600 to-cyan-500 dark:from-[#0a0a12] dark:to-[#0a0a12] border-r border-border/20 flex flex-col transition-all duration-300
           md:static md:translate-x-0 md:z-auto
           ${collapsed ? "md:w-16 w-56" : "md:w-56 w-56"}
           ${mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
         `}
       >
         {/* Logo area */}
-        <div className={`border-b border-border flex items-center ${collapsed ? "justify-center p-3" : "gap-3 p-4"}`}>
+        <div className={`border-b border-white/10 flex items-center ${collapsed ? "justify-center p-3" : "gap-3 p-4"}`}>
           <img src="/hmn_logo.png" alt="HMN" className="h-7 w-7 object-contain shrink-0" />
-          {!collapsed && <span className="font-semibold text-foreground/90 text-sm whitespace-nowrap">Cascade Admin</span>}
+          {!collapsed && <span className="font-semibold text-white/90 text-sm whitespace-nowrap">Cascade Admin</span>}
         </div>
 
         {/* Nav items */}
@@ -173,18 +173,18 @@ export default function AdminLayout() {
               <div key={item.path}>
                 {showDivider && !collapsed && (
                   <div className="pt-3 pb-1 px-3">
-                    <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    <span className="text-[10px] font-semibold uppercase tracking-wider text-white/50">
                       {item.section === "outreach" ? "Outreach" : "Tools"}
                     </span>
                   </div>
                 )}
-                {showDivider && collapsed && <div className="my-2 mx-2 border-t border-border" />}
+                {showDivider && collapsed && <div className="my-2 mx-2 border-t border-white/10" />}
                 <Link
                   to={item.path}
                   className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all ${
                     active
-                      ? "bg-muted text-foreground border-l-2 border-blue-400"
-                      : "text-muted-foreground hover:text-foreground/80 hover:bg-muted"
+                      ? "bg-white/20 text-white border-l-2 border-white"
+                      : "text-white/70 hover:text-white hover:bg-white/10"
                   } ${collapsed ? "justify-center" : ""}`}
                 >
                   <span className="shrink-0 w-5 h-5"><Icon /></span>
@@ -193,7 +193,7 @@ export default function AdminLayout() {
                       <span className="flex-1">{item.label}</span>
                       {count !== undefined && count > 0 && (
                         <span className={`text-[11px] font-medium px-1.5 py-0.5 rounded-full ${
-                          active ? "bg-blue-500/20 text-blue-300" : "bg-muted text-muted-foreground"
+                          active ? "bg-white/20 text-white" : "bg-white/10 text-white/70"
                         }`}>
                           {count}
                         </span>
@@ -207,13 +207,13 @@ export default function AdminLayout() {
         </nav>
 
         {/* AI Assistant — sticky footer in sidebar */}
-        <div className="p-2 border-t border-border">
+        <div className="p-2 border-t border-white/10">
           <button
             onClick={() => { setChatOpen((o) => !o); setMobileOpen(false); }}
             className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all ${
               chatOpen
-                ? "bg-purple-500/20 text-purple-300 border border-purple-500/30"
-                : "text-muted-foreground hover:text-foreground/80 hover:bg-muted"
+                ? "bg-white/20 text-white border border-white/30"
+                : "text-white/70 hover:text-white hover:bg-white/10"
             }`}
           >
             <span className="shrink-0 w-7 h-7 rounded-lg bg-gradient-to-br from-purple-600 to-blue-600 flex items-center justify-center">
@@ -226,10 +226,10 @@ export default function AdminLayout() {
         </div>
 
         {/* Collapse toggle — desktop only */}
-        <div className="hidden md:block p-3 border-t border-border">
+        <div className="hidden md:block p-3 border-t border-white/10">
           <button
             onClick={() => setCollapsed(!collapsed)}
-            className="w-full flex items-center justify-center p-2 rounded-lg text-muted-foreground hover:text-muted-foreground hover:bg-muted transition-all"
+            className="w-full flex items-center justify-center p-2 rounded-lg text-white/50 hover:text-white hover:bg-white/10 transition-all"
           >
             {collapsed ? "→" : "←"}
           </button>

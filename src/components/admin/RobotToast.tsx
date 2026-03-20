@@ -108,7 +108,7 @@ export function RobotProvider({ children }: { children: ReactNode }) {
                 ? "bg-red-500/10 border-red-500/30 text-red-300"
                 : toast.category === "success"
                 ? "bg-green-500/10 border-green-500/30 text-green-300"
-                : "bg-white/[0.07] border-border text-foreground/90"
+                : "bg-foreground/[0.07] border-border text-foreground/90"
             }`}
             style={{ minWidth: 280 }}
           >

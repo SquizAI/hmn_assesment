@@ -367,7 +367,7 @@ export default function AddCompanyModal({ open, onClose, onCreated }: Props) {
                     className="sr-only peer"
                   />
                   <div className="w-9 h-5 rounded-full bg-muted peer-checked:bg-purple-500/50 transition-colors" />
-                  <div className="absolute left-0.5 top-0.5 w-4 h-4 rounded-full bg-white/60 peer-checked:translate-x-4 peer-checked:bg-white transition-all" />
+                  <div className="absolute left-0.5 top-0.5 w-4 h-4 rounded-full bg-foreground/60 peer-checked:translate-x-4 peer-checked:bg-white transition-all" />
                 </div>
                 <span className="text-sm text-muted-foreground">Send invitation emails</span>
               </label>
