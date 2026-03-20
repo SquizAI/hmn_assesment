@@ -154,7 +154,7 @@ export default function ProcessMap({
               {idx < PHASES.length - 1 && (
                 <div
                   className={`absolute left-[15px] top-[36px] w-[2px] h-[calc(100%_-_12px)] ${
-                    isComplete ? "bg-purple-500/40" : "bg-muted"
+                    isComplete ? "bg-blue-500/40" : "bg-muted"
                   }`}
                   style={isPending ? { backgroundImage: "repeating-linear-gradient(to bottom, transparent, transparent 3px, rgba(255,255,255,0.06) 3px, rgba(255,255,255,0.06) 6px)" } : undefined}
                 />
@@ -165,7 +165,7 @@ export default function ProcessMap({
                 disabled={!canClick}
                 className={`
                   relative w-full text-left flex items-start gap-3 px-2 py-2.5 rounded-xl transition-all
-                  ${isActive ? "bg-purple-500/10 border border-purple-500/20" : "border border-transparent"}
+                  ${isActive ? "bg-blue-500/10 border border-blue-500/20" : "border border-transparent"}
                   ${canClick ? "hover:bg-foreground/[0.04] cursor-pointer" : "cursor-default"}
                   ${isPending ? "opacity-40" : ""}
                 `}
@@ -174,8 +174,8 @@ export default function ProcessMap({
                 <div
                   className={`
                     shrink-0 w-[30px] h-[30px] rounded-lg flex items-center justify-center text-sm
-                    ${isComplete ? "bg-purple-500/20 text-purple-300" : ""}
-                    ${isActive ? "bg-purple-500/30 text-purple-200" : ""}
+                    ${isComplete ? "bg-blue-500/20 text-blue-300" : ""}
+                    ${isActive ? "bg-blue-500/30 text-blue-200" : ""}
                     ${isPending ? "bg-foreground/[0.04] text-muted-foreground" : ""}
                   `}
                 >
@@ -200,8 +200,8 @@ export default function ProcessMap({
                     </span>
                     {isActive && (
                       <span className="relative flex h-2 w-2">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75" />
-                        <span className="relative inline-flex rounded-full h-2 w-2 bg-purple-500" />
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75" />
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500" />
                       </span>
                     )}
                   </div>
@@ -213,7 +213,7 @@ export default function ProcessMap({
                     </p>
                   )}
                   {isComplete && summary && (
-                    <p className="text-[11px] text-purple-300/60 mt-0.5 leading-snug truncate">
+                    <p className="text-[11px] text-blue-300/60 mt-0.5 leading-snug truncate">
                       {summary}
                     </p>
                   )}
@@ -232,7 +232,7 @@ export default function ProcessMap({
         </div>
         <div className="mt-1.5 h-1 bg-muted rounded-full overflow-hidden">
           <div
-            className="h-full bg-gradient-to-r from-purple-500/60 to-blue-500/60 rounded-full transition-all duration-500"
+            className="h-full bg-gradient-to-r from-blue-500/60 to-blue-500/60 rounded-full transition-all duration-500"
             style={{ width: `${(currentIdx / PHASES.length) * 100}%` }}
           />
         </div>

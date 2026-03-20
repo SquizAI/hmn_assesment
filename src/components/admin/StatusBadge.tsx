@@ -2,7 +2,7 @@ const STATUS_STYLES: Record<string, string> = {
   intake: "bg-gray-500/20 text-muted-foreground border-gray-500/30",
   in_progress: "bg-blue-500/20 text-blue-300 border-blue-500/30",
   completed: "bg-green-500/20 text-green-300 border-green-500/30",
-  analyzed: "bg-purple-500/20 text-purple-300 border-purple-500/30",
+  analyzed: "bg-blue-500/20 text-blue-300 border-blue-500/30",
   draft: "bg-yellow-500/20 text-yellow-300 border-yellow-500/30",
   active: "bg-green-500/20 text-green-300 border-green-500/30",
   archived: "bg-gray-500/20 text-muted-foreground border-gray-500/30",

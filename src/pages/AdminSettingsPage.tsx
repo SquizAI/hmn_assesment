@@ -98,7 +98,7 @@ export default function AdminSettingsPage() {
         </div>
 
         <div className="flex items-center gap-3">
-          <button type="button" onClick={() => setSettings({ ...settings, auto_cleanup: !settings.auto_cleanup })} className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${settings.auto_cleanup ? "bg-purple-600" : "bg-muted"}`}>
+          <button type="button" onClick={() => setSettings({ ...settings, auto_cleanup: !settings.auto_cleanup })} className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${settings.auto_cleanup ? "bg-blue-600" : "bg-muted"}`}>
             <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${settings.auto_cleanup ? "translate-x-6" : "translate-x-1"}`} />
           </button>
           <span className="text-sm text-muted-foreground">Auto-cleanup (runs daily)</span>
@@ -110,7 +110,7 @@ export default function AdminSettingsPage() {
 
         {settings.retention_days && (
           <div>
-            <button onClick={handlePreview} className="text-xs text-purple-400 hover:text-purple-300 underline">Preview what would be deleted</button>
+            <button onClick={handlePreview} className="text-xs text-blue-400 hover:text-blue-300 underline">Preview what would be deleted</button>
             {preview && (
               <div className="mt-2 p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg">
                 <p className="text-sm text-amber-400">{preview.count} session{preview.count !== 1 ? "s" : ""} would be deleted</p>
@@ -121,7 +121,7 @@ export default function AdminSettingsPage() {
         )}
 
         <div className="flex items-center gap-3 pt-4 border-t border-border">
-          <button onClick={handleSave} disabled={saving} className="px-5 py-2.5 text-sm font-medium rounded-lg bg-gradient-to-r from-purple-600 to-blue-600 text-foreground disabled:opacity-50 transition-all">{saving ? "Saving..." : "Save Settings"}</button>
+          <button onClick={handleSave} disabled={saving} className="px-5 py-2.5 text-sm font-medium rounded-lg bg-gradient-to-r from-blue-600 to-cyan-600 text-foreground disabled:opacity-50 transition-all">{saving ? "Saving..." : "Save Settings"}</button>
           <button onClick={() => setShowCleanupConfirm(true)} disabled={cleaning || !settings.retention_days} className="px-4 py-2.5 text-sm font-medium rounded-lg bg-muted text-foreground hover:bg-muted border border-border disabled:opacity-50 transition-colors">{cleaning ? "Cleaning..." : "Run Cleanup Now"}</button>
         </div>
       </div>

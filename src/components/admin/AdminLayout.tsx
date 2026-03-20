@@ -213,11 +213,11 @@ export default function AdminLayout() {
             onClick={() => { setChatOpen((o) => !o); setMobileOpen(false); }}
             className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all ${
               chatOpen
-                ? "bg-purple-500/10 text-purple-600 dark:text-purple-300 border border-purple-500/20"
+                ? "bg-blue-500/10 text-blue-600 dark:text-blue-300 border border-blue-500/20"
                 : "text-muted-foreground hover:text-foreground hover:bg-muted"
             }`}
           >
-            <span className="shrink-0 w-7 h-7 rounded-lg bg-gradient-to-br from-purple-600 to-blue-600 flex items-center justify-center">
+            <span className="shrink-0 w-7 h-7 rounded-lg bg-gradient-to-br from-blue-600 to-cyan-600 flex items-center justify-center">
               <svg className="w-4 h-4 text-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
               </svg>
@@ -271,12 +271,12 @@ export default function AdminLayout() {
         onClick={() => setChatOpen((o) => !o)}
         className={`
           hidden md:flex fixed bottom-6 right-6 z-30 w-14 h-14 rounded-full
-          bg-gradient-to-br from-purple-600 to-blue-600
-          text-foreground shadow-lg shadow-purple-900/30
-          hover:shadow-xl hover:shadow-purple-900/40 hover:scale-105
+          bg-gradient-to-br from-blue-600 to-cyan-600
+          text-foreground shadow-lg shadow-blue-900/30
+          hover:shadow-xl hover:shadow-blue-900/40 hover:scale-105
           active:scale-95 transition-all duration-200
           items-center justify-center
-          ${chatOpen ? "ring-2 ring-purple-400/50 ring-offset-2 ring-offset-[#0a0a12]" : ""}
+          ${chatOpen ? "ring-2 ring-blue-400/50 ring-offset-2 ring-offset-[#0a0a12]" : ""}
         `}
         title="AI Assistant"
       >

@@ -6,7 +6,7 @@ interface Props {
 
 const TIER_COLORS: Record<number, string> = {
   1: "bg-blue-500/20 text-blue-300 border-blue-500/30",
-  2: "bg-purple-500/20 text-purple-300 border-purple-500/30",
+  2: "bg-blue-500/20 text-blue-300 border-blue-500/30",
   3: "bg-amber-500/20 text-amber-300 border-amber-500/30",
 };
 

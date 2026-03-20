@@ -548,7 +548,7 @@ export default function AdminInvitationsPage() {
           </button>
           <button
             onClick={openCreateModal}
-            className="px-4 py-2 text-sm font-medium rounded-xl transition-all bg-gradient-to-r from-purple-500/20 to-blue-500/20 border border-purple-500/20 text-purple-200 hover:from-purple-500/30 hover:to-blue-500/30 hover:text-foreground"
+            className="px-4 py-2 text-sm font-medium rounded-xl transition-all bg-gradient-to-r from-blue-500/20 to-blue-500/20 border border-blue-500/20 text-blue-200 hover:from-blue-500/30 hover:to-blue-500/30 hover:text-foreground"
           >
             New Invitation
           </button>
@@ -821,7 +821,7 @@ export default function AdminInvitationsPage() {
               />
               {enriching && (
                 <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                  <div className="animate-spin w-4 h-4 border-2 border-border border-t-purple-400 rounded-full" />
+                  <div className="animate-spin w-4 h-4 border-2 border-border border-t-blue-400 rounded-full" />
                 </div>
               )}
               {showEmailSuggestions && emailSuggestions.length > 0 && (
@@ -922,7 +922,7 @@ export default function AdminInvitationsPage() {
                   type="checkbox"
                   checked={sendEmailOnCreate}
                   onChange={(e) => setSendEmailOnCreate(e.target.checked)}
-                  className="w-4 h-4 rounded border-border bg-muted text-purple-500 focus:ring-purple-500/30"
+                  className="w-4 h-4 rounded border-border bg-muted text-blue-500 focus:ring-blue-500/30"
                 />
                 <div>
                   <span className="text-sm text-foreground/80">Send invitation email</span>

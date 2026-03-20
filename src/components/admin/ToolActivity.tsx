@@ -85,8 +85,8 @@ export default function ToolActivity({ events }: Props) {
           >
             {/* Pulsing indicator */}
             <div className="relative flex-shrink-0">
-              <div className="w-2.5 h-2.5 rounded-full bg-purple-400 animate-pulse" />
-              <div className="absolute inset-0 w-2.5 h-2.5 rounded-full bg-purple-400/50 animate-ping" />
+              <div className="w-2.5 h-2.5 rounded-full bg-blue-400 animate-pulse" />
+              <div className="absolute inset-0 w-2.5 h-2.5 rounded-full bg-blue-400/50 animate-ping" />
             </div>
 
             {/* Status text */}
@@ -126,7 +126,7 @@ export default function ToolActivity({ events }: Props) {
                   {/* Status icon */}
                   <div className="flex-shrink-0 w-5 h-5 flex items-center justify-center">
                     {step.status === "running" ? (
-                      <svg className="w-4 h-4 text-purple-400 animate-spin" fill="none" viewBox="0 0 24 24">
+                      <svg className="w-4 h-4 text-blue-400 animate-spin" fill="none" viewBox="0 0 24 24">
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                       </svg>
@@ -168,7 +168,7 @@ export default function ToolActivity({ events }: Props) {
           {totalCount > 0 && (
             <div className="h-0.5 bg-foreground/[0.04]">
               <div
-                className="h-full bg-gradient-to-r from-purple-500 to-blue-500 transition-all duration-500 ease-out"
+                className="h-full bg-gradient-to-r from-blue-500 to-cyan-500 transition-all duration-500 ease-out"
                 style={{ width: `${(completedCount / totalCount) * 100}%` }}
               />
             </div>

@@ -89,7 +89,7 @@ const INPUT_TYPES = [
 ];
 
 const INPUT_TYPE_COLORS: Record<string, string> = {
-  ai_conversation: "bg-purple-500/20 text-purple-300 border-purple-500/30",
+  ai_conversation: "bg-blue-500/20 text-blue-300 border-blue-500/30",
   slider: "bg-blue-500/20 text-blue-300 border-blue-500/30",
   buttons: "bg-green-500/20 text-green-300 border-green-500/30",
   open_text: "bg-yellow-500/20 text-yellow-300 border-yellow-500/30",
@@ -433,7 +433,7 @@ export default function AssessmentDrawer({
                 <div className="flex items-center gap-2 shrink-0 mt-1">
                   <button
                     onClick={() => navigate(`/admin/builder/${assessmentId}`)}
-                    className="px-3 py-1.5 text-xs rounded-lg bg-purple-500/10 border border-purple-500/20 text-purple-300 hover:bg-purple-500/20 transition-colors"
+                    className="px-3 py-1.5 text-xs rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-300 hover:bg-blue-500/20 transition-colors"
                   >
                     Open in Builder
                   </button>
@@ -608,7 +608,7 @@ export default function AssessmentDrawer({
                   <div>
                     <button
                       onClick={() => navigate(`/admin/preview/${assessment.id}`)}
-                      className="w-full bg-purple-500/10 border border-purple-500/20 rounded-xl px-4 py-3 text-sm text-purple-300 hover:bg-purple-500/20 hover:text-purple-200 transition-colors text-left flex items-center gap-3"
+                      className="w-full bg-blue-500/10 border border-blue-500/20 rounded-xl px-4 py-3 text-sm text-blue-300 hover:bg-blue-500/20 hover:text-blue-200 transition-colors text-left flex items-center gap-3"
                     >
                       <svg
                         className="w-4 h-4 shrink-0"
@@ -737,7 +737,7 @@ export default function AssessmentDrawer({
                                 key={question.id}
                                 className={`bg-muted border rounded-xl transition-colors cursor-pointer ${
                                   isModified
-                                    ? "border-purple-500/30 border-l-2 border-l-purple-500/60"
+                                    ? "border-blue-500/30 border-l-2 border-l-blue-500/60"
                                     : isExpanded
                                       ? "border-border"
                                       : "border-border hover:border-foreground/15"
@@ -751,7 +751,7 @@ export default function AssessmentDrawer({
                                 {/* Question summary row */}
                                 <div className="p-3 flex items-start gap-3">
                                   <div className="flex-1 min-w-0">
-                                    <p className={`text-sm leading-relaxed ${isModified ? "text-purple-200/80" : "text-foreground/80"}`}>
+                                    <p className={`text-sm leading-relaxed ${isModified ? "text-blue-200/80" : "text-foreground/80"}`}>
                                       {displayText}
                                     </p>
                                     <div className="mt-2 flex flex-wrap items-center gap-2">
@@ -771,7 +771,7 @@ export default function AssessmentDrawer({
                                         weight: {displayWeight}
                                       </span>
                                       {isModified && (
-                                        <span className="text-[10px] bg-purple-500/15 text-purple-300 border border-purple-500/20 px-1.5 py-0.5 rounded font-medium">
+                                        <span className="text-[10px] bg-blue-500/15 text-blue-300 border border-blue-500/20 px-1.5 py-0.5 rounded font-medium">
                                           Modified
                                         </span>
                                       )}
@@ -822,7 +822,7 @@ export default function AssessmentDrawer({
                                     {/* Modified indicator + revert */}
                                     {isModified && (
                                       <div className="flex items-center justify-between">
-                                        <span className="text-[11px] text-purple-300/70">
+                                        <span className="text-[11px] text-blue-300/70">
                                           Question modified — save below
                                         </span>
                                         <button
@@ -844,7 +844,7 @@ export default function AssessmentDrawer({
                                         onChange={(e) => setQuestionEdit(question.id, "text", e.target.value)}
                                         autoFocus
                                         rows={3}
-                                        className="w-full bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-purple-500/40 focus:ring-1 focus:ring-purple-500/20 resize-none"
+                                        className="w-full bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-blue-500/40 focus:ring-1 focus:ring-blue-500/20 resize-none"
                                       />
                                     </div>
 
@@ -858,7 +858,7 @@ export default function AssessmentDrawer({
                                         value={getQuestionField(question.id, "subtext") || ""}
                                         onChange={(e) => setQuestionEdit(question.id, "subtext", e.target.value || undefined)}
                                         placeholder="Optional helper text..."
-                                        className="w-full bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-purple-500/40 focus:ring-1 focus:ring-purple-500/20"
+                                        className="w-full bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-blue-500/40 focus:ring-1 focus:ring-blue-500/20"
                                       />
                                     </div>
 
@@ -871,7 +871,7 @@ export default function AssessmentDrawer({
                                         <select
                                           value={getQuestionField(question.id, "inputType")}
                                           onChange={(e) => setQuestionEdit(question.id, "inputType", e.target.value)}
-                                          className="w-full bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:border-purple-500/40 appearance-none"
+                                          className="w-full bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:border-blue-500/40 appearance-none"
                                         >
                                           {INPUT_TYPES.map((t) => (
                                             <option key={t.value} value={t.value} className="bg-[#141420]">
@@ -891,7 +891,7 @@ export default function AssessmentDrawer({
                                           step="0.1"
                                           value={getQuestionField(question.id, "weight")}
                                           onChange={(e) => setQuestionEdit(question.id, "weight", parseFloat(e.target.value) || 0)}
-                                          className="w-full bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:border-purple-500/40"
+                                          className="w-full bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:border-blue-500/40"
                                         />
                                       </div>
                                     </div>
@@ -937,7 +937,7 @@ export default function AssessmentDrawer({
                                             (dim) => (
                                               <span
                                                 key={dim}
-                                                className="text-[10px] bg-purple-500/10 text-purple-300 border border-purple-500/20 px-2 py-0.5 rounded-full"
+                                                className="text-[10px] bg-blue-500/10 text-blue-300 border border-blue-500/20 px-2 py-0.5 rounded-full"
                                               >
                                                 {dim}
                                               </span>
@@ -1023,7 +1023,7 @@ export default function AssessmentDrawer({
                           {/* Weight bar */}
                           <div className="w-full h-2 bg-foreground/6 rounded-full overflow-hidden">
                             <div
-                              className="h-full rounded-full bg-linear-to-r from-blue-500/80 to-purple-500/80 transition-all duration-500"
+                              className="h-full rounded-full bg-linear-to-r from-blue-500/80 to-blue-500/80 transition-all duration-500"
                               style={{ width: `${pct}%` }}
                             />
                           </div>

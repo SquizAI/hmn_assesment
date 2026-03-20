@@ -278,7 +278,7 @@ export default function ResearchPage() {
             )}
 
             {/* Confirmation */}
-            <div className="bg-gradient-to-r from-indigo-500/10 to-purple-500/10 border border-primary/20 rounded-2xl p-6 text-center space-y-4">
+            <div className="bg-gradient-to-r from-cyan-500/10 to-blue-500/10 border border-primary/20 rounded-2xl p-6 text-center space-y-4">
               <h3 className="text-lg font-medium text-foreground">Is this information about you?</h3>
               <p className="text-muted-foreground text-sm">Edit anything above that's inaccurate. Confirming helps us skip redundant questions and ask smarter ones.</p>
               <div className="flex gap-4 justify-center">

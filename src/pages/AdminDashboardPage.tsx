@@ -128,9 +128,9 @@ function scoreColor(score: number): "green" | "yellow" | "red" {
 
 const FUNNEL_COLORS: Record<string, string> = {
   intake: "from-gray-500 to-gray-600",
-  in_progress: "from-blue-500 to-blue-600",
+  in_progress: "from-blue-500 to-cyan-600",
   completed: "from-green-500 to-green-600",
-  analyzed: "from-purple-500 to-purple-600",
+  analyzed: "from-blue-500 to-cyan-600",
 };
 
 const FUNNEL_LABELS: Record<string, string> = {
@@ -363,7 +363,7 @@ export default function AdminDashboardPage() {
               key={n.id}
               className={`px-4 py-3 rounded-xl text-sm font-medium shadow-lg border backdrop-blur-sm animate-slide-in ${
                 n.type === "analysis_ready"
-                  ? "bg-purple-500/20 text-purple-300 border-purple-500/30"
+                  ? "bg-blue-500/20 text-blue-300 border-blue-500/30"
                   : n.type === "session_completed"
                   ? "bg-green-500/20 text-green-300 border-green-500/30"
                   : "bg-blue-500/20 text-blue-300 border-blue-500/30"
@@ -548,7 +548,7 @@ export default function AdminDashboardPage() {
                 {archetypes
                   .sort((a, b) => b.count - a.count)
                   .map((a, i) => {
-                    const colors = ["bg-purple-500", "bg-blue-500", "bg-cyan-500", "bg-green-500", "bg-amber-500", "bg-rose-500", "bg-primary", "bg-teal-500"];
+                    const colors = ["bg-blue-500", "bg-blue-500", "bg-cyan-500", "bg-green-500", "bg-amber-500", "bg-rose-500", "bg-primary", "bg-teal-500"];
                     const total = archetypes.reduce((s, x) => s + x.count, 0);
                     const pct = total > 0 ? Math.round((a.count / total) * 100) : 0;
                     return (
@@ -602,7 +602,7 @@ export default function AdminDashboardPage() {
                     {idx + 1}
                   </span>
                   {/* Avatar */}
-                  <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-purple-500/15 to-blue-500/15 border border-border flex items-center justify-center shrink-0">
+                  <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-500/15 to-blue-500/15 border border-border flex items-center justify-center shrink-0">
                     <span className="text-xs font-bold text-muted-foreground">
                       {company.company.charAt(0).toUpperCase()}
                     </span>
@@ -643,7 +643,7 @@ export default function AdminDashboardPage() {
         {/* Theme Intelligence */}
         <div className="bg-muted rounded-2xl border border-border p-4 md:p-6">
           <div className="flex items-center gap-2 mb-3">
-            <svg className="w-4 h-4 text-purple-400/60" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <svg className="w-4 h-4 text-blue-400/60" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456z" />
             </svg>
             <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
@@ -663,7 +663,7 @@ export default function AdminDashboardPage() {
                 <button
                   onClick={handleSeed}
                   disabled={seeding}
-                  className="mt-3 text-xs text-purple-400/70 hover:text-purple-400 transition-colors"
+                  className="mt-3 text-xs text-blue-400/70 hover:text-blue-400 transition-colors"
                 >
                   {seeding ? "Seeding..." : "Seed Graph"}
                 </button>
@@ -689,7 +689,7 @@ export default function AdminDashboardPage() {
                     <span className="w-28 text-xs text-muted-foreground truncate flex-shrink-0">{theme.theme}</span>
                     <div className="flex-1 bg-muted rounded h-3 overflow-hidden">
                       <div
-                        className="h-full rounded bg-gradient-to-r from-purple-500/60 to-blue-500/60"
+                        className="h-full rounded bg-gradient-to-r from-blue-500/60 to-blue-500/60"
                         style={{ width: `${(theme.frequency / maxFreq) * 100}%`, minWidth: "2px" }}
                       />
                     </div>

@@ -6,7 +6,7 @@ import type { BuilderPhase } from "./ProcessMap";
 // ============================================================
 
 const INPUT_TYPE_LABELS: Record<string, { label: string; color: string }> = {
-  ai_conversation: { label: "AI Chat", color: "bg-purple-500/20 text-purple-300 border-purple-500/30" },
+  ai_conversation: { label: "AI Chat", color: "bg-blue-500/20 text-blue-300 border-blue-500/30" },
   slider: { label: "Slider", color: "bg-blue-500/20 text-blue-300 border-blue-500/30" },
   buttons: { label: "Buttons", color: "bg-green-500/20 text-green-300 border-green-500/30" },
   multi_select: { label: "Multi", color: "bg-yellow-500/20 text-yellow-300 border-yellow-500/30" },
@@ -169,7 +169,7 @@ function FrameworkSection({ assessment }: { assessment: AssessmentType }) {
               return (
                 <div key={phase.id} className="ml-1">
                   <div className="flex items-center gap-1.5">
-                    <div className="w-1.5 h-1.5 rounded-full bg-purple-400/60" />
+                    <div className="w-1.5 h-1.5 rounded-full bg-blue-400/60" />
                     <span className="text-xs font-medium text-foreground/80">{phase.label}</span>
                   </div>
                   {phaseSections.map((sec) => (
@@ -202,7 +202,7 @@ function FrameworkSection({ assessment }: { assessment: AssessmentType }) {
                   </div>
                   <div className="mt-0.5 h-1 bg-muted rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-gradient-to-r from-purple-500/50 to-blue-500/50 rounded-full transition-all duration-300"
+                      className="h-full bg-gradient-to-r from-blue-500/50 to-blue-500/50 rounded-full transition-all duration-300"
                       style={{ width: `${dim.weight * 100}%` }}
                     />
                   </div>
@@ -272,7 +272,7 @@ function QuestionsSection({ assessment }: { assessment: AssessmentType }) {
                   {q.scoringDimensions?.map((dim) => (
                     <span
                       key={typeof dim === "string" ? dim : dim}
-                      className="text-[10px] px-1.5 py-0.5 rounded bg-purple-500/10 text-purple-300/60 border border-purple-500/10"
+                      className="text-[10px] px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-300/60 border border-blue-500/10"
                     >
                       {typeof dim === "string" ? dim.replace(/_/g, " ") : dim}
                     </span>

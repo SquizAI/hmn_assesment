@@ -18,7 +18,7 @@ const ALL_EVENTS = [
   { value: "call_started", label: "Call Started", color: "bg-blue-500/20 text-blue-400 border-blue-500/30" },
   { value: "call_completed", label: "Call Completed", color: "bg-green-500/20 text-green-400 border-green-500/30" },
   { value: "call_failed", label: "Call Failed", color: "bg-red-500/20 text-red-400 border-red-500/30" },
-  { value: "campaign_completed", label: "Campaign Completed", color: "bg-purple-500/20 text-purple-400 border-purple-500/30" },
+  { value: "campaign_completed", label: "Campaign Completed", color: "bg-blue-500/20 text-blue-400 border-blue-500/30" },
   { value: "assessment_completed", label: "Assessment Completed", color: "bg-amber-500/20 text-amber-400 border-amber-500/30" },
 ];
 
@@ -113,7 +113,7 @@ export default function AdminWebhooksPage() {
           <h1 className="text-3xl font-bold text-foreground">Webhooks</h1>
           <p className="text-sm text-muted-foreground mt-1">Configure webhook URLs to receive event notifications</p>
         </div>
-        <button onClick={() => { resetForm(); setShowForm(true); }} className="px-5 py-2.5 text-sm font-medium rounded-xl bg-gradient-to-r from-purple-600 to-blue-600 text-foreground hover:from-purple-500 hover:to-blue-500 transition-all">Add Webhook</button>
+        <button onClick={() => { resetForm(); setShowForm(true); }} className="px-5 py-2.5 text-sm font-medium rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 text-foreground hover:from-blue-500 hover:to-blue-500 transition-all">Add Webhook</button>
       </div>
 
       {showForm && (
@@ -148,13 +148,13 @@ export default function AdminWebhooksPage() {
               <input type="text" placeholder="Sent as X-Webhook-Secret header" value={formSecret} onChange={(e) => setFormSecret(e.target.value)} className="w-full bg-muted border border-border rounded-lg px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-border focus:outline-none" />
             </div>
             <div className="flex items-center gap-3">
-              <button type="button" onClick={() => setFormActive(!formActive)} className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${formActive ? "bg-purple-600" : "bg-muted"}`}>
+              <button type="button" onClick={() => setFormActive(!formActive)} className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${formActive ? "bg-blue-600" : "bg-muted"}`}>
                 <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${formActive ? "translate-x-6" : "translate-x-1"}`} />
               </button>
               <span className="text-sm text-muted-foreground">Active</span>
             </div>
             <div className="flex items-center gap-3 pt-2">
-              <button type="submit" disabled={saving || !formUrl.trim() || formEvents.length === 0} className="px-5 py-2.5 text-sm font-medium rounded-lg bg-gradient-to-r from-purple-600 to-blue-600 text-foreground disabled:opacity-50 transition-all">{saving ? "Saving..." : editingWebhook ? "Update" : "Create"}</button>
+              <button type="submit" disabled={saving || !formUrl.trim() || formEvents.length === 0} className="px-5 py-2.5 text-sm font-medium rounded-lg bg-gradient-to-r from-blue-600 to-cyan-600 text-foreground disabled:opacity-50 transition-all">{saving ? "Saving..." : editingWebhook ? "Update" : "Create"}</button>
               <button type="button" onClick={() => { resetForm(); setShowForm(false); }} className="px-4 py-2.5 text-sm text-muted-foreground hover:text-muted-foreground">Cancel</button>
             </div>
           </form>

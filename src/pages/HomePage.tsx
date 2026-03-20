@@ -151,7 +151,7 @@ export default function HomePage() {
     intake: "text-muted-foreground",
     in_progress: "text-blue-400",
     completed: "text-green-400",
-    analyzed: "text-purple-400",
+    analyzed: "text-blue-400",
   };
 
   // ─── Render ────────────────────────────────────────────────

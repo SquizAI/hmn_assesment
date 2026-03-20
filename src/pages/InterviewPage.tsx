@@ -458,7 +458,7 @@ export default function InterviewPage() {
               {!editingQuestion && (
                 <div className="shrink-0 flex items-center gap-1.5 px-3 py-1 rounded-full text-xs bg-primary/20 border border-primary/30 text-primary">
                   <span className="w-4 h-4 rounded-full bg-primary/30 border border-primary/40 flex items-center justify-center shrink-0">
-                    <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
                   </span>
                   <span>Q{visibleAnswered.length + 1}</span>
                 </div>

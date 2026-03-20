@@ -122,7 +122,7 @@ export default function ComparePage() {
       <header className="border-b border-border px-6 py-4">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-sm font-bold text-foreground">H</div>
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-600 flex items-center justify-center text-sm font-bold text-foreground">H</div>
             <span className="font-semibold text-foreground/90">HMN Cascade</span>
           </div>
           <button onClick={() => navigate("/")} className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground/90 transition-colors">New Assessment</button>
@@ -151,7 +151,7 @@ export default function ComparePage() {
           <h2 className="text-lg font-semibold text-foreground mb-6">Score Progression</h2>
           {sessions.length === 1 ? (
             <div className="text-center py-8">
-              <div className="text-5xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent mb-2">{sessions[0].overallScore ?? "--"}</div>
+              <div className="text-5xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent mb-2">{sessions[0].overallScore ?? "--"}</div>
               <p className="text-sm text-muted-foreground">Only one assessment so far. Retake to see progression.</p>
             </div>
           ) : (
@@ -255,11 +255,11 @@ export default function ComparePage() {
               const prevArchetype = idx > 0 ? sessions[idx - 1].archetype : null;
               const changed = idx > 0 && session.archetype !== prevArchetype;
               return (
-                <div key={session.sessionId} className={`flex-1 min-w-[180px] rounded-xl border p-5 space-y-2 ${changed ? "border-purple-500/40 bg-purple-500/10" : "border-border bg-muted"}`}>
+                <div key={session.sessionId} className={`flex-1 min-w-[180px] rounded-xl border p-5 space-y-2 ${changed ? "border-blue-500/40 bg-blue-500/10" : "border-border bg-muted"}`}>
                   <div className="text-xs text-muted-foreground">{formatDate(session.createdAt)}</div>
                   <div className="text-base font-semibold text-foreground capitalize">{session.archetype?.replace(/_/g, " ") ?? "Unknown"}</div>
                   {session.archetypeDescription && <div className="text-xs text-muted-foreground line-clamp-2">{session.archetypeDescription}</div>}
-                  {changed && <div className="flex items-center gap-1 text-xs text-purple-300"><svg className="w-3 h-3" viewBox="0 0 12 12" fill="currentColor"><path d="M6 1L11 6L6 11L5 10L8.5 6.5H1V5.5H8.5L5 2L6 1Z" /></svg>Changed from {prevArchetype?.replace(/_/g, " ")}</div>}
+                  {changed && <div className="flex items-center gap-1 text-xs text-blue-300"><svg className="w-3 h-3" viewBox="0 0 12 12" fill="currentColor"><path d="M6 1L11 6L6 11L5 10L8.5 6.5H1V5.5H8.5L5 2L6 1Z" /></svg>Changed from {prevArchetype?.replace(/_/g, " ")}</div>}
                 </div>
               );
             })}

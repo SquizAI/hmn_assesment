@@ -411,7 +411,7 @@ export default function GraphVisualization({ nodes: rawNodes, edges: rawEdges, l
         <button
           onClick={() => { setShowFilters((v) => !v); setShowEdgeFilters(false); }}
           className={`px-3 py-1.5 text-[10px] font-medium rounded-lg border transition-colors ${
-            showFilters ? "bg-purple-500/20 border-purple-500/30 text-purple-300" : "border-border text-muted-foreground hover:text-muted-foreground"
+            showFilters ? "bg-blue-500/20 border-blue-500/30 text-blue-300" : "border-border text-muted-foreground hover:text-muted-foreground"
           }`}
         >
           Node Types
@@ -454,7 +454,7 @@ export default function GraphVisualization({ nodes: rawNodes, edges: rawEdges, l
           <div className="flex items-center justify-between mb-2">
             <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Node Types</span>
             <div className="flex gap-2">
-              <button onClick={selectAllNodeTypes} className="text-[10px] text-purple-400/70 hover:text-purple-300">Select All</button>
+              <button onClick={selectAllNodeTypes} className="text-[10px] text-blue-400/70 hover:text-blue-300">Select All</button>
               <button onClick={clearAllNodeTypes} className="text-[10px] text-red-400/70 hover:text-red-300">Clear All</button>
             </div>
           </div>

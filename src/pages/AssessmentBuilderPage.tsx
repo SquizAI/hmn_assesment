@@ -432,7 +432,7 @@ export default function AssessmentBuilderPage() {
         {/* Resize handle */}
         <div
           onMouseDown={handleResizeStart}
-          className={`w-1.5 shrink-0 cursor-col-resize group relative z-10 ${isResizing ? "bg-purple-500/30" : "hover:bg-muted"} transition-colors`}
+          className={`w-1.5 shrink-0 cursor-col-resize group relative z-10 ${isResizing ? "bg-blue-500/30" : "hover:bg-muted"} transition-colors`}
           title="Drag to resize chat"
         >
           <div className={`absolute inset-y-0 -left-1 -right-1 ${isResizing ? "" : "group-hover:bg-muted"}`} />
@@ -451,14 +451,14 @@ export default function AssessmentBuilderPage() {
         >
           {/* Drag overlay */}
           {isDragging && (
-            <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm border-2 border-dashed border-purple-400/50 rounded-xl pointer-events-none">
+            <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm border-2 border-dashed border-blue-400/50 rounded-xl pointer-events-none">
               <div className="text-center space-y-3">
-                <div className="w-16 h-16 rounded-2xl bg-purple-500/20 border border-purple-500/30 flex items-center justify-center mx-auto">
-                  <svg className="w-8 h-8 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <div className="w-16 h-16 rounded-2xl bg-blue-500/20 border border-blue-500/30 flex items-center justify-center mx-auto">
+                  <svg className="w-8 h-8 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
                   </svg>
                 </div>
-                <p className="text-purple-300 font-medium">Drop files to attach</p>
+                <p className="text-blue-300 font-medium">Drop files to attach</p>
                 <p className="text-muted-foreground text-xs">{ALLOWED_EXTENSIONS.join(", ")} — max {formatFileSize(MAX_FILE_SIZE)}</p>
               </div>
             </div>
@@ -471,7 +471,7 @@ export default function AssessmentBuilderPage() {
               {messages.length === 0 && !assessmentId && (
                 <div className="text-center py-8 space-y-6">
                   <div className="space-y-3">
-                    <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-500/20 to-blue-500/20 border border-border">
+                    <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500/20 to-blue-500/20 border border-border">
                       <span className="text-2xl">🏗</span>
                     </div>
                     <h2 className="text-lg font-semibold text-foreground">Assessment Developer</h2>
@@ -484,10 +484,10 @@ export default function AssessmentBuilderPage() {
                   {/* File drop zone */}
                   <div
                     onClick={() => fileInputRef.current?.click()}
-                    className="max-w-md mx-auto border-2 border-dashed border-border hover:border-purple-500/30 rounded-2xl p-6 cursor-pointer transition-all hover:bg-purple-500/5 group"
+                    className="max-w-md mx-auto border-2 border-dashed border-border hover:border-blue-500/30 rounded-2xl p-6 cursor-pointer transition-all hover:bg-blue-500/5 group"
                   >
                     <div className="space-y-2">
-                      <svg className="w-7 h-7 text-muted-foreground group-hover:text-purple-400/60 mx-auto transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <svg className="w-7 h-7 text-muted-foreground group-hover:text-blue-400/60 mx-auto transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m3.75 9v6m3-3H9m1.5-12H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
                       </svg>
                       <p className="text-sm text-muted-foreground group-hover:text-muted-foreground transition-colors">
@@ -514,14 +514,14 @@ export default function AssessmentBuilderPage() {
                           }}
                           className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border text-sm transition-all text-left ${
                             isActive
-                              ? "bg-purple-500/10 border-purple-500/30 text-purple-300"
+                              ? "bg-blue-500/10 border-blue-500/30 text-blue-300"
                               : isDisabled
                                 ? "bg-muted border-border text-muted-foreground cursor-not-allowed"
                                 : "bg-muted border-border text-muted-foreground hover:bg-foreground/[0.07] hover:text-foreground/90 hover:border-border"
                           }`}
                         >
                           {isActive ? (
-                            <div className="w-4 h-4 border-2 border-purple-400/30 border-t-purple-400 rounded-full animate-spin shrink-0" />
+                            <div className="w-4 h-4 border-2 border-blue-400/30 border-t-blue-400 rounded-full animate-spin shrink-0" />
                           ) : (
                             <span className="text-base">{action.icon}</span>
                           )}
@@ -536,7 +536,7 @@ export default function AssessmentBuilderPage() {
               {/* Welcome state for editing existing */}
               {messages.length === 0 && assessmentId && assessment && (
                 <div className="text-center py-8 space-y-4">
-                  <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-500/20 to-blue-500/20 border border-border">
+                  <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500/20 to-blue-500/20 border border-border">
                     <span className="text-2xl">{assessment.icon || "📋"}</span>
                   </div>
                   <h2 className="text-lg font-semibold text-foreground">{assessment.name}</h2>
@@ -562,14 +562,14 @@ export default function AssessmentBuilderPage() {
                           }}
                           className={`px-3 py-2 rounded-xl border text-xs transition-all flex items-center gap-1.5 ${
                             isActive
-                              ? "bg-purple-500/10 border-purple-500/30 text-purple-300"
+                              ? "bg-blue-500/10 border-blue-500/30 text-blue-300"
                               : isThinking
                                 ? "bg-muted border-border text-muted-foreground cursor-not-allowed"
                                 : "bg-muted border-border text-muted-foreground hover:bg-foreground/[0.07] hover:text-foreground/90"
                           }`}
                         >
                           {isActive && (
-                            <div className="w-3 h-3 border-2 border-purple-400/30 border-t-purple-400 rounded-full animate-spin shrink-0" />
+                            <div className="w-3 h-3 border-2 border-blue-400/30 border-t-blue-400 rounded-full animate-spin shrink-0" />
                           )}
                           {isActive ? "Working..." : btn.label}
                         </button>
@@ -609,12 +609,12 @@ export default function AssessmentBuilderPage() {
                     {attachments.map((att, i) => (
                       <div
                         key={i}
-                        className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-purple-500/10 border border-purple-500/20 text-purple-300 text-xs"
+                        className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-300 text-xs"
                       >
                         <span className="truncate max-w-[120px]">{att.filename}</span>
                         <button
                           onClick={() => removeAttachment(i)}
-                          className="text-purple-400/50 hover:text-purple-300 transition-colors"
+                          className="text-blue-400/50 hover:text-blue-300 transition-colors"
                         >
                           &#x2715;
                         </button>

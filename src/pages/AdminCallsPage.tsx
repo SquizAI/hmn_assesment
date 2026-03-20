@@ -52,7 +52,7 @@ function TranscriptViewer({ messages }: { messages: Array<{ role: string; messag
     <div className="space-y-2 max-h-60 overflow-y-auto">
       {messages.map((msg, i) => (
         <div key={i} className={`flex gap-2 ${msg.role === "assistant" ? "" : "flex-row-reverse"}`}>
-          <div className={`max-w-[80%] px-3 py-2 rounded-lg text-xs ${msg.role === "assistant" ? "bg-purple-500/10 text-purple-200" : "bg-muted text-foreground/80"}`}>
+          <div className={`max-w-[80%] px-3 py-2 rounded-lg text-xs ${msg.role === "assistant" ? "bg-blue-500/10 text-blue-200" : "bg-muted text-foreground/80"}`}>
             {msg.message}
           </div>
         </div>
@@ -131,7 +131,7 @@ export default function AdminCallsPage() {
                     </td>
                     <td className="px-6 py-4">
                       {call.analysis_status === "completed" && call.session_id ? (
-                        <Link to={`/analysis/${call.session_id}`} onClick={(e) => e.stopPropagation()} className="text-xs text-purple-400 hover:text-purple-300 underline underline-offset-2 transition-colors">View Analysis</Link>
+                        <Link to={`/analysis/${call.session_id}`} onClick={(e) => e.stopPropagation()} className="text-xs text-blue-400 hover:text-blue-300 underline underline-offset-2 transition-colors">View Analysis</Link>
                       ) : <StatusBadge status={call.analysis_status} size="sm" />}
                     </td>
                     <td className="px-6 py-4 text-sm text-muted-foreground">{formatDate(call.created_at)}</td>

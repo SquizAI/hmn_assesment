@@ -49,7 +49,7 @@ export default function ProgressBar({ questionNumber, totalQuestions, phase, sec
         <span className="text-xs text-muted-foreground">{questionNumber} of {totalQuestions}</span>
       </div>
       <div className="h-1 w-full bg-muted rounded-full overflow-hidden">
-        <div className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full transition-all duration-700 ease-out" style={{ width: `${completedPercentage}%` }} />
+        <div className="h-full bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full transition-all duration-700 ease-out" style={{ width: `${completedPercentage}%` }} />
       </div>
     </div>
   );

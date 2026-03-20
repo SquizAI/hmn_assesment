@@ -138,9 +138,9 @@ export default function SectionStepper({ sections, answeredQuestions, onQuestion
                       </svg>
                     ) : sp.status === "in_progress" ? (
                       isCurrent ? (
-                        <span className="w-2.5 h-2.5 rounded-full bg-indigo-400 animate-pulse" />
+                        <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-pulse" />
                       ) : (
-                        <span className="w-2.5 h-2.5 rounded-full border border-indigo-400/50 bg-primary/30" />
+                        <span className="w-2.5 h-2.5 rounded-full border border-cyan-400/50 bg-primary/30" />
                       )
                     ) : sp.status === "skipped" ? (
                       <span className="w-2.5 h-2.5 flex items-center justify-center text-muted-foreground">—</span>

@@ -192,7 +192,7 @@ export default function VapiVoiceAgent({
                 className={`text-sm ${
                   t.role === "user"
                     ? "text-blue-300 pl-4 border-l-2 border-blue-500/30"
-                    : "text-foreground/80 pl-4 border-l-2 border-purple-500/30"
+                    : "text-foreground/80 pl-4 border-l-2 border-blue-500/30"
                 }`}
               >
                 <span className="text-[10px] uppercase tracking-wider text-muted-foreground block mb-0.5">
@@ -262,7 +262,7 @@ export default function VapiVoiceAgent({
           )}
 
           {callStatus === "connecting" && (
-            <span className="absolute inset-0 rounded-full bg-purple-500/20 animate-ping" />
+            <span className="absolute inset-0 rounded-full bg-blue-500/20 animate-ping" />
           )}
 
           <button
@@ -272,11 +272,11 @@ export default function VapiVoiceAgent({
               ${
                 callStatus === "active"
                   ? isSpeaking
-                    ? "bg-gradient-to-br from-purple-500 to-purple-700 shadow-purple-500/40"
-                    : "bg-gradient-to-br from-blue-500 to-blue-700 shadow-blue-500/40"
+                    ? "bg-gradient-to-br from-blue-500 to-cyan-700 shadow-blue-500/40"
+                    : "bg-gradient-to-br from-blue-500 to-cyan-700 shadow-blue-500/40"
                   : callStatus === "connecting"
-                    ? "bg-gradient-to-br from-purple-600 to-purple-800 shadow-purple-500/30 animate-pulse"
-                    : "bg-gradient-to-br from-purple-600 to-blue-600 shadow-purple-500/20 hover:shadow-purple-500/40 hover:scale-105"
+                    ? "bg-gradient-to-br from-blue-600 to-cyan-800 shadow-blue-500/30 animate-pulse"
+                    : "bg-gradient-to-br from-blue-600 to-cyan-600 shadow-blue-500/20 hover:shadow-blue-500/40 hover:scale-105"
               }
               ${callStatus === "connecting" || callStatus === "ending" ? "cursor-wait" : "cursor-pointer"}
             `}

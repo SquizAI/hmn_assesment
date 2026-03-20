@@ -58,7 +58,7 @@ function formatDuration(seconds: number) {
 }
 function getScoreColor(score: number) {
   if (score >= 70) return "bg-gradient-to-r from-green-500 to-emerald-400";
-  if (score >= 50) return "bg-gradient-to-r from-purple-600 to-blue-500";
+  if (score >= 50) return "bg-gradient-to-r from-blue-600 to-cyan-500";
   if (score >= 30) return "bg-gradient-to-r from-yellow-500 to-orange-400";
   return "bg-gradient-to-r from-red-500 to-pink-500";
 }
@@ -112,7 +112,7 @@ function HBarChart({ items, maxValue, colorClass }: { items: { label: string; va
           </div>
           <div className="h-5 w-full bg-muted rounded-md overflow-hidden">
             <div
-              className={`h-full rounded-md transition-all duration-700 ${colorClass || "bg-gradient-to-r from-purple-600 to-blue-500"}`}
+              className={`h-full rounded-md transition-all duration-700 ${colorClass || "bg-gradient-to-r from-blue-600 to-cyan-500"}`}
               style={{ width: `${Math.max((item.value / maxValue) * 100, 2)}%` }}
             />
           </div>
@@ -159,7 +159,7 @@ function MiniTimeline({ data }: { data: { date: string; count: number }[] }) {
         {data.map((d, i) => (
           <div key={i} className="flex-1 flex flex-col items-center justify-end h-full group relative">
             <div
-              className="w-full rounded-t-sm bg-gradient-to-t from-purple-600/80 to-blue-500/60 transition-all duration-300 hover:from-purple-500 hover:to-blue-400 cursor-default min-h-[2px]"
+              className="w-full rounded-t-sm bg-gradient-to-t from-blue-600/80 to-blue-500/60 transition-all duration-300 hover:from-blue-500 hover:to-blue-400 cursor-default min-h-[2px]"
               style={{ height: `${Math.max((d.count / max) * 100, 2)}%` }}
             />
             {/* Tooltip */}
@@ -274,7 +274,7 @@ export default function AdminAnalyticsPage() {
                 onClick={() => setPeriod(p.value)}
                 className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${
                   period === p.value
-                    ? "bg-gradient-to-r from-purple-600 to-blue-600 text-foreground shadow-lg shadow-purple-500/20"
+                    ? "bg-gradient-to-r from-blue-600 to-cyan-600 text-foreground shadow-lg shadow-blue-500/20"
                     : "text-muted-foreground hover:text-foreground/90"
                 }`}
               >
@@ -293,7 +293,7 @@ export default function AdminAnalyticsPage() {
             onClick={() => setActiveTab(tab.value)}
             className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-all whitespace-nowrap ${
               activeTab === tab.value
-                ? "border-purple-500 text-foreground"
+                ? "border-blue-500 text-foreground"
                 : "border-transparent text-muted-foreground hover:text-muted-foreground"
             }`}
           >
@@ -307,7 +307,7 @@ export default function AdminAnalyticsPage() {
         {/* Active filter indicator */}
         {activeFilterCount > 0 && (
           <div className="ml-auto flex items-center gap-2 px-3 shrink-0">
-            <span className="text-[10px] text-purple-400">{activeFilterCount} filter{activeFilterCount > 1 ? "s" : ""} active</span>
+            <span className="text-[10px] text-blue-400">{activeFilterCount} filter{activeFilterCount > 1 ? "s" : ""} active</span>
             <button onClick={clearFilters} className="text-[10px] text-muted-foreground hover:text-muted-foreground underline">
               Clear
             </button>
@@ -410,7 +410,7 @@ export default function AdminAnalyticsPage() {
                 <div className="bg-muted border border-border rounded-2xl p-6">
                   <div className="flex items-center justify-between mb-5">
                     <h3 className="text-base font-semibold text-foreground">Archetype Distribution</h3>
-                    <button onClick={() => setActiveTab("distribution")} className="text-[11px] text-purple-400/70 hover:text-purple-300">
+                    <button onClick={() => setActiveTab("distribution")} className="text-[11px] text-blue-400/70 hover:text-blue-300">
                       View details &rarr;
                     </button>
                   </div>
@@ -426,7 +426,7 @@ export default function AdminAnalyticsPage() {
                 <div className="bg-muted border border-border rounded-2xl p-6">
                   <div className="flex items-center justify-between mb-5">
                     <h3 className="text-base font-semibold text-foreground">Top Dimensions</h3>
-                    <button onClick={() => setActiveTab("dimensions")} className="text-[11px] text-purple-400/70 hover:text-purple-300">
+                    <button onClick={() => setActiveTab("dimensions")} className="text-[11px] text-blue-400/70 hover:text-blue-300">
                       View all &rarr;
                     </button>
                   </div>
@@ -465,13 +465,13 @@ export default function AdminAnalyticsPage() {
                 <span className="text-xs text-muted-foreground">Sort by:</span>
                 <button
                   onClick={() => { setDimSortBy("score"); setDimSortDir((d) => dimSortBy === "score" ? (d === "desc" ? "asc" : "desc") : "desc"); }}
-                  className={`px-3 py-1.5 text-xs rounded-lg border transition-colors ${dimSortBy === "score" ? "bg-purple-500/20 border-purple-500/30 text-purple-300" : "border-border text-muted-foreground hover:text-muted-foreground"}`}
+                  className={`px-3 py-1.5 text-xs rounded-lg border transition-colors ${dimSortBy === "score" ? "bg-blue-500/20 border-blue-500/30 text-blue-300" : "border-border text-muted-foreground hover:text-muted-foreground"}`}
                 >
                   Score {dimSortBy === "score" ? (dimSortDir === "desc" ? "\u2193" : "\u2191") : ""}
                 </button>
                 <button
                   onClick={() => { setDimSortBy("name"); setDimSortDir((d) => dimSortBy === "name" ? (d === "desc" ? "asc" : "desc") : "asc"); }}
-                  className={`px-3 py-1.5 text-xs rounded-lg border transition-colors ${dimSortBy === "name" ? "bg-purple-500/20 border-purple-500/30 text-purple-300" : "border-border text-muted-foreground hover:text-muted-foreground"}`}
+                  className={`px-3 py-1.5 text-xs rounded-lg border transition-colors ${dimSortBy === "name" ? "bg-blue-500/20 border-blue-500/30 text-blue-300" : "border-border text-muted-foreground hover:text-muted-foreground"}`}
                 >
                   Name {dimSortBy === "name" ? (dimSortDir === "desc" ? "\u2193" : "\u2191") : ""}
                 </button>
@@ -539,7 +539,7 @@ export default function AdminAnalyticsPage() {
                 <button
                   onClick={() => setSelectedArchetype(null)}
                   className={`px-3 py-1.5 text-xs rounded-full border transition-colors ${
-                    !selectedArchetype ? "bg-purple-500/20 border-purple-500/30 text-purple-300" : "border-border text-muted-foreground hover:text-muted-foreground"
+                    !selectedArchetype ? "bg-blue-500/20 border-blue-500/30 text-blue-300" : "border-border text-muted-foreground hover:text-muted-foreground"
                   }`}
                 >
                   All
@@ -550,7 +550,7 @@ export default function AdminAnalyticsPage() {
                     onClick={() => setSelectedArchetype(selectedArchetype === a.archetype ? null : a.archetype)}
                     className={`px-3 py-1.5 text-xs rounded-full border transition-colors ${
                       selectedArchetype === a.archetype
-                        ? "bg-purple-500/20 border-purple-500/30 text-purple-300"
+                        ? "bg-blue-500/20 border-blue-500/30 text-blue-300"
                         : "border-border text-muted-foreground hover:text-muted-foreground"
                     }`}
                   >
@@ -609,7 +609,7 @@ export default function AdminAnalyticsPage() {
                               <div
                                 key={a.archetype}
                                 className={`px-3 py-2 rounded-lg border transition-colors cursor-default ${
-                                  selectedArchetype === a.archetype ? "bg-purple-500/15 border-purple-500/30" : "bg-muted border-border"
+                                  selectedArchetype === a.archetype ? "bg-blue-500/15 border-blue-500/30" : "bg-muted border-border"
                                 }`}
                               >
                                 <p className="text-lg font-bold text-foreground">{pct}%</p>
@@ -727,7 +727,7 @@ export default function AdminAnalyticsPage() {
                               <td className="py-2 px-3">
                                 <div className="h-2 bg-muted rounded-full overflow-hidden">
                                   <div
-                                    className="h-full rounded-full bg-gradient-to-r from-purple-500 to-blue-500"
+                                    className="h-full rounded-full bg-gradient-to-r from-blue-500 to-cyan-500"
                                     style={{ width: `${(d.count / max) * 100}%` }}
                                   />
                                 </div>

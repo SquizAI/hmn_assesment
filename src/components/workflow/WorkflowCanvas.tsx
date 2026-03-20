@@ -42,7 +42,7 @@ interface WorkflowCanvasProps {
 const INPUT_TYPE_COLORS: Record<string, { bg: string; text: string }> = {
   ai_conversation: { bg: "bg-amber-500/20", text: "text-amber-300" },
   slider: { bg: "bg-blue-500/20", text: "text-blue-300" },
-  buttons: { bg: "bg-purple-500/20", text: "text-purple-300" },
+  buttons: { bg: "bg-blue-500/20", text: "text-blue-300" },
   multi_select: { bg: "bg-violet-500/20", text: "text-violet-300" },
   open_text: { bg: "bg-gray-500/20", text: "text-muted-foreground" },
   voice: { bg: "bg-green-500/20", text: "text-green-300" },
@@ -54,7 +54,7 @@ const INPUT_TYPE_COLORS: Record<string, { bg: string; text: string }> = {
 
 const PHASE_BORDER_COLORS = [
   "border-l-blue-400",
-  "border-l-purple-400",
+  "border-l-blue-400",
   "border-l-amber-400",
   "border-l-green-400",
 ];
@@ -70,7 +70,7 @@ function BuilderStepNode({ data }: NodeProps) {
 
   const borderClass =
     status === "active"
-      ? "border-purple-500/50 shadow-lg shadow-purple-500/10"
+      ? "border-blue-500/50 shadow-lg shadow-blue-500/10"
       : status === "complete"
         ? "border-emerald-500/30"
         : "border-border opacity-50";
@@ -81,7 +81,7 @@ function BuilderStepNode({ data }: NodeProps) {
     >
       <Handle type="target" position={Position.Left} className="!bg-muted !w-2 !h-2 !border-0" />
       <Handle type="source" position={Position.Right} className="!bg-muted !w-2 !h-2 !border-0" />
-      <Handle type="source" position={Position.Bottom} id="bottom" className="!bg-purple-500/30 !w-2 !h-2 !border-0" />
+      <Handle type="source" position={Position.Bottom} id="bottom" className="!bg-blue-500/30 !w-2 !h-2 !border-0" />
 
       <div className="flex items-center gap-2">
         <span className="text-base">{icon}</span>
@@ -100,10 +100,10 @@ function BuilderStepNode({ data }: NodeProps) {
         {status === "active" && (
           <div className="flex items-center gap-1">
             <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-purple-500" />
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500" />
             </span>
-            <span className="text-[10px] text-purple-400/70">Active</span>
+            <span className="text-[10px] text-blue-400/70">Active</span>
           </div>
         )}
         {status === "pending" && (
@@ -215,7 +215,7 @@ function QuestionNode({ data }: NodeProps) {
       {weight > 0 && (
         <div className="h-[3px] bg-foreground/[0.04] rounded-full overflow-hidden">
           <div
-            className="h-full bg-gradient-to-r from-purple-500/40 to-blue-500/40 rounded-full"
+            className="h-full bg-gradient-to-r from-blue-500/40 to-blue-500/40 rounded-full"
             style={{ width: `${Math.min(weight * 100, 100)}%` }}
           />
         </div>
@@ -244,7 +244,7 @@ function DimensionNode({ data }: NodeProps) {
 
       <div className="h-[3px] bg-foreground/[0.04] rounded-full overflow-hidden">
         <div
-          className="h-full bg-gradient-to-r from-purple-500/50 to-blue-500/50 rounded-full"
+          className="h-full bg-gradient-to-r from-blue-500/50 to-blue-500/50 rounded-full"
           style={{ width: `${Math.min(weight * 100, 100)}%` }}
         />
       </div>

@@ -79,7 +79,7 @@ export default function AnalysisPage() {
     <div className="min-h-screen pb-20">
       <header className="border-b border-border px-6 py-4">
         <div className="max-w-5xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3"><div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-sm font-bold">H</div><span className="font-semibold text-foreground/90">HMN Cascade</span></div>
+          <div className="flex items-center gap-3"><div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-600 flex items-center justify-center text-sm font-bold">H</div><span className="font-semibold text-foreground/90">HMN Cascade</span></div>
           <div className="flex items-center gap-2">
             <Button variant="ghost" onClick={handleDownloadPdf} disabled={downloading}>
               {downloading ? "Generating..." : "Download PDF"}
@@ -94,7 +94,7 @@ export default function AnalysisPage() {
         <section className="text-center space-y-6">
           <h1 className="text-3xl font-bold text-foreground">{name ? `${name}'s` : "Your"} AI Readiness Analysis</h1>
           <div className="inline-flex items-center gap-6 bg-muted border border-border rounded-2xl px-10 py-8">
-            <div><div className="text-6xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">{analysis.overallReadinessScore}</div><div className="text-sm text-muted-foreground mt-1">Overall Score</div></div>
+            <div><div className="text-6xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">{analysis.overallReadinessScore}</div><div className="text-sm text-muted-foreground mt-1">Overall Score</div></div>
             <div className="w-px h-16 bg-muted" />
             <div className="text-left"><div className="text-lg font-semibold text-foreground capitalize">{analysis.archetype.replace(/_/g, " ")}</div><div className="text-sm text-muted-foreground max-w-xs">{analysis.archetypeDescription}</div></div>
           </div>

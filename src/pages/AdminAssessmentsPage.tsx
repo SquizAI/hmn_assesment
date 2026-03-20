@@ -443,7 +443,7 @@ export default function AdminAssessmentsPage() {
 
         <button
           onClick={() => navigate("/admin/builder")}
-          className="w-full sm:w-auto px-4 py-2 text-sm font-medium rounded-xl transition-all bg-gradient-to-r from-purple-500/20 to-blue-500/20 border border-purple-500/20 text-purple-200 hover:from-purple-500/30 hover:to-blue-500/30 hover:text-foreground"
+          className="w-full sm:w-auto px-4 py-2 text-sm font-medium rounded-xl transition-all bg-gradient-to-r from-blue-500/20 to-blue-500/20 border border-blue-500/20 text-blue-200 hover:from-blue-500/30 hover:to-blue-500/30 hover:text-foreground"
         >
           Build Assessment
         </button>
@@ -739,7 +739,7 @@ export default function AdminAssessmentsPage() {
                 <div className="mt-3 flex items-center gap-1.5">
                   {assessment.typeBadge && (
                     <span className={`px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider rounded-full ${
-                      assessment.typeBadge === "Survey" ? "bg-purple-500/15 text-purple-300" :
+                      assessment.typeBadge === "Survey" ? "bg-blue-500/15 text-blue-300" :
                       assessment.typeBadge === "Diagnostic" ? "bg-blue-500/15 text-blue-300" :
                       "bg-muted text-muted-foreground"
                     }`}>
@@ -851,7 +851,7 @@ export default function AdminAssessmentsPage() {
                       <StatusBadge status={assessment.status} />
                       {assessment.typeBadge && (
                         <span className={`px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider rounded-full ${
-                          assessment.typeBadge === "Survey" ? "bg-purple-500/15 text-purple-300" :
+                          assessment.typeBadge === "Survey" ? "bg-blue-500/15 text-blue-300" :
                           assessment.typeBadge === "Diagnostic" ? "bg-blue-500/15 text-blue-300" :
                           "bg-muted text-muted-foreground"
                         }`}>

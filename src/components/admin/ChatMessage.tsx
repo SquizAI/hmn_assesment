@@ -76,7 +76,7 @@ export default function ChatMessage({ role, content, onAction, isLatest, toolCal
                   return (
                     <tr
                       key={i}
-                      className={`transition-colors ${question ? "hover:bg-purple-500/[0.06] cursor-pointer group" : "hover:bg-muted"}`}
+                      className={`transition-colors ${question ? "hover:bg-blue-500/[0.06] cursor-pointer group" : "hover:bg-muted"}`}
                       onClick={question ? () => setEditingQuestion(question) : undefined}
                     >
                       {row.map((cell, j) => (
@@ -87,7 +87,7 @@ export default function ChatMessage({ role, content, onAction, isLatest, toolCal
                       {hasQuestions && (
                         <td className="px-1 py-2 border-b border-border">
                           {question && (
-                            <svg className="w-3.5 h-3.5 text-purple-400/0 group-hover:text-purple-400/60 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                            <svg className="w-3.5 h-3.5 text-blue-400/0 group-hover:text-blue-400/60 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                               <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
                             </svg>
                           )}
@@ -99,7 +99,7 @@ export default function ChatMessage({ role, content, onAction, isLatest, toolCal
               </tbody>
             </table>
             {hasQuestions && (
-              <p className="text-[10px] text-purple-400/40 mt-1 pl-1">Click a question to edit</p>
+              <p className="text-[10px] text-blue-400/40 mt-1 pl-1">Click a question to edit</p>
             )}
           </div>
         );
@@ -228,7 +228,7 @@ export default function ChatMessage({ role, content, onAction, isLatest, toolCal
       const codeMatch = remaining.match(/`(.+?)`/);
       if (codeMatch && codeMatch.index !== undefined) {
         if (codeMatch.index > 0) parts.push(remaining.slice(0, codeMatch.index));
-        parts.push(<code key={key++} className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono text-purple-300">{codeMatch[1]}</code>);
+        parts.push(<code key={key++} className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono text-blue-300">{codeMatch[1]}</code>);
         remaining = remaining.slice(codeMatch.index + codeMatch[0].length);
         continue;
       }

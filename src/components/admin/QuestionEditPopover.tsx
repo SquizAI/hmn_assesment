@@ -73,7 +73,7 @@ export default function QuestionEditPopover({ question, onSave, onClose }: Props
             value={text}
             onChange={(e) => setText(e.target.value)}
             rows={3}
-            className="w-full bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-purple-500/40 focus:ring-1 focus:ring-purple-500/20 resize-none"
+            className="w-full bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-blue-500/40 focus:ring-1 focus:ring-blue-500/20 resize-none"
           />
         </div>
 
@@ -84,7 +84,7 @@ export default function QuestionEditPopover({ question, onSave, onClose }: Props
             <select
               value={inputType}
               onChange={(e) => setInputType(e.target.value)}
-              className="w-full bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:border-purple-500/40 appearance-none"
+              className="w-full bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:border-blue-500/40 appearance-none"
             >
               {INPUT_TYPES.map((t) => (
                 <option key={t.value} value={t.value} className="bg-[#141420]">{t.label}</option>
@@ -100,7 +100,7 @@ export default function QuestionEditPopover({ question, onSave, onClose }: Props
               step="0.1"
               value={weight}
               onChange={(e) => setWeight(e.target.value)}
-              className="w-full bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:border-purple-500/40"
+              className="w-full bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:border-blue-500/40"
             />
           </div>
         </div>
@@ -115,7 +115,7 @@ export default function QuestionEditPopover({ question, onSave, onClose }: Props
           </button>
           <button
             onClick={handleSave}
-            className="px-4 py-1.5 rounded-lg text-xs font-medium bg-purple-500/20 border border-purple-500/30 text-purple-300 hover:bg-purple-500/30 transition-colors"
+            className="px-4 py-1.5 rounded-lg text-xs font-medium bg-blue-500/20 border border-blue-500/30 text-blue-300 hover:bg-blue-500/30 transition-colors"
           >
             Save via AI
           </button>

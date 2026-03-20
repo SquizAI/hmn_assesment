@@ -360,7 +360,7 @@ export default function AdminCompanyDetailPage() {
             >
               {tab === "recommendations" ? "Recs" : humanize(tab)}
               {activeIntelTab === tab && (
-                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-purple-500/70 rounded-full" />
+                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500/70 rounded-full" />
               )}
             </button>
           ))}
@@ -382,7 +382,7 @@ export default function AdminCompanyDetailPage() {
               <button
                 onClick={handleSeedGraph}
                 disabled={seedingGraph}
-                className="mt-3 px-4 py-2 text-xs font-medium text-purple-400/80 hover:text-purple-300 bg-purple-500/10 hover:bg-purple-500/15 border border-purple-500/20 rounded-lg transition-colors"
+                className="mt-3 px-4 py-2 text-xs font-medium text-blue-400/80 hover:text-blue-300 bg-blue-500/10 hover:bg-blue-500/15 border border-blue-500/20 rounded-lg transition-colors"
               >
                 {seedingGraph ? "Seeding..." : "Seed Graph"}
               </button>
@@ -446,7 +446,7 @@ export default function AdminCompanyDetailPage() {
                             </span>
                           </div>
                           <p className="text-xs text-muted-foreground truncate">{p.role}</p>
-                          <span className="inline-block mt-2 text-[10px] px-2 py-0.5 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-400/70">
+                          <span className="inline-block mt-2 text-[10px] px-2 py-0.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400/70">
                             {p.archetype ? humanize(p.archetype.replace("the_", "")) : "Pending"}
                           </span>
                         </div>
@@ -469,7 +469,7 @@ export default function AdminCompanyDetailPage() {
                           <div key={idx} className="flex items-start gap-3 p-3 rounded-xl bg-muted border border-border">
                             <span className={`mt-0.5 text-xs font-bold px-2 py-0.5 rounded-full flex-shrink-0 ${
                               rec.tier === 1
-                                ? "bg-purple-500/15 text-purple-400 border border-purple-500/20"
+                                ? "bg-blue-500/15 text-blue-400 border border-blue-500/20"
                                 : rec.tier === 2
                                 ? "bg-blue-500/15 text-blue-400 border border-blue-500/20"
                                 : "bg-gray-500/15 text-muted-foreground border border-gray-500/20"
@@ -495,7 +495,7 @@ export default function AdminCompanyDetailPage() {
                                 <span className="text-[10px] text-muted-foreground">{rec.frequency}x triggered</span>
                                 <div className="flex-1 max-w-[80px] bg-muted rounded h-1.5 overflow-hidden">
                                   <div
-                                    className="h-full rounded bg-purple-500/50"
+                                    className="h-full rounded bg-blue-500/50"
                                     style={{ width: `${rec.confidence * 100}%` }}
                                   />
                                 </div>
@@ -526,10 +526,10 @@ export default function AdminCompanyDetailPage() {
                               </span>
                             </div>
                             <div className="flex items-center gap-2">
-                              <span className="text-[10px] text-purple-400/50 w-7 text-right flex-shrink-0">{Math.round(b.companyAvg)}</span>
+                              <span className="text-[10px] text-blue-400/50 w-7 text-right flex-shrink-0">{Math.round(b.companyAvg)}</span>
                               <div className="flex-1 bg-muted rounded h-3 overflow-hidden relative">
                                 <div
-                                  className="absolute h-full rounded bg-purple-500/50"
+                                  className="absolute h-full rounded bg-blue-500/50"
                                   style={{ width: `${b.companyAvg}%`, minWidth: "2px" }}
                                 />
                                 <div
@@ -540,7 +540,7 @@ export default function AdminCompanyDetailPage() {
                               <span className="text-[10px] text-muted-foreground w-7 text-right flex-shrink-0">{Math.round(b.globalAvg)}</span>
                             </div>
                             <div className="flex justify-between mt-0.5">
-                              <span className="text-[9px] text-purple-400/30">Company</span>
+                              <span className="text-[9px] text-blue-400/30">Company</span>
                               <span className="text-[9px] text-muted-foreground">Global</span>
                             </div>
                           </div>

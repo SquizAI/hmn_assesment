@@ -310,9 +310,9 @@ export default function QuestionCard({ question, sessionId, onSubmit, onConversa
             })}
             {isAiThinking && (
               <div className="flex gap-1.5 py-1">
-                <span className="w-2 h-2 bg-purple-400/50 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
-                <span className="w-2 h-2 bg-purple-400/50 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
-                <span className="w-2 h-2 bg-purple-400/50 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+                <span className="w-2 h-2 bg-blue-400/50 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+                <span className="w-2 h-2 bg-blue-400/50 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+                <span className="w-2 h-2 bg-blue-400/50 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
               </div>
             )}
             {conversationError && (
@@ -420,12 +420,12 @@ export default function QuestionCard({ question, sessionId, onSubmit, onConversa
                                 value={callPhone}
                                 onChange={(e) => setCallPhone(e.target.value)}
                                 placeholder="+1 (555) 123-4567"
-                                className="flex-1 bg-muted border border-border rounded-xl px-4 py-3 text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:border-purple-500/40 transition-all"
+                                className="flex-1 bg-muted border border-border rounded-xl px-4 py-3 text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:border-blue-500/40 transition-all"
                               />
                               <button
                                 onClick={handleRequestCall}
                                 disabled={!callPhone.trim() || callLoading}
-                                className="px-5 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-blue-600 text-foreground text-sm font-medium hover:opacity-90 disabled:opacity-40 transition-all flex items-center gap-2 whitespace-nowrap"
+                                className="px-5 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 text-foreground text-sm font-medium hover:opacity-90 disabled:opacity-40 transition-all flex items-center gap-2 whitespace-nowrap"
                               >
                                 {callLoading ? (
                                   <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">

@@ -131,7 +131,7 @@ export default function AdminCampaignsPage() {
 
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-3xl font-bold text-foreground">Campaigns</h1>
-        <button onClick={() => setShowNewForm(!showNewForm)} className="px-5 py-2.5 text-sm font-medium rounded-xl bg-gradient-to-r from-purple-600 to-blue-600 text-foreground hover:from-purple-500 hover:to-blue-500 transition-all">
+        <button onClick={() => setShowNewForm(!showNewForm)} className="px-5 py-2.5 text-sm font-medium rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 text-foreground hover:from-blue-500 hover:to-blue-500 transition-all">
           New Campaign
         </button>
       </div>
@@ -143,7 +143,7 @@ export default function AdminCampaignsPage() {
               <input type="text" placeholder="Campaign name..." value={newName} onChange={(e) => setNewName(e.target.value)} autoFocus className="flex-1 bg-muted border border-border rounded-lg px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-border focus:outline-none" />
             </div>
             <div className="flex items-center gap-3">
-              <button type="button" onClick={() => setEnableScheduling(!enableScheduling)} className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${enableScheduling ? "bg-purple-600" : "bg-muted"}`}>
+              <button type="button" onClick={() => setEnableScheduling(!enableScheduling)} className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${enableScheduling ? "bg-blue-600" : "bg-muted"}`}>
                 <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${enableScheduling ? "translate-x-6" : "translate-x-1"}`} />
               </button>
               <span className="text-sm text-muted-foreground">Schedule for later</span>
@@ -179,7 +179,7 @@ export default function AdminCampaignsPage() {
               </div>
             )}
             <div className="flex items-center gap-3">
-              <button type="submit" disabled={creating || !newName.trim() || (enableScheduling && !scheduleDate)} className="px-5 py-2.5 text-sm font-medium rounded-lg bg-gradient-to-r from-purple-600 to-blue-600 text-foreground hover:from-purple-500 hover:to-blue-500 disabled:opacity-50 transition-all">
+              <button type="submit" disabled={creating || !newName.trim() || (enableScheduling && !scheduleDate)} className="px-5 py-2.5 text-sm font-medium rounded-lg bg-gradient-to-r from-blue-600 to-cyan-600 text-foreground hover:from-blue-500 hover:to-blue-500 disabled:opacity-50 transition-all">
                 {creating ? "Creating..." : enableScheduling ? "Create & Schedule" : "Create"}
               </button>
               <button type="button" onClick={() => { resetForm(); setShowNewForm(false); }} className="px-4 py-2.5 text-sm text-muted-foreground hover:text-muted-foreground transition-colors">Cancel</button>
@@ -206,12 +206,12 @@ export default function AdminCampaignsPage() {
                   <StatusBadge status={campaign.status} size="sm" />
                 </div>
                 {campaign.status === "scheduled" && campaign.scheduled_at && (
-                  <div className="mb-3 px-3 py-2 bg-purple-500/10 border border-purple-500/20 rounded-lg">
+                  <div className="mb-3 px-3 py-2 bg-blue-500/10 border border-blue-500/20 rounded-lg">
                     <div className="flex items-center gap-1.5">
-                      <svg className="w-3.5 h-3.5 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <svg className="w-3.5 h-3.5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
-                      <span className="text-xs text-purple-400">{formatScheduledDate(campaign.scheduled_at)}</span>
+                      <span className="text-xs text-blue-400">{formatScheduledDate(campaign.scheduled_at)}</span>
                     </div>
                   </div>
                 )}
@@ -221,7 +221,7 @@ export default function AdminCampaignsPage() {
                     <span className="text-xs text-muted-foreground font-medium">{progress}%</span>
                   </div>
                   <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-                    <div className="h-full bg-gradient-to-r from-purple-500 to-blue-500 rounded-full transition-all duration-500" style={{ width: `${progress}%` }} />
+                    <div className="h-full bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full transition-all duration-500" style={{ width: `${progress}%` }} />
                   </div>
                 </div>
                 <div className="flex items-center gap-4 text-xs">

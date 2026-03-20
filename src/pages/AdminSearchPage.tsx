@@ -62,7 +62,7 @@ export default function AdminSearchPage() {
 
       <div className="relative mb-6">
         <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>
-        <input ref={inputRef} type="text" value={inputValue} onChange={(e) => setInputValue(e.target.value)} placeholder="Search by name, company, email, industry..." className="w-full bg-muted border border-border rounded-xl pl-12 pr-4 py-3.5 text-foreground placeholder:text-muted-foreground text-base focus:border-purple-500/50 focus:outline-none focus:ring-1 focus:ring-purple-500/20 transition-all" />
+        <input ref={inputRef} type="text" value={inputValue} onChange={(e) => setInputValue(e.target.value)} placeholder="Search by name, company, email, industry..." className="w-full bg-muted border border-border rounded-xl pl-12 pr-4 py-3.5 text-foreground placeholder:text-muted-foreground text-base focus:border-blue-500/50 focus:outline-none focus:ring-1 focus:ring-blue-500/20 transition-all" />
         {inputValue && <button onClick={() => { setInputValue(""); inputRef.current?.focus(); }} className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground"><svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></button>}
       </div>
 
@@ -98,7 +98,7 @@ export default function AdminSearchPage() {
                       </div>
                       <div className="flex items-center gap-3">
                         {s.overall_score !== null && <span className="text-sm font-semibold text-foreground/80">{Math.round(s.overall_score)}</span>}
-                        {s.archetype && <span className="px-2 py-0.5 text-[10px] font-medium bg-purple-500/10 text-purple-300 rounded-full">{s.archetype}</span>}
+                        {s.archetype && <span className="px-2 py-0.5 text-[10px] font-medium bg-blue-500/10 text-blue-300 rounded-full">{s.archetype}</span>}
                         <span className="text-xs text-muted-foreground">{formatDate(s.created_at)}</span>
                       </div>
                     </div>

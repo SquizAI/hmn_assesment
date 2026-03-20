@@ -64,7 +64,7 @@ export default function ResearchCard({
           <button
             onClick={onTriggerResearch}
             disabled={triggerLoading}
-            className="px-4 py-2 rounded-xl bg-purple-500/15 border border-purple-500/30 text-purple-300 text-sm font-medium hover:bg-purple-500/25 transition-all disabled:opacity-40"
+            className="px-4 py-2 rounded-xl bg-blue-500/15 border border-blue-500/30 text-blue-300 text-sm font-medium hover:bg-blue-500/25 transition-all disabled:opacity-40"
           >
             {triggerLoading ? (
               <span className="flex items-center gap-2">
@@ -210,7 +210,7 @@ export default function ResearchCard({
               <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Products</span>
               <div className="flex flex-wrap gap-1 mt-1">
                 {companyProfile.products.map((p, i) => (
-                  <span key={i} className="text-xs px-2 py-0.5 rounded-lg bg-purple-500/10 border border-purple-500/20 text-purple-300">
+                  <span key={i} className="text-xs px-2 py-0.5 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-300">
                     {p}
                   </span>
                 ))}
@@ -256,7 +256,7 @@ export default function ResearchCard({
           <ul className="space-y-1.5">
             {interviewAngles.map((angle, i) => (
               <li key={i} className="text-xs text-muted-foreground flex gap-2">
-                <span className="text-purple-400/60 mt-0.5 flex-shrink-0">&#x25B8;</span>
+                <span className="text-blue-400/60 mt-0.5 flex-shrink-0">&#x25B8;</span>
                 <span>{angle}</span>
               </li>
             ))}

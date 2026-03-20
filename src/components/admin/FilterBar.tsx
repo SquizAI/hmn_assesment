@@ -13,14 +13,14 @@ interface FilterBarProps {
 const selectClass = (active: boolean) =>
   `appearance-none bg-muted border rounded-lg text-xs text-foreground/90 px-2.5 py-1.5 outline-none transition-colors cursor-pointer ${
     active
-      ? "border-purple-500/40 bg-purple-500/10"
+      ? "border-blue-500/40 bg-blue-500/10"
       : "border-border hover:border-border"
   }`;
 
 const dateClass = (active: boolean) =>
   `bg-muted border rounded-lg text-xs text-foreground/90 px-2.5 py-1.5 outline-none transition-colors [color-scheme:dark] ${
     active
-      ? "border-purple-500/40 bg-purple-500/10"
+      ? "border-blue-500/40 bg-blue-500/10"
       : "border-border hover:border-border"
   }`;
 
@@ -177,7 +177,7 @@ export default function FilterBar({
           onClick={clearAll}
           className="ml-auto flex items-center gap-1.5 text-xs text-muted-foreground hover:text-muted-foreground transition-colors"
         >
-          <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-purple-500/20 text-[10px] text-purple-300 font-medium">
+          <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-blue-500/20 text-[10px] text-blue-300 font-medium">
             {activeCount}
           </span>
           <svg

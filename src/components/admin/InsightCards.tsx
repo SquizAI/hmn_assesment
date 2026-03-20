@@ -44,7 +44,7 @@ export default function InsightCards({
     label: "Sessions Tracked",
     value: String(totalSessions),
     detail: `${completionRate}% completion rate across ${companyCount} ${companyCount === 1 ? "company" : "companies"}`,
-    color: "from-purple-500/20 to-blue-500/20",
+    color: "from-blue-500/20 to-blue-500/20",
   });
 
   // Average score

@@ -315,8 +315,8 @@ export default function CsvUploadModal({ assessments, onClose, onComplete }: Pro
               const isActive = i <= current;
               return (
                 <div key={label} className="flex items-center gap-2">
-                  {i > 0 && <div className={`w-6 h-px ${isActive ? "bg-purple-500/50" : "bg-muted"}`} />}
-                  <div className={`text-xs font-medium ${isActive ? "text-purple-400" : "text-muted-foreground"}`}>
+                  {i > 0 && <div className={`w-6 h-px ${isActive ? "bg-blue-500/50" : "bg-muted"}`} />}
+                  <div className={`text-xs font-medium ${isActive ? "text-blue-400" : "text-muted-foreground"}`}>
                     {label}
                   </div>
                 </div>
@@ -351,7 +351,7 @@ export default function CsvUploadModal({ assessments, onClose, onComplete }: Pro
                   onDragLeave={() => setDragOver(false)}
                   className={`border-2 border-dashed rounded-xl p-10 text-center transition-colors ${
                     dragOver
-                      ? "border-purple-500/50 bg-purple-500/5"
+                      ? "border-blue-500/50 bg-blue-500/5"
                       : "border-border hover:border-border"
                   }`}
                 >
@@ -446,7 +446,7 @@ export default function CsvUploadModal({ assessments, onClose, onComplete }: Pro
                       type="checkbox"
                       checked={sendEmail}
                       onChange={(e) => setSendEmail(e.target.checked)}
-                      className="w-4 h-4 rounded border-border bg-muted text-purple-500 focus:ring-purple-500/30"
+                      className="w-4 h-4 rounded border-border bg-muted text-blue-500 focus:ring-blue-500/30"
                     />
                     <div>
                       <span className="text-sm text-foreground/80">Send invitation emails</span>
@@ -534,7 +534,7 @@ export default function CsvUploadModal({ assessments, onClose, onComplete }: Pro
                 </p>
                 <div className="w-full bg-muted rounded-full h-2 max-w-xs mx-auto">
                   <div
-                    className="bg-gradient-to-r from-purple-500 to-blue-500 h-2 rounded-full transition-all duration-300"
+                    className="bg-gradient-to-r from-blue-500 to-cyan-500 h-2 rounded-full transition-all duration-300"
                     style={{ width: `${importProgress}%` }}
                   />
                 </div>
@@ -628,7 +628,7 @@ export default function CsvUploadModal({ assessments, onClose, onComplete }: Pro
                   disabled={validRows.length === 0 || !assessmentId}
                   className={`px-5 py-2 text-sm font-medium rounded-xl border transition-all ${
                     validRows.length > 0 && assessmentId
-                      ? "bg-gradient-to-r from-purple-500/20 to-blue-500/20 border-purple-500/20 text-purple-200 hover:from-purple-500/30 hover:to-blue-500/30 hover:text-foreground"
+                      ? "bg-gradient-to-r from-blue-500/20 to-blue-500/20 border-blue-500/20 text-blue-200 hover:from-blue-500/30 hover:to-blue-500/30 hover:text-foreground"
                       : "bg-foreground/[0.04] border-border text-muted-foreground cursor-not-allowed"
                   }`}
                 >

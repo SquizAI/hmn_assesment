@@ -11,7 +11,7 @@ const COLOR_MAP: Record<string, string> = {
   yellow: "text-yellow-400",
   red: "text-red-400",
   blue: "text-blue-400",
-  purple: "text-purple-400",
+  purple: "text-blue-400",
 };
 
 export default function StatCard({ label, value, sub, color = "default" }: StatCardProps) {

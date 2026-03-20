@@ -190,7 +190,7 @@ export default function AdminPreviewPage() {
             </button>
             <button
               onClick={() => setMode("autopilot")}
-              className={`px-3 py-1 text-xs font-medium transition-colors ${mode === "autopilot" ? "bg-purple-500/20 text-purple-300" : "text-muted-foreground hover:text-muted-foreground"}`}
+              className={`px-3 py-1 text-xs font-medium transition-colors ${mode === "autopilot" ? "bg-blue-500/20 text-blue-300" : "text-muted-foreground hover:text-muted-foreground"}`}
             >
               Auto-pilot
             </button>
@@ -249,7 +249,7 @@ export default function AdminPreviewPage() {
           <div className="max-w-3xl mx-auto space-y-6">
             {/* Score */}
             <div className="text-center space-y-3">
-              <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-gradient-to-br from-blue-500/20 to-purple-500/20 border border-border">
+              <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-gradient-to-br from-blue-500/20 to-blue-500/20 border border-border">
                 <span className="text-3xl font-bold text-foreground">{analysis.overallReadinessScore ?? "—"}</span>
               </div>
               <div>
@@ -424,7 +424,7 @@ export default function AdminPreviewPage() {
               <button
                 onClick={handleAutopilot}
                 disabled={isSubmitting}
-                className="mt-6 px-6 py-2.5 rounded-xl text-sm font-medium bg-purple-500/15 border border-purple-500/25 text-purple-300 hover:bg-purple-500/25 transition-all disabled:opacity-50"
+                className="mt-6 px-6 py-2.5 rounded-xl text-sm font-medium bg-blue-500/15 border border-blue-500/25 text-blue-300 hover:bg-blue-500/25 transition-all disabled:opacity-50"
               >
                 {isSubmitting ? "Submitting..." : "Auto-answer & Next →"}
               </button>

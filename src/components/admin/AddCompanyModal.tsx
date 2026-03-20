@@ -182,7 +182,7 @@ export default function AddCompanyModal({ open, onClose, onCreated }: Props) {
                 {(["company", "employees", "review"] as Step[]).map((s, i) => (
                   <div key={s} className="flex items-center gap-1.5">
                     <div className={`w-2 h-2 rounded-full transition-colors ${
-                      s === step ? "bg-purple-400" : (["company", "employees", "review"].indexOf(step) > i ? "bg-purple-400/40" : "bg-muted")
+                      s === step ? "bg-blue-400" : (["company", "employees", "review"].indexOf(step) > i ? "bg-blue-400/40" : "bg-muted")
                     }`} />
                     <span className={`text-[10px] ${s === step ? "text-muted-foreground" : "text-muted-foreground"}`}>
                       {s === "company" ? "Company" : s === "employees" ? "People" : "Review"}
@@ -223,7 +223,7 @@ export default function AddCompanyModal({ open, onClose, onCreated }: Props) {
                     onCreated();
                     onClose();
                   }}
-                  className="px-4 py-2 rounded-xl bg-purple-500/20 border border-purple-500/30 text-purple-300 text-sm font-medium hover:bg-purple-500/30 transition-all"
+                  className="px-4 py-2 rounded-xl bg-blue-500/20 border border-blue-500/30 text-blue-300 text-sm font-medium hover:bg-blue-500/30 transition-all"
                 >
                   Done
                 </button>
@@ -242,7 +242,7 @@ export default function AddCompanyModal({ open, onClose, onCreated }: Props) {
                   value={companyName}
                   onChange={(e) => setCompanyName(e.target.value)}
                   placeholder="Acme Corp"
-                  className="w-full bg-muted border border-border rounded-xl px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-purple-500/40 transition-colors"
+                  className="w-full bg-muted border border-border rounded-xl px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-blue-500/40 transition-colors"
                   onKeyDown={(e) => e.key === "Enter" && canProceedToEmployees && setStep("employees")}
                 />
               </div>
@@ -253,7 +253,7 @@ export default function AddCompanyModal({ open, onClose, onCreated }: Props) {
                   value={domain}
                   onChange={(e) => setDomain(e.target.value)}
                   placeholder="acme.com"
-                  className="w-full bg-muted border border-border rounded-xl px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-purple-500/40 transition-colors"
+                  className="w-full bg-muted border border-border rounded-xl px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-blue-500/40 transition-colors"
                 />
                 <p className="text-[11px] text-muted-foreground mt-1">Auto-detected from employee emails</p>
               </div>
@@ -264,7 +264,7 @@ export default function AddCompanyModal({ open, onClose, onCreated }: Props) {
                   value={industry}
                   onChange={(e) => setIndustry(e.target.value)}
                   placeholder="Technology, Healthcare, Finance..."
-                  className="w-full bg-muted border border-border rounded-xl px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-purple-500/40 transition-colors"
+                  className="w-full bg-muted border border-border rounded-xl px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-blue-500/40 transition-colors"
                 />
               </div>
             </div>
@@ -293,7 +293,7 @@ export default function AddCompanyModal({ open, onClose, onCreated }: Props) {
                         value={emp.name}
                         onChange={(e) => updateEmployee(i, "name", e.target.value)}
                         placeholder="Name"
-                        className="bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-purple-500/40 transition-colors"
+                        className="bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-blue-500/40 transition-colors"
                       />
                       <input
                         type="email"
@@ -303,14 +303,14 @@ export default function AddCompanyModal({ open, onClose, onCreated }: Props) {
                           if (i === 0) autoDetectDomain(e.target.value);
                         }}
                         placeholder="email@company.com"
-                        className="bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-purple-500/40 transition-colors"
+                        className="bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-blue-500/40 transition-colors"
                       />
                       <input
                         type="text"
                         value={emp.role}
                         onChange={(e) => updateEmployee(i, "role", e.target.value)}
                         placeholder="Role (optional)"
-                        className="bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-purple-500/40 transition-colors"
+                        className="bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-blue-500/40 transition-colors"
                         onKeyDown={(e) => {
                           if (e.key === "Enter") {
                             e.preventDefault();
@@ -334,7 +334,7 @@ export default function AddCompanyModal({ open, onClose, onCreated }: Props) {
               {/* Add more */}
               <button
                 onClick={addEmployee}
-                className="flex items-center gap-2 text-sm text-purple-400/70 hover:text-purple-300 transition-colors"
+                className="flex items-center gap-2 text-sm text-blue-400/70 hover:text-blue-300 transition-colors"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
@@ -348,7 +348,7 @@ export default function AddCompanyModal({ open, onClose, onCreated }: Props) {
                 <select
                   value={selectedAssessment}
                   onChange={(e) => setSelectedAssessment(e.target.value)}
-                  className="w-full bg-muted border border-border rounded-xl px-4 py-2.5 text-sm text-foreground outline-none focus:border-purple-500/40 transition-colors appearance-none cursor-pointer"
+                  className="w-full bg-muted border border-border rounded-xl px-4 py-2.5 text-sm text-foreground outline-none focus:border-blue-500/40 transition-colors appearance-none cursor-pointer"
                 >
                   <option value="">Select an assessment...</option>
                   {assessments.map((a) => (
@@ -366,7 +366,7 @@ export default function AddCompanyModal({ open, onClose, onCreated }: Props) {
                     onChange={(e) => setSendEmail(e.target.checked)}
                     className="sr-only peer"
                   />
-                  <div className="w-9 h-5 rounded-full bg-muted peer-checked:bg-purple-500/50 transition-colors" />
+                  <div className="w-9 h-5 rounded-full bg-muted peer-checked:bg-blue-500/50 transition-colors" />
                   <div className="absolute left-0.5 top-0.5 w-4 h-4 rounded-full bg-foreground/60 peer-checked:translate-x-4 peer-checked:bg-white transition-all" />
                 </div>
                 <span className="text-sm text-muted-foreground">Send invitation emails</span>
@@ -459,7 +459,7 @@ export default function AddCompanyModal({ open, onClose, onCreated }: Props) {
               <button
                 onClick={() => setStep("employees")}
                 disabled={!canProceedToEmployees}
-                className="px-5 py-2 rounded-xl bg-purple-500/20 border border-purple-500/30 text-purple-300 text-sm font-medium hover:bg-purple-500/30 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                className="px-5 py-2 rounded-xl bg-blue-500/20 border border-blue-500/30 text-blue-300 text-sm font-medium hover:bg-blue-500/30 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
               >
                 Next: Add Employees
               </button>
@@ -469,7 +469,7 @@ export default function AddCompanyModal({ open, onClose, onCreated }: Props) {
               <button
                 onClick={() => setStep("review")}
                 disabled={!canProceedToReview}
-                className="px-5 py-2 rounded-xl bg-purple-500/20 border border-purple-500/30 text-purple-300 text-sm font-medium hover:bg-purple-500/30 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                className="px-5 py-2 rounded-xl bg-blue-500/20 border border-blue-500/30 text-blue-300 text-sm font-medium hover:bg-blue-500/30 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
               >
                 Next: Review
               </button>
@@ -479,7 +479,7 @@ export default function AddCompanyModal({ open, onClose, onCreated }: Props) {
               <button
                 onClick={handleSubmit}
                 disabled={submitting}
-                className="px-5 py-2 rounded-xl bg-purple-600 text-foreground text-sm font-medium hover:bg-purple-500 transition-all disabled:opacity-50 flex items-center gap-2"
+                className="px-5 py-2 rounded-xl bg-blue-600 text-foreground text-sm font-medium hover:bg-blue-500 transition-all disabled:opacity-50 flex items-center gap-2"
               >
                 {submitting ? (
                   <>
