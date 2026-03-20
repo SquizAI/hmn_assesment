@@ -42,13 +42,13 @@ export default function ProgressBar({ questionNumber, totalQuestions, phase, sec
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <div>
-          <span className="text-xs font-medium text-white/40 uppercase tracking-wider">{pLabels[phase] || formatLabel(phase)}</span>
-          <span className="text-white/20 mx-2">/</span>
-          <span className="text-xs text-white/60">{sLabels[section] || formatLabel(section)}</span>
+          <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{pLabels[phase] || formatLabel(phase)}</span>
+          <span className="text-muted-foreground/50 mx-2">/</span>
+          <span className="text-xs text-muted-foreground">{sLabels[section] || formatLabel(section)}</span>
         </div>
-        <span className="text-xs text-white/40">{questionNumber} of {totalQuestions}</span>
+        <span className="text-xs text-muted-foreground">{questionNumber} of {totalQuestions}</span>
       </div>
-      <div className="h-1 w-full bg-white/10 rounded-full overflow-hidden">
+      <div className="h-1 w-full bg-muted rounded-full overflow-hidden">
         <div className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full transition-all duration-700 ease-out" style={{ width: `${completedPercentage}%` }} />
       </div>
     </div>

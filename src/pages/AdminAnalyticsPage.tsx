@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback, useMemo } from "react";
+import { fetchAnalytics as fetchAnalyticsApi } from "../lib/admin-api";
 
 // ============================================================
 // Types
@@ -85,17 +86,17 @@ async function downloadCsv(url: string, filename: string) {
 
 function KPICard({ label, value, sub, trend }: { label: string; value: string | number; sub?: string; trend?: "up" | "down" | "neutral" }) {
   return (
-    <div className="bg-white/5 border border-white/10 rounded-xl p-5 hover:bg-white/[0.07] transition-colors group">
-      <p className="text-sm text-white/50 mb-1">{label}</p>
+    <div className="bg-muted border border-border rounded-xl p-5 hover:bg-white/[0.07] transition-colors group">
+      <p className="text-sm text-muted-foreground mb-1">{label}</p>
       <div className="flex items-end gap-2">
-        <p className="text-3xl font-bold text-white">{value}</p>
+        <p className="text-3xl font-bold text-foreground">{value}</p>
         {trend && (
-          <span className={`text-xs mb-1 ${trend === "up" ? "text-green-400" : trend === "down" ? "text-red-400" : "text-white/30"}`}>
+          <span className={`text-xs mb-1 ${trend === "up" ? "text-green-400" : trend === "down" ? "text-red-400" : "text-muted-foreground/70"}`}>
             {trend === "up" ? "\u2191" : trend === "down" ? "\u2193" : "\u2014"}
           </span>
         )}
       </div>
-      {sub && <p className="text-xs text-white/40 mt-2">{sub}</p>}
+      {sub && <p className="text-xs text-muted-foreground mt-2">{sub}</p>}
     </div>
   );
 }
@@ -106,10 +107,10 @@ function HBarChart({ items, maxValue, colorClass }: { items: { label: string; va
       {items.map((item, i) => (
         <div key={i}>
           <div className="flex items-center justify-between mb-1">
-            <span className="text-sm text-white/70 truncate">{item.label}</span>
-            <span className="text-sm font-medium text-white/50 ml-2 shrink-0">{item.value}</span>
+            <span className="text-sm text-foreground/80 truncate">{item.label}</span>
+            <span className="text-sm font-medium text-muted-foreground ml-2 shrink-0">{item.value}</span>
           </div>
-          <div className="h-5 w-full bg-white/5 rounded-md overflow-hidden">
+          <div className="h-5 w-full bg-muted rounded-md overflow-hidden">
             <div
               className={`h-full rounded-md transition-all duration-700 ${colorClass || "bg-gradient-to-r from-purple-600 to-blue-500"}`}
               style={{ width: `${Math.max((item.value / maxValue) * 100, 2)}%` }}
@@ -125,16 +126,16 @@ function RankedList({ items, label }: { items: { name: string; value: number }[]
   const max = Math.max(...items.map((d) => d.value), 1);
   return (
     <div className="space-y-2.5">
-      {label && <h4 className="text-xs text-white/30 uppercase tracking-wider mb-3">{label}</h4>}
+      {label && <h4 className="text-xs text-muted-foreground/70 uppercase tracking-wider mb-3">{label}</h4>}
       {items.map((item, i) => (
         <div key={i} className="flex items-center gap-3">
-          <span className="text-xs text-white/30 w-5 text-right shrink-0">{i + 1}</span>
+          <span className="text-xs text-muted-foreground/70 w-5 text-right shrink-0">{i + 1}</span>
           <div className="flex-1 min-w-0">
             <div className="flex justify-between mb-1">
-              <span className="text-sm text-white/70 truncate">{item.name}</span>
-              <span className="text-xs text-white/40 shrink-0 ml-2">{item.value}</span>
+              <span className="text-sm text-foreground/80 truncate">{item.name}</span>
+              <span className="text-xs text-muted-foreground shrink-0 ml-2">{item.value}</span>
             </div>
-            <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
+            <div className="h-1.5 bg-muted rounded-full overflow-hidden">
               <div
                 className="h-full rounded-full bg-gradient-to-r from-blue-500 to-cyan-400"
                 style={{ width: `${Math.max((item.value / max) * 100, 2)}%` }}
@@ -143,14 +144,14 @@ function RankedList({ items, label }: { items: { name: string; value: number }[]
           </div>
         </div>
       ))}
-      {items.length === 0 && <p className="text-sm text-white/30">No data</p>}
+      {items.length === 0 && <p className="text-sm text-muted-foreground/70">No data</p>}
     </div>
   );
 }
 
 // Sparkline-style mini area chart (pure CSS/divs)
 function MiniTimeline({ data }: { data: { date: string; count: number }[] }) {
-  if (data.length === 0) return <p className="text-sm text-white/30">No timeline data</p>;
+  if (data.length === 0) return <p className="text-sm text-muted-foreground/70">No timeline data</p>;
   const max = Math.max(...data.map((d) => d.count), 1);
   return (
     <div>
@@ -163,7 +164,7 @@ function MiniTimeline({ data }: { data: { date: string; count: number }[] }) {
             />
             {/* Tooltip */}
             <div className="absolute bottom-full mb-1 hidden group-hover:block z-10">
-              <div className="bg-black/90 border border-white/10 rounded-lg px-2 py-1 text-[10px] text-white whitespace-nowrap">
+              <div className="bg-black/90 border border-border rounded-lg px-2 py-1 text-[10px] text-foreground whitespace-nowrap">
                 {d.date}: {d.count}
               </div>
             </div>
@@ -201,9 +202,7 @@ export default function AdminAnalyticsPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/admin/analytics?period=${p}`, { credentials: "include" });
-      if (!res.ok) throw new Error(`Failed (${res.status})`);
-      setData(await res.json());
+      setData(await fetchAnalyticsApi(p));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unknown error");
     } finally {
@@ -257,26 +256,26 @@ export default function AdminAnalyticsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-white">Analytics</h1>
-          <p className="text-white/40 mt-1">Aggregate assessment insights and reporting</p>
+          <h1 className="text-3xl font-bold text-foreground">Analytics</h1>
+          <p className="text-muted-foreground mt-1">Aggregate assessment insights and reporting</p>
         </div>
         <div className="flex items-center gap-3 flex-wrap">
           <button
             onClick={() => handleExport("sessions")}
             disabled={exporting}
-            className="px-4 py-2 text-sm font-medium rounded-lg bg-white/10 text-white hover:bg-white/20 border border-white/10 disabled:opacity-50 transition-colors"
+            className="px-4 py-2 text-sm font-medium rounded-lg bg-muted text-foreground hover:bg-white/20 border border-border disabled:opacity-50 transition-colors"
           >
             Export Assessments
           </button>
-          <div className="flex items-center bg-white/5 border border-white/10 rounded-xl p-1">
+          <div className="flex items-center bg-muted border border-border rounded-xl p-1">
             {PERIODS.map((p) => (
               <button
                 key={p.value}
                 onClick={() => setPeriod(p.value)}
                 className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${
                   period === p.value
-                    ? "bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-lg shadow-purple-500/20"
-                    : "text-white/50 hover:text-white/80"
+                    ? "bg-gradient-to-r from-purple-600 to-blue-600 text-foreground shadow-lg shadow-purple-500/20"
+                    : "text-muted-foreground hover:text-foreground/90"
                 }`}
               >
                 {p.label}
@@ -294,8 +293,8 @@ export default function AdminAnalyticsPage() {
             onClick={() => setActiveTab(tab.value)}
             className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-all whitespace-nowrap ${
               activeTab === tab.value
-                ? "border-purple-500 text-white"
-                : "border-transparent text-white/40 hover:text-white/60"
+                ? "border-purple-500 text-foreground"
+                : "border-transparent text-muted-foreground hover:text-muted-foreground"
             }`}
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -309,7 +308,7 @@ export default function AdminAnalyticsPage() {
         {activeFilterCount > 0 && (
           <div className="ml-auto flex items-center gap-2 px-3 shrink-0">
             <span className="text-[10px] text-purple-400">{activeFilterCount} filter{activeFilterCount > 1 ? "s" : ""} active</span>
-            <button onClick={clearFilters} className="text-[10px] text-white/30 hover:text-white/60 underline">
+            <button onClick={clearFilters} className="text-[10px] text-muted-foreground/70 hover:text-muted-foreground underline">
               Clear
             </button>
           </div>
@@ -331,15 +330,15 @@ export default function AdminAnalyticsPage() {
         <div className="space-y-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="bg-white/5 border border-white/10 rounded-xl p-6 animate-pulse">
-                <div className="h-3 w-24 bg-white/10 rounded mb-3" />
-                <div className="h-8 w-16 bg-white/10 rounded" />
+              <div key={i} className="bg-muted border border-border rounded-xl p-6 animate-pulse">
+                <div className="h-3 w-24 bg-muted rounded mb-3" />
+                <div className="h-8 w-16 bg-muted rounded" />
               </div>
             ))}
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {[1, 2].map((i) => (
-              <div key={i} className="bg-white/5 border border-white/10 rounded-2xl p-6 h-48 animate-pulse" />
+              <div key={i} className="bg-muted border border-border rounded-2xl p-6 h-48 animate-pulse" />
             ))}
           </div>
         </div>
@@ -376,28 +375,28 @@ export default function AdminAnalyticsPage() {
 
               {/* Timeline + Score Distribution */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-                  <h3 className="text-base font-semibold text-white mb-5">Assessments Over Time</h3>
+                <div className="bg-muted border border-border rounded-2xl p-6">
+                  <h3 className="text-base font-semibold text-foreground mb-5">Assessments Over Time</h3>
                   <MiniTimeline data={data.assessments_over_time} />
                 </div>
-                <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-                  <h3 className="text-base font-semibold text-white mb-5">Score Distribution</h3>
+                <div className="bg-muted border border-border rounded-2xl p-6">
+                  <h3 className="text-base font-semibold text-foreground mb-5">Score Distribution</h3>
                   {data.score_distribution.length === 0 ? (
-                    <p className="text-sm text-white/30">No data</p>
+                    <p className="text-sm text-muted-foreground/70">No data</p>
                   ) : (
                     <div className="flex items-end gap-2 h-32">
                       {data.score_distribution.map((item, i) => {
                         const max = Math.max(...data.score_distribution.map((d) => d.count), 1);
                         return (
                           <div key={i} className="flex-1 flex flex-col items-center justify-end h-full group relative">
-                            <span className="text-xs text-white/50 mb-1">{item.count}</span>
+                            <span className="text-xs text-muted-foreground mb-1">{item.count}</span>
                             <div className="w-full relative flex-1 flex items-end">
                               <div
                                 className="w-full rounded-t-md bg-gradient-to-t from-blue-500 to-cyan-400 transition-all duration-700 hover:from-blue-400 hover:to-cyan-300"
                                 style={{ height: `${Math.max((item.count / max) * 100, 3)}%` }}
                               />
                             </div>
-                            <span className="text-[10px] text-white/40 mt-2">{item.label}</span>
+                            <span className="text-[10px] text-muted-foreground mt-2">{item.label}</span>
                           </div>
                         );
                       })}
@@ -408,15 +407,15 @@ export default function AdminAnalyticsPage() {
 
               {/* Archetype + Industry quick view */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+                <div className="bg-muted border border-border rounded-2xl p-6">
                   <div className="flex items-center justify-between mb-5">
-                    <h3 className="text-base font-semibold text-white">Archetype Distribution</h3>
+                    <h3 className="text-base font-semibold text-foreground">Archetype Distribution</h3>
                     <button onClick={() => setActiveTab("distribution")} className="text-[11px] text-purple-400/70 hover:text-purple-300">
                       View details &rarr;
                     </button>
                   </div>
                   {data.archetype_distribution.length === 0 ? (
-                    <p className="text-sm text-white/30">No data</p>
+                    <p className="text-sm text-muted-foreground/70">No data</p>
                   ) : (
                     <HBarChart
                       items={data.archetype_distribution.slice(0, 5).map((d) => ({ label: d.archetype, value: d.count }))}
@@ -424,24 +423,24 @@ export default function AdminAnalyticsPage() {
                     />
                   )}
                 </div>
-                <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+                <div className="bg-muted border border-border rounded-2xl p-6">
                   <div className="flex items-center justify-between mb-5">
-                    <h3 className="text-base font-semibold text-white">Top Dimensions</h3>
+                    <h3 className="text-base font-semibold text-foreground">Top Dimensions</h3>
                     <button onClick={() => setActiveTab("dimensions")} className="text-[11px] text-purple-400/70 hover:text-purple-300">
                       View all &rarr;
                     </button>
                   </div>
                   {data.dimension_averages.length === 0 ? (
-                    <p className="text-sm text-white/30">No data</p>
+                    <p className="text-sm text-muted-foreground/70">No data</p>
                   ) : (
                     <div className="space-y-3">
                       {[...data.dimension_averages].sort((a, b) => b.average - a.average).slice(0, 5).map((dim) => (
                         <div key={dim.dimension}>
                           <div className="flex items-center justify-between mb-1">
-                            <span className="text-sm text-white/70">{dim.label}</span>
+                            <span className="text-sm text-foreground/80">{dim.label}</span>
                             <span className={`text-sm font-semibold ${getScoreTextColor(dim.average)}`}>{dim.average}</span>
                           </div>
-                          <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden">
+                          <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
                             <div
                               className={`h-full rounded-full transition-all duration-700 ${getScoreColor(dim.average)}`}
                               style={{ width: `${Math.max(dim.average, 1)}%` }}
@@ -463,39 +462,39 @@ export default function AdminAnalyticsPage() {
             <div className="space-y-6">
               {/* Sort controls */}
               <div className="flex items-center gap-3">
-                <span className="text-xs text-white/40">Sort by:</span>
+                <span className="text-xs text-muted-foreground">Sort by:</span>
                 <button
                   onClick={() => { setDimSortBy("score"); setDimSortDir((d) => dimSortBy === "score" ? (d === "desc" ? "asc" : "desc") : "desc"); }}
-                  className={`px-3 py-1.5 text-xs rounded-lg border transition-colors ${dimSortBy === "score" ? "bg-purple-500/20 border-purple-500/30 text-purple-300" : "border-white/10 text-white/40 hover:text-white/60"}`}
+                  className={`px-3 py-1.5 text-xs rounded-lg border transition-colors ${dimSortBy === "score" ? "bg-purple-500/20 border-purple-500/30 text-purple-300" : "border-border text-muted-foreground hover:text-muted-foreground"}`}
                 >
                   Score {dimSortBy === "score" ? (dimSortDir === "desc" ? "\u2193" : "\u2191") : ""}
                 </button>
                 <button
                   onClick={() => { setDimSortBy("name"); setDimSortDir((d) => dimSortBy === "name" ? (d === "desc" ? "asc" : "desc") : "asc"); }}
-                  className={`px-3 py-1.5 text-xs rounded-lg border transition-colors ${dimSortBy === "name" ? "bg-purple-500/20 border-purple-500/30 text-purple-300" : "border-white/10 text-white/40 hover:text-white/60"}`}
+                  className={`px-3 py-1.5 text-xs rounded-lg border transition-colors ${dimSortBy === "name" ? "bg-purple-500/20 border-purple-500/30 text-purple-300" : "border-border text-muted-foreground hover:text-muted-foreground"}`}
                 >
                   Name {dimSortBy === "name" ? (dimSortDir === "desc" ? "\u2193" : "\u2191") : ""}
                 </button>
                 <div className="flex-1" />
-                <span className="text-xs text-white/30">{sortedDimensions.length} dimensions</span>
+                <span className="text-xs text-muted-foreground/70">{sortedDimensions.length} dimensions</span>
               </div>
 
               {/* Dimension cards — full width comparison */}
-              <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-                <h3 className="text-base font-semibold text-white mb-6">All Scoring Dimensions</h3>
+              <div className="bg-muted border border-border rounded-2xl p-6">
+                <h3 className="text-base font-semibold text-foreground mb-6">All Scoring Dimensions</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5">
                   {sortedDimensions.map((dim) => (
                     <div key={dim.dimension} className="group">
                       <div className="flex items-center justify-between mb-1.5">
-                        <span className="text-sm text-white/70 group-hover:text-white/90 transition-colors">{dim.label}</span>
+                        <span className="text-sm text-foreground/80 group-hover:text-foreground/90 transition-colors">{dim.label}</span>
                         <div className="flex items-center gap-2">
                           <span className="text-[10px] text-white/25">n={dim.count}</span>
                           <span className={`text-sm font-semibold ${getScoreTextColor(dim.average)}`}>
-                            {dim.average}<span className="text-white/20 font-normal text-xs">/100</span>
+                            {dim.average}<span className="text-muted-foreground/50 font-normal text-xs">/100</span>
                           </span>
                         </div>
                       </div>
-                      <div className="h-4 w-full bg-white/5 rounded-full overflow-hidden">
+                      <div className="h-4 w-full bg-muted rounded-full overflow-hidden">
                         <div
                           className={`h-full rounded-full transition-all duration-700 ${getScoreColor(dim.average)}`}
                           style={{ width: `${Math.max(dim.average, 1)}%` }}
@@ -507,18 +506,18 @@ export default function AdminAnalyticsPage() {
               </div>
 
               {/* Dimension comparison — horizontal bar chart sorted by score */}
-              <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-                <h3 className="text-base font-semibold text-white mb-5">Dimension Comparison</h3>
+              <div className="bg-muted border border-border rounded-2xl p-6">
+                <h3 className="text-base font-semibold text-foreground mb-5">Dimension Comparison</h3>
                 <div className="space-y-2">
                   {[...data.dimension_averages].sort((a, b) => b.average - a.average).map((dim) => (
                     <div key={dim.dimension} className="flex items-center gap-3">
-                      <span className="text-xs text-white/50 w-40 truncate shrink-0">{dim.label}</span>
-                      <div className="flex-1 h-6 bg-white/5 rounded-md overflow-hidden relative">
+                      <span className="text-xs text-muted-foreground w-40 truncate shrink-0">{dim.label}</span>
+                      <div className="flex-1 h-6 bg-muted rounded-md overflow-hidden relative">
                         <div
                           className={`h-full rounded-md transition-all duration-700 ${getScoreColor(dim.average)}`}
                           style={{ width: `${Math.max(dim.average, 1)}%` }}
                         />
-                        <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-white/80">
+                        <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-foreground/90">
                           {dim.average}
                         </span>
                       </div>
@@ -536,11 +535,11 @@ export default function AdminAnalyticsPage() {
             <div className="space-y-6">
               {/* Filter bar */}
               <div className="flex items-center gap-3 flex-wrap">
-                <span className="text-xs text-white/40">Filter by archetype:</span>
+                <span className="text-xs text-muted-foreground">Filter by archetype:</span>
                 <button
                   onClick={() => setSelectedArchetype(null)}
                   className={`px-3 py-1.5 text-xs rounded-full border transition-colors ${
-                    !selectedArchetype ? "bg-purple-500/20 border-purple-500/30 text-purple-300" : "border-white/10 text-white/40 hover:text-white/60"
+                    !selectedArchetype ? "bg-purple-500/20 border-purple-500/30 text-purple-300" : "border-border text-muted-foreground hover:text-muted-foreground"
                   }`}
                 >
                   All
@@ -552,7 +551,7 @@ export default function AdminAnalyticsPage() {
                     className={`px-3 py-1.5 text-xs rounded-full border transition-colors ${
                       selectedArchetype === a.archetype
                         ? "bg-purple-500/20 border-purple-500/30 text-purple-300"
-                        : "border-white/10 text-white/40 hover:text-white/60"
+                        : "border-border text-muted-foreground hover:text-muted-foreground"
                     }`}
                   >
                     {a.archetype} ({a.count})
@@ -562,7 +561,7 @@ export default function AdminAnalyticsPage() {
 
               {/* Score range filter */}
               <div className="flex items-center gap-4">
-                <span className="text-xs text-white/40">Score range:</span>
+                <span className="text-xs text-muted-foreground">Score range:</span>
                 <div className="flex items-center gap-2">
                   <input
                     type="number"
@@ -570,20 +569,20 @@ export default function AdminAnalyticsPage() {
                     max={100}
                     value={scoreRange[0]}
                     onChange={(e) => setScoreRange([Number(e.target.value), scoreRange[1]])}
-                    className="w-16 bg-white/5 border border-white/10 rounded-lg px-2 py-1.5 text-xs text-white text-center focus:outline-none focus:border-white/20"
+                    className="w-16 bg-muted border border-border rounded-lg px-2 py-1.5 text-xs text-foreground text-center focus:outline-none focus:border-border"
                   />
-                  <span className="text-white/20">to</span>
+                  <span className="text-muted-foreground/50">to</span>
                   <input
                     type="number"
                     min={0}
                     max={100}
                     value={scoreRange[1]}
                     onChange={(e) => setScoreRange([scoreRange[0], Number(e.target.value)])}
-                    className="w-16 bg-white/5 border border-white/10 rounded-lg px-2 py-1.5 text-xs text-white text-center focus:outline-none focus:border-white/20"
+                    className="w-16 bg-muted border border-border rounded-lg px-2 py-1.5 text-xs text-foreground text-center focus:outline-none focus:border-border"
                   />
                 </div>
                 {(scoreRange[0] !== 0 || scoreRange[1] !== 100) && (
-                  <button onClick={() => setScoreRange([0, 100])} className="text-[10px] text-white/30 hover:text-white/60 underline">
+                  <button onClick={() => setScoreRange([0, 100])} className="text-[10px] text-muted-foreground/70 hover:text-muted-foreground underline">
                     Reset
                   </button>
                 )}
@@ -591,10 +590,10 @@ export default function AdminAnalyticsPage() {
 
               {/* Archetype distribution — full cards */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-                  <h3 className="text-base font-semibold text-white mb-5">Archetype Distribution</h3>
+                <div className="bg-muted border border-border rounded-2xl p-6">
+                  <h3 className="text-base font-semibold text-foreground mb-5">Archetype Distribution</h3>
                   {data.archetype_distribution.length === 0 ? (
-                    <p className="text-sm text-white/30">No data</p>
+                    <p className="text-sm text-muted-foreground/70">No data</p>
                   ) : (
                     <>
                       <HBarChart
@@ -610,11 +609,11 @@ export default function AdminAnalyticsPage() {
                               <div
                                 key={a.archetype}
                                 className={`px-3 py-2 rounded-lg border transition-colors cursor-default ${
-                                  selectedArchetype === a.archetype ? "bg-purple-500/15 border-purple-500/30" : "bg-white/[0.03] border-white/[0.06]"
+                                  selectedArchetype === a.archetype ? "bg-purple-500/15 border-purple-500/30" : "bg-muted/50 border-white/[0.06]"
                                 }`}
                               >
-                                <p className="text-lg font-bold text-white">{pct}%</p>
-                                <p className="text-[10px] text-white/40 truncate max-w-20">{a.archetype}</p>
+                                <p className="text-lg font-bold text-foreground">{pct}%</p>
+                                <p className="text-[10px] text-muted-foreground truncate max-w-20">{a.archetype}</p>
                               </div>
                             );
                           })}
@@ -623,10 +622,10 @@ export default function AdminAnalyticsPage() {
                     </>
                   )}
                 </div>
-                <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-                  <h3 className="text-base font-semibold text-white mb-5">Score Distribution</h3>
+                <div className="bg-muted border border-border rounded-2xl p-6">
+                  <h3 className="text-base font-semibold text-foreground mb-5">Score Distribution</h3>
                   {data.score_distribution.length === 0 ? (
-                    <p className="text-sm text-white/30">No data</p>
+                    <p className="text-sm text-muted-foreground/70">No data</p>
                   ) : (
                     <div className="flex items-end gap-3 h-48">
                       {data.score_distribution.map((item, i) => {
@@ -636,14 +635,14 @@ export default function AdminAnalyticsPage() {
                           parseInt(item.label.split("-")[1] || "100") <= scoreRange[1];
                         return (
                           <div key={i} className={`flex-1 flex flex-col items-center justify-end h-full transition-opacity ${isInRange ? "" : "opacity-30"}`}>
-                            <span className="text-xs text-white/50 mb-1">{item.count}</span>
+                            <span className="text-xs text-muted-foreground mb-1">{item.count}</span>
                             <div className="w-full relative flex-1 flex items-end">
                               <div
                                 className="w-full rounded-t-lg bg-gradient-to-t from-blue-600 to-cyan-400 transition-all duration-700"
                                 style={{ height: `${Math.max((item.count / max) * 100, 3)}%` }}
                               />
                             </div>
-                            <span className="text-[10px] text-white/40 mt-2">{item.label}</span>
+                            <span className="text-[10px] text-muted-foreground mt-2">{item.label}</span>
                           </div>
                         );
                       })}
@@ -660,33 +659,33 @@ export default function AdminAnalyticsPage() {
           {activeTab === "trends" && (
             <div className="space-y-6">
               {/* Timeline — larger */}
-              <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-                <h3 className="text-base font-semibold text-white mb-5">Assessment Volume Over Time</h3>
+              <div className="bg-muted border border-border rounded-2xl p-6">
+                <h3 className="text-base font-semibold text-foreground mb-5">Assessment Volume Over Time</h3>
                 {data.assessments_over_time.length === 0 ? (
-                  <p className="text-sm text-white/30">No timeline data for this period</p>
+                  <p className="text-sm text-muted-foreground/70">No timeline data for this period</p>
                 ) : (
                   <>
                     <MiniTimeline data={data.assessments_over_time} />
                     {/* Summary stats */}
                     <div className="mt-5 pt-4 border-t border-white/[0.06] grid grid-cols-3 gap-4">
                       <div>
-                        <p className="text-[10px] text-white/30 uppercase tracking-wider">Total</p>
-                        <p className="text-lg font-bold text-white">
+                        <p className="text-[10px] text-muted-foreground/70 uppercase tracking-wider">Total</p>
+                        <p className="text-lg font-bold text-foreground">
                           {data.assessments_over_time.reduce((s, d) => s + d.count, 0)}
                         </p>
                       </div>
                       <div>
-                        <p className="text-[10px] text-white/30 uppercase tracking-wider">Peak Day</p>
-                        <p className="text-lg font-bold text-white">
+                        <p className="text-[10px] text-muted-foreground/70 uppercase tracking-wider">Peak Day</p>
+                        <p className="text-lg font-bold text-foreground">
                           {Math.max(...data.assessments_over_time.map((d) => d.count))}
                         </p>
-                        <p className="text-[10px] text-white/40">
+                        <p className="text-[10px] text-muted-foreground">
                           {data.assessments_over_time.reduce((max, d) => d.count > max.count ? d : max, data.assessments_over_time[0])?.date}
                         </p>
                       </div>
                       <div>
-                        <p className="text-[10px] text-white/30 uppercase tracking-wider">Daily Avg</p>
-                        <p className="text-lg font-bold text-white">
+                        <p className="text-[10px] text-muted-foreground/70 uppercase tracking-wider">Daily Avg</p>
+                        <p className="text-lg font-bold text-foreground">
                           {data.assessments_over_time.length
                             ? (data.assessments_over_time.reduce((s, d) => s + d.count, 0) / data.assessments_over_time.length).toFixed(1)
                             : 0}
@@ -707,26 +706,26 @@ export default function AdminAnalyticsPage() {
 
               {/* Data table view */}
               {data.assessments_over_time.length > 0 && (
-                <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-                  <h3 className="text-base font-semibold text-white mb-4">Daily Breakdown</h3>
+                <div className="bg-muted border border-border rounded-2xl p-6">
+                  <h3 className="text-base font-semibold text-foreground mb-4">Daily Breakdown</h3>
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm">
                       <thead>
-                        <tr className="border-b border-white/10">
-                          <th className="text-left py-2 px-3 text-white/40 font-medium text-xs">Date</th>
-                          <th className="text-right py-2 px-3 text-white/40 font-medium text-xs">Assessments</th>
-                          <th className="text-left py-2 px-3 text-white/40 font-medium text-xs w-1/2">Volume</th>
+                        <tr className="border-b border-border">
+                          <th className="text-left py-2 px-3 text-muted-foreground font-medium text-xs">Date</th>
+                          <th className="text-right py-2 px-3 text-muted-foreground font-medium text-xs">Assessments</th>
+                          <th className="text-left py-2 px-3 text-muted-foreground font-medium text-xs w-1/2">Volume</th>
                         </tr>
                       </thead>
                       <tbody>
                         {[...data.assessments_over_time].reverse().slice(0, 20).map((d) => {
                           const max = Math.max(...data.assessments_over_time.map((x) => x.count), 1);
                           return (
-                            <tr key={d.date} className="border-b border-white/5 hover:bg-white/[0.03]">
-                              <td className="py-2 px-3 text-white/70">{d.date}</td>
-                              <td className="py-2 px-3 text-right text-white/50">{d.count}</td>
+                            <tr key={d.date} className="border-b border-border/50 hover:bg-muted/50">
+                              <td className="py-2 px-3 text-foreground/80">{d.date}</td>
+                              <td className="py-2 px-3 text-right text-muted-foreground">{d.count}</td>
                               <td className="py-2 px-3">
-                                <div className="h-2 bg-white/5 rounded-full overflow-hidden">
+                                <div className="h-2 bg-muted rounded-full overflow-hidden">
                                   <div
                                     className="h-full rounded-full bg-gradient-to-r from-purple-500 to-blue-500"
                                     style={{ width: `${(d.count / max) * 100}%` }}
@@ -751,11 +750,11 @@ export default function AdminAnalyticsPage() {
             <div className="space-y-6">
               {/* Industry filter */}
               <div className="flex items-center gap-3 flex-wrap">
-                <span className="text-xs text-white/40">Filter by company:</span>
+                <span className="text-xs text-muted-foreground">Filter by company:</span>
                 <button
                   onClick={() => setSelectedIndustry(null)}
                   className={`px-3 py-1.5 text-xs rounded-full border transition-colors ${
-                    !selectedIndustry ? "bg-blue-500/20 border-blue-500/30 text-blue-300" : "border-white/10 text-white/40 hover:text-white/60"
+                    !selectedIndustry ? "bg-blue-500/20 border-blue-500/30 text-blue-300" : "border-border text-muted-foreground hover:text-muted-foreground"
                   }`}
                 >
                   All
@@ -767,7 +766,7 @@ export default function AdminAnalyticsPage() {
                     className={`px-3 py-1.5 text-xs rounded-full border transition-colors ${
                       selectedIndustry === ind.industry
                         ? "bg-blue-500/20 border-blue-500/30 text-blue-300"
-                        : "border-white/10 text-white/40 hover:text-white/60"
+                        : "border-border text-muted-foreground hover:text-muted-foreground"
                     }`}
                   >
                     {ind.industry} ({ind.count})
@@ -776,14 +775,14 @@ export default function AdminAnalyticsPage() {
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-                  <h3 className="text-base font-semibold text-white mb-5">Top Gaps</h3>
+                <div className="bg-muted border border-border rounded-2xl p-6">
+                  <h3 className="text-base font-semibold text-foreground mb-5">Top Gaps</h3>
                   <RankedList
                     items={data.top_gaps.slice(0, 15).map((g) => ({ name: g.gap, value: g.count }))}
                   />
                 </div>
-                <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-                  <h3 className="text-base font-semibold text-white mb-5">Company Breakdown</h3>
+                <div className="bg-muted border border-border rounded-2xl p-6">
+                  <h3 className="text-base font-semibold text-foreground mb-5">Company Breakdown</h3>
                   <RankedList
                     items={data.industry_breakdown.slice(0, 15).map((ind) => ({ name: ind.industry, value: ind.count }))}
                   />
@@ -791,25 +790,25 @@ export default function AdminAnalyticsPage() {
               </div>
 
               {/* Combined view — gaps + industry cross-reference */}
-              <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-                <h3 className="text-base font-semibold text-white mb-2">Quick Insights</h3>
-                <p className="text-xs text-white/40 mb-5">Summary metrics for the selected period</p>
+              <div className="bg-muted border border-border rounded-2xl p-6">
+                <h3 className="text-base font-semibold text-foreground mb-2">Quick Insights</h3>
+                <p className="text-xs text-muted-foreground mb-5">Summary metrics for the selected period</p>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                  <div className="bg-white/[0.03] rounded-xl p-4 border border-white/[0.06]">
-                    <p className="text-2xl font-bold text-white">{data.top_gaps.length}</p>
-                    <p className="text-[10px] text-white/40 mt-1">Unique Gaps</p>
+                  <div className="bg-muted/50 rounded-xl p-4 border border-white/[0.06]">
+                    <p className="text-2xl font-bold text-foreground">{data.top_gaps.length}</p>
+                    <p className="text-[10px] text-muted-foreground mt-1">Unique Gaps</p>
                   </div>
-                  <div className="bg-white/[0.03] rounded-xl p-4 border border-white/[0.06]">
-                    <p className="text-2xl font-bold text-white">{data.industry_breakdown.length}</p>
-                    <p className="text-[10px] text-white/40 mt-1">Companies</p>
+                  <div className="bg-muted/50 rounded-xl p-4 border border-white/[0.06]">
+                    <p className="text-2xl font-bold text-foreground">{data.industry_breakdown.length}</p>
+                    <p className="text-[10px] text-muted-foreground mt-1">Companies</p>
                   </div>
-                  <div className="bg-white/[0.03] rounded-xl p-4 border border-white/[0.06]">
-                    <p className="text-2xl font-bold text-white">{data.archetype_distribution.length}</p>
-                    <p className="text-[10px] text-white/40 mt-1">Archetypes</p>
+                  <div className="bg-muted/50 rounded-xl p-4 border border-white/[0.06]">
+                    <p className="text-2xl font-bold text-foreground">{data.archetype_distribution.length}</p>
+                    <p className="text-[10px] text-muted-foreground mt-1">Archetypes</p>
                   </div>
-                  <div className="bg-white/[0.03] rounded-xl p-4 border border-white/[0.06]">
-                    <p className="text-2xl font-bold text-white">{data.dimension_averages.length}</p>
-                    <p className="text-[10px] text-white/40 mt-1">Dimensions</p>
+                  <div className="bg-muted/50 rounded-xl p-4 border border-white/[0.06]">
+                    <p className="text-2xl font-bold text-foreground">{data.dimension_averages.length}</p>
+                    <p className="text-[10px] text-muted-foreground mt-1">Dimensions</p>
                   </div>
                 </div>
               </div>

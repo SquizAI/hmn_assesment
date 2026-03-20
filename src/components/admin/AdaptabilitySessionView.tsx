@@ -47,8 +47,8 @@ function MarkerScoreRow({ code, marker }: { code: string; marker: MarkerScore })
       : "text-red-400";
 
   return (
-    <div className="flex items-start gap-3 py-2 border-b border-white/5 last:border-0">
-      <span className="text-white/40 font-mono text-xs w-6 flex-shrink-0 pt-0.5">
+    <div className="flex items-start gap-3 py-2 border-b border-border/50 last:border-0">
+      <span className="text-muted-foreground font-mono text-xs w-6 flex-shrink-0 pt-0.5">
         {code}
       </span>
       <div className="flex-1 min-w-0">
@@ -60,7 +60,7 @@ function MarkerScoreRow({ code, marker }: { code: string; marker: MarkerScore })
                 className={`w-4 h-4 rounded-sm text-[10px] flex items-center justify-center ${
                   s <= marker.score
                     ? "bg-emerald-500/30 text-emerald-300"
-                    : "bg-white/5 text-white/20"
+                    : "bg-muted text-muted-foreground/50"
                 }`}
               >
                 {s}
@@ -71,7 +71,7 @@ function MarkerScoreRow({ code, marker }: { code: string; marker: MarkerScore })
             {marker.confidence}
           </span>
         </div>
-        <p className="text-white/40 text-[11px] mt-1 leading-relaxed truncate">
+        <p className="text-muted-foreground text-[11px] mt-1 leading-relaxed truncate">
           {marker.evidence}
         </p>
       </div>
@@ -96,23 +96,23 @@ export default function AdaptabilitySessionView({ analysis }: AdaptabilitySessio
     <div className="space-y-6">
       {/* Overall Score + Key Metrics */}
       <div className="grid grid-cols-3 gap-3">
-        <div className="rounded-lg border border-white/5 bg-white/[0.02] p-3 text-center">
-          <p className="text-2xl font-semibold text-white">
+        <div className="rounded-lg border border-border/50 bg-white/[0.02] p-3 text-center">
+          <p className="text-2xl font-semibold text-foreground">
             {analysis.overallAdaptabilityScore}
           </p>
-          <p className="text-[10px] text-white/30 mt-1">Overall / 100</p>
+          <p className="text-[10px] text-muted-foreground/70 mt-1">Overall / 100</p>
         </div>
-        <div className="rounded-lg border border-white/5 bg-white/[0.02] p-3 text-center">
+        <div className="rounded-lg border border-border/50 bg-white/[0.02] p-3 text-center">
           <p className={`text-lg font-medium ${regulation.color}`}>
             {regulation.label}
           </p>
-          <p className="text-[10px] text-white/30 mt-1">Adaptive Regulation</p>
+          <p className="text-[10px] text-muted-foreground/70 mt-1">Adaptive Regulation</p>
         </div>
-        <div className="rounded-lg border border-white/5 bg-white/[0.02] p-3 text-center">
-          <p className="text-lg font-medium text-white/70 capitalize">
+        <div className="rounded-lg border border-border/50 bg-white/[0.02] p-3 text-center">
+          <p className="text-lg font-medium text-foreground/80 capitalize">
             {analysis.meaningStructure.classification.replace(/_/g, " ")}
           </p>
-          <p className="text-[10px] text-white/30 mt-1">Meaning Structure</p>
+          <p className="text-[10px] text-muted-foreground/70 mt-1">Meaning Structure</p>
         </div>
       </div>
 
@@ -122,7 +122,7 @@ export default function AdaptabilitySessionView({ analysis }: AdaptabilitySessio
           <p className="text-red-400 text-xs font-medium">
             Play 0 Recommended — Stabilize Before Developing
           </p>
-          <p className="text-white/40 text-[11px] mt-1">
+          <p className="text-muted-foreground text-[11px] mt-1">
             {analysis.interventionRouting.play0Rationale}
           </p>
         </div>
@@ -143,7 +143,7 @@ export default function AdaptabilitySessionView({ analysis }: AdaptabilitySessio
               }`}>
                 {flag.severity}
               </span>
-              <p className="text-white/40 text-[11px]">{flag.description}</p>
+              <p className="text-muted-foreground text-[11px]">{flag.description}</p>
             </div>
           ))}
         </div>
@@ -151,18 +151,18 @@ export default function AdaptabilitySessionView({ analysis }: AdaptabilitySessio
 
       {/* 4-Pillar Scores */}
       <div className="space-y-3">
-        <h4 className="text-white/50 text-xs font-medium uppercase tracking-wider">
+        <h4 className="text-muted-foreground text-xs font-medium uppercase tracking-wider">
           Pillar Scores
         </h4>
         {pillars.map((pillar) => (
           <div key={pillar.key} className="space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-white/60 text-xs">{pillar.label}</span>
-              <span className="text-white/40 font-mono text-xs">
+              <span className="text-muted-foreground text-xs">{pillar.label}</span>
+              <span className="text-muted-foreground font-mono text-xs">
                 {pillar.score}/25
               </span>
             </div>
-            <div className="h-1.5 rounded-full bg-white/5 overflow-hidden">
+            <div className="h-1.5 rounded-full bg-muted overflow-hidden">
               <div
                 className="h-full rounded-full"
                 style={{
@@ -178,12 +178,12 @@ export default function AdaptabilitySessionView({ analysis }: AdaptabilitySessio
 
       {/* Content Markers Detail (collapsible per pillar) */}
       <div className="space-y-3">
-        <h4 className="text-white/50 text-xs font-medium uppercase tracking-wider">
+        <h4 className="text-muted-foreground text-xs font-medium uppercase tracking-wider">
           Behavioral Markers
         </h4>
         {pillars.map((pillar) => (
-          <details key={pillar.key} className="rounded-lg border border-white/5 bg-white/[0.02]">
-            <summary className="px-3 py-2 cursor-pointer text-white/60 text-xs hover:text-white/80 transition-colors">
+          <details key={pillar.key} className="rounded-lg border border-border/50 bg-white/[0.02]">
+            <summary className="px-3 py-2 cursor-pointer text-muted-foreground text-xs hover:text-foreground/90 transition-colors">
               {pillar.label} — Content Markers
             </summary>
             <div className="px-3 pb-2">
@@ -196,8 +196,8 @@ export default function AdaptabilitySessionView({ analysis }: AdaptabilitySessio
       </div>
 
       {/* Process Scores */}
-      <details className="rounded-lg border border-white/5 bg-white/[0.02]">
-        <summary className="px-3 py-2 cursor-pointer text-white/50 text-xs hover:text-white/80 transition-colors">
+      <details className="rounded-lg border border-border/50 bg-white/[0.02]">
+        <summary className="px-3 py-2 cursor-pointer text-muted-foreground text-xs hover:text-foreground/90 transition-colors">
           Process Markers
         </summary>
         <div className="px-3 pb-2">
@@ -211,35 +211,35 @@ export default function AdaptabilitySessionView({ analysis }: AdaptabilitySessio
 
       {/* Derived Constructs */}
       <div className="space-y-3">
-        <h4 className="text-white/50 text-xs font-medium uppercase tracking-wider">
+        <h4 className="text-muted-foreground text-xs font-medium uppercase tracking-wider">
           Derived Constructs
         </h4>
 
         {/* Adaptive Regulation Details */}
-        <div className="rounded-lg border border-white/5 bg-white/[0.02] p-3 space-y-2">
-          <p className="text-white/50 text-xs font-medium">Adaptive Regulation</p>
+        <div className="rounded-lg border border-border/50 bg-white/[0.02] p-3 space-y-2">
+          <p className="text-muted-foreground text-xs font-medium">Adaptive Regulation</p>
           <div className="grid grid-cols-2 gap-2 text-[11px]">
             <div>
-              <span className="text-white/30">Specificity diff:</span>{" "}
-              <span className="text-white/50">
+              <span className="text-muted-foreground/70">Specificity diff:</span>{" "}
+              <span className="text-muted-foreground">
                 {analysis.adaptiveRegulation.narrativeSpecificityDifferential.toFixed(3)}
               </span>
             </div>
             <div>
-              <span className="text-white/30">Hedging diff:</span>{" "}
-              <span className="text-white/50">
+              <span className="text-muted-foreground/70">Hedging diff:</span>{" "}
+              <span className="text-muted-foreground">
                 {analysis.adaptiveRegulation.hedgingFrequencyDifferential.toFixed(2)}
               </span>
             </div>
             <div>
-              <span className="text-white/30">Elaboration:</span>{" "}
-              <span className="text-white/50">
+              <span className="text-muted-foreground/70">Elaboration:</span>{" "}
+              <span className="text-muted-foreground">
                 {analysis.adaptiveRegulation.elaborationTrajectory}
               </span>
             </div>
             <div>
-              <span className="text-white/30">Self-correction ratio:</span>{" "}
-              <span className="text-white/50">
+              <span className="text-muted-foreground/70">Self-correction ratio:</span>{" "}
+              <span className="text-muted-foreground">
                 {analysis.adaptiveRegulation.selfCorrectionRatio.toFixed(3)}
               </span>
             </div>
@@ -247,57 +247,57 @@ export default function AdaptabilitySessionView({ analysis }: AdaptabilitySessio
         </div>
 
         {/* System vs Individual */}
-        <div className="rounded-lg border border-white/5 bg-white/[0.02] p-3 space-y-1">
-          <p className="text-white/50 text-xs font-medium">System vs. Individual</p>
-          <p className="text-white/40 text-[11px] capitalize">
+        <div className="rounded-lg border border-border/50 bg-white/[0.02] p-3 space-y-1">
+          <p className="text-muted-foreground text-xs font-medium">System vs. Individual</p>
+          <p className="text-muted-foreground text-[11px] capitalize">
             {analysis.systemVsIndividual.classification.replace(/_/g, " ")}
           </p>
-          <p className="text-white/30 text-[10px]">{analysis.systemVsIndividual.evidence}</p>
+          <p className="text-muted-foreground/70 text-[10px]">{analysis.systemVsIndividual.evidence}</p>
         </div>
 
         {/* Cross-Pillar Observations */}
-        <details className="rounded-lg border border-white/5 bg-white/[0.02]">
-          <summary className="px-3 py-2 cursor-pointer text-white/50 text-xs hover:text-white/80">
+        <details className="rounded-lg border border-border/50 bg-white/[0.02]">
+          <summary className="px-3 py-2 cursor-pointer text-muted-foreground text-xs hover:text-foreground/90">
             Cross-Pillar Observations
           </summary>
           <div className="px-3 pb-3 space-y-2 text-[11px]">
             <div>
-              <span className="text-white/30">Micro-moment:</span>{" "}
-              <span className="text-white/50 capitalize">
+              <span className="text-muted-foreground/70">Micro-moment:</span>{" "}
+              <span className="text-muted-foreground capitalize">
                 {analysis.crossPillarObservations.microMomentResponse.replace(/_/g, " ")}
               </span>
             </div>
             <div>
-              <span className="text-white/30">Self-deception probe:</span>{" "}
-              <span className="text-white/50">
+              <span className="text-muted-foreground/70">Self-deception probe:</span>{" "}
+              <span className="text-muted-foreground">
                 {analysis.crossPillarObservations.selfDeceptionProbeResponse}
               </span>
             </div>
             {analysis.crossPillarObservations.selfDeceptionProbeVerbatim && (
               <div>
-                <span className="text-white/30">Verbatim:</span>{" "}
-                <span className="text-white/40 italic">
+                <span className="text-muted-foreground/70">Verbatim:</span>{" "}
+                <span className="text-muted-foreground italic">
                   &ldquo;{analysis.crossPillarObservations.selfDeceptionProbeVerbatim}&rdquo;
                 </span>
               </div>
             )}
             <div>
-              <span className="text-white/30">Content-process:</span>{" "}
-              <span className="text-white/50">
+              <span className="text-muted-foreground/70">Content-process:</span>{" "}
+              <span className="text-muted-foreground">
                 {analysis.contentProcessCongruence.congruent ? "Congruent" : "Incongruent"}
               </span>
             </div>
             {!analysis.contentProcessCongruence.congruent && (
-              <p className="text-white/30 text-[10px]">
+              <p className="text-muted-foreground/70 text-[10px]">
                 {analysis.contentProcessCongruence.incongruenceDescription}
               </p>
             )}
             {analysis.crossPillarObservations.contradictionPatterns.length > 0 && (
               <div>
-                <span className="text-white/30">Contradictions:</span>
+                <span className="text-muted-foreground/70">Contradictions:</span>
                 <ul className="mt-1 space-y-1">
                   {analysis.crossPillarObservations.contradictionPatterns.map((c, i) => (
-                    <li key={i} className="text-white/30 text-[10px] pl-2">
+                    <li key={i} className="text-muted-foreground/70 text-[10px] pl-2">
                       - {c}
                     </li>
                   ))}
@@ -309,14 +309,14 @@ export default function AdaptabilitySessionView({ analysis }: AdaptabilitySessio
       </div>
 
       {/* Intervention Routing */}
-      <details className="rounded-lg border border-white/5 bg-white/[0.02]">
-        <summary className="px-3 py-2 cursor-pointer text-white/50 text-xs hover:text-white/80">
+      <details className="rounded-lg border border-border/50 bg-white/[0.02]">
+        <summary className="px-3 py-2 cursor-pointer text-muted-foreground text-xs hover:text-foreground/90">
           Intervention Routing
         </summary>
         <div className="px-3 pb-3 space-y-2 text-[11px]">
           <div>
-            <span className="text-white/30">Primary focus:</span>{" "}
-            <span className="text-white/50 capitalize">
+            <span className="text-muted-foreground/70">Primary focus:</span>{" "}
+            <span className="text-muted-foreground capitalize">
               {analysis.interventionRouting.primaryPillarFocus.replace(/_/g, " ")}
             </span>
           </div>
@@ -332,8 +332,8 @@ export default function AdaptabilitySessionView({ analysis }: AdaptabilitySessio
           )}
           {analysis.interventionRouting.pillar2MeaningRoute && (
             <div>
-              <span className="text-white/30">P2 meaning route:</span>{" "}
-              <span className="text-white/40">{analysis.interventionRouting.pillar2MeaningRoute}</span>
+              <span className="text-muted-foreground/70">P2 meaning route:</span>{" "}
+              <span className="text-muted-foreground">{analysis.interventionRouting.pillar2MeaningRoute}</span>
             </div>
           )}
           {analysis.interventionRouting.pillar3SystemFlag && (
@@ -341,8 +341,8 @@ export default function AdaptabilitySessionView({ analysis }: AdaptabilitySessio
           )}
           {analysis.interventionRouting.crossPillarPriority && (
             <div>
-              <span className="text-white/30">Cross-pillar priority:</span>{" "}
-              <span className="text-white/40">{analysis.interventionRouting.crossPillarPriority}</span>
+              <span className="text-muted-foreground/70">Cross-pillar priority:</span>{" "}
+              <span className="text-muted-foreground">{analysis.interventionRouting.crossPillarPriority}</span>
             </div>
           )}
         </div>
@@ -351,10 +351,10 @@ export default function AdaptabilitySessionView({ analysis }: AdaptabilitySessio
       {/* Executive Summary */}
       {analysis.executiveSummary && (
         <div className="space-y-2">
-          <h4 className="text-white/50 text-xs font-medium uppercase tracking-wider">
+          <h4 className="text-muted-foreground text-xs font-medium uppercase tracking-wider">
             Executive Summary
           </h4>
-          <p className="text-white/40 text-xs leading-relaxed">
+          <p className="text-muted-foreground text-xs leading-relaxed">
             {analysis.executiveSummary}
           </p>
         </div>

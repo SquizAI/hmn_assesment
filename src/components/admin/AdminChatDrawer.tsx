@@ -239,17 +239,17 @@ export default function AdminChatDrawer({ open, onClose }: Props) {
         {/* Header */}
         <div className="shrink-0 flex items-center justify-between px-4 py-3 border-b border-white/[0.06]">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-purple-500/20 to-blue-500/20 border border-white/10 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-purple-500/20 to-blue-500/20 border border-border flex items-center justify-center">
               <span className="text-sm">🤖</span>
             </div>
             <div>
-              <h2 className="text-sm font-semibold text-white/80">Admin Assistant</h2>
-              <p className="text-[10px] text-white/30">AI-powered admin tools</p>
+              <h2 className="text-sm font-semibold text-foreground/90">Admin Assistant</h2>
+              <p className="text-[10px] text-muted-foreground/70">AI-powered admin tools</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-lg text-white/30 hover:text-white/60 hover:bg-white/5 transition-all"
+            className="p-2 rounded-lg text-muted-foreground/70 hover:text-muted-foreground hover:bg-muted transition-all"
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -267,7 +267,7 @@ export default function AdminChatDrawer({ open, onClose }: Props) {
                 </svg>
               </div>
               <p className="text-purple-300 font-medium text-sm">Drop files to attach</p>
-              <p className="text-white/30 text-xs">{ALLOWED_EXTENSIONS.join(", ")} — max {formatFileSize(MAX_FILE_SIZE)}</p>
+              <p className="text-muted-foreground/70 text-xs">{ALLOWED_EXTENSIONS.join(", ")} — max {formatFileSize(MAX_FILE_SIZE)}</p>
             </div>
           </div>
         )}
@@ -278,7 +278,7 @@ export default function AdminChatDrawer({ open, onClose }: Props) {
             {/* Welcome state */}
             {messages.length === 0 && (
               <div className="text-center py-6 space-y-5">
-                <p className="text-white/40 text-xs leading-relaxed px-2">
+                <p className="text-muted-foreground text-xs leading-relaxed px-2">
                   Manage invitations, look up companies, view sessions, and more.
                   Paste a CSV, drop a file, or pick a quick action.
                 </p>
@@ -286,16 +286,16 @@ export default function AdminChatDrawer({ open, onClose }: Props) {
                 {/* File drop zone */}
                 <div
                   onClick={() => fileInputRef.current?.click()}
-                  className="border-2 border-dashed border-white/10 hover:border-purple-500/30 rounded-xl p-4 cursor-pointer transition-all hover:bg-purple-500/5 group"
+                  className="border-2 border-dashed border-border hover:border-purple-500/30 rounded-xl p-4 cursor-pointer transition-all hover:bg-purple-500/5 group"
                 >
                   <div className="space-y-1.5">
-                    <svg className="w-6 h-6 text-white/20 group-hover:text-purple-400/60 mx-auto transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <svg className="w-6 h-6 text-muted-foreground/50 group-hover:text-purple-400/60 mx-auto transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m3.75 9v6m3-3H9m1.5-12H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
                     </svg>
-                    <p className="text-xs text-white/40 group-hover:text-white/60 transition-colors">
+                    <p className="text-xs text-muted-foreground group-hover:text-muted-foreground transition-colors">
                       Drop CSV or files here
                     </p>
-                    <p className="text-[10px] text-white/20">
+                    <p className="text-[10px] text-muted-foreground/50">
                       {ALLOWED_EXTENSIONS.map((e) => `.${e}`).join("  ")}
                     </p>
                   </div>
@@ -307,7 +307,7 @@ export default function AdminChatDrawer({ open, onClose }: Props) {
                     <button
                       key={action.label}
                       onClick={() => handleSend(action.label)}
-                      className="flex items-center gap-1.5 px-2.5 py-2 rounded-lg bg-white/[0.03] border border-white/10 text-white/50 hover:bg-white/[0.07] hover:text-white/80 hover:border-white/20 transition-all text-left"
+                      className="flex items-center gap-1.5 px-2.5 py-2 rounded-lg bg-muted/50 border border-border text-muted-foreground hover:bg-white/[0.07] hover:text-foreground/90 hover:border-border transition-all text-left"
                     >
                       <span className="text-sm shrink-0">{action.icon}</span>
                       <span className="text-[11px] leading-tight">{action.label}</span>
@@ -367,7 +367,7 @@ export default function AdminChatDrawer({ open, onClose }: Props) {
               {/* File upload button */}
               <button
                 onClick={() => fileInputRef.current?.click()}
-                className="p-2.5 bg-white/[0.03] hover:bg-white/[0.06] border border-white/[0.08] rounded-lg text-white/30 hover:text-white/60 transition-all shrink-0"
+                className="p-2.5 bg-muted/50 hover:bg-white/[0.06] border border-white/[0.08] rounded-lg text-muted-foreground/70 hover:text-muted-foreground transition-all shrink-0"
                 title="Attach files"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>

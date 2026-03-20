@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import type { Question, ConversationMessage } from "../lib/types";
-import { API_BASE } from "../lib/api";
+import { startInterview, submitAnswer, analyzeSession, fetchSessionPublic } from "../lib/api";
 import { createPreviewSession, deletePreviewSession } from "../lib/admin-api";
 import QuestionCard from "../components/interview/QuestionCard";
 import ProgressBar from "../components/interview/ProgressBar";
@@ -62,13 +62,7 @@ export default function AdminPreviewPage() {
         setSessionId(session.id);
 
         // Start interview
-        const res = await fetch(`${API_BASE}/api/interview/start`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ sessionId: session.id }),
-        });
-        if (!res.ok) throw new Error("Failed to start preview");
-        const data = await res.json();
+        const data = await startInterview(session.id);
         setCurrentQuestion(data.currentQuestion);
         setProgress({ ...data.progress, completedPercentage: 0 });
 
@@ -129,12 +123,7 @@ export default function AdminPreviewPage() {
     if (!currentQuestion || !sessionId) return;
     setIsSubmitting(true);
     try {
-      const res = await fetch(`${API_BASE}/api/interview/respond`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sessionId, questionId: currentQuestion.id, answer, conversationHistory }),
-      });
-      const data = await res.json();
+      const data = await submitAnswer(sessionId, currentQuestion.id, answer as string, conversationHistory);
       if (data.type === "follow_up") return;
 
       setAnsweredQuestions((prev) => [
@@ -168,16 +157,10 @@ export default function AdminPreviewPage() {
     if (!sessionId) return;
     setIsAnalyzing(true);
     try {
-      const res = await fetch(`${API_BASE}/api/interview/analyze`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sessionId }),
-      });
-      if (!res.ok) throw new Error("Analysis failed");
+      await analyzeSession(sessionId);
       // Load the analysis result
-      const sessionRes = await fetch(`${API_BASE}/api/sessions/${sessionId}`);
-      const session = await sessionRes.json();
-      setAnalysisResult(session.analysis || null);
+      const sessionData = await fetchSessionPublic(sessionId);
+      setAnalysisResult(sessionData.analysis || null);
     } catch { setError("Analysis failed. The preview may not have enough responses."); }
     finally { setIsAnalyzing(false); }
   };
@@ -198,16 +181,16 @@ export default function AdminPreviewPage() {
       </div>
       <div className="flex items-center gap-2">
         {!isComplete && !analysisResult && (
-          <div className="flex rounded-lg overflow-hidden border border-white/10">
+          <div className="flex rounded-lg overflow-hidden border border-border">
             <button
               onClick={() => setMode("manual")}
-              className={`px-3 py-1 text-xs font-medium transition-colors ${mode === "manual" ? "bg-white/10 text-white" : "text-white/40 hover:text-white/60"}`}
+              className={`px-3 py-1 text-xs font-medium transition-colors ${mode === "manual" ? "bg-muted text-foreground" : "text-muted-foreground hover:text-muted-foreground"}`}
             >
               Manual
             </button>
             <button
               onClick={() => setMode("autopilot")}
-              className={`px-3 py-1 text-xs font-medium transition-colors ${mode === "autopilot" ? "bg-purple-500/20 text-purple-300" : "text-white/40 hover:text-white/60"}`}
+              className={`px-3 py-1 text-xs font-medium transition-colors ${mode === "autopilot" ? "bg-purple-500/20 text-purple-300" : "text-muted-foreground hover:text-muted-foreground"}`}
             >
               Auto-pilot
             </button>
@@ -215,7 +198,7 @@ export default function AdminPreviewPage() {
         )}
         <button
           onClick={handleExit}
-          className="px-3 py-1.5 rounded-lg text-xs font-medium bg-white/5 border border-white/10 text-white/60 hover:bg-white/10 hover:text-white transition-colors"
+          className="px-3 py-1.5 rounded-lg text-xs font-medium bg-muted border border-border text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
         >
           Exit Preview
         </button>
@@ -229,7 +212,7 @@ export default function AdminPreviewPage() {
       <div className="flex-1 flex items-center justify-center">
         <div className="text-center space-y-4">
           <div className="w-12 h-12 border-2 border-amber-500/30 border-t-amber-400 rounded-full animate-spin mx-auto" />
-          <p className="text-white/40">Setting up preview...</p>
+          <p className="text-muted-foreground">Setting up preview...</p>
         </div>
       </div>
     </div>
@@ -241,7 +224,7 @@ export default function AdminPreviewPage() {
       <div className="flex-1 flex items-center justify-center">
         <div className="text-center space-y-4">
           <p className="text-red-400">{error}</p>
-          <button onClick={handleExit} className="px-4 py-2 text-sm rounded-xl bg-white/5 border border-white/10 text-white/60 hover:bg-white/10 transition-colors">
+          <button onClick={handleExit} className="px-4 py-2 text-sm rounded-xl bg-muted border border-border text-muted-foreground hover:bg-muted transition-colors">
             Back to Assessments
           </button>
         </div>
@@ -266,37 +249,37 @@ export default function AdminPreviewPage() {
           <div className="max-w-3xl mx-auto space-y-6">
             {/* Score */}
             <div className="text-center space-y-3">
-              <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-gradient-to-br from-blue-500/20 to-purple-500/20 border border-white/10">
-                <span className="text-3xl font-bold text-white">{analysis.overallReadinessScore ?? "—"}</span>
+              <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-gradient-to-br from-blue-500/20 to-purple-500/20 border border-border">
+                <span className="text-3xl font-bold text-foreground">{analysis.overallReadinessScore ?? "—"}</span>
               </div>
               <div>
-                <h2 className="text-xl font-semibold text-white">
+                <h2 className="text-xl font-semibold text-foreground">
                   {analysis.archetype?.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()) || "Analysis Complete"}
                 </h2>
-                <p className="text-sm text-white/50 mt-1">{analysis.archetypeDescription || ""}</p>
+                <p className="text-sm text-muted-foreground mt-1">{analysis.archetypeDescription || ""}</p>
               </div>
             </div>
 
             {/* Executive Summary */}
             {analysis.executiveSummary && (
-              <div className="bg-white/3 rounded-2xl border border-white/10 p-6">
-                <h3 className="text-sm font-semibold text-white/60 uppercase tracking-wider mb-3">Executive Summary</h3>
-                <p className="text-sm text-white/70 leading-relaxed">{analysis.executiveSummary}</p>
+              <div className="bg-white/3 rounded-2xl border border-border p-6">
+                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">Executive Summary</h3>
+                <p className="text-sm text-foreground/80 leading-relaxed">{analysis.executiveSummary}</p>
               </div>
             )}
 
             {/* Dimension Scores */}
             {analysis.dimensionScores && analysis.dimensionScores.length > 0 && (
-              <div className="bg-white/3 rounded-2xl border border-white/10 p-6">
-                <h3 className="text-sm font-semibold text-white/60 uppercase tracking-wider mb-4">Dimension Scores</h3>
+              <div className="bg-white/3 rounded-2xl border border-border p-6">
+                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">Dimension Scores</h3>
                 <div className="space-y-3">
                   {analysis.dimensionScores.map((dim) => (
                     <div key={dim.dimension} className="flex items-center gap-3">
-                      <span className="w-36 text-sm text-white/50 truncate">
+                      <span className="w-36 text-sm text-muted-foreground truncate">
                         {dim.dimension.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}
                       </span>
-                      <span className="text-sm font-medium text-white/70 w-8 text-right">{Math.round(dim.score)}</span>
-                      <div className="flex-1 bg-white/5 rounded-lg h-5 overflow-hidden">
+                      <span className="text-sm font-medium text-foreground/80 w-8 text-right">{Math.round(dim.score)}</span>
+                      <div className="flex-1 bg-muted rounded-lg h-5 overflow-hidden">
                         <div
                           className={`h-full rounded-lg bg-gradient-to-r ${dim.score >= 70 ? "from-green-500 to-green-600" : dim.score >= 45 ? "from-yellow-500 to-yellow-600" : "from-red-500 to-red-600"}`}
                           style={{ width: `${dim.score}%`, minWidth: "2px" }}
@@ -310,17 +293,17 @@ export default function AdminPreviewPage() {
 
             {/* Recommendations */}
             {analysis.serviceRecommendations && analysis.serviceRecommendations.length > 0 && (
-              <div className="bg-white/3 rounded-2xl border border-white/10 p-6">
-                <h3 className="text-sm font-semibold text-white/60 uppercase tracking-wider mb-4">Recommendations</h3>
+              <div className="bg-white/3 rounded-2xl border border-border p-6">
+                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">Recommendations</h3>
                 <div className="space-y-3">
                   {analysis.serviceRecommendations.map((rec, i) => (
-                    <div key={i} className="flex items-start gap-3 bg-white/3 rounded-xl p-3 border border-white/5">
+                    <div key={i} className="flex items-start gap-3 bg-white/3 rounded-xl p-3 border border-border/50">
                       <span className="shrink-0 w-6 h-6 rounded-full bg-blue-500/20 text-blue-300 text-xs font-bold flex items-center justify-center">
                         {rec.tier}
                       </span>
                       <div>
-                        <p className="text-sm font-medium text-white/80">{rec.service}</p>
-                        <p className="text-xs text-white/40 mt-0.5">{rec.description}</p>
+                        <p className="text-sm font-medium text-foreground/90">{rec.service}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">{rec.description}</p>
                       </div>
                     </div>
                   ))}
@@ -343,20 +326,20 @@ export default function AdminPreviewPage() {
             <svg className="w-8 h-8 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
           </div>
           <div className="space-y-2">
-            <h2 className="text-2xl font-semibold text-white">Preview Complete</h2>
-            <p className="text-white/50 text-sm">All questions answered. Generate analysis to see results.</p>
+            <h2 className="text-2xl font-semibold text-foreground">Preview Complete</h2>
+            <p className="text-muted-foreground text-sm">All questions answered. Generate analysis to see results.</p>
           </div>
           <div className="flex gap-3 justify-center">
             <button
               onClick={handleAnalyze}
               disabled={isAnalyzing}
-              className="px-6 py-3 rounded-xl text-sm font-medium bg-white/10 border border-white/15 text-white hover:bg-white/15 transition-colors disabled:opacity-50"
+              className="px-6 py-3 rounded-xl text-sm font-medium bg-muted border border-white/15 text-foreground hover:bg-white/15 transition-colors disabled:opacity-50"
             >
               {isAnalyzing ? "Analyzing..." : "Generate Analysis"}
             </button>
             <button
               onClick={handleExit}
-              className="px-6 py-3 rounded-xl text-sm text-white/50 border border-white/10 hover:bg-white/5 transition-colors"
+              className="px-6 py-3 rounded-xl text-sm text-muted-foreground border border-border hover:bg-muted transition-colors"
             >
               Exit Preview
             </button>
@@ -371,7 +354,7 @@ export default function AdminPreviewPage() {
     <div className="min-h-screen flex flex-col">
       <PreviewBanner />
 
-      <header className="sticky top-0 z-10 bg-[#0a0a0f]/80 backdrop-blur-lg border-b border-white/5 px-6 py-3">
+      <header className="sticky top-0 z-10 bg-background/80 backdrop-blur-lg border-b border-border/50 px-6 py-3">
         <div className="max-w-3xl mx-auto space-y-2">
           <SectionStepper
             sections={sectionProgress}
@@ -398,13 +381,13 @@ export default function AdminPreviewPage() {
 
       {/* Answered question pills */}
       {visibleAnswered.length > 0 && (
-        <div className="sticky top-[110px] z-10 bg-[#0a0a0f]/60 backdrop-blur-sm border-b border-white/5 px-6 py-2">
+        <div className="sticky top-[110px] z-10 bg-background/60 backdrop-blur-sm border-b border-border/50 px-6 py-2">
           <div className="max-w-3xl mx-auto">
             <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: "none" }}>
               {visibleAnswered.map((q, i) => (
                 <div
                   key={q.questionId}
-                  className="shrink-0 flex items-center gap-1.5 px-3 py-1 rounded-full text-xs bg-white/5 border border-white/10 text-white/50"
+                  className="shrink-0 flex items-center gap-1.5 px-3 py-1 rounded-full text-xs bg-muted border border-border text-muted-foreground"
                 >
                   <span className="w-4 h-4 rounded-full bg-green-500/20 border border-green-500/30 flex items-center justify-center shrink-0">
                     <svg className="w-2.5 h-2.5 text-green-400" fill="currentColor" viewBox="0 0 20 20">

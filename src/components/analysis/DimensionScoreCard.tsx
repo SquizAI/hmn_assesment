@@ -17,19 +17,19 @@ export default function DimensionScoreCard({ scores, dimLabels = {}, maxScore = 
         const pct = maxScore > 0 ? (s.score / maxScore) * 100 : 0;
         const c = pct >= 70 ? "bg-green-500" : pct >= 45 ? "bg-yellow-500" : "bg-red-500";
         return (
-          <div key={s.dimension} className="bg-white/5 border border-white/10 rounded-xl p-4 space-y-3">
+          <div key={s.dimension} className="bg-muted border border-border rounded-xl p-4 space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-white">{dimLabels[s.dimension] || formatDimLabel(s.dimension)}</span>
+              <span className="text-sm font-medium text-foreground">{dimLabels[s.dimension] || formatDimLabel(s.dimension)}</span>
               <div className="flex items-center gap-2">
-                <span className="text-lg font-bold text-white">{s.score}</span>
-                <span className="text-xs text-white/30">/ {maxScore}</span>
+                <span className="text-lg font-bold text-foreground">{s.score}</span>
+                <span className="text-xs text-muted-foreground/70">/ {maxScore}</span>
               </div>
             </div>
-            <div className="h-2 w-full bg-white/10 rounded-full overflow-hidden">
+            <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
               <div className={`h-full rounded-full ${c} transition-all duration-1000`} style={{ width: `${pct}%` }} />
             </div>
             {s.evidence.length > 0 && (
-              <p className="text-xs text-white/40 italic truncate">&ldquo;{s.evidence[0]}&rdquo;</p>
+              <p className="text-xs text-muted-foreground italic truncate">&ldquo;{s.evidence[0]}&rdquo;</p>
             )}
           </div>
         );

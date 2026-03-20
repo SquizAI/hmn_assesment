@@ -4,6 +4,7 @@
 
 import { Router } from "express";
 import { getSupabase } from "../supabase.js";
+import { processWebhookRetries } from "../webhook-dispatch.js";
 
 const router = Router();
 
@@ -61,6 +62,17 @@ router.post("/cleanup", async (_req, res) => {
   } catch (err) {
     console.error("[cleanup] error:", err);
     res.status(500).json({ error: "Cleanup failed" });
+  }
+});
+
+// POST /api/admin/cron/webhook-retries — Process failed webhook deliveries
+router.post("/webhook-retries", async (_req, res) => {
+  try {
+    const result = await processWebhookRetries();
+    res.json(result);
+  } catch (err) {
+    console.error("[webhook-retries] error:", err);
+    res.status(500).json({ error: "Webhook retry processing failed" });
   }
 });
 

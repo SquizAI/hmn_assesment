@@ -17,8 +17,8 @@ export default function Button({
 
   const variants: Record<string, string> = {
     primary: "bg-white text-black hover:bg-gray-100 focus:ring-white shadow-lg",
-    secondary: "bg-white/10 text-white hover:bg-white/20 focus:ring-white/50 border border-white/20",
-    ghost: "bg-transparent text-white/70 hover:text-white hover:bg-white/10 focus:ring-white/30",
+    secondary: "bg-muted text-foreground hover:bg-white/20 focus:ring-white/50 border border-border",
+    ghost: "bg-transparent text-foreground/80 hover:text-foreground hover:bg-muted focus:ring-white/30",
     danger: "bg-red-500/20 text-red-300 hover:bg-red-500/30 focus:ring-red-500/50 border border-red-500/30",
   };
 

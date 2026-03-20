@@ -267,18 +267,18 @@ export default function VoiceRecorder({ onTranscription, onPartialTranscription,
             ? "bg-red-500 hover:bg-red-600 shadow-lg shadow-red-500/30"
             : isTranscribing
             ? "bg-white/20 cursor-not-allowed"
-            : "bg-white/10 hover:bg-white/20 border-2 border-white/30 hover:border-white/50"
+            : "bg-muted hover:bg-white/20 border-2 border-white/30 hover:border-white/50"
           }`}
       >
         {isTranscribing ? (
-          <svg className="animate-spin h-8 w-8 text-white" fill="none" viewBox="0 0 24 24">
+          <svg className="animate-spin h-8 w-8 text-foreground" fill="none" viewBox="0 0 24 24">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
           </svg>
         ) : isRecording ? (
           <div className="w-6 h-6 rounded-sm bg-white" />
         ) : (
-          <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
+          <svg className="w-8 h-8 text-foreground" fill="currentColor" viewBox="0 0 24 24">
             <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z" />
             <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z" />
           </svg>
@@ -290,16 +290,16 @@ export default function VoiceRecorder({ onTranscription, onPartialTranscription,
       {(isTranscribing || isRecording || !hideIdleStatus) && (
         <div className="text-center">
           {isTranscribing ? (
-            <p className="text-white/60 text-sm">Finalizing transcription...</p>
+            <p className="text-muted-foreground text-sm">Finalizing transcription...</p>
           ) : isRecording ? (
             <>
               <p className="text-red-400 text-sm font-medium">Recording {fmt(duration)}</p>
-              <p className="text-white/40 text-xs mt-1">Tap or press Space to stop</p>
+              <p className="text-muted-foreground text-xs mt-1">Tap or press Space to stop</p>
             </>
           ) : (
             <>
-              <p className="text-white/80 text-sm font-medium">Tap or press Space to speak</p>
-              <p className="text-white/50 text-xs mt-1">Live transcription as you talk</p>
+              <p className="text-foreground/90 text-sm font-medium">Tap or press Space to speak</p>
+              <p className="text-muted-foreground text-xs mt-1">Live transcription as you talk</p>
             </>
           )}
         </div>
@@ -307,11 +307,11 @@ export default function VoiceRecorder({ onTranscription, onPartialTranscription,
 
       {/* Live Transcription Preview */}
       {!hideTranscriptionPreview && (finalText || partialText) && (
-        <div className="w-full max-w-sm bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm">
-          <p className="text-white/30 text-xs mb-1 uppercase tracking-wider">Live transcription</p>
-          <p className="text-white/80 leading-relaxed">
+        <div className="w-full max-w-sm bg-muted border border-border rounded-xl px-4 py-3 text-sm">
+          <p className="text-muted-foreground/70 text-xs mb-1 uppercase tracking-wider">Live transcription</p>
+          <p className="text-foreground/90 leading-relaxed">
             {finalText}
-            {partialText && <span className="text-white/40 italic"> {partialText}</span>}
+            {partialText && <span className="text-muted-foreground italic"> {partialText}</span>}
             {isRecording && <span className="inline-block w-0.5 h-4 bg-white/60 ml-0.5 animate-pulse align-text-bottom" />}
           </p>
         </div>

@@ -352,16 +352,16 @@ export default function GraphVisualization({ nodes: rawNodes, edges: rawEdges, l
 
   if (loading) {
     return (
-      <div className="bg-white/[0.03] rounded-2xl border border-white/10 p-6 h-[500px] flex items-center justify-center">
-        <div className="text-white/30 text-sm">Loading graph...</div>
+      <div className="bg-muted/50 rounded-2xl border border-border p-6 h-[500px] flex items-center justify-center">
+        <div className="text-muted-foreground/70 text-sm">Loading graph...</div>
       </div>
     );
   }
 
   if (rawNodes.length === 0) {
     return (
-      <div className="bg-white/[0.03] rounded-2xl border border-white/10 p-6 h-[500px] flex items-center justify-center">
-        <div className="text-white/30 text-sm">No graph data available. Seed the graph to populate.</div>
+      <div className="bg-muted/50 rounded-2xl border border-border p-6 h-[500px] flex items-center justify-center">
+        <div className="text-muted-foreground/70 text-sm">No graph data available. Seed the graph to populate.</div>
       </div>
     );
   }
@@ -373,8 +373,8 @@ export default function GraphVisualization({ nodes: rawNodes, edges: rawEdges, l
       ref={fullscreenRef}
       className={`${
         isFullscreen
-          ? "fixed inset-0 z-50 bg-[#0a0a0f]"
-          : "bg-white/[0.03] rounded-2xl border border-white/10"
+          ? "fixed inset-0 z-50 bg-background"
+          : "bg-muted/50 rounded-2xl border border-border"
       } overflow-hidden flex flex-col`}
     >
       {/* Top Toolbar */}
@@ -387,17 +387,17 @@ export default function GraphVisualization({ nodes: rawNodes, edges: rawEdges, l
             placeholder="Search nodes..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-white/5 border border-white/10 rounded-lg pl-8 pr-3 py-1.5 text-xs text-white placeholder-white/25 focus:outline-none focus:border-white/20"
+            className="w-full bg-muted border border-border rounded-lg pl-8 pr-3 py-1.5 text-xs text-foreground placeholder-white/25 focus:outline-none focus:border-border"
           />
           {searchQuery && (
-            <button onClick={() => setSearchQuery("")} className="absolute right-2 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 text-xs">
+            <button onClick={() => setSearchQuery("")} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground/70 hover:text-muted-foreground text-xs">
               &times;
             </button>
           )}
         </div>
 
         {/* Stats */}
-        <div className="flex items-center gap-3 text-[10px] text-white/30 shrink-0">
+        <div className="flex items-center gap-3 text-[10px] text-muted-foreground/70 shrink-0">
           <span>{graphData.nodes.length} nodes</span>
           <span>{graphData.links.length} edges</span>
           {searchMatchIds && <span className="text-yellow-400/70">{searchMatchIds.size} matches</span>}
@@ -409,7 +409,7 @@ export default function GraphVisualization({ nodes: rawNodes, edges: rawEdges, l
         <button
           onClick={() => { setShowFilters((v) => !v); setShowEdgeFilters(false); }}
           className={`px-3 py-1.5 text-[10px] font-medium rounded-lg border transition-colors ${
-            showFilters ? "bg-purple-500/20 border-purple-500/30 text-purple-300" : "border-white/10 text-white/40 hover:text-white/60"
+            showFilters ? "bg-purple-500/20 border-purple-500/30 text-purple-300" : "border-border text-muted-foreground hover:text-muted-foreground"
           }`}
         >
           Node Types
@@ -417,7 +417,7 @@ export default function GraphVisualization({ nodes: rawNodes, edges: rawEdges, l
         <button
           onClick={() => { setShowEdgeFilters((v) => !v); setShowFilters(false); }}
           className={`px-3 py-1.5 text-[10px] font-medium rounded-lg border transition-colors ${
-            showEdgeFilters ? "bg-blue-500/20 border-blue-500/30 text-blue-300" : "border-white/10 text-white/40 hover:text-white/60"
+            showEdgeFilters ? "bg-blue-500/20 border-blue-500/30 text-blue-300" : "border-border text-muted-foreground hover:text-muted-foreground"
           }`}
         >
           Edge Types
@@ -426,7 +426,7 @@ export default function GraphVisualization({ nodes: rawNodes, edges: rawEdges, l
         {/* Zoom to fit */}
         <button
           onClick={handleZoomToFit}
-          className="p-1.5 rounded-lg border border-white/10 text-white/40 hover:text-white/70 hover:bg-white/5 transition-colors"
+          className="p-1.5 rounded-lg border border-border text-muted-foreground hover:text-foreground/80 hover:bg-muted transition-colors"
           title="Zoom to fit"
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" /></svg>
@@ -435,7 +435,7 @@ export default function GraphVisualization({ nodes: rawNodes, edges: rawEdges, l
         {/* Fullscreen toggle */}
         <button
           onClick={() => setIsFullscreen((f) => !f)}
-          className="p-1.5 rounded-lg border border-white/10 text-white/40 hover:text-white/70 hover:bg-white/5 transition-colors"
+          className="p-1.5 rounded-lg border border-border text-muted-foreground hover:text-foreground/80 hover:bg-muted transition-colors"
           title={isFullscreen ? "Exit fullscreen (Esc)" : "Fullscreen"}
         >
           {isFullscreen ? (
@@ -450,7 +450,7 @@ export default function GraphVisualization({ nodes: rawNodes, edges: rawEdges, l
       {showFilters && (
         <div className="px-4 py-3 border-b border-white/[0.06] bg-white/[0.02] shrink-0">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-[10px] text-white/40 uppercase tracking-wider">Node Types</span>
+            <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Node Types</span>
             <div className="flex gap-2">
               <button onClick={selectAllNodeTypes} className="text-[10px] text-purple-400/70 hover:text-purple-300">Select All</button>
               <button onClick={clearAllNodeTypes} className="text-[10px] text-red-400/70 hover:text-red-300">Clear All</button>
@@ -466,14 +466,14 @@ export default function GraphVisualization({ nodes: rawNodes, edges: rawEdges, l
                   onClick={() => toggleNodeType(type)}
                   className={`flex items-center gap-1.5 text-[11px] px-2.5 py-1 rounded-full border transition-all ${
                     isActive
-                      ? "border-white/20 bg-white/10 text-white/80"
-                      : "border-white/5 text-white/20 opacity-50"
+                      ? "border-border bg-muted text-foreground/90"
+                      : "border-border/50 text-muted-foreground/50 opacity-50"
                   }`}
                   style={isActive ? { borderColor: `${color}60`, backgroundColor: `${color}15` } : undefined}
                 >
                   <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: isActive ? color : "#444" }} />
                   {type}
-                  <span className="text-white/30">({count})</span>
+                  <span className="text-muted-foreground/70">({count})</span>
                 </button>
               );
             })}
@@ -485,7 +485,7 @@ export default function GraphVisualization({ nodes: rawNodes, edges: rawEdges, l
       {showEdgeFilters && (
         <div className="px-4 py-3 border-b border-white/[0.06] bg-white/[0.02] shrink-0">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-[10px] text-white/40 uppercase tracking-wider">Relationship Types</span>
+            <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Relationship Types</span>
             <div className="flex gap-2">
               <button onClick={selectAllEdgeTypes} className="text-[10px] text-blue-400/70 hover:text-blue-300">Select All</button>
               <button onClick={clearAllEdgeTypes} className="text-[10px] text-red-400/70 hover:text-red-300">Clear All</button>
@@ -501,13 +501,13 @@ export default function GraphVisualization({ nodes: rawNodes, edges: rawEdges, l
                   onClick={() => toggleEdgeType(type)}
                   className={`flex items-center gap-1.5 text-[11px] px-2.5 py-1 rounded-full border transition-all ${
                     isActive
-                      ? "border-white/20 bg-white/10 text-white/80"
-                      : "border-white/5 text-white/20 opacity-50"
+                      ? "border-border bg-muted text-foreground/90"
+                      : "border-border/50 text-muted-foreground/50 opacity-50"
                   }`}
                 >
                   <span className="w-3 h-0.5 rounded-full shrink-0" style={{ backgroundColor: isActive ? color.replace(/[\d.]+\)$/, "0.8)") : "#444" }} />
                   {LINK_LABELS[type] || type}
-                  <span className="text-white/30">({count})</span>
+                  <span className="text-muted-foreground/70">({count})</span>
                 </button>
               );
             })}
@@ -551,22 +551,22 @@ export default function GraphVisualization({ nodes: rawNodes, edges: rawEdges, l
                 <div className="flex items-center gap-2 min-w-0">
                   <span className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: NODE_COLORS[selectedNode.type] || DEFAULT_COLOR }} />
                   <div className="min-w-0">
-                    <h4 className="text-sm font-semibold text-white truncate">{selectedNode.label}</h4>
-                    <p className="text-[10px] text-white/40">{selectedNode.type}</p>
+                    <h4 className="text-sm font-semibold text-foreground truncate">{selectedNode.label}</h4>
+                    <p className="text-[10px] text-muted-foreground">{selectedNode.type}</p>
                   </div>
                 </div>
-                <button onClick={() => setSelectedNodeId(null)} className="text-white/30 hover:text-white/60 text-xs shrink-0 ml-2">&times;</button>
+                <button onClick={() => setSelectedNodeId(null)} className="text-muted-foreground/70 hover:text-muted-foreground text-xs shrink-0 ml-2">&times;</button>
               </div>
 
               {/* Properties */}
               {Object.keys(selectedNode.properties).length > 0 && (
                 <div className="mb-4">
-                  <h5 className="text-[10px] text-white/30 uppercase tracking-wider mb-2">Properties</h5>
+                  <h5 className="text-[10px] text-muted-foreground/70 uppercase tracking-wider mb-2">Properties</h5>
                   <div className="space-y-1.5">
                     {Object.entries(selectedNode.properties).slice(0, 12).map(([key, value]) => (
                       <div key={key} className="flex items-start gap-2 text-xs">
-                        <span className="text-white/30 shrink-0 min-w-0">{key}:</span>
-                        <span className="text-white/70 break-all">{typeof value === "object" ? JSON.stringify(value).slice(0, 80) : String(value).slice(0, 80)}</span>
+                        <span className="text-muted-foreground/70 shrink-0 min-w-0">{key}:</span>
+                        <span className="text-foreground/80 break-all">{typeof value === "object" ? JSON.stringify(value).slice(0, 80) : String(value).slice(0, 80)}</span>
                       </div>
                     ))}
                   </div>
@@ -575,7 +575,7 @@ export default function GraphVisualization({ nodes: rawNodes, edges: rawEdges, l
 
               {/* Connections */}
               <div>
-                <h5 className="text-[10px] text-white/30 uppercase tracking-wider mb-2">
+                <h5 className="text-[10px] text-muted-foreground/70 uppercase tracking-wider mb-2">
                   Connections ({selectedNodeConnections.length})
                 </h5>
                 <div className="space-y-1 max-h-60 overflow-y-auto">
@@ -583,18 +583,18 @@ export default function GraphVisualization({ nodes: rawNodes, edges: rawEdges, l
                     <button
                       key={i}
                       onClick={(e) => { e.stopPropagation(); if (conn.node) setSelectedNodeId(conn.node.id); }}
-                      className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-white/5 text-left transition-colors group"
+                      className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-muted text-left transition-colors group"
                     >
-                      <span className="text-[10px] text-white/20 w-4 shrink-0">{conn.direction === "out" ? "\u2192" : "\u2190"}</span>
+                      <span className="text-[10px] text-muted-foreground/50 w-4 shrink-0">{conn.direction === "out" ? "\u2192" : "\u2190"}</span>
                       <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: conn.node ? NODE_COLORS[conn.node.type] || DEFAULT_COLOR : "#444" }} />
                       <div className="min-w-0 flex-1">
-                        <p className="text-xs text-white/60 group-hover:text-white/80 truncate">{conn.node?.label || "Unknown"}</p>
+                        <p className="text-xs text-muted-foreground group-hover:text-foreground/90 truncate">{conn.node?.label || "Unknown"}</p>
                         <p className="text-[9px] text-white/25">{LINK_LABELS[conn.type] || conn.type}</p>
                       </div>
                     </button>
                   ))}
                   {selectedNodeConnections.length === 0 && (
-                    <p className="text-xs text-white/20 px-2">No connections</p>
+                    <p className="text-xs text-muted-foreground/50 px-2">No connections</p>
                   )}
                 </div>
               </div>
@@ -611,7 +611,7 @@ export default function GraphVisualization({ nodes: rawNodes, edges: rawEdges, l
           .map(([type, color]) => (
             <div key={type} className="flex items-center gap-1 shrink-0">
               <span className="w-2 h-2 rounded-full" style={{ backgroundColor: color }} />
-              <span className="text-[9px] text-white/30">{type}</span>
+              <span className="text-[9px] text-muted-foreground/70">{type}</span>
             </div>
           ))}
       </div>

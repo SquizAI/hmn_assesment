@@ -15,7 +15,7 @@ const INPUT_TYPE_LABELS: Record<string, { label: string; color: string }> = {
 };
 
 function InputTypeBadge({ type }: { type: string }) {
-  const config = INPUT_TYPE_LABELS[type] || { label: type, color: "bg-white/10 text-white/50 border-white/10" };
+  const config = INPUT_TYPE_LABELS[type] || { label: type, color: "bg-muted text-muted-foreground border-border" };
   return (
     <span className={`inline-flex px-1.5 py-0.5 text-[10px] font-medium rounded border ${config.color}`}>
       {config.label}
@@ -37,13 +37,13 @@ export default function LivePreview({ assessment, currentPhase }: LivePreviewPro
     <div className="h-full flex flex-col">
       {/* Header */}
       <div className="px-4 pt-5 pb-3 border-b border-white/[0.06]">
-        <h3 className="text-xs font-semibold text-white/30 uppercase tracking-wider">
+        <h3 className="text-xs font-semibold text-muted-foreground/70 uppercase tracking-wider">
           Live Preview
         </h3>
         {assessment && (
           <div className="flex items-center gap-2 mt-2">
             <span className="text-lg">{assessment.icon || "📋"}</span>
-            <span className="text-sm font-medium text-white/80 truncate">{assessment.name}</span>
+            <span className="text-sm font-medium text-foreground/90 truncate">{assessment.name}</span>
           </div>
         )}
       </div>
@@ -93,7 +93,7 @@ function EmptyPreview({ currentPhase }: { currentPhase: BuilderPhase }) {
       <div className="w-12 h-12 rounded-xl bg-white/[0.04] border border-white/[0.08] flex items-center justify-center mb-3">
         <span className="text-xl opacity-30">📋</span>
       </div>
-      <p className="text-sm text-white/30 leading-relaxed">
+      <p className="text-sm text-muted-foreground/70 leading-relaxed">
         {currentPhase === "purpose"
           ? "Your assessment will appear here as the AI builds it. Start by describing what you want to measure."
           : "Waiting for assessment data..."}
@@ -110,20 +110,20 @@ function PurposeSection({ assessment }: { assessment: AssessmentType }) {
   return (
     <div className="space-y-2">
       <SectionHeader label="Purpose" icon="🎯" />
-      <div className="bg-white/[0.03] border border-white/[0.08] rounded-xl p-3 space-y-2">
+      <div className="bg-muted/50 border border-white/[0.08] rounded-xl p-3 space-y-2">
         <div>
           <span className="text-[10px] text-white/25 uppercase tracking-wider">Name</span>
-          <p className="text-sm text-white/80">{assessment.name || "—"}</p>
+          <p className="text-sm text-foreground/90">{assessment.name || "—"}</p>
         </div>
         {assessment.description && (
           <div>
             <span className="text-[10px] text-white/25 uppercase tracking-wider">Description</span>
-            <p className="text-xs text-white/50 leading-relaxed">{assessment.description}</p>
+            <p className="text-xs text-muted-foreground leading-relaxed">{assessment.description}</p>
           </div>
         )}
-        <div className="flex gap-4 text-[11px] text-white/40">
+        <div className="flex gap-4 text-[11px] text-muted-foreground">
           <span>{assessment.estimatedMinutes || 15} min</span>
-          <span className={`capitalize ${assessment.status === "active" ? "text-green-400" : assessment.status === "draft" ? "text-yellow-400" : "text-white/30"}`}>
+          <span className={`capitalize ${assessment.status === "active" ? "text-green-400" : assessment.status === "draft" ? "text-yellow-400" : "text-muted-foreground/70"}`}>
             {assessment.status}
           </span>
         </div>
@@ -156,7 +156,7 @@ function FrameworkSection({ assessment }: { assessment: AssessmentType }) {
 
       {/* Phases → Sections tree */}
       {phases.length > 0 && (
-        <div className="bg-white/[0.03] border border-white/[0.08] rounded-xl p-3 space-y-2">
+        <div className="bg-muted/50 border border-white/[0.08] rounded-xl p-3 space-y-2">
           <span className="text-[10px] text-white/25 uppercase tracking-wider">
             Phases & Sections
           </span>
@@ -170,12 +170,12 @@ function FrameworkSection({ assessment }: { assessment: AssessmentType }) {
                 <div key={phase.id} className="ml-1">
                   <div className="flex items-center gap-1.5">
                     <div className="w-1.5 h-1.5 rounded-full bg-purple-400/60" />
-                    <span className="text-xs font-medium text-white/70">{phase.label}</span>
+                    <span className="text-xs font-medium text-foreground/80">{phase.label}</span>
                   </div>
                   {phaseSections.map((sec) => (
                     <div key={sec.id} className="ml-5 flex items-center gap-1.5 mt-0.5">
                       <div className="w-1 h-1 rounded-full bg-white/20" />
-                      <span className="text-[11px] text-white/40">{sec.label}</span>
+                      <span className="text-[11px] text-muted-foreground">{sec.label}</span>
                     </div>
                   ))}
                 </div>
@@ -186,7 +186,7 @@ function FrameworkSection({ assessment }: { assessment: AssessmentType }) {
 
       {/* Scoring Dimensions */}
       {dims.length > 0 && (
-        <div className="bg-white/[0.03] border border-white/[0.08] rounded-xl p-3 space-y-2">
+        <div className="bg-muted/50 border border-white/[0.08] rounded-xl p-3 space-y-2">
           <span className="text-[10px] text-white/25 uppercase tracking-wider">
             Scoring Dimensions
           </span>
@@ -195,8 +195,8 @@ function FrameworkSection({ assessment }: { assessment: AssessmentType }) {
               <div key={dim.id} className="flex items-center gap-2">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
-                    <span className="text-[11px] text-white/60 truncate">{dim.label}</span>
-                    <span className="text-[10px] text-white/30 tabular-nums ml-2">
+                    <span className="text-[11px] text-muted-foreground truncate">{dim.label}</span>
+                    <span className="text-[10px] text-muted-foreground/70 tabular-nums ml-2">
                       {Math.round(dim.weight * 100)}%
                     </span>
                   </div>
@@ -255,11 +255,11 @@ function QuestionsSection({ assessment }: { assessment: AssessmentType }) {
           {qs.map((q, i) => (
             <div
               key={q.id}
-              className="bg-white/[0.03] border border-white/[0.08] rounded-lg px-3 py-2 animate-in fade-in slide-in-from-bottom-1 duration-300"
+              className="bg-muted/50 border border-white/[0.08] rounded-lg px-3 py-2 animate-in fade-in slide-in-from-bottom-1 duration-300"
               style={{ animationDelay: `${i * 50}ms` }}
             >
               <div className="flex items-start justify-between gap-2">
-                <p className="text-xs text-white/70 leading-relaxed flex-1">{q.text}</p>
+                <p className="text-xs text-foreground/80 leading-relaxed flex-1">{q.text}</p>
                 <InputTypeBadge type={q.inputType} />
               </div>
               {(q.weight > 0 || q.scoringDimensions?.length > 0) && (
@@ -311,7 +311,7 @@ function ScoringSection({ assessment }: { assessment: AssessmentType }) {
   return (
     <div className="space-y-2">
       <SectionHeader label="Scoring Coverage" icon="⚖️" />
-      <div className="bg-white/[0.03] border border-white/[0.08] rounded-xl p-3 space-y-2">
+      <div className="bg-muted/50 border border-white/[0.08] rounded-xl p-3 space-y-2">
         {totalWeight > 0 && Math.abs(totalWeight - 1) > 0.01 && (
           <div className="text-[10px] text-yellow-400/70 bg-yellow-500/10 border border-yellow-500/20 rounded-lg px-2 py-1">
             Weights sum to {totalWeight.toFixed(2)} (should be 1.0)
@@ -321,7 +321,7 @@ function ScoringSection({ assessment }: { assessment: AssessmentType }) {
           const count = coverage.get(dim.id) || 0;
           return (
             <div key={dim.id} className="flex items-center gap-2">
-              <span className="text-[11px] text-white/50 min-w-0 flex-1 truncate">
+              <span className="text-[11px] text-muted-foreground min-w-0 flex-1 truncate">
                 {dim.label}
               </span>
               <span className="text-[10px] text-white/25 tabular-nums w-8 text-right">
@@ -360,7 +360,7 @@ function ReviewSection({ assessment }: { assessment: AssessmentType }) {
   return (
     <div className="space-y-2">
       <SectionHeader label="Summary" icon="✅" />
-      <div className="bg-white/[0.03] border border-white/[0.08] rounded-xl p-3 space-y-3">
+      <div className="bg-muted/50 border border-white/[0.08] rounded-xl p-3 space-y-3">
         <div className="grid grid-cols-2 gap-2">
           <StatBlock label="Questions" value={questions.length} />
           <StatBlock label="Dimensions" value={dims.length} />
@@ -377,7 +377,7 @@ function ReviewSection({ assessment }: { assessment: AssessmentType }) {
               {[...typeCounts.entries()].map(([type, count]) => (
                 <span
                   key={type}
-                  className="text-[10px] px-2 py-0.5 rounded-full bg-white/[0.05] border border-white/[0.08] text-white/40"
+                  className="text-[10px] px-2 py-0.5 rounded-full bg-white/[0.05] border border-white/[0.08] text-muted-foreground"
                 >
                   {INPUT_TYPE_LABELS[type]?.label || type} ({count})
                 </span>
@@ -398,7 +398,7 @@ function SectionHeader({ label, icon, count }: { label: string; icon: string; co
   return (
     <div className="flex items-center gap-2">
       <span className="text-sm">{icon}</span>
-      <span className="text-xs font-medium text-white/50">{label}</span>
+      <span className="text-xs font-medium text-muted-foreground">{label}</span>
       {count !== undefined && (
         <span className="text-[10px] text-white/25 tabular-nums">({count})</span>
       )}
@@ -409,7 +409,7 @@ function SectionHeader({ label, icon, count }: { label: string; icon: string; co
 function GhostPlaceholder({ text }: { text: string }) {
   return (
     <div className="border border-dashed border-white/[0.08] rounded-xl p-4 text-center">
-      <p className="text-[11px] text-white/20 leading-relaxed">{text}</p>
+      <p className="text-[11px] text-muted-foreground/50 leading-relaxed">{text}</p>
     </div>
   );
 }
@@ -417,8 +417,8 @@ function GhostPlaceholder({ text }: { text: string }) {
 function StatBlock({ label, value }: { label: string; value: string | number }) {
   return (
     <div className="bg-white/[0.02] border border-white/[0.06] rounded-lg p-2 text-center">
-      <div className="text-base font-semibold text-white/80 tabular-nums">{value}</div>
-      <div className="text-[10px] text-white/30 mt-0.5">{label}</div>
+      <div className="text-base font-semibold text-foreground/90 tabular-nums">{value}</div>
+      <div className="text-[10px] text-muted-foreground/70 mt-0.5">{label}</div>
     </div>
   );
 }

@@ -177,9 +177,9 @@ export default function VapiVoiceAgent({
     <div className="flex flex-col items-center gap-4">
       {/* Live transcript panel */}
       {callStatus === "active" && showTranscript && (
-        <div className="w-full max-w-sm bg-[#12121a]/95 backdrop-blur-xl border border-white/10 rounded-2xl p-4 max-h-48 overflow-y-auto">
+        <div className="w-full max-w-sm bg-[#12121a]/95 backdrop-blur-xl border border-border rounded-2xl p-4 max-h-48 overflow-y-auto">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-medium text-white/40 uppercase tracking-wider">Live Transcript</span>
+            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Live Transcript</span>
             <div className="flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
               <span className="text-xs text-green-400">Live</span>
@@ -192,17 +192,17 @@ export default function VapiVoiceAgent({
                 className={`text-sm ${
                   t.role === "user"
                     ? "text-blue-300 pl-4 border-l-2 border-blue-500/30"
-                    : "text-white/70 pl-4 border-l-2 border-purple-500/30"
+                    : "text-foreground/80 pl-4 border-l-2 border-purple-500/30"
                 }`}
               >
-                <span className="text-[10px] uppercase tracking-wider text-white/30 block mb-0.5">
+                <span className="text-[10px] uppercase tracking-wider text-muted-foreground/70 block mb-0.5">
                   {t.role === "user" ? "You" : "Kascade"}
                 </span>
                 {t.text}
               </div>
             ))}
             {currentSpeech && (
-              <div className="text-sm text-white/40 italic pl-4 border-l-2 border-white/10">
+              <div className="text-sm text-muted-foreground italic pl-4 border-l-2 border-border">
                 {currentSpeech}...
               </div>
             )}
@@ -213,7 +213,7 @@ export default function VapiVoiceAgent({
       {/* Status label */}
       {callStatus !== "idle" && (
         <div className="text-center">
-          <span className="text-sm text-white/60">
+          <span className="text-sm text-muted-foreground">
             {callStatus === "connecting" && "Connecting to Kascade..."}
             {callStatus === "active" && (isSpeaking ? "Kascade is speaking..." : "Listening...")}
             {callStatus === "ending" && "Wrapping up..."}
@@ -227,10 +227,10 @@ export default function VapiVoiceAgent({
         {callStatus === "active" && (
           <button
             onClick={() => setShowTranscript(!showTranscript)}
-            className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-all"
+            className="w-10 h-10 rounded-full bg-muted border border-border flex items-center justify-center hover:bg-muted transition-all"
             title={showTranscript ? "Hide transcript" : "Show transcript"}
           >
-            <svg className="w-4 h-4 text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-4 h-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
             </svg>
           </button>
@@ -283,14 +283,14 @@ export default function VapiVoiceAgent({
             title={callStatus === "idle" ? "Talk to Kascade" : "End call"}
           >
             {callStatus === "idle" ? (
-              <svg className="w-7 h-7 text-white" fill="currentColor" viewBox="0 0 24 24">
+              <svg className="w-7 h-7 text-foreground" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z" />
                 <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z" />
                 <circle cx="19" cy="5" r="1.5" className="animate-pulse" opacity="0.8" />
                 <circle cx="20.5" cy="3" r="0.8" className="animate-pulse" opacity="0.6" />
               </svg>
             ) : callStatus === "connecting" ? (
-              <svg className="animate-spin h-7 w-7 text-white" fill="none" viewBox="0 0 24 24">
+              <svg className="animate-spin h-7 w-7 text-foreground" fill="none" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
               </svg>
@@ -316,7 +316,7 @@ export default function VapiVoiceAgent({
 
           {callStatus === "idle" && (
             <div className="absolute -bottom-7 left-1/2 -translate-x-1/2 whitespace-nowrap">
-              <span className="text-[11px] text-white/40 font-medium">Talk to Kascade</span>
+              <span className="text-[11px] text-muted-foreground font-medium">Talk to Kascade</span>
             </div>
           )}
         </div>

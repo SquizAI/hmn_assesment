@@ -17,7 +17,7 @@ export default function FlagsList({ redFlags, greenLights }: Props) {
           <h3 className="text-sm font-semibold text-red-400 uppercase tracking-wider mb-4">Watch Out For</h3>
           <ul className="space-y-3">
             {redFlags.map((f, i) => (
-              <li key={i} className="flex gap-2 text-sm text-white/70">
+              <li key={i} className="flex gap-2 text-sm text-foreground/80">
                 <span className="text-red-400">&#x2022;</span>{f.description}
               </li>
             ))}
@@ -29,7 +29,7 @@ export default function FlagsList({ redFlags, greenLights }: Props) {
           <h3 className="text-sm font-semibold text-green-400 uppercase tracking-wider mb-4">Strengths</h3>
           <ul className="space-y-3">
             {greenLights.map((f, i) => (
-              <li key={i} className="flex gap-2 text-sm text-white/70">
+              <li key={i} className="flex gap-2 text-sm text-foreground/80">
                 <span className="text-green-400">&#x2022;</span>{f.description}
               </li>
             ))}

@@ -36,6 +36,7 @@ import settingsRoutes from "./routes/settings.js";
 import cleanupRoutes from "./routes/cleanup.js";
 import resumeRoutes from "./routes/resume.js";
 import compareRoutes from "./routes/compare.js";
+import reportPdfRoutes from "./routes/report-pdf.js";
 import { addSSEClient, emitAdminEvent } from "./admin-events.js";
 
 dotenv.config();
@@ -681,6 +682,7 @@ app.post("/api/sessions", async (req, res) => {
 // Mount resume/compare routers BEFORE the :sessionId wildcard
 app.use("/api/sessions/resume", resumeRoutes);
 app.use("/api/sessions/compare", compareRoutes);
+app.use("/api/sessions/report", reportPdfRoutes);
 
 app.get("/api/sessions/lookup", async (req, res) => {
   try {

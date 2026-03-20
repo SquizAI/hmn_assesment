@@ -386,16 +386,16 @@ export default function AssessmentDrawer({
 
       {/* Drawer Panel */}
       <div
-        className={`absolute right-0 top-0 h-full w-full max-w-2xl bg-[#0a0a0f] border-l border-white/10 flex flex-col transition-transform duration-300 ease-in-out ${
+        className={`absolute right-0 top-0 h-full w-full max-w-2xl bg-background border-l border-border flex flex-col transition-transform duration-300 ease-in-out ${
           visible ? "translate-x-0" : "translate-x-full"
         }`}
       >
         {loading ? (
           <div className="flex items-center justify-center h-full">
-            <div className="w-8 h-8 border-2 border-white/20 border-t-white/60 rounded-full animate-spin" />
+            <div className="w-8 h-8 border-2 border-border border-t-white/60 rounded-full animate-spin" />
           </div>
         ) : !assessment ? (
-          <div className="flex items-center justify-center h-full text-white/40">
+          <div className="flex items-center justify-center h-full text-muted-foreground">
             Assessment not found
           </div>
         ) : (
@@ -411,7 +411,7 @@ export default function AssessmentDrawer({
                     type="text"
                     value={getField("icon")}
                     onChange={(e) => setEdit("icon", e.target.value)}
-                    className="text-3xl w-12 h-12 text-center bg-transparent border border-transparent hover:border-white/10 focus:border-white/20 rounded-lg outline-none transition-colors shrink-0"
+                    className="text-3xl w-12 h-12 text-center bg-transparent border border-transparent hover:border-border focus:border-border rounded-lg outline-none transition-colors shrink-0"
                     maxLength={4}
                     title="Click to edit icon"
                   />
@@ -422,7 +422,7 @@ export default function AssessmentDrawer({
                       type="text"
                       value={getField("name")}
                       onChange={(e) => setEdit("name", e.target.value)}
-                      className="text-xl font-semibold text-white bg-transparent border border-transparent hover:border-white/10 focus:border-white/20 rounded-lg px-2 py-1 -ml-2 w-full outline-none transition-colors"
+                      className="text-xl font-semibold text-foreground bg-transparent border border-transparent hover:border-border focus:border-border rounded-lg px-2 py-1 -ml-2 w-full outline-none transition-colors"
                       title="Click to edit name"
                     />
                     <div className="mt-1 ml-0.5">
@@ -439,7 +439,7 @@ export default function AssessmentDrawer({
                   </button>
                   <button
                     onClick={handleClose}
-                    className="text-white/40 hover:text-white transition-colors text-2xl leading-none p-1"
+                    className="text-muted-foreground hover:text-foreground transition-colors text-2xl leading-none p-1"
                     aria-label="Close drawer"
                   >
                     &times;
@@ -448,15 +448,15 @@ export default function AssessmentDrawer({
               </div>
 
               {/* Tab navigation */}
-              <nav className="flex gap-1 mt-5 border-b border-white/10">
+              <nav className="flex gap-1 mt-5 border-b border-border">
                 {TABS.map((tab) => (
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
                     className={`px-4 py-2.5 text-sm font-medium transition-colors relative ${
                       activeTab === tab.id
-                        ? "text-white"
-                        : "text-white/40 hover:text-white/70"
+                        ? "text-foreground"
+                        : "text-muted-foreground hover:text-foreground/80"
                     }`}
                   >
                     {tab.label}
@@ -477,14 +477,14 @@ export default function AssessmentDrawer({
                 <div className="space-y-6">
                   {/* Description */}
                   <div>
-                    <label className="block text-xs font-medium text-white/40 uppercase tracking-wider mb-2">
+                    <label className="block text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
                       Description
                     </label>
                     <textarea
                       value={getField("description")}
                       onChange={(e) => setEdit("description", e.target.value)}
                       rows={3}
-                      className="w-full bg-white/3 border border-white/10 rounded-xl px-4 py-3 text-sm text-white/80 placeholder-white/20 outline-none focus:border-white/20 transition-colors resize-none"
+                      className="w-full bg-white/3 border border-border rounded-xl px-4 py-3 text-sm text-foreground/90 placeholder-white/20 outline-none focus:border-border transition-colors resize-none"
                       placeholder="Assessment description..."
                     />
                   </div>
@@ -505,12 +505,12 @@ export default function AssessmentDrawer({
                     ].map((stat) => (
                       <div
                         key={stat.label}
-                        className="bg-white/3 border border-white/10 rounded-xl p-3 text-center"
+                        className="bg-white/3 border border-border rounded-xl p-3 text-center"
                       >
-                        <div className="text-lg font-semibold text-white">
+                        <div className="text-lg font-semibold text-foreground">
                           {stat.value}
                         </div>
-                        <div className="text-[11px] text-white/40 mt-0.5">
+                        <div className="text-[11px] text-muted-foreground mt-0.5">
                           {stat.label}
                         </div>
                       </div>
@@ -519,7 +519,7 @@ export default function AssessmentDrawer({
 
                   {/* Status toggle */}
                   <div>
-                    <label className="block text-xs font-medium text-white/40 uppercase tracking-wider mb-2">
+                    <label className="block text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
                       Status
                     </label>
                     <div className="flex gap-2">
@@ -535,7 +535,7 @@ export default function AssessmentDrawer({
                                 : s === "active"
                                   ? "bg-green-500/20 text-green-300 border-green-500/30"
                                   : "bg-gray-500/20 text-gray-300 border-gray-500/30"
-                              : "bg-white/3 text-white/40 border-white/10 hover:bg-white/6 hover:text-white/60"
+                              : "bg-white/3 text-muted-foreground border-border hover:bg-white/6 hover:text-muted-foreground"
                           } ${statusUpdating ? "opacity-50 cursor-not-allowed" : ""}`}
                         >
                           {s.charAt(0).toUpperCase() + s.slice(1)}
@@ -546,10 +546,10 @@ export default function AssessmentDrawer({
 
                   {/* Phases & Sections preview */}
                   <div>
-                    <label className="block text-xs font-medium text-white/40 uppercase tracking-wider mb-2">
+                    <label className="block text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
                       Structure
                     </label>
-                    <div className="bg-white/3 border border-white/10 rounded-xl p-4 space-y-3">
+                    <div className="bg-white/3 border border-border rounded-xl p-4 space-y-3">
                       {(assessment.phases || [])
                         .sort((a, b) => a.order - b.order)
                         .map((phase) => {
@@ -573,10 +573,10 @@ export default function AssessmentDrawer({
                           return (
                             <div key={phase.id}>
                               <div className="flex items-center justify-between">
-                                <h4 className="text-sm font-medium text-white/80">
+                                <h4 className="text-sm font-medium text-foreground/90">
                                   {phase.label}
                                 </h4>
-                                <span className="text-xs text-white/30">
+                                <span className="text-xs text-muted-foreground/70">
                                   {phaseQuestionCount} questions
                                 </span>
                               </div>
@@ -586,7 +586,7 @@ export default function AssessmentDrawer({
                                     key={sec.id}
                                     className="flex items-center justify-between text-xs"
                                   >
-                                    <span className="text-white/50">
+                                    <span className="text-muted-foreground">
                                       {sec.label}
                                     </span>
                                     <span className="text-white/25">
@@ -634,7 +634,7 @@ export default function AssessmentDrawer({
                         setDupName(`${assessment.name} (Copy)`);
                         setShowDuplicate(true);
                       }}
-                      className="w-full bg-white/3 border border-white/10 rounded-xl px-4 py-3 text-sm text-white/60 hover:bg-white/6 hover:text-white/80 transition-colors text-left flex items-center gap-3"
+                      className="w-full bg-white/3 border border-border rounded-xl px-4 py-3 text-sm text-muted-foreground hover:bg-white/6 hover:text-foreground/90 transition-colors text-left flex items-center gap-3"
                     >
                       <svg
                         className="w-4 h-4 shrink-0"
@@ -654,17 +654,17 @@ export default function AssessmentDrawer({
                   </div>
 
                   {/* Timestamps */}
-                  <div className="bg-white/3 border border-white/10 rounded-xl p-4">
+                  <div className="bg-white/3 border border-border rounded-xl p-4">
                     <div className="grid grid-cols-2 gap-4 text-xs">
                       <div>
-                        <span className="text-white/30">Created</span>
-                        <p className="text-white/60 mt-0.5">
+                        <span className="text-muted-foreground/70">Created</span>
+                        <p className="text-muted-foreground mt-0.5">
                           {formatDate(assessment.createdAt)}
                         </p>
                       </div>
                       <div>
-                        <span className="text-white/30">Last Updated</span>
-                        <p className="text-white/60 mt-0.5">
+                        <span className="text-muted-foreground/70">Last Updated</span>
+                        <p className="text-muted-foreground mt-0.5">
                           {formatDate(assessment.updatedAt)}
                         </p>
                       </div>
@@ -678,12 +678,12 @@ export default function AssessmentDrawer({
                 <div className="space-y-5">
                   {/* Count header */}
                   <div className="flex items-center justify-between">
-                    <h3 className="text-sm text-white/60">
-                      <span className="text-white font-semibold">
+                    <h3 className="text-sm text-muted-foreground">
+                      <span className="text-foreground font-semibold">
                         {assessment.questions.length}
                       </span>{" "}
                       questions across{" "}
-                      <span className="text-white font-semibold">
+                      <span className="text-foreground font-semibold">
                         {orderedSectionIds.length}
                       </span>{" "}
                       sections
@@ -715,13 +715,13 @@ export default function AssessmentDrawer({
                       <div key={sectionId}>
                         {/* Section header */}
                         <div className="flex items-center gap-2 mb-2">
-                          <h4 className="text-xs font-semibold text-white/50 uppercase tracking-wider">
+                          <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                             {section?.label || sectionId}
                           </h4>
                           <span className="text-[10px] text-white/25">
                             ({questions.length})
                           </span>
-                          <div className="flex-1 h-px bg-white/10" />
+                          <div className="flex-1 h-px bg-muted" />
                         </div>
 
                         <div className="space-y-2">
@@ -739,8 +739,8 @@ export default function AssessmentDrawer({
                                   isModified
                                     ? "border-purple-500/30 border-l-2 border-l-purple-500/60"
                                     : isExpanded
-                                      ? "border-white/20"
-                                      : "border-white/10 hover:border-white/15"
+                                      ? "border-border"
+                                      : "border-border hover:border-white/15"
                                 }`}
                                 onClick={() =>
                                   setExpandedQuestion(
@@ -760,14 +760,14 @@ export default function AssessmentDrawer({
                                           INPUT_TYPE_COLORS[
                                             displayInputType
                                           ] ||
-                                          "bg-white/10 text-white/50 border-white/20"
+                                          "bg-muted text-muted-foreground border-border"
                                         }`}
                                       >
                                         {INPUT_TYPE_LABELS[
                                           displayInputType
                                         ] || displayInputType}
                                       </span>
-                                      <span className="text-[10px] text-white/30">
+                                      <span className="text-[10px] text-muted-foreground/70">
                                         weight: {displayWeight}
                                       </span>
                                       {isModified && (
@@ -780,14 +780,14 @@ export default function AssessmentDrawer({
                                         .map((dim) => (
                                           <span
                                             key={dim}
-                                            className="text-[10px] bg-white/5 text-white/30 px-1.5 py-0.5 rounded"
+                                            className="text-[10px] bg-muted text-muted-foreground/70 px-1.5 py-0.5 rounded"
                                           >
                                             {dim}
                                           </span>
                                         ))}
                                       {question.scoringDimensions.length >
                                         3 && (
-                                        <span className="text-[10px] text-white/20">
+                                        <span className="text-[10px] text-muted-foreground/50">
                                           +
                                           {question.scoringDimensions
                                             .length - 3}
@@ -797,7 +797,7 @@ export default function AssessmentDrawer({
                                   </div>
                                   {/* Expand chevron */}
                                   <svg
-                                    className={`w-4 h-4 text-white/20 shrink-0 mt-1 transition-transform ${
+                                    className={`w-4 h-4 text-muted-foreground/50 shrink-0 mt-1 transition-transform ${
                                       isExpanded ? "rotate-180" : ""
                                     }`}
                                     fill="none"
@@ -816,7 +816,7 @@ export default function AssessmentDrawer({
                                 {/* Expanded inline editor */}
                                 {isExpanded && (
                                   <div
-                                    className="border-t border-white/10 px-3 py-3 space-y-3"
+                                    className="border-t border-border px-3 py-3 space-y-3"
                                     onClick={(e) => e.stopPropagation()}
                                   >
                                     {/* Modified indicator + revert */}
@@ -827,7 +827,7 @@ export default function AssessmentDrawer({
                                         </span>
                                         <button
                                           onClick={() => revertQuestion(question.id)}
-                                          className="text-[11px] text-white/30 hover:text-white/60 transition-colors"
+                                          className="text-[11px] text-muted-foreground/70 hover:text-muted-foreground transition-colors"
                                         >
                                           Revert
                                         </button>
@@ -836,7 +836,7 @@ export default function AssessmentDrawer({
 
                                     {/* Editable: Question text */}
                                     <div className="space-y-1">
-                                      <label className="text-[11px] text-white/40 uppercase tracking-wider">
+                                      <label className="text-[11px] text-muted-foreground uppercase tracking-wider">
                                         Question Text
                                       </label>
                                       <textarea
@@ -844,13 +844,13 @@ export default function AssessmentDrawer({
                                         onChange={(e) => setQuestionEdit(question.id, "text", e.target.value)}
                                         autoFocus
                                         rows={3}
-                                        className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/20 focus:outline-none focus:border-purple-500/40 focus:ring-1 focus:ring-purple-500/20 resize-none"
+                                        className="w-full bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder-white/20 focus:outline-none focus:border-purple-500/40 focus:ring-1 focus:ring-purple-500/20 resize-none"
                                       />
                                     </div>
 
                                     {/* Editable: Subtext */}
                                     <div className="space-y-1">
-                                      <label className="text-[11px] text-white/40 uppercase tracking-wider">
+                                      <label className="text-[11px] text-muted-foreground uppercase tracking-wider">
                                         Subtext
                                       </label>
                                       <input
@@ -858,20 +858,20 @@ export default function AssessmentDrawer({
                                         value={getQuestionField(question.id, "subtext") || ""}
                                         onChange={(e) => setQuestionEdit(question.id, "subtext", e.target.value || undefined)}
                                         placeholder="Optional helper text..."
-                                        className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/20 focus:outline-none focus:border-purple-500/40 focus:ring-1 focus:ring-purple-500/20"
+                                        className="w-full bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder-white/20 focus:outline-none focus:border-purple-500/40 focus:ring-1 focus:ring-purple-500/20"
                                       />
                                     </div>
 
                                     {/* Editable: Input type + Weight row */}
                                     <div className="grid grid-cols-2 gap-3">
                                       <div className="space-y-1">
-                                        <label className="text-[11px] text-white/40 uppercase tracking-wider">
+                                        <label className="text-[11px] text-muted-foreground uppercase tracking-wider">
                                           Input Type
                                         </label>
                                         <select
                                           value={getQuestionField(question.id, "inputType")}
                                           onChange={(e) => setQuestionEdit(question.id, "inputType", e.target.value)}
-                                          className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500/40 appearance-none"
+                                          className="w-full bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:border-purple-500/40 appearance-none"
                                         >
                                           {INPUT_TYPES.map((t) => (
                                             <option key={t.value} value={t.value} className="bg-[#141420]">
@@ -881,7 +881,7 @@ export default function AssessmentDrawer({
                                         </select>
                                       </div>
                                       <div className="space-y-1">
-                                        <label className="text-[11px] text-white/40 uppercase tracking-wider">
+                                        <label className="text-[11px] text-muted-foreground uppercase tracking-wider">
                                           Weight
                                         </label>
                                         <input
@@ -891,36 +891,36 @@ export default function AssessmentDrawer({
                                           step="0.1"
                                           value={getQuestionField(question.id, "weight")}
                                           onChange={(e) => setQuestionEdit(question.id, "weight", parseFloat(e.target.value) || 0)}
-                                          className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500/40"
+                                          className="w-full bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:border-purple-500/40"
                                         />
                                       </div>
                                     </div>
 
                                     {/* Read-only metadata */}
-                                    <div className="grid grid-cols-3 gap-3 text-xs pt-2 border-t border-white/5">
+                                    <div className="grid grid-cols-3 gap-3 text-xs pt-2 border-t border-border/50">
                                       <div>
-                                        <span className="text-white/30">
+                                        <span className="text-muted-foreground/70">
                                           ID
                                         </span>
-                                        <p className="text-white/50 font-mono mt-0.5 break-all text-[10px]">
+                                        <p className="text-muted-foreground font-mono mt-0.5 break-all text-[10px]">
                                           {question.id}
                                         </p>
                                       </div>
                                       <div>
-                                        <span className="text-white/30">
+                                        <span className="text-muted-foreground/70">
                                           Phase
                                         </span>
-                                        <p className="text-white/50 mt-0.5">
+                                        <p className="text-muted-foreground mt-0.5">
                                           {assessment.phases.find(
                                             (p) => p.id === question.phase,
                                           )?.label || question.phase}
                                         </p>
                                       </div>
                                       <div>
-                                        <span className="text-white/30">
+                                        <span className="text-muted-foreground/70">
                                           Section
                                         </span>
-                                        <p className="text-white/50 mt-0.5">
+                                        <p className="text-muted-foreground mt-0.5">
                                           {section?.label || question.section}
                                         </p>
                                       </div>
@@ -929,7 +929,7 @@ export default function AssessmentDrawer({
                                     {/* Scoring dimensions */}
                                     {question.scoringDimensions.length > 0 && (
                                       <div>
-                                        <span className="text-[11px] text-white/30">
+                                        <span className="text-[11px] text-muted-foreground/70">
                                           Scoring Dimensions
                                         </span>
                                         <div className="flex flex-wrap gap-1.5 mt-1">
@@ -951,14 +951,14 @@ export default function AssessmentDrawer({
                                     {question.tags &&
                                       question.tags.length > 0 && (
                                         <div>
-                                          <span className="text-[11px] text-white/30">
+                                          <span className="text-[11px] text-muted-foreground/70">
                                             Tags
                                           </span>
                                           <div className="flex flex-wrap gap-1.5 mt-1">
                                             {question.tags.map((tag) => (
                                               <span
                                                 key={tag}
-                                                className="text-[10px] bg-white/5 text-white/40 border border-white/10 px-2 py-0.5 rounded-full"
+                                                className="text-[10px] bg-muted text-muted-foreground border border-border px-2 py-0.5 rounded-full"
                                               >
                                                 {tag}
                                               </span>
@@ -982,8 +982,8 @@ export default function AssessmentDrawer({
               {activeTab === "scoring" && (
                 <div className="space-y-5">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-sm text-white/60">
-                      <span className="text-white font-semibold">
+                    <h3 className="text-sm text-muted-foreground">
+                      <span className="text-foreground font-semibold">
                         {assessment.scoringDimensions.length}
                       </span>{" "}
                       scoring dimensions
@@ -1005,18 +1005,18 @@ export default function AssessmentDrawer({
                       return (
                         <div
                           key={dim.id}
-                          className="bg-white/3 border border-white/10 rounded-xl p-4"
+                          className="bg-white/3 border border-border rounded-xl p-4"
                         >
                           <div className="flex items-start justify-between gap-3 mb-2">
                             <div className="min-w-0 flex-1">
                               <h4 className="text-sm font-medium text-white/85">
                                 {dim.label}
                               </h4>
-                              <p className="text-xs text-white/40 mt-0.5 leading-relaxed">
+                              <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
                                 {dim.description}
                               </p>
                             </div>
-                            <span className="text-sm font-semibold text-white/70 shrink-0 tabular-nums">
+                            <span className="text-sm font-semibold text-foreground/80 shrink-0 tabular-nums">
                               {pct}%
                             </span>
                           </div>
@@ -1048,7 +1048,7 @@ export default function AssessmentDrawer({
                 <div className="space-y-6">
                   {/* Estimated minutes */}
                   <div>
-                    <label className="block text-xs font-medium text-white/40 uppercase tracking-wider mb-2">
+                    <label className="block text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
                       Estimated Duration (minutes)
                     </label>
                     <input
@@ -1062,32 +1062,32 @@ export default function AssessmentDrawer({
                           parseInt(e.target.value, 10) || 0,
                         )
                       }
-                      className="w-full bg-white/3 border border-white/10 rounded-xl px-4 py-3 text-sm text-white/80 outline-none focus:border-white/20 transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      className="w-full bg-white/3 border border-border rounded-xl px-4 py-3 text-sm text-foreground/90 outline-none focus:border-border transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     />
                   </div>
 
                   {/* Icon */}
                   <div>
-                    <label className="block text-xs font-medium text-white/40 uppercase tracking-wider mb-2">
+                    <label className="block text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
                       Icon (Emoji)
                     </label>
                     <input
                       type="text"
                       value={getField("icon")}
                       onChange={(e) => setEdit("icon", e.target.value)}
-                      className="w-full bg-white/3 border border-white/10 rounded-xl px-4 py-3 text-2xl outline-none focus:border-white/20 transition-colors"
+                      className="w-full bg-white/3 border border-border rounded-xl px-4 py-3 text-2xl outline-none focus:border-border transition-colors"
                       maxLength={4}
                     />
                   </div>
 
                   {/* Assessment ID */}
                   <div>
-                    <label className="block text-xs font-medium text-white/40 uppercase tracking-wider mb-2">
+                    <label className="block text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
                       Assessment ID
                     </label>
                     <div
                       onClick={() => handleCopyId(assessment.id)}
-                      className="w-full bg-white/3 border border-white/10 rounded-xl px-4 py-3 text-sm text-white/50 font-mono cursor-pointer hover:bg-white/5 transition-colors flex items-center justify-between"
+                      className="w-full bg-white/3 border border-border rounded-xl px-4 py-3 text-sm text-muted-foreground font-mono cursor-pointer hover:bg-muted transition-colors flex items-center justify-between"
                       title="Click to copy"
                     >
                       <span className="truncate">{assessment.id}</span>
@@ -1098,20 +1098,20 @@ export default function AssessmentDrawer({
                   </div>
 
                   {/* Timestamps */}
-                  <div className="bg-white/3 border border-white/10 rounded-xl p-4">
-                    <label className="block text-xs font-medium text-white/40 uppercase tracking-wider mb-3">
+                  <div className="bg-white/3 border border-border rounded-xl p-4">
+                    <label className="block text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">
                       Timestamps
                     </label>
                     <div className="grid grid-cols-2 gap-4 text-xs">
                       <div>
-                        <span className="text-white/30">Created</span>
-                        <p className="text-white/60 mt-0.5">
+                        <span className="text-muted-foreground/70">Created</span>
+                        <p className="text-muted-foreground mt-0.5">
                           {formatDate(assessment.createdAt)}
                         </p>
                       </div>
                       <div>
-                        <span className="text-white/30">Last Updated</span>
-                        <p className="text-white/60 mt-0.5">
+                        <span className="text-muted-foreground/70">Last Updated</span>
+                        <p className="text-muted-foreground mt-0.5">
                           {formatDate(assessment.updatedAt)}
                         </p>
                       </div>
@@ -1137,7 +1137,7 @@ export default function AssessmentDrawer({
                         onBlur={() => setArchiveConfirm(false)}
                         className={`w-full rounded-lg px-4 py-2.5 text-sm font-medium transition-colors ${
                           archiveConfirm
-                            ? "bg-red-600 text-white hover:bg-red-700"
+                            ? "bg-red-600 text-foreground hover:bg-red-700"
                             : "bg-white/3 text-red-400 border border-red-500/20 hover:bg-red-500/10"
                         }`}
                       >
@@ -1146,7 +1146,7 @@ export default function AssessmentDrawer({
                           : "Archive Assessment"}
                       </button>
                     ) : (
-                      <div className="text-xs text-white/30">
+                      <div className="text-xs text-muted-foreground/70">
                         This assessment is already archived. Change status
                         above to reactivate.
                       </div>
@@ -1161,9 +1161,9 @@ export default function AssessmentDrawer({
             {/* FLOATING SAVE BAR                                             */}
             {/* ============================================================ */}
             {hasUnsavedChanges && (
-              <div className="shrink-0 border-t border-white/10 bg-[#0a0a0f] px-6 py-4">
+              <div className="shrink-0 border-t border-border bg-background px-6 py-4">
                 <div className="flex items-center justify-between gap-3">
-                  <span className="text-xs text-white/40">
+                  <span className="text-xs text-muted-foreground">
                     {(() => {
                       const count = Object.keys(edits).length + Object.keys(questionEdits).length;
                       return `${count} unsaved ${count === 1 ? "change" : "changes"}`;
@@ -1172,7 +1172,7 @@ export default function AssessmentDrawer({
                   <div className="flex gap-2">
                     <button
                       onClick={handleDiscard}
-                      className="px-4 py-2 rounded-lg text-sm text-white/50 hover:text-white/70 bg-white/3 border border-white/10 hover:bg-white/6 transition-colors"
+                      className="px-4 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground/80 bg-white/3 border border-border hover:bg-white/6 transition-colors"
                     >
                       Discard
                     </button>
@@ -1224,14 +1224,14 @@ export default function AssessmentDrawer({
             className="absolute inset-0 bg-black/60"
             onClick={() => setShowDuplicate(false)}
           />
-          <div className="relative bg-[#111118] border border-white/10 rounded-2xl p-6 w-full max-w-md mx-4 shadow-2xl">
-            <h3 className="text-lg font-semibold text-white mb-1">
+          <div className="relative bg-[#111118] border border-border rounded-2xl p-6 w-full max-w-md mx-4 shadow-2xl">
+            <h3 className="text-lg font-semibold text-foreground mb-1">
               Duplicate Assessment
             </h3>
-            <p className="text-sm text-white/40 mb-4">
+            <p className="text-sm text-muted-foreground mb-4">
               Create a copy of this assessment with a new name.
             </p>
-            <label className="block text-xs font-medium text-white/40 uppercase tracking-wider mb-2">
+            <label className="block text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
               New Assessment Name
             </label>
             <input
@@ -1239,7 +1239,7 @@ export default function AssessmentDrawer({
               value={dupName}
               onChange={(e) => setDupName(e.target.value)}
               autoFocus
-              className="w-full bg-white/3 border border-white/10 rounded-xl px-4 py-3 text-sm text-white/80 outline-none focus:border-white/20 transition-colors mb-4"
+              className="w-full bg-white/3 border border-border rounded-xl px-4 py-3 text-sm text-foreground/90 outline-none focus:border-border transition-colors mb-4"
               placeholder="Assessment name..."
               onKeyDown={(e) => {
                 if (e.key === "Enter") handleDuplicate();
@@ -1248,7 +1248,7 @@ export default function AssessmentDrawer({
             <div className="flex gap-2 justify-end">
               <button
                 onClick={() => setShowDuplicate(false)}
-                className="px-4 py-2 rounded-lg text-sm text-white/50 hover:text-white/70 bg-white/3 border border-white/10 hover:bg-white/6 transition-colors"
+                className="px-4 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground/80 bg-white/3 border border-border hover:bg-white/6 transition-colors"
               >
                 Cancel
               </button>

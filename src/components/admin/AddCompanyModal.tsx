@@ -170,11 +170,11 @@ export default function AddCompanyModal({ open, onClose, onCreated }: Props) {
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
 
       {/* Modal */}
-      <div className="relative w-full max-w-lg bg-[#0d0d1a] border border-white/10 rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
+      <div className="relative w-full max-w-lg bg-[#0d0d1a] border border-border rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
         {/* Header */}
         <div className="px-6 py-4 border-b border-white/[0.06] flex items-center justify-between shrink-0">
           <div>
-            <h2 className="text-base font-semibold text-white/90">
+            <h2 className="text-base font-semibold text-foreground/90">
               {result ? "Done!" : step === "company" ? "New Company" : step === "employees" ? "Add Employees" : "Review & Send"}
             </h2>
             {!result && (
@@ -182,18 +182,18 @@ export default function AddCompanyModal({ open, onClose, onCreated }: Props) {
                 {(["company", "employees", "review"] as Step[]).map((s, i) => (
                   <div key={s} className="flex items-center gap-1.5">
                     <div className={`w-2 h-2 rounded-full transition-colors ${
-                      s === step ? "bg-purple-400" : (["company", "employees", "review"].indexOf(step) > i ? "bg-purple-400/40" : "bg-white/10")
+                      s === step ? "bg-purple-400" : (["company", "employees", "review"].indexOf(step) > i ? "bg-purple-400/40" : "bg-muted")
                     }`} />
-                    <span className={`text-[10px] ${s === step ? "text-white/50" : "text-white/20"}`}>
+                    <span className={`text-[10px] ${s === step ? "text-muted-foreground" : "text-muted-foreground/50"}`}>
                       {s === "company" ? "Company" : s === "employees" ? "People" : "Review"}
                     </span>
-                    {i < 2 && <div className="w-4 h-px bg-white/10" />}
+                    {i < 2 && <div className="w-4 h-px bg-muted" />}
                   </div>
                 ))}
               </div>
             )}
           </div>
-          <button onClick={onClose} className="p-1 text-white/30 hover:text-white/60 transition-colors">
+          <button onClick={onClose} className="p-1 text-muted-foreground/70 hover:text-muted-foreground transition-colors">
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
             </svg>
@@ -211,8 +211,8 @@ export default function AddCompanyModal({ open, onClose, onCreated }: Props) {
                 </svg>
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-white/90">{companyName} added</h3>
-                <p className="text-sm text-white/40 mt-1">
+                <h3 className="text-lg font-semibold text-foreground/90">{companyName} added</h3>
+                <p className="text-sm text-muted-foreground mt-1">
                   {result.created} invitation{result.created !== 1 ? "s" : ""} created
                   {result.emailed > 0 && `, ${result.emailed} email${result.emailed !== 1 ? "s" : ""} sent`}
                 </p>
@@ -235,36 +235,36 @@ export default function AddCompanyModal({ open, onClose, onCreated }: Props) {
           {!result && step === "company" && (
             <div className="space-y-4">
               <div>
-                <label className="block text-xs text-white/40 mb-1.5">Company Name *</label>
+                <label className="block text-xs text-muted-foreground mb-1.5">Company Name *</label>
                 <input
                   ref={firstInputRef}
                   type="text"
                   value={companyName}
                   onChange={(e) => setCompanyName(e.target.value)}
                   placeholder="Acme Corp"
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-white/20 outline-none focus:border-purple-500/40 transition-colors"
+                  className="w-full bg-muted border border-border rounded-xl px-4 py-2.5 text-sm text-foreground placeholder-white/20 outline-none focus:border-purple-500/40 transition-colors"
                   onKeyDown={(e) => e.key === "Enter" && canProceedToEmployees && setStep("employees")}
                 />
               </div>
               <div>
-                <label className="block text-xs text-white/40 mb-1.5">Domain (optional)</label>
+                <label className="block text-xs text-muted-foreground mb-1.5">Domain (optional)</label>
                 <input
                   type="text"
                   value={domain}
                   onChange={(e) => setDomain(e.target.value)}
                   placeholder="acme.com"
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-white/20 outline-none focus:border-purple-500/40 transition-colors"
+                  className="w-full bg-muted border border-border rounded-xl px-4 py-2.5 text-sm text-foreground placeholder-white/20 outline-none focus:border-purple-500/40 transition-colors"
                 />
-                <p className="text-[11px] text-white/20 mt-1">Auto-detected from employee emails</p>
+                <p className="text-[11px] text-muted-foreground/50 mt-1">Auto-detected from employee emails</p>
               </div>
               <div>
-                <label className="block text-xs text-white/40 mb-1.5">Industry (optional)</label>
+                <label className="block text-xs text-muted-foreground mb-1.5">Industry (optional)</label>
                 <input
                   type="text"
                   value={industry}
                   onChange={(e) => setIndustry(e.target.value)}
                   placeholder="Technology, Healthcare, Finance..."
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-white/20 outline-none focus:border-purple-500/40 transition-colors"
+                  className="w-full bg-muted border border-border rounded-xl px-4 py-2.5 text-sm text-foreground placeholder-white/20 outline-none focus:border-purple-500/40 transition-colors"
                 />
               </div>
             </div>
@@ -274,10 +274,10 @@ export default function AddCompanyModal({ open, onClose, onCreated }: Props) {
           {!result && step === "employees" && (
             <div className="space-y-4" onPaste={handlePaste}>
               <div className="flex items-center justify-between">
-                <p className="text-xs text-white/40">
-                  Add employees for <span className="text-white/60 font-medium">{companyName}</span>
+                <p className="text-xs text-muted-foreground">
+                  Add employees for <span className="text-muted-foreground font-medium">{companyName}</span>
                 </p>
-                <span className="text-[10px] text-white/20 bg-white/5 px-2 py-0.5 rounded-full">
+                <span className="text-[10px] text-muted-foreground/50 bg-muted px-2 py-0.5 rounded-full">
                   Tip: paste CSV data
                 </span>
               </div>
@@ -293,7 +293,7 @@ export default function AddCompanyModal({ open, onClose, onCreated }: Props) {
                         value={emp.name}
                         onChange={(e) => updateEmployee(i, "name", e.target.value)}
                         placeholder="Name"
-                        className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/20 outline-none focus:border-purple-500/40 transition-colors"
+                        className="bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder-white/20 outline-none focus:border-purple-500/40 transition-colors"
                       />
                       <input
                         type="email"
@@ -303,14 +303,14 @@ export default function AddCompanyModal({ open, onClose, onCreated }: Props) {
                           if (i === 0) autoDetectDomain(e.target.value);
                         }}
                         placeholder="email@company.com"
-                        className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/20 outline-none focus:border-purple-500/40 transition-colors"
+                        className="bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder-white/20 outline-none focus:border-purple-500/40 transition-colors"
                       />
                       <input
                         type="text"
                         value={emp.role}
                         onChange={(e) => updateEmployee(i, "role", e.target.value)}
                         placeholder="Role (optional)"
-                        className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/20 outline-none focus:border-purple-500/40 transition-colors"
+                        className="bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder-white/20 outline-none focus:border-purple-500/40 transition-colors"
                         onKeyDown={(e) => {
                           if (e.key === "Enter") {
                             e.preventDefault();
@@ -343,12 +343,12 @@ export default function AddCompanyModal({ open, onClose, onCreated }: Props) {
               </button>
 
               {/* Assessment selection */}
-              <div className="pt-2 border-t border-white/5">
-                <label className="block text-xs text-white/40 mb-1.5">Assessment *</label>
+              <div className="pt-2 border-t border-border/50">
+                <label className="block text-xs text-muted-foreground mb-1.5">Assessment *</label>
                 <select
                   value={selectedAssessment}
                   onChange={(e) => setSelectedAssessment(e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white outline-none focus:border-purple-500/40 transition-colors appearance-none cursor-pointer"
+                  className="w-full bg-muted border border-border rounded-xl px-4 py-2.5 text-sm text-foreground outline-none focus:border-purple-500/40 transition-colors appearance-none cursor-pointer"
                 >
                   <option value="">Select an assessment...</option>
                   {assessments.map((a) => (
@@ -366,10 +366,10 @@ export default function AddCompanyModal({ open, onClose, onCreated }: Props) {
                     onChange={(e) => setSendEmail(e.target.checked)}
                     className="sr-only peer"
                   />
-                  <div className="w-9 h-5 rounded-full bg-white/10 peer-checked:bg-purple-500/50 transition-colors" />
+                  <div className="w-9 h-5 rounded-full bg-muted peer-checked:bg-purple-500/50 transition-colors" />
                   <div className="absolute left-0.5 top-0.5 w-4 h-4 rounded-full bg-white/60 peer-checked:translate-x-4 peer-checked:bg-white transition-all" />
                 </div>
-                <span className="text-sm text-white/50">Send invitation emails</span>
+                <span className="text-sm text-muted-foreground">Send invitation emails</span>
               </label>
             </div>
           )}
@@ -378,19 +378,19 @@ export default function AddCompanyModal({ open, onClose, onCreated }: Props) {
           {!result && step === "review" && (
             <div className="space-y-4">
               {/* Company summary */}
-              <div className="bg-white/[0.03] rounded-xl border border-white/10 p-4">
+              <div className="bg-muted/50 rounded-xl border border-border p-4">
                 <div className="flex items-center gap-3">
                   {domain && (
                     <img
                       src={`https://logo.clearbit.com/${domain}`}
                       alt=""
-                      className="w-10 h-10 rounded-lg bg-white/5"
+                      className="w-10 h-10 rounded-lg bg-muted"
                       onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
                     />
                   )}
                   <div>
-                    <h3 className="text-sm font-semibold text-white/90">{companyName}</h3>
-                    <p className="text-xs text-white/30">
+                    <h3 className="text-sm font-semibold text-foreground/90">{companyName}</h3>
+                    <p className="text-xs text-muted-foreground/70">
                       {domain && `${domain} · `}
                       {industry || "No industry specified"}
                     </p>
@@ -399,9 +399,9 @@ export default function AddCompanyModal({ open, onClose, onCreated }: Props) {
               </div>
 
               {/* Employee list */}
-              <div className="bg-white/[0.03] rounded-xl border border-white/10 overflow-hidden">
+              <div className="bg-muted/50 rounded-xl border border-border overflow-hidden">
                 <div className="px-4 py-2.5 border-b border-white/[0.06]">
-                  <span className="text-xs text-white/40">
+                  <span className="text-xs text-muted-foreground">
                     {validEmployees.length} employee{validEmployees.length !== 1 ? "s" : ""}
                   </span>
                 </div>
@@ -409,10 +409,10 @@ export default function AddCompanyModal({ open, onClose, onCreated }: Props) {
                   {validEmployees.map((emp, i) => (
                     <div key={i} className="px-4 py-2 flex items-center justify-between">
                       <div>
-                        <span className="text-sm text-white/80">{emp.name}</span>
-                        <span className="text-xs text-white/30 ml-2">{emp.email}</span>
+                        <span className="text-sm text-foreground/90">{emp.name}</span>
+                        <span className="text-xs text-muted-foreground/70 ml-2">{emp.email}</span>
                       </div>
-                      {emp.role && <span className="text-xs text-white/20">{emp.role}</span>}
+                      {emp.role && <span className="text-xs text-muted-foreground/50">{emp.role}</span>}
                     </div>
                   ))}
                 </div>
@@ -421,12 +421,12 @@ export default function AddCompanyModal({ open, onClose, onCreated }: Props) {
               {/* Assessment + email info */}
               <div className="flex flex-col gap-2 text-sm">
                 <div className="flex items-center justify-between">
-                  <span className="text-white/40">Assessment</span>
-                  <span className="text-white/70">{assessmentName}</span>
+                  <span className="text-muted-foreground">Assessment</span>
+                  <span className="text-foreground/80">{assessmentName}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-white/40">Send emails</span>
-                  <span className={sendEmail ? "text-green-400" : "text-white/30"}>
+                  <span className="text-muted-foreground">Send emails</span>
+                  <span className={sendEmail ? "text-green-400" : "text-muted-foreground/70"}>
                     {sendEmail ? "Yes" : "No"}
                   </span>
                 </div>
@@ -450,7 +450,7 @@ export default function AddCompanyModal({ open, onClose, onCreated }: Props) {
                 else if (step === "employees") setStep("company");
                 else setStep("employees");
               }}
-              className="px-4 py-2 text-sm text-white/40 hover:text-white/60 transition-colors"
+              className="px-4 py-2 text-sm text-muted-foreground hover:text-muted-foreground transition-colors"
             >
               {step === "company" ? "Cancel" : "Back"}
             </button>
@@ -479,7 +479,7 @@ export default function AddCompanyModal({ open, onClose, onCreated }: Props) {
               <button
                 onClick={handleSubmit}
                 disabled={submitting}
-                className="px-5 py-2 rounded-xl bg-purple-600 text-white text-sm font-medium hover:bg-purple-500 transition-all disabled:opacity-50 flex items-center gap-2"
+                className="px-5 py-2 rounded-xl bg-purple-600 text-foreground text-sm font-medium hover:bg-purple-500 transition-all disabled:opacity-50 flex items-center gap-2"
               >
                 {submitting ? (
                   <>

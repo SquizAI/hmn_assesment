@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { fetchCampaignDetail, deleteCampaign, controlCampaign } from "../lib/admin-api";
 import StatusBadge from "../components/admin/StatusBadge";
 import ConfirmDialog from "../components/ui/ConfirmDialog";
 
@@ -43,8 +44,7 @@ export default function AdminCampaignDetailPage() {
   useEffect(() => {
     if (!id) return;
     setLoading(true);
-    fetch(`/api/admin/campaigns/${id}`, { credentials: "include" })
-      .then((res) => { if (!res.ok) throw new Error("Not found"); return res.json(); })
+    fetchCampaignDetail(id)
       .then((data) => { setCampaign(data.campaign); setContacts(data.contacts || []); })
       .catch(() => navigate("/admin/campaigns"))
       .finally(() => setLoading(false));
@@ -56,13 +56,12 @@ export default function AdminCampaignDetailPage() {
     setActionLoading(true);
     try {
       if (action === "delete") {
-        await fetch(`/api/admin/campaigns/${id}`, { method: "DELETE", credentials: "include" });
+        await deleteCampaign(id);
         navigate("/admin/campaigns");
         return;
       }
-      await fetch(`/api/admin/campaigns/${id}/${action}`, { method: "POST", credentials: "include" });
-      const res = await fetch(`/api/admin/campaigns/${id}`, { credentials: "include" });
-      const data = await res.json();
+      await controlCampaign(id, action);
+      const data = await fetchCampaignDetail(id);
       setCampaign(data.campaign);
       setContacts(data.contacts || []);
       showToast(`Campaign ${action === "start" ? "started" : "paused"}`, "success");
@@ -75,7 +74,7 @@ export default function AdminCampaignDetailPage() {
   };
 
   if (loading || !campaign) {
-    return <div className="flex items-center justify-center h-full min-h-[60vh]"><div className="text-white/30 text-sm">Loading...</div></div>;
+    return <div className="flex items-center justify-center h-full min-h-[60vh]"><div className="text-muted-foreground/70 text-sm">Loading...</div></div>;
   }
 
   const progress = campaign.total_contacts > 0 ? Math.round((campaign.calls_completed / campaign.total_contacts) * 100) : 0;
@@ -84,25 +83,25 @@ export default function AdminCampaignDetailPage() {
     <div className="max-w-5xl mx-auto p-6">
       {toast && <div className={`fixed top-6 right-6 z-50 px-5 py-3 rounded-xl text-sm font-medium shadow-lg border transition-all ${toast.type === "success" ? "bg-green-500/20 text-green-400 border-green-500/30" : "bg-red-500/20 text-red-400 border-red-500/30"}`}>{toast.message}</div>}
 
-      <button onClick={() => navigate("/admin/campaigns")} className="text-white/40 hover:text-white/60 text-sm mb-4 inline-flex items-center gap-1 transition-colors">
+      <button onClick={() => navigate("/admin/campaigns")} className="text-muted-foreground hover:text-muted-foreground text-sm mb-4 inline-flex items-center gap-1 transition-colors">
         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" /></svg>
         Back to Campaigns
       </button>
 
       <div className="flex items-start justify-between mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-white">{campaign.name}</h1>
-          <p className="text-white/40 text-sm mt-1">Created {new Date(campaign.created_at).toLocaleDateString()}</p>
+          <h1 className="text-3xl font-bold text-foreground">{campaign.name}</h1>
+          <p className="text-muted-foreground text-sm mt-1">Created {new Date(campaign.created_at).toLocaleDateString()}</p>
         </div>
         <div className="flex items-center gap-3">
           <StatusBadge status={campaign.status} />
           {campaign.status === "draft" && (
-            <button onClick={() => handleAction("start")} disabled={actionLoading || campaign.total_contacts === 0} className="px-4 py-2 text-sm font-medium rounded-lg bg-gradient-to-r from-green-600 to-emerald-600 text-white hover:from-green-500 hover:to-emerald-500 disabled:opacity-50 transition-all">
+            <button onClick={() => handleAction("start")} disabled={actionLoading || campaign.total_contacts === 0} className="px-4 py-2 text-sm font-medium rounded-lg bg-gradient-to-r from-green-600 to-emerald-600 text-foreground hover:from-green-500 hover:to-emerald-500 disabled:opacity-50 transition-all">
               {actionLoading ? "Starting..." : "Start Campaign"}
             </button>
           )}
           {campaign.status === "active" && (
-            <button onClick={() => handleAction("pause")} disabled={actionLoading} className="px-4 py-2 text-sm font-medium rounded-lg bg-yellow-600/80 text-white hover:bg-yellow-500/80 disabled:opacity-50 transition-all">
+            <button onClick={() => handleAction("pause")} disabled={actionLoading} className="px-4 py-2 text-sm font-medium rounded-lg bg-yellow-600/80 text-foreground hover:bg-yellow-500/80 disabled:opacity-50 transition-all">
               {actionLoading ? "Pausing..." : "Pause"}
             </button>
           )}
@@ -114,47 +113,47 @@ export default function AdminCampaignDetailPage() {
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        <div className="bg-white/5 border border-white/10 rounded-xl p-4">
-          <p className="text-xs text-white/40">Total Contacts</p>
-          <p className="text-2xl font-bold text-white mt-1">{campaign.total_contacts}</p>
+        <div className="bg-muted border border-border rounded-xl p-4">
+          <p className="text-xs text-muted-foreground">Total Contacts</p>
+          <p className="text-2xl font-bold text-foreground mt-1">{campaign.total_contacts}</p>
         </div>
-        <div className="bg-white/5 border border-white/10 rounded-xl p-4">
-          <p className="text-xs text-white/40">Completed</p>
+        <div className="bg-muted border border-border rounded-xl p-4">
+          <p className="text-xs text-muted-foreground">Completed</p>
           <p className="text-2xl font-bold text-green-400 mt-1">{campaign.calls_completed}</p>
         </div>
-        <div className="bg-white/5 border border-white/10 rounded-xl p-4">
-          <p className="text-xs text-white/40">Failed</p>
+        <div className="bg-muted border border-border rounded-xl p-4">
+          <p className="text-xs text-muted-foreground">Failed</p>
           <p className="text-2xl font-bold text-red-400 mt-1">{campaign.calls_failed}</p>
         </div>
-        <div className="bg-white/5 border border-white/10 rounded-xl p-4">
-          <p className="text-xs text-white/40">Progress</p>
-          <p className="text-2xl font-bold text-white mt-1">{progress}%</p>
+        <div className="bg-muted border border-border rounded-xl p-4">
+          <p className="text-xs text-muted-foreground">Progress</p>
+          <p className="text-2xl font-bold text-foreground mt-1">{progress}%</p>
         </div>
       </div>
 
       {/* Contact List */}
-      <div className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden">
-        <div className="px-6 py-4 border-b border-white/5">
-          <h2 className="text-sm font-semibold text-white/70">Contacts ({contacts.length})</h2>
+      <div className="bg-muted border border-border rounded-2xl overflow-hidden">
+        <div className="px-6 py-4 border-b border-border/50">
+          <h2 className="text-sm font-semibold text-foreground/80">Contacts ({contacts.length})</h2>
         </div>
         <table className="w-full">
           <thead>
-            <tr className="bg-white/5">
-              <th className="text-left px-6 py-3 text-xs font-medium text-white/40 uppercase tracking-wider">Name</th>
-              <th className="text-left px-6 py-3 text-xs font-medium text-white/40 uppercase tracking-wider">Phone</th>
-              <th className="text-left px-6 py-3 text-xs font-medium text-white/40 uppercase tracking-wider">Company</th>
-              <th className="text-left px-6 py-3 text-xs font-medium text-white/40 uppercase tracking-wider">Status</th>
+            <tr className="bg-muted">
+              <th className="text-left px-6 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Name</th>
+              <th className="text-left px-6 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Phone</th>
+              <th className="text-left px-6 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Company</th>
+              <th className="text-left px-6 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Status</th>
             </tr>
           </thead>
           <tbody>
             {contacts.length === 0 ? (
-              <tr><td colSpan={4} className="px-6 py-8 text-center text-white/30 text-sm">No contacts in this campaign yet.</td></tr>
+              <tr><td colSpan={4} className="px-6 py-8 text-center text-muted-foreground/70 text-sm">No contacts in this campaign yet.</td></tr>
             ) : (
               contacts.map((c) => (
-                <tr key={c.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                  <td className="px-6 py-3 text-sm text-white">{c.name}</td>
-                  <td className="px-6 py-3 text-sm text-white/60 font-mono">{c.phone}</td>
-                  <td className="px-6 py-3 text-sm text-white/60">{c.company || "\u2014"}</td>
+                <tr key={c.id} className="border-b border-border/50 hover:bg-muted transition-colors">
+                  <td className="px-6 py-3 text-sm text-foreground">{c.name}</td>
+                  <td className="px-6 py-3 text-sm text-muted-foreground font-mono">{c.phone}</td>
+                  <td className="px-6 py-3 text-sm text-muted-foreground">{c.company || "\u2014"}</td>
                   <td className="px-6 py-3"><StatusBadge status={c.status} size="sm" /></td>
                 </tr>
               ))

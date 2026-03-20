@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { API_BASE } from "../lib/api";
+import { fetchAdaptabilityProfile } from "../lib/api";
 import type { AdaptabilityAnalysis, AdaptabilityProfile, AdaptabilityPillar } from "../lib/types";
 import Button from "../components/ui/Button";
 
@@ -41,9 +41,7 @@ export default function AdaptabilityProfilePage() {
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch(`${API_BASE}/api/adaptability/profile/${sessionId}`);
-        if (!res.ok) throw new Error("Failed to load profile");
-        const data = await res.json();
+        const data = await fetchAdaptabilityProfile(sessionId!);
         setAnalysis(data.analysis);
         setProfile(data.profile);
       } catch {
@@ -59,7 +57,7 @@ export default function AdaptabilityProfilePage() {
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
         <div className="text-center space-y-4">
           <div className="w-12 h-12 border-2 border-emerald-500/20 border-t-emerald-400 rounded-full animate-spin mx-auto" />
-          <p className="text-white/40">Loading your Adaptability Profile...</p>
+          <p className="text-muted-foreground">Loading your Adaptability Profile...</p>
         </div>
       </div>
     );
@@ -79,13 +77,13 @@ export default function AdaptabilityProfilePage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 pb-20">
       {/* Header */}
-      <div className="border-b border-white/5 bg-slate-950/60 backdrop-blur-xl">
+      <div className="border-b border-border/50 bg-slate-950/60 backdrop-blur-xl">
         <div className="max-w-3xl mx-auto px-6 py-8">
           <div className="space-y-2">
-            <h1 className="text-2xl font-semibold text-white">
+            <h1 className="text-2xl font-semibold text-foreground">
               Your Adaptability Profile
             </h1>
-            <p className="text-white/40 text-sm">
+            <p className="text-muted-foreground text-sm">
               Personal and confidential. Generated from your Adaptability Index conversation.
             </p>
           </div>
@@ -104,7 +102,7 @@ export default function AdaptabilityProfilePage() {
                 Stabilize Before Developing
               </h3>
             </div>
-            <p className="text-white/60 text-sm leading-relaxed">
+            <p className="text-muted-foreground text-sm leading-relaxed">
               Your profile suggests your adaptive capacity may be stretched by
               current demands. Before adding development activities, consider
               reducing the number of simultaneous changes in your environment.
@@ -120,7 +118,7 @@ export default function AdaptabilityProfilePage() {
             <h3 className="text-violet-400 font-medium text-sm">
               Adaptive Regulation
             </h3>
-            <p className="text-white/50 text-sm leading-relaxed">
+            <p className="text-muted-foreground text-sm leading-relaxed">
               {profile.adaptiveRegulationNote}
             </p>
           </div>
@@ -128,14 +126,14 @@ export default function AdaptabilityProfilePage() {
 
         {/* Section 1: Pillar Scores Visual */}
         <section className="space-y-6">
-          <h2 className="text-lg font-medium text-white">
+          <h2 className="text-lg font-medium text-foreground">
             Your Four Pillars
           </h2>
           <div className="grid gap-4">
             {profile.pillarScores.map((ps) => (
               <div
                 key={ps.pillar}
-                className="rounded-xl border border-white/5 bg-white/[0.02] p-5"
+                className="rounded-xl border border-border/50 bg-white/[0.02] p-5"
               >
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-3">
@@ -143,7 +141,7 @@ export default function AdaptabilityProfilePage() {
                       className="w-3 h-3 rounded-full"
                       style={{ backgroundColor: PILLAR_COLORS[ps.pillar] }}
                     />
-                    <span className="text-white/80 font-medium">
+                    <span className="text-foreground/90 font-medium">
                       {ps.label}
                     </span>
                   </div>
@@ -153,13 +151,13 @@ export default function AdaptabilityProfilePage() {
                     >
                       {STATUS_LABELS[ps.status]}
                     </span>
-                    <span className="text-white/60 font-mono text-sm">
+                    <span className="text-muted-foreground font-mono text-sm">
                       {ps.score}/25
                     </span>
                   </div>
                 </div>
                 {/* Score bar */}
-                <div className="h-2 rounded-full bg-white/5 overflow-hidden">
+                <div className="h-2 rounded-full bg-muted overflow-hidden">
                   <div
                     className="h-full rounded-full transition-all duration-1000"
                     style={{
@@ -174,8 +172,8 @@ export default function AdaptabilityProfilePage() {
           </div>
           {/* Overall score */}
           <div className="text-center pt-2">
-            <span className="text-white/30 text-sm">Overall Adaptability: </span>
-            <span className="text-white/60 font-mono">
+            <span className="text-muted-foreground/70 text-sm">Overall Adaptability: </span>
+            <span className="text-muted-foreground font-mono">
               {analysis.overallAdaptabilityScore}/100
             </span>
           </div>
@@ -184,7 +182,7 @@ export default function AdaptabilityProfilePage() {
         {/* Section 2: Strengths */}
         {profile.strengths.length > 0 && (
           <section className="space-y-6">
-            <h2 className="text-lg font-medium text-white">
+            <h2 className="text-lg font-medium text-foreground">
               Your Strengths
             </h2>
             <div className="space-y-4">
@@ -202,15 +200,15 @@ export default function AdaptabilityProfilePage() {
                       {s.pillar.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}
                     </span>
                   </div>
-                  <p className="text-white/70 text-sm leading-relaxed">
+                  <p className="text-foreground/80 text-sm leading-relaxed">
                     {s.behavioralDescription}
                   </p>
                   {s.evidence && (
-                    <p className="text-white/40 text-xs italic border-l-2 border-emerald-500/20 pl-3">
+                    <p className="text-muted-foreground text-xs italic border-l-2 border-emerald-500/20 pl-3">
                       {s.evidence}
                     </p>
                   )}
-                  <p className="text-white/50 text-sm">
+                  <p className="text-muted-foreground text-sm">
                     <span className="text-emerald-400/60">How to leverage:</span>{" "}
                     {s.leverageAdvice}
                   </p>
@@ -223,44 +221,44 @@ export default function AdaptabilityProfilePage() {
         {/* Section 3: Development Edge */}
         {profile.developmentEdges.length > 0 && (
           <section className="space-y-6">
-            <h2 className="text-lg font-medium text-white">
+            <h2 className="text-lg font-medium text-foreground">
               Your Development Edge
             </h2>
             <div className="space-y-4">
               {profile.developmentEdges.map((de, i) => (
                 <div
                   key={i}
-                  className="rounded-xl border border-white/5 bg-white/[0.02] p-6 space-y-4"
+                  className="rounded-xl border border-border/50 bg-white/[0.02] p-6 space-y-4"
                 >
                   <div className="flex items-center gap-2">
                     <div
                       className="w-2 h-2 rounded-full"
                       style={{ backgroundColor: PILLAR_COLORS[de.pillar] }}
                     />
-                    <span className="text-white/60 text-sm font-medium">
+                    <span className="text-muted-foreground text-sm font-medium">
                       {de.pillar.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}
                     </span>
                   </div>
-                  <p className="text-white/70 text-sm leading-relaxed">
+                  <p className="text-foreground/80 text-sm leading-relaxed">
                     {de.behavioralDescription}
                   </p>
-                  <p className="text-white/50 text-sm">
+                  <p className="text-muted-foreground text-sm">
                     {de.observation}
                   </p>
-                  <div className="rounded-lg bg-white/[0.02] border border-white/5 p-4 space-y-2">
-                    <p className="text-white/60 text-sm">
-                      <span className="text-white/40">Why this matters:</span>{" "}
+                  <div className="rounded-lg bg-white/[0.02] border border-border/50 p-4 space-y-2">
+                    <p className="text-muted-foreground text-sm">
+                      <span className="text-muted-foreground">Why this matters:</span>{" "}
                       {de.whyItMatters}
                     </p>
-                    <p className="text-white/40 text-xs">
+                    <p className="text-muted-foreground text-xs">
                       {de.researchInsight}
                     </p>
                   </div>
-                  <p className="text-white/30 text-xs">
+                  <p className="text-muted-foreground/70 text-xs">
                     {de.normalization}
                   </p>
                   {de.domainSpecific && (
-                    <p className="text-white/40 text-xs italic">
+                    <p className="text-muted-foreground text-xs italic">
                       {de.domainSpecific}
                     </p>
                   )}
@@ -273,26 +271,26 @@ export default function AdaptabilityProfilePage() {
         {/* Section 4: 90-Day Development Plan */}
         {profile.developmentPlan.length > 0 && (
           <section className="space-y-6">
-            <h2 className="text-lg font-medium text-white">
+            <h2 className="text-lg font-medium text-foreground">
               Your 90-Day Development Plan
             </h2>
             <div className="space-y-4">
               {profile.developmentPlan.map((phase) => (
                 <div
                   key={phase.phase}
-                  className="rounded-xl border border-white/5 bg-white/[0.02] p-6 space-y-4"
+                  className="rounded-xl border border-border/50 bg-white/[0.02] p-6 space-y-4"
                 >
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="text-white/80 font-medium">
+                      <h3 className="text-foreground/90 font-medium">
                         Phase {phase.phase}: {phase.theme}
                       </h3>
-                      <span className="text-white/30 text-xs">
+                      <span className="text-muted-foreground/70 text-xs">
                         {phase.weekRange} &middot; {phase.timeCommitment}
                       </span>
                     </div>
-                    <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center">
-                      <span className="text-white/40 text-sm font-mono">
+                    <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
+                      <span className="text-muted-foreground text-sm font-mono">
                         {phase.phase}
                       </span>
                     </div>
@@ -301,18 +299,18 @@ export default function AdaptabilityProfilePage() {
                     {phase.actions.map((action, i) => (
                       <li key={i} className="flex items-start gap-2">
                         <div className="w-1.5 h-1.5 rounded-full bg-emerald-500/40 mt-1.5 flex-shrink-0" />
-                        <span className="text-white/60 text-sm">
+                        <span className="text-muted-foreground text-sm">
                           {action}
                         </span>
                       </li>
                     ))}
                   </ul>
-                  <div className="rounded-lg bg-white/[0.01] border border-white/5 p-3 space-y-1">
-                    <p className="text-white/40 text-xs">
-                      <span className="text-white/30">You may experience:</span>{" "}
+                  <div className="rounded-lg bg-white/[0.01] border border-border/50 p-3 space-y-1">
+                    <p className="text-muted-foreground text-xs">
+                      <span className="text-muted-foreground/70">You may experience:</span>{" "}
                       {phase.expectedExperience}
                     </p>
-                    <p className="text-white/40 text-xs italic">
+                    <p className="text-muted-foreground text-xs italic">
                       Reflect: {phase.reflectionQuestion}
                     </p>
                   </div>
@@ -325,27 +323,27 @@ export default function AdaptabilityProfilePage() {
         {/* Section 5: Career Context */}
         {profile.careerContext && (
           <section className="space-y-4">
-            <h2 className="text-lg font-medium text-white">
+            <h2 className="text-lg font-medium text-foreground">
               What This Means for Your Career
             </h2>
-            <p className="text-white/50 text-sm leading-relaxed">
+            <p className="text-muted-foreground text-sm leading-relaxed">
               {profile.careerContext}
             </p>
           </section>
         )}
 
         {/* Section 6: Re-assessment */}
-        <section className="rounded-xl border border-white/5 bg-white/[0.02] p-6 space-y-3">
-          <h3 className="text-white/70 font-medium">Your Re-Assessment</h3>
+        <section className="rounded-xl border border-border/50 bg-white/[0.02] p-6 space-y-3">
+          <h3 className="text-foreground/80 font-medium">Your Re-Assessment</h3>
           {profile.reassessmentDate && (
-            <p className="text-white/40 text-sm">
+            <p className="text-muted-foreground text-sm">
               Scheduled: {new Date(profile.reassessmentDate).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
             </p>
           )}
-          <p className="text-white/40 text-sm leading-relaxed">
+          <p className="text-muted-foreground text-sm leading-relaxed">
             {profile.reassessmentNote}
           </p>
-          <p className="text-white/30 text-xs italic">
+          <p className="text-muted-foreground/70 text-xs italic">
             The goal isn't a perfect score — it's meaningful progress on your
             development edge.
           </p>
@@ -357,7 +355,7 @@ export default function AdaptabilityProfilePage() {
             <p className="text-amber-400/80 text-sm font-medium">
               Human Review Pending
             </p>
-            <p className="text-white/40 text-xs leading-relaxed">
+            <p className="text-muted-foreground text-xs leading-relaxed">
               Some aspects of your profile have been flagged for review by a
               human assessor to ensure accuracy. You may receive an updated
               profile after this review.
@@ -367,7 +365,7 @@ export default function AdaptabilityProfilePage() {
 
         {/* Footer */}
         <div className="text-center pt-4 space-y-4">
-          <p className="text-white/20 text-xs">
+          <p className="text-muted-foreground/50 text-xs">
             This assessment was AI-conducted using both content analysis and
             linguistic process signals. You may request a human review of your
             scores at any time.

@@ -361,25 +361,25 @@ export default function AssessmentBuilderPage() {
         <div className="flex items-center gap-3">
           <button
             onClick={() => navigate("/admin/assessments")}
-            className="text-white/30 hover:text-white/60 transition-colors"
+            className="text-muted-foreground/70 hover:text-muted-foreground transition-colors"
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
             </svg>
           </button>
           <div>
-            <h1 className="text-sm font-semibold text-white/80">
+            <h1 className="text-sm font-semibold text-foreground/90">
               {assessment ? assessment.name : "Assessment Developer"}
             </h1>
             {assessment && (
-              <p className="text-[11px] text-white/30">{assessment.id}</p>
+              <p className="text-[11px] text-muted-foreground/70">{assessment.id}</p>
             )}
           </div>
         </div>
 
         <div className="flex items-center gap-2">
           {/* Chat width presets */}
-          <div className="flex items-center bg-white/[0.03] border border-white/[0.06] rounded-lg overflow-hidden">
+          <div className="flex items-center bg-muted/50 border border-white/[0.06] rounded-lg overflow-hidden">
             {([
               { w: 420, label: "S", title: "Narrow chat" },
               { w: 600, label: "M", title: "Medium chat" },
@@ -390,8 +390,8 @@ export default function AssessmentBuilderPage() {
                 onClick={() => setChatWidth(preset.w)}
                 className={`px-2 py-1.5 text-[10px] font-semibold transition-colors ${
                   Math.abs(chatWidth - preset.w) < 30
-                    ? "bg-white/10 text-white/70"
-                    : "text-white/25 hover:text-white/50"
+                    ? "bg-muted text-foreground/80"
+                    : "text-white/25 hover:text-muted-foreground"
                 }`}
                 title={preset.title}
               >
@@ -402,7 +402,7 @@ export default function AssessmentBuilderPage() {
           {/* Fullscreen toggle */}
           <button
             onClick={() => setIsFullscreen((f) => !f)}
-            className="p-2 rounded-lg bg-white/[0.03] hover:bg-white/[0.06] border border-white/[0.06] text-white/30 hover:text-white/60 transition-all"
+            className="p-2 rounded-lg bg-muted/50 hover:bg-white/[0.06] border border-white/[0.06] text-muted-foreground/70 hover:text-muted-foreground transition-all"
             title={isFullscreen ? "Exit fullscreen (Esc)" : "Fullscreen mode"}
           >
             {isFullscreen ? (
@@ -432,10 +432,10 @@ export default function AssessmentBuilderPage() {
         {/* Resize handle */}
         <div
           onMouseDown={handleResizeStart}
-          className={`w-1.5 shrink-0 cursor-col-resize group relative z-10 ${isResizing ? "bg-purple-500/30" : "hover:bg-white/10"} transition-colors`}
+          className={`w-1.5 shrink-0 cursor-col-resize group relative z-10 ${isResizing ? "bg-purple-500/30" : "hover:bg-muted"} transition-colors`}
           title="Drag to resize chat"
         >
-          <div className={`absolute inset-y-0 -left-1 -right-1 ${isResizing ? "" : "group-hover:bg-white/5"}`} />
+          <div className={`absolute inset-y-0 -left-1 -right-1 ${isResizing ? "" : "group-hover:bg-muted"}`} />
           {/* Visible grip dots */}
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
             <div className="w-0.5 h-0.5 rounded-full bg-white/30" />
@@ -459,7 +459,7 @@ export default function AssessmentBuilderPage() {
                   </svg>
                 </div>
                 <p className="text-purple-300 font-medium">Drop files to attach</p>
-                <p className="text-white/30 text-xs">{ALLOWED_EXTENSIONS.join(", ")} — max {formatFileSize(MAX_FILE_SIZE)}</p>
+                <p className="text-muted-foreground/70 text-xs">{ALLOWED_EXTENSIONS.join(", ")} — max {formatFileSize(MAX_FILE_SIZE)}</p>
               </div>
             </div>
           )}
@@ -471,11 +471,11 @@ export default function AssessmentBuilderPage() {
               {messages.length === 0 && !assessmentId && (
                 <div className="text-center py-8 space-y-6">
                   <div className="space-y-3">
-                    <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-500/20 to-blue-500/20 border border-white/10">
+                    <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-500/20 to-blue-500/20 border border-border">
                       <span className="text-2xl">🏗</span>
                     </div>
-                    <h2 className="text-lg font-semibold text-white">Assessment Developer</h2>
-                    <p className="text-white/40 text-sm max-w-md mx-auto leading-relaxed">
+                    <h2 className="text-lg font-semibold text-foreground">Assessment Developer</h2>
+                    <p className="text-muted-foreground text-sm max-w-md mx-auto leading-relaxed">
                       I'll guide you through building a complete assessment — from purpose to questions to scoring.
                       Upload files, describe what you need, or pick a quick start below.
                     </p>
@@ -484,16 +484,16 @@ export default function AssessmentBuilderPage() {
                   {/* File drop zone */}
                   <div
                     onClick={() => fileInputRef.current?.click()}
-                    className="max-w-md mx-auto border-2 border-dashed border-white/10 hover:border-purple-500/30 rounded-2xl p-6 cursor-pointer transition-all hover:bg-purple-500/5 group"
+                    className="max-w-md mx-auto border-2 border-dashed border-border hover:border-purple-500/30 rounded-2xl p-6 cursor-pointer transition-all hover:bg-purple-500/5 group"
                   >
                     <div className="space-y-2">
-                      <svg className="w-7 h-7 text-white/20 group-hover:text-purple-400/60 mx-auto transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <svg className="w-7 h-7 text-muted-foreground/50 group-hover:text-purple-400/60 mx-auto transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m3.75 9v6m3-3H9m1.5-12H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
                       </svg>
-                      <p className="text-sm text-white/40 group-hover:text-white/60 transition-colors">
+                      <p className="text-sm text-muted-foreground group-hover:text-muted-foreground transition-colors">
                         Drop files here or click to browse
                       </p>
-                      <p className="text-[11px] text-white/20">
+                      <p className="text-[11px] text-muted-foreground/50">
                         {ALLOWED_EXTENSIONS.map((e) => `.${e}`).join("  ")} — up to {MAX_FILES} files
                       </p>
                     </div>
@@ -516,8 +516,8 @@ export default function AssessmentBuilderPage() {
                             isActive
                               ? "bg-purple-500/10 border-purple-500/30 text-purple-300"
                               : isDisabled
-                                ? "bg-white/[0.02] border-white/5 text-white/20 cursor-not-allowed"
-                                : "bg-white/[0.03] border-white/10 text-white/50 hover:bg-white/[0.07] hover:text-white/80 hover:border-white/20"
+                                ? "bg-white/[0.02] border-border/50 text-muted-foreground/50 cursor-not-allowed"
+                                : "bg-muted/50 border-border text-muted-foreground hover:bg-white/[0.07] hover:text-foreground/90 hover:border-border"
                           }`}
                         >
                           {isActive ? (
@@ -536,11 +536,11 @@ export default function AssessmentBuilderPage() {
               {/* Welcome state for editing existing */}
               {messages.length === 0 && assessmentId && assessment && (
                 <div className="text-center py-8 space-y-4">
-                  <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-500/20 to-blue-500/20 border border-white/10">
+                  <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-500/20 to-blue-500/20 border border-border">
                     <span className="text-2xl">{assessment.icon || "📋"}</span>
                   </div>
-                  <h2 className="text-lg font-semibold text-white">{assessment.name}</h2>
-                  <p className="text-white/40 text-sm max-w-md mx-auto">
+                  <h2 className="text-lg font-semibold text-foreground">{assessment.name}</h2>
+                  <p className="text-muted-foreground text-sm max-w-md mx-auto">
                     {assessment.questions?.length || 0} questions, {assessment.phases?.length || 0} phases,{" "}
                     {assessment.scoringDimensions?.length || 0} scoring dimensions.
                     Ask me to add questions, adjust scoring, or refine the structure.
@@ -564,8 +564,8 @@ export default function AssessmentBuilderPage() {
                             isActive
                               ? "bg-purple-500/10 border-purple-500/30 text-purple-300"
                               : isThinking
-                                ? "bg-white/[0.02] border-white/5 text-white/20 cursor-not-allowed"
-                                : "bg-white/[0.03] border-white/10 text-white/50 hover:bg-white/[0.07] hover:text-white/80"
+                                ? "bg-white/[0.02] border-border/50 text-muted-foreground/50 cursor-not-allowed"
+                                : "bg-muted/50 border-border text-muted-foreground hover:bg-white/[0.07] hover:text-foreground/90"
                           }`}
                         >
                           {isActive && (
@@ -599,7 +599,7 @@ export default function AssessmentBuilderPage() {
           </div>
 
           {/* Bottom bar: attachments + input */}
-          <div className="border-t border-white/5 shrink-0">
+          <div className="border-t border-border/50 shrink-0">
             {/* Attached files bar */}
             {attachments.length > 0 && (
               <div className="px-6 pt-3 pb-0">
@@ -631,7 +631,7 @@ export default function AssessmentBuilderPage() {
                 {/* File upload button */}
                 <button
                   onClick={() => fileInputRef.current?.click()}
-                  className="p-3 bg-white/[0.03] hover:bg-white/[0.06] border border-white/[0.08] rounded-xl text-white/30 hover:text-white/60 transition-all shrink-0"
+                  className="p-3 bg-muted/50 hover:bg-white/[0.06] border border-white/[0.08] rounded-xl text-muted-foreground/70 hover:text-muted-foreground transition-all shrink-0"
                   title="Attach files"
                 >
                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -674,7 +674,7 @@ export default function AssessmentBuilderPage() {
 
   if (isFullscreen) {
     return (
-      <div className="fixed inset-0 z-50 bg-[#0a0a0f] flex flex-col animate-in fade-in duration-200">
+      <div className="fixed inset-0 z-50 bg-background flex flex-col animate-in fade-in duration-200">
         {content}
       </div>
     );

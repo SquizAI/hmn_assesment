@@ -133,7 +133,7 @@ export default function ProcessMap({
     <div className="h-full flex flex-col">
       {/* Header */}
       <div className="px-4 pt-5 pb-4">
-        <h3 className="text-xs font-semibold text-white/30 uppercase tracking-wider">
+        <h3 className="text-xs font-semibold text-muted-foreground/70 uppercase tracking-wider">
           Cascade Methodology
         </h3>
       </div>
@@ -176,7 +176,7 @@ export default function ProcessMap({
                     shrink-0 w-[30px] h-[30px] rounded-lg flex items-center justify-center text-sm
                     ${isComplete ? "bg-purple-500/20 text-purple-300" : ""}
                     ${isActive ? "bg-purple-500/30 text-purple-200" : ""}
-                    ${isPending ? "bg-white/[0.04] text-white/20" : ""}
+                    ${isPending ? "bg-white/[0.04] text-muted-foreground/50" : ""}
                   `}
                 >
                   {isComplete ? (
@@ -193,7 +193,7 @@ export default function ProcessMap({
                   <div className="flex items-center gap-2">
                     <span
                       className={`text-sm font-medium leading-tight ${
-                        isActive ? "text-white" : isComplete ? "text-white/70" : "text-white/30"
+                        isActive ? "text-foreground" : isComplete ? "text-foreground/80" : "text-muted-foreground/70"
                       }`}
                     >
                       {phase.label}
@@ -208,7 +208,7 @@ export default function ProcessMap({
 
                   {/* Description or summary */}
                   {isActive && (
-                    <p className="text-[11px] text-white/40 mt-0.5 leading-snug">
+                    <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug">
                       {phase.description}
                     </p>
                   )}

@@ -25,15 +25,15 @@ export default function GapAnalysisGrid({ gaps, dimensionScores, dimLabels = {} 
               <span className="text-xs text-orange-300/60">Severity: {g.severity}</span>
             </div>
             <div className="flex items-center gap-4 text-sm">
-              <span className="text-white/60">
-                {dimLabels[g.dimension1] || formatDimLabel(g.dimension1)}: <strong className="text-white">{s1?.score ?? "?"}</strong>
+              <span className="text-muted-foreground">
+                {dimLabels[g.dimension1] || formatDimLabel(g.dimension1)}: <strong className="text-foreground">{s1?.score ?? "?"}</strong>
               </span>
-              <span className="text-white/20">vs</span>
-              <span className="text-white/60">
-                {dimLabels[g.dimension2] || formatDimLabel(g.dimension2)}: <strong className="text-white">{s2?.score ?? "?"}</strong>
+              <span className="text-muted-foreground/50">vs</span>
+              <span className="text-muted-foreground">
+                {dimLabels[g.dimension2] || formatDimLabel(g.dimension2)}: <strong className="text-foreground">{s2?.score ?? "?"}</strong>
               </span>
             </div>
-            <p className="text-sm text-white/50">{g.description}</p>
+            <p className="text-sm text-muted-foreground">{g.description}</p>
             <p className="text-xs text-orange-300/80 font-medium">{g.serviceRecommendation}</p>
           </div>
         );

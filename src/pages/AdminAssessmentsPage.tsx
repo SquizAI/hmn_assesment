@@ -70,15 +70,15 @@ function FilterTab({
         relative px-4 py-2 text-sm font-medium rounded-lg transition-all
         ${
           active
-            ? "bg-white/[0.08] text-white border border-white/15"
-            : "text-white/40 hover:text-white/60 hover:bg-white/[0.04] border border-transparent"
+            ? "bg-white/[0.08] text-foreground border border-white/15"
+            : "text-muted-foreground hover:text-muted-foreground hover:bg-white/[0.04] border border-transparent"
         }
       `}
     >
       {label}
       <span
         className={`ml-2 text-xs tabular-nums ${
-          active ? "text-white/60" : "text-white/25"
+          active ? "text-muted-foreground" : "text-white/25"
         }`}
       >
         {count}
@@ -149,7 +149,7 @@ function EmptyState({
         <div className="text-4xl mb-4 opacity-30">
           {filter === "draft" ? "📝" : filter === "active" ? "✅" : "📦"}
         </div>
-        <p className="text-white/40 text-sm mb-1">
+        <p className="text-muted-foreground text-sm mb-1">
           No {filter} assessments found.
         </p>
         <button
@@ -165,13 +165,13 @@ function EmptyState({
   return (
     <div className="flex flex-col items-center justify-center py-20 text-center">
       <div className="text-5xl mb-4 opacity-30">📋</div>
-      <p className="text-white/50 text-sm mb-1">No assessments yet.</p>
-      <p className="text-white/30 text-xs mb-5">
+      <p className="text-muted-foreground text-sm mb-1">No assessments yet.</p>
+      <p className="text-muted-foreground/70 text-xs mb-5">
         Create your first assessment to get started.
       </p>
       <button
         onClick={onCreate}
-        className="px-5 py-2.5 text-sm font-medium rounded-xl bg-white/[0.08] border border-white/15 text-white hover:bg-white/[0.12] transition-colors"
+        className="px-5 py-2.5 text-sm font-medium rounded-xl bg-white/[0.08] border border-white/15 text-foreground hover:bg-white/[0.12] transition-colors"
       >
         + Create Assessment
       </button>
@@ -405,7 +405,7 @@ export default function AdminAssessmentsPage() {
     return (
       <div className="px-4 md:px-6 py-6 flex flex-col items-center justify-center min-h-[500px] gap-3">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white/40" />
-        <span className="text-white/30 text-sm">Loading assessments...</span>
+        <span className="text-muted-foreground/70 text-sm">Loading assessments...</span>
       </div>
     );
   }
@@ -415,10 +415,10 @@ export default function AdminAssessmentsPage() {
     return (
       <div className="px-4 md:px-6 py-6 flex flex-col items-center justify-center min-h-[500px] gap-4">
         <div className="text-4xl opacity-30">⚠</div>
-        <p className="text-white/50 text-sm">{error}</p>
+        <p className="text-muted-foreground text-sm">{error}</p>
         <button
           onClick={loadAssessments}
-          className="px-4 py-2 text-sm rounded-xl bg-white/[0.06] border border-white/10 text-white hover:bg-white/[0.10] transition-colors"
+          className="px-4 py-2 text-sm rounded-xl bg-white/[0.06] border border-border text-foreground hover:bg-white/[0.10] transition-colors"
         >
           Retry
         </button>
@@ -433,17 +433,17 @@ export default function AdminAssessmentsPage() {
       {/* ================================================================== */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-xl md:text-2xl font-bold text-white/90 tracking-tight">
+          <h1 className="text-xl md:text-2xl font-bold text-foreground/90 tracking-tight">
             Assessments
           </h1>
-          <p className="text-sm text-white/40 mt-0.5">
+          <p className="text-sm text-muted-foreground mt-0.5">
             Manage, create, and monitor your assessment library.
           </p>
         </div>
 
         <button
           onClick={() => navigate("/admin/builder")}
-          className="w-full sm:w-auto px-4 py-2 text-sm font-medium rounded-xl transition-all bg-gradient-to-r from-purple-500/20 to-blue-500/20 border border-purple-500/20 text-purple-200 hover:from-purple-500/30 hover:to-blue-500/30 hover:text-white"
+          className="w-full sm:w-auto px-4 py-2 text-sm font-medium rounded-xl transition-all bg-gradient-to-r from-purple-500/20 to-blue-500/20 border border-purple-500/20 text-purple-200 hover:from-purple-500/30 hover:to-blue-500/30 hover:text-foreground"
         >
           Build Assessment
         </button>
@@ -477,7 +477,7 @@ export default function AdminAssessmentsPage() {
               placeholder="Search assessments..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="bg-white/[0.05] border border-white/10 rounded-lg pl-9 pr-3 py-2 text-sm text-white placeholder-white/30 outline-none focus:border-white/20 transition-colors w-full sm:w-56"
+              className="bg-white/[0.05] border border-border rounded-lg pl-9 pr-3 py-2 text-sm text-foreground placeholder-white/30 outline-none focus:border-border transition-colors w-full sm:w-56"
             />
             {/* Search icon */}
             <svg
@@ -496,7 +496,7 @@ export default function AdminAssessmentsPage() {
             {search && (
               <button
                 onClick={() => setSearch("")}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/50 text-xs"
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground/70 hover:text-muted-foreground text-xs"
               >
                 &#x2715;
               </button>
@@ -507,7 +507,7 @@ export default function AdminAssessmentsPage() {
           <select
             value={categoryFilter}
             onChange={(e) => setCategoryFilter(e.target.value)}
-            className="bg-white/[0.05] border border-white/10 rounded-lg px-3 py-2 text-sm text-white/50 outline-none focus:border-white/20 transition-colors"
+            className="bg-white/[0.05] border border-border rounded-lg px-3 py-2 text-sm text-muted-foreground outline-none focus:border-border transition-colors"
           >
             <option value="all">All Categories</option>
             {categories.map((c) => (
@@ -520,7 +520,7 @@ export default function AdminAssessmentsPage() {
             <select
               value={companyFilter}
               onChange={(e) => setCompanyFilter(e.target.value)}
-              className="bg-white/[0.05] border border-white/10 rounded-lg px-3 py-2 text-sm text-white/50 outline-none focus:border-white/20 transition-colors"
+              className="bg-white/[0.05] border border-border rounded-lg px-3 py-2 text-sm text-muted-foreground outline-none focus:border-border transition-colors"
             >
               <option value="all">All Companies</option>
               {companies.map((c) => (
@@ -531,7 +531,7 @@ export default function AdminAssessmentsPage() {
 
           {/* Sort dropdown */}
           <div className="relative group">
-            <button className="bg-white/[0.05] border border-white/10 rounded-lg px-3 py-2 text-sm text-white/50 hover:bg-white/[0.08] transition-colors flex items-center gap-1">
+            <button className="bg-white/[0.05] border border-border rounded-lg px-3 py-2 text-sm text-muted-foreground hover:bg-white/[0.08] transition-colors flex items-center gap-1">
               <svg
                 className="w-4 h-4"
                 fill="none"
@@ -547,7 +547,7 @@ export default function AdminAssessmentsPage() {
               </svg>
               <span className="hidden sm:inline">Sort</span>
             </button>
-            <div className="absolute right-0 top-full mt-1 bg-[#12121a] border border-white/10 rounded-lg overflow-hidden shadow-xl z-20 opacity-0 pointer-events-none group-focus-within:opacity-100 group-focus-within:pointer-events-auto transition-opacity min-w-[160px]">
+            <div className="absolute right-0 top-full mt-1 bg-[#12121a] border border-border rounded-lg overflow-hidden shadow-xl z-20 opacity-0 pointer-events-none group-focus-within:opacity-100 group-focus-within:pointer-events-auto transition-opacity min-w-[160px]">
               {(
                 [
                   ["name", "Name"],
@@ -561,8 +561,8 @@ export default function AdminAssessmentsPage() {
                   onClick={() => handleSortToggle(key)}
                   className={`block w-full text-left px-4 py-2 text-sm transition-colors ${
                     sortKey === key
-                      ? "text-white bg-white/[0.06]"
-                      : "text-white/50 hover:bg-white/[0.04]"
+                      ? "text-foreground bg-white/[0.06]"
+                      : "text-muted-foreground hover:bg-white/[0.04]"
                   }`}
                 >
                   {label}
@@ -573,11 +573,11 @@ export default function AdminAssessmentsPage() {
           </div>
 
           {/* View toggle */}
-          <div className="flex items-center bg-white/[0.05] border border-white/10 rounded-lg overflow-hidden">
+          <div className="flex items-center bg-white/[0.05] border border-border rounded-lg overflow-hidden">
             <button
               onClick={() => setViewMode("gallery")}
               className={`p-2 transition-colors ${
-                viewMode === "gallery" ? "bg-white/[0.08] text-white/70" : "text-white/30 hover:text-white/50"
+                viewMode === "gallery" ? "bg-white/[0.08] text-foreground/80" : "text-muted-foreground/70 hover:text-muted-foreground"
               }`}
               title="Gallery view"
             >
@@ -588,7 +588,7 @@ export default function AdminAssessmentsPage() {
             <button
               onClick={() => setViewMode("list")}
               className={`p-2 transition-colors ${
-                viewMode === "list" ? "bg-white/[0.08] text-white/70" : "text-white/30 hover:text-white/50"
+                viewMode === "list" ? "bg-white/[0.08] text-foreground/80" : "text-muted-foreground/70 hover:text-muted-foreground"
               }`}
               title="List view"
             >
@@ -604,15 +604,15 @@ export default function AdminAssessmentsPage() {
       {/* SUMMARY STATS ROW                                                  */}
       {/* ================================================================== */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="bg-white/[0.03] border border-white/10 rounded-xl px-4 py-3">
-          <p className="text-xs text-white/30 uppercase tracking-wider">
+        <div className="bg-muted/50 border border-border rounded-xl px-4 py-3">
+          <p className="text-xs text-muted-foreground/70 uppercase tracking-wider">
             Total
           </p>
-          <p className="text-lg md:text-xl font-semibold text-white/90 mt-1 tabular-nums">
+          <p className="text-lg md:text-xl font-semibold text-foreground/90 mt-1 tabular-nums">
             {counts.all}
           </p>
         </div>
-        <div className="bg-white/[0.03] border border-white/10 rounded-xl px-4 py-3">
+        <div className="bg-muted/50 border border-border rounded-xl px-4 py-3">
           <p className="text-xs text-green-400/60 uppercase tracking-wider">
             Active
           </p>
@@ -620,7 +620,7 @@ export default function AdminAssessmentsPage() {
             {counts.active}
           </p>
         </div>
-        <div className="bg-white/[0.03] border border-white/10 rounded-xl px-4 py-3">
+        <div className="bg-muted/50 border border-border rounded-xl px-4 py-3">
           <p className="text-xs text-yellow-400/60 uppercase tracking-wider">
             Draft
           </p>
@@ -628,11 +628,11 @@ export default function AdminAssessmentsPage() {
             {counts.draft}
           </p>
         </div>
-        <div className="bg-white/[0.03] border border-white/10 rounded-xl px-4 py-3">
+        <div className="bg-muted/50 border border-border rounded-xl px-4 py-3">
           <p className="text-xs text-white/25 uppercase tracking-wider">
             Archived
           </p>
-          <p className="text-lg md:text-xl font-semibold text-white/40 mt-1 tabular-nums">
+          <p className="text-lg md:text-xl font-semibold text-muted-foreground mt-1 tabular-nums">
             {counts.archived}
           </p>
         </div>
@@ -659,8 +659,8 @@ export default function AdminAssessmentsPage() {
                 key={assessment.id}
                 onClick={() => setSelectedAssessmentId(assessment.id)}
                 className={`
-                  group relative bg-white/[0.03] border border-white/10 rounded-2xl p-5
-                  hover:bg-white/[0.06] hover:border-white/20 transition-all cursor-pointer
+                  group relative bg-muted/50 border border-border rounded-2xl p-5
+                  hover:bg-white/[0.06] hover:border-border transition-all cursor-pointer
                   ${isInFlight ? "opacity-60 pointer-events-none" : ""}
                 `}
               >
@@ -675,7 +675,7 @@ export default function AdminAssessmentsPage() {
                         e.stopPropagation();
                         navigate(`/admin/builder/${assessment.id}`);
                       }}
-                      className="opacity-0 group-hover:opacity-100 p-1 rounded-lg hover:bg-white/10 text-white/30 hover:text-white/60 transition-all"
+                      className="opacity-0 group-hover:opacity-100 p-1 rounded-lg hover:bg-muted text-muted-foreground/70 hover:text-muted-foreground transition-all"
                       title="Edit in Builder"
                     >
                       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -687,17 +687,17 @@ export default function AdminAssessmentsPage() {
                 </div>
 
                 {/* Name */}
-                <h3 className="text-sm md:text-base font-semibold text-white/90 leading-snug">
+                <h3 className="text-sm md:text-base font-semibold text-foreground/90 leading-snug">
                   {assessment.name}
                 </h3>
 
                 {/* Description */}
-                <p className="text-sm text-white/40 mt-1.5 line-clamp-2 leading-relaxed">
+                <p className="text-sm text-muted-foreground mt-1.5 line-clamp-2 leading-relaxed">
                   {assessment.description}
                 </p>
 
                 {/* Stats row */}
-                <div className="mt-4 flex items-center gap-4 text-xs text-white/30">
+                <div className="mt-4 flex items-center gap-4 text-xs text-muted-foreground/70">
                   <span className="flex items-center gap-1">
                     <svg
                       className="w-3.5 h-3.5"
@@ -730,7 +730,7 @@ export default function AdminAssessmentsPage() {
                     </svg>
                     {assessment.estimatedMinutes} min
                   </span>
-                  <span className="ml-auto text-white/20 text-[11px] font-mono">
+                  <span className="ml-auto text-muted-foreground/50 text-[11px] font-mono">
                     {assessment.id}
                   </span>
                 </div>
@@ -741,13 +741,13 @@ export default function AdminAssessmentsPage() {
                     <span className={`px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider rounded-full ${
                       assessment.typeBadge === "Survey" ? "bg-purple-500/15 text-purple-300" :
                       assessment.typeBadge === "Diagnostic" ? "bg-blue-500/15 text-blue-300" :
-                      "bg-white/[0.06] text-white/40"
+                      "bg-white/[0.06] text-muted-foreground"
                     }`}>
                       {assessment.typeBadge}
                     </span>
                   )}
                   {assessment.category && (
-                    <span className="px-2 py-0.5 text-[10px] text-white/25 bg-white/[0.03] rounded-full">
+                    <span className="px-2 py-0.5 text-[10px] text-white/25 bg-muted/50 rounded-full">
                       {assessment.category}
                     </span>
                   )}
@@ -818,7 +818,7 @@ export default function AdminAssessmentsPage() {
                       e.stopPropagation();
                       setSelectedAssessmentId(assessment.id);
                     }}
-                    className="ml-auto px-2.5 py-1 text-xs rounded-lg border transition-colors bg-white/[0.04] border-white/10 text-white/40 hover:bg-white/[0.08] hover:text-white/60"
+                    className="ml-auto px-2.5 py-1 text-xs rounded-lg border transition-colors bg-white/[0.04] border-border text-muted-foreground hover:bg-white/[0.08] hover:text-muted-foreground"
                   >
                     View Details
                   </button>
@@ -829,7 +829,7 @@ export default function AdminAssessmentsPage() {
         </div>
       ) : (
         /* ---- LIST VIEW ---- */
-        <div className="bg-white/[0.03] rounded-2xl border border-white/10 overflow-hidden">
+        <div className="bg-muted/50 rounded-2xl border border-border overflow-hidden">
           <div className="divide-y divide-white/5">
             {filtered.map((assessment) => {
               const isInFlight = actionInFlight === assessment.id;
@@ -847,23 +847,23 @@ export default function AdminAssessmentsPage() {
                   {/* Name + description */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <h3 className="text-sm font-medium text-white/90 truncate">{assessment.name}</h3>
+                      <h3 className="text-sm font-medium text-foreground/90 truncate">{assessment.name}</h3>
                       <StatusBadge status={assessment.status} />
                       {assessment.typeBadge && (
                         <span className={`px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider rounded-full ${
                           assessment.typeBadge === "Survey" ? "bg-purple-500/15 text-purple-300" :
                           assessment.typeBadge === "Diagnostic" ? "bg-blue-500/15 text-blue-300" :
-                          "bg-white/[0.06] text-white/40"
+                          "bg-white/[0.06] text-muted-foreground"
                         }`}>
                           {assessment.typeBadge}
                         </span>
                       )}
                     </div>
-                    <p className="text-xs text-white/30 truncate mt-0.5">{assessment.description}</p>
+                    <p className="text-xs text-muted-foreground/70 truncate mt-0.5">{assessment.description}</p>
                   </div>
 
                   {/* Stats */}
-                  <div className="hidden sm:flex items-center gap-4 text-xs text-white/30 flex-shrink-0">
+                  <div className="hidden sm:flex items-center gap-4 text-xs text-muted-foreground/70 flex-shrink-0">
                     <span>{assessment.questionCount} questions</span>
                     <span>{assessment.estimatedMinutes} min</span>
                   </div>
@@ -889,7 +889,7 @@ export default function AdminAssessmentsPage() {
                         e.stopPropagation();
                         navigate(`/admin/builder/${assessment.id}`);
                       }}
-                      className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg hover:bg-white/10 text-white/30 hover:text-white/60 transition-all"
+                      className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg hover:bg-muted text-muted-foreground/70 hover:text-muted-foreground transition-all"
                       title="Edit in Builder"
                     >
                       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -978,14 +978,14 @@ function DuplicateAssessmentModal({
     <ModalBackdrop onClose={onClose}>
       <form
         onSubmit={handleSubmit}
-        className="bg-[#0e0e16] border border-white/10 rounded-2xl p-6 shadow-2xl"
+        className="bg-[#0e0e16] border border-border rounded-2xl p-6 shadow-2xl"
       >
-        <h2 className="text-lg font-semibold text-white/90 mb-1">
+        <h2 className="text-lg font-semibold text-foreground/90 mb-1">
           Duplicate Assessment
         </h2>
-        <p className="text-sm text-white/40 mb-5">
+        <p className="text-sm text-muted-foreground mb-5">
           Create a copy of{" "}
-          <span className="text-white/60 font-medium">{source.name}</span> with
+          <span className="text-muted-foreground font-medium">{source.name}</span> with
           all its questions and configuration.
         </p>
 
@@ -996,11 +996,11 @@ function DuplicateAssessmentModal({
         )}
 
         {/* Source preview */}
-        <div className="bg-white/[0.03] border border-white/[0.06] rounded-xl p-3 mb-5 flex items-center gap-3">
+        <div className="bg-muted/50 border border-white/[0.06] rounded-xl p-3 mb-5 flex items-center gap-3">
           <span className="text-2xl">{source.icon}</span>
           <div>
-            <p className="text-sm text-white/70 font-medium">{source.name}</p>
-            <p className="text-xs text-white/30">
+            <p className="text-sm text-foreground/80 font-medium">{source.name}</p>
+            <p className="text-xs text-muted-foreground/70">
               {source.questionCount} questions &middot;{" "}
               {source.estimatedMinutes} min
             </p>
@@ -1009,7 +1009,7 @@ function DuplicateAssessmentModal({
         </div>
 
         {/* New name */}
-        <label className="block text-xs text-white/40 mb-1.5">
+        <label className="block text-xs text-muted-foreground mb-1.5">
           New Assessment Name
         </label>
         <input
@@ -1017,9 +1017,9 @@ function DuplicateAssessmentModal({
           value={name}
           onChange={(e) => setName(e.target.value)}
           autoFocus
-          className="w-full bg-white/[0.05] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/25 outline-none focus:border-white/20 transition-colors mb-1"
+          className="w-full bg-white/[0.05] border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder-white/25 outline-none focus:border-border transition-colors mb-1"
         />
-        <p className="text-[11px] text-white/20 mb-6 font-mono">
+        <p className="text-[11px] text-muted-foreground/50 mb-6 font-mono">
           ID: {generatedId}
         </p>
 
@@ -1028,7 +1028,7 @@ function DuplicateAssessmentModal({
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 text-sm rounded-xl border border-white/10 text-white/50 hover:bg-white/[0.04] transition-colors"
+            className="px-4 py-2 text-sm rounded-xl border border-border text-muted-foreground hover:bg-white/[0.04] transition-colors"
           >
             Cancel
           </button>
@@ -1037,8 +1037,8 @@ function DuplicateAssessmentModal({
             disabled={submitting || !name.trim()}
             className={`px-5 py-2 text-sm font-medium rounded-xl border transition-all ${
               submitting || !name.trim()
-                ? "bg-white/[0.04] border-white/10 text-white/25 cursor-not-allowed"
-                : "bg-white/[0.10] border-white/15 text-white hover:bg-white/[0.15]"
+                ? "bg-white/[0.04] border-border text-white/25 cursor-not-allowed"
+                : "bg-white/[0.10] border-white/15 text-foreground hover:bg-white/[0.15]"
             }`}
           >
             {submitting ? "Duplicating..." : "Duplicate"}

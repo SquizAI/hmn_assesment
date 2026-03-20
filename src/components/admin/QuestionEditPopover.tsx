@@ -47,18 +47,18 @@ export default function QuestionEditPopover({ question, onSave, onClose }: Props
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={onClose}>
       <div
-        className="bg-[#141420] border border-white/10 rounded-2xl p-5 w-full max-w-md shadow-2xl space-y-4"
+        className="bg-[#141420] border border-border rounded-2xl p-5 w-full max-w-md shadow-2xl space-y-4"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-sm font-semibold text-white">Edit Question</h3>
-            <p className="text-[11px] text-white/30 mt-0.5 font-mono">{question.id}</p>
+            <h3 className="text-sm font-semibold text-foreground">Edit Question</h3>
+            <p className="text-[11px] text-muted-foreground/70 mt-0.5 font-mono">{question.id}</p>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg hover:bg-white/5 text-white/30 hover:text-white/60 transition-colors"
+            className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground/70 hover:text-muted-foreground transition-colors"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -68,23 +68,23 @@ export default function QuestionEditPopover({ question, onSave, onClose }: Props
 
         {/* Question text */}
         <div className="space-y-1.5">
-          <label className="text-[11px] text-white/40 uppercase tracking-wider">Question Text</label>
+          <label className="text-[11px] text-muted-foreground uppercase tracking-wider">Question Text</label>
           <textarea
             value={text}
             onChange={(e) => setText(e.target.value)}
             rows={3}
-            className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/20 focus:outline-none focus:border-purple-500/40 focus:ring-1 focus:ring-purple-500/20 resize-none"
+            className="w-full bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder-white/20 focus:outline-none focus:border-purple-500/40 focus:ring-1 focus:ring-purple-500/20 resize-none"
           />
         </div>
 
         {/* Input type + Weight row */}
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
-            <label className="text-[11px] text-white/40 uppercase tracking-wider">Input Type</label>
+            <label className="text-[11px] text-muted-foreground uppercase tracking-wider">Input Type</label>
             <select
               value={inputType}
               onChange={(e) => setInputType(e.target.value)}
-              className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500/40 appearance-none"
+              className="w-full bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:border-purple-500/40 appearance-none"
             >
               {INPUT_TYPES.map((t) => (
                 <option key={t.value} value={t.value} className="bg-[#141420]">{t.label}</option>
@@ -92,7 +92,7 @@ export default function QuestionEditPopover({ question, onSave, onClose }: Props
             </select>
           </div>
           <div className="space-y-1.5">
-            <label className="text-[11px] text-white/40 uppercase tracking-wider">Weight</label>
+            <label className="text-[11px] text-muted-foreground uppercase tracking-wider">Weight</label>
             <input
               type="number"
               min="0"
@@ -100,7 +100,7 @@ export default function QuestionEditPopover({ question, onSave, onClose }: Props
               step="0.1"
               value={weight}
               onChange={(e) => setWeight(e.target.value)}
-              className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500/40"
+              className="w-full bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:border-purple-500/40"
             />
           </div>
         </div>
@@ -109,7 +109,7 @@ export default function QuestionEditPopover({ question, onSave, onClose }: Props
         <div className="flex justify-end gap-2 pt-1">
           <button
             onClick={onClose}
-            className="px-3 py-1.5 rounded-lg text-xs text-white/40 hover:text-white/60 hover:bg-white/5 transition-colors"
+            className="px-3 py-1.5 rounded-lg text-xs text-muted-foreground hover:text-muted-foreground hover:bg-muted transition-colors"
           >
             Cancel
           </button>

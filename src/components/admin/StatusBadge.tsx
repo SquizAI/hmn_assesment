@@ -8,7 +8,7 @@ const STATUS_STYLES: Record<string, string> = {
   archived: "bg-gray-500/20 text-gray-400 border-gray-500/30",
   sent: "bg-sky-500/20 text-sky-300 border-sky-500/30",
   opened: "bg-amber-500/20 text-amber-300 border-amber-500/30",
-  started: "bg-indigo-500/20 text-indigo-300 border-indigo-500/30",
+  started: "bg-primary/20 text-primary border-primary/30",
   queued: "bg-gray-500/20 text-gray-300 border-gray-500/30",
   ringing: "bg-amber-500/20 text-amber-300 border-amber-500/30",
   failed: "bg-red-500/20 text-red-300 border-red-500/30",
@@ -43,7 +43,7 @@ const STATUS_LABELS: Record<string, string> = {
 export default function StatusBadge({ status, size }: { status: string; size?: "sm" | "md" }) {
   const sizeClass = size === "sm" ? "px-1.5 py-0.5 text-[10px]" : "px-2 py-0.5 text-xs";
   return (
-    <span className={`inline-flex items-center rounded-full font-medium border ${sizeClass} ${STATUS_STYLES[status] || "bg-white/10 text-white/50 border-white/20"}`}>
+    <span className={`inline-flex items-center rounded-full font-medium border ${sizeClass} ${STATUS_STYLES[status] || "bg-muted text-muted-foreground border-border"}`}>
       {STATUS_LABELS[status] || status}
     </span>
   );

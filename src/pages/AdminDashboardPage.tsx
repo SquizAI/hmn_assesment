@@ -348,7 +348,7 @@ export default function AdminDashboardPage() {
   if (loading) {
     return (
       <div className="px-4 md:px-6 py-4 md:py-6 flex items-center justify-center h-full">
-        <span className="text-white/30">Loading...</span>
+        <span className="text-muted-foreground/70">Loading...</span>
       </div>
     );
   }
@@ -435,13 +435,13 @@ export default function AdminDashboardPage() {
             onClick={() => {
               if (graphStatus?.enabled && (graphStatus?.nodeCount ?? 0) === 0) handleSeed();
             }}
-            className={`bg-white/[0.03] border border-white/10 rounded-2xl p-4 hover:bg-white/[0.05] transition-colors ${
+            className={`bg-muted/50 border border-border rounded-2xl p-4 hover:bg-white/[0.05] transition-colors ${
               graphStatus?.enabled && (graphStatus?.nodeCount ?? 0) === 0 ? "cursor-pointer" : ""
             }`}
           >
-            <div className="text-[10px] text-white/40 uppercase tracking-wider mb-1.5">Graph</div>
+            <div className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1.5">Graph</div>
             {graphLoading ? (
-              <div className="h-6 w-16 bg-white/5 rounded animate-pulse" />
+              <div className="h-6 w-16 bg-muted rounded animate-pulse" />
             ) : (
               <div className="flex items-center gap-2">
                 <span
@@ -449,16 +449,16 @@ export default function AdminDashboardPage() {
                     isGraphEnabled ? "bg-green-400" : graphStatus?.enabled ? "bg-orange-400" : "bg-gray-500"
                   }`}
                 />
-                <span className="text-sm font-medium text-white/70">
+                <span className="text-sm font-medium text-foreground/80">
                   {isGraphEnabled ? "Connected" : graphStatus?.enabled ? "Empty" : "Offline"}
                 </span>
               </div>
             )}
             {isGraphEnabled && (
-              <div className="text-[10px] text-white/30 mt-0.5">{graphStatus!.nodeCount} nodes</div>
+              <div className="text-[10px] text-muted-foreground/70 mt-0.5">{graphStatus!.nodeCount} nodes</div>
             )}
             {graphStatus?.enabled && (graphStatus?.nodeCount ?? 0) === 0 && (
-              <div className="text-[10px] text-white/30 mt-0.5">
+              <div className="text-[10px] text-muted-foreground/70 mt-0.5">
                 {seeding ? "Seeding..." : "Click to seed"}
               </div>
             )}
@@ -483,18 +483,18 @@ export default function AdminDashboardPage() {
         />
 
         {/* Archetype Distribution — Donut Chart */}
-        <div className="bg-white/[0.03] rounded-2xl border border-white/10 p-4 md:p-6">
-          <h2 className="text-xs font-semibold text-white/60 uppercase tracking-wider mb-3">
+        <div className="bg-muted/50 rounded-2xl border border-border p-4 md:p-6">
+          <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
             Archetype Distribution
           </h2>
           {graphLoading ? (
             <div className="space-y-3">
               {[...Array(5)].map((_, i) => (
-                <div key={i} className="h-6 bg-white/5 rounded animate-pulse" />
+                <div key={i} className="h-6 bg-muted rounded animate-pulse" />
               ))}
             </div>
           ) : !isGraphEnabled || archetypes.length === 0 ? (
-            <div className="text-center py-8 text-white/30 text-sm">
+            <div className="text-center py-8 text-muted-foreground/70 text-sm">
               {isGraphEnabled ? "No archetype data yet" : "Graph not connected"}
             </div>
           ) : (
@@ -548,16 +548,16 @@ export default function AdminDashboardPage() {
                 {archetypes
                   .sort((a, b) => b.count - a.count)
                   .map((a, i) => {
-                    const colors = ["bg-purple-500", "bg-blue-500", "bg-cyan-500", "bg-green-500", "bg-amber-500", "bg-rose-500", "bg-indigo-500", "bg-teal-500"];
+                    const colors = ["bg-purple-500", "bg-blue-500", "bg-cyan-500", "bg-green-500", "bg-amber-500", "bg-rose-500", "bg-primary", "bg-teal-500"];
                     const total = archetypes.reduce((s, x) => s + x.count, 0);
                     const pct = total > 0 ? Math.round((a.count / total) * 100) : 0;
                     return (
                       <div key={a.archetype} className="flex items-center gap-2">
                         <span className={`w-2 h-2 rounded-full ${colors[i % colors.length]} opacity-70`} />
-                        <span className="text-xs text-white/60 flex-1 truncate">
+                        <span className="text-xs text-muted-foreground flex-1 truncate">
                           {humanize(a.archetype)}
                         </span>
-                        <span className="text-[10px] text-white/40 tabular-nums">{a.count}</span>
+                        <span className="text-[10px] text-muted-foreground tabular-nums">{a.count}</span>
                         <span className="text-[10px] text-white/25 tabular-nums w-8 text-right">{pct}%</span>
                       </div>
                     );
@@ -575,9 +575,9 @@ export default function AdminDashboardPage() {
       {/* ============================================ */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Company Leaderboard */}
-        <div className="bg-white/[0.03] rounded-2xl border border-white/10 p-4 md:p-6">
+        <div className="bg-muted/50 rounded-2xl border border-border p-4 md:p-6">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-xs font-semibold text-white/60 uppercase tracking-wider">
+            <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
               Company Leaderboard
             </h2>
             <button
@@ -588,29 +588,29 @@ export default function AdminDashboardPage() {
             </button>
           </div>
           {companies.length === 0 ? (
-            <div className="text-center py-8 text-white/30">No companies yet</div>
+            <div className="text-center py-8 text-muted-foreground/70">No companies yet</div>
           ) : (
             <div className="space-y-1.5">
               {companies.slice(0, 10).map((company, idx) => (
                 <div
                   key={company.company}
                   onClick={() => navigate(`/admin/companies/${encodeURIComponent(company.company)}`)}
-                  className="flex items-center gap-2 px-2.5 py-2 rounded-xl hover:bg-white/5 cursor-pointer transition-colors"
+                  className="flex items-center gap-2 px-2.5 py-2 rounded-xl hover:bg-muted cursor-pointer transition-colors"
                 >
                   {/* Rank */}
-                  <span className="text-[10px] text-white/20 tabular-nums w-4 text-right flex-shrink-0">
+                  <span className="text-[10px] text-muted-foreground/50 tabular-nums w-4 text-right flex-shrink-0">
                     {idx + 1}
                   </span>
                   {/* Avatar */}
-                  <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-purple-500/15 to-blue-500/15 border border-white/10 flex items-center justify-center shrink-0">
-                    <span className="text-xs font-bold text-white/50">
+                  <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-purple-500/15 to-blue-500/15 border border-border flex items-center justify-center shrink-0">
+                    <span className="text-xs font-bold text-muted-foreground">
                       {company.company.charAt(0).toUpperCase()}
                     </span>
                   </div>
                   {/* Info */}
                   <div className="flex-1 min-w-0">
-                    <span className="text-xs font-medium text-white/80 truncate block">{company.company}</span>
-                    <span className="text-[10px] text-white/30">
+                    <span className="text-xs font-medium text-foreground/90 truncate block">{company.company}</span>
+                    <span className="text-[10px] text-muted-foreground/70">
                       {company.sessionCount} session{company.sessionCount !== 1 ? "s" : ""} · {company.participantCount} people
                     </span>
                   </div>
@@ -631,7 +631,7 @@ export default function AdminDashboardPage() {
                   {company.hasResearch && (
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
                   )}
-                  <span className="text-[10px] text-white/20 shrink-0 w-12 text-right">
+                  <span className="text-[10px] text-muted-foreground/50 shrink-0 w-12 text-right">
                     {relativeDate(company.lastActivity)}
                   </span>
                 </div>
@@ -641,24 +641,24 @@ export default function AdminDashboardPage() {
         </div>
 
         {/* Theme Intelligence */}
-        <div className="bg-white/[0.03] rounded-2xl border border-white/10 p-4 md:p-6">
+        <div className="bg-muted/50 rounded-2xl border border-border p-4 md:p-6">
           <div className="flex items-center gap-2 mb-3">
             <svg className="w-4 h-4 text-purple-400/60" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456z" />
             </svg>
-            <h2 className="text-xs font-semibold text-white/60 uppercase tracking-wider">
+            <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
               Theme Intelligence
             </h2>
           </div>
           {graphLoading ? (
             <div className="space-y-3">
               {[...Array(6)].map((_, i) => (
-                <div key={i} className="h-6 bg-white/5 rounded animate-pulse" />
+                <div key={i} className="h-6 bg-muted rounded animate-pulse" />
               ))}
             </div>
           ) : !isGraphEnabled ? (
             <div className="text-center py-8">
-              <p className="text-white/30 text-sm">Connect Neo4j to see theme intelligence</p>
+              <p className="text-muted-foreground/70 text-sm">Connect Neo4j to see theme intelligence</p>
               {graphStatus?.enabled && (
                 <button
                   onClick={handleSeed}
@@ -670,7 +670,7 @@ export default function AdminDashboardPage() {
               )}
             </div>
           ) : themes.length === 0 ? (
-            <div className="text-center py-8 text-white/30 text-sm">No themes detected yet</div>
+            <div className="text-center py-8 text-muted-foreground/70 text-sm">No themes detected yet</div>
           ) : (
             <div className="space-y-2">
               {themes.slice(0, 12).map((theme) => {
@@ -686,14 +686,14 @@ export default function AdminDashboardPage() {
                           : "bg-gray-400"
                       }`}
                     />
-                    <span className="w-28 text-xs text-white/60 truncate flex-shrink-0">{theme.theme}</span>
-                    <div className="flex-1 bg-white/5 rounded h-3 overflow-hidden">
+                    <span className="w-28 text-xs text-muted-foreground truncate flex-shrink-0">{theme.theme}</span>
+                    <div className="flex-1 bg-muted rounded h-3 overflow-hidden">
                       <div
                         className="h-full rounded bg-gradient-to-r from-purple-500/60 to-blue-500/60"
                         style={{ width: `${(theme.frequency / maxFreq) * 100}%`, minWidth: "2px" }}
                       />
                     </div>
-                    <span className="text-[10px] text-white/30 tabular-nums w-5 text-right flex-shrink-0">
+                    <span className="text-[10px] text-muted-foreground/70 tabular-nums w-5 text-right flex-shrink-0">
                       {theme.frequency}
                     </span>
                     <span
@@ -722,8 +722,8 @@ export default function AdminDashboardPage() {
       {/* ============================================ */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Completion Funnel */}
-        <div className="bg-white/[0.03] rounded-2xl border border-white/10 p-4 md:p-6">
-          <h2 className="text-xs font-semibold text-white/60 uppercase tracking-wider mb-3">
+        <div className="bg-muted/50 rounded-2xl border border-border p-4 md:p-6">
+          <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
             Completion Funnel
           </h2>
           <div className="space-y-2.5">
@@ -733,22 +733,22 @@ export default function AdminDashboardPage() {
               return (
                 <div key={stage.stage}>
                   <div className="flex items-center gap-2">
-                    <span className="w-20 text-xs text-white/50 flex-shrink-0">
+                    <span className="w-20 text-xs text-muted-foreground flex-shrink-0">
                       {FUNNEL_LABELS[stage.stage] || stage.stage}
                     </span>
-                    <div className="flex-1 bg-white/5 rounded-lg h-6 overflow-hidden">
+                    <div className="flex-1 bg-muted rounded-lg h-6 overflow-hidden">
                       <div
                         className={`h-full rounded-lg bg-gradient-to-r ${FUNNEL_COLORS[stage.stage] || "from-gray-500 to-gray-600"}`}
                         style={{ width: `${stage.percentage}%`, minWidth: "2px" }}
                       />
                     </div>
-                    <span className="text-xs text-white/40 tabular-nums flex-shrink-0 w-20 text-right">
+                    <span className="text-xs text-muted-foreground tabular-nums flex-shrink-0 w-20 text-right">
                       {stage.count} ({stage.percentage}%)
                     </span>
                   </div>
                   {convRate !== null && (
                     <div className="flex items-center gap-2 ml-20 mt-0.5">
-                      <span className="text-[9px] text-white/20">
+                      <span className="text-[9px] text-muted-foreground/50">
                         {convRate}% conversion
                       </span>
                     </div>
@@ -760,18 +760,18 @@ export default function AdminDashboardPage() {
         </div>
 
         {/* Industry Benchmarks */}
-        <div className="bg-white/[0.03] rounded-2xl border border-white/10 p-4 md:p-6">
-          <h2 className="text-xs font-semibold text-white/60 uppercase tracking-wider mb-3">
+        <div className="bg-muted/50 rounded-2xl border border-border p-4 md:p-6">
+          <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
             Industry Benchmarks
           </h2>
           {graphLoading ? (
             <div className="space-y-3">
               {[...Array(4)].map((_, i) => (
-                <div key={i} className="h-6 bg-white/5 rounded animate-pulse" />
+                <div key={i} className="h-6 bg-muted rounded animate-pulse" />
               ))}
             </div>
           ) : !isGraphEnabled || benchmarks.length === 0 ? (
-            <div className="text-center py-8 text-white/30 text-sm">
+            <div className="text-center py-8 text-muted-foreground/70 text-sm">
               {isGraphEnabled ? "No benchmark data yet" : "Graph not connected"}
             </div>
           ) : (
@@ -780,8 +780,8 @@ export default function AdminDashboardPage() {
                 .sort((a, b) => b.avgScore - a.avgScore)
                 .map((b) => (
                   <div key={b.industry} className="flex items-center gap-2">
-                    <span className="w-24 text-xs text-white/60 truncate flex-shrink-0">{b.industry}</span>
-                    <div className="flex-1 bg-white/5 rounded h-5 overflow-hidden">
+                    <span className="w-24 text-xs text-muted-foreground truncate flex-shrink-0">{b.industry}</span>
+                    <div className="flex-1 bg-muted rounded h-5 overflow-hidden">
                       <div
                         className={`h-full rounded bg-gradient-to-r ${
                           b.avgScore >= 70

@@ -267,14 +267,14 @@ export default function QuestionCard({ question, sessionId, onSubmit, onConversa
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
           </svg>
           <span className="text-amber-300/80 text-sm flex-1">Editing your previous answer</span>
-          <button onClick={onCancelEdit} className="text-white/40 hover:text-white/60 text-sm transition-colors">Cancel</button>
+          <button onClick={onCancelEdit} className="text-muted-foreground hover:text-muted-foreground text-sm transition-colors">Cancel</button>
         </div>
       )}
 
       {/* Question */}
       <div className="mb-6">
-        <h2 className="text-2xl font-semibold text-white leading-relaxed">{question.text || "Please share your thoughts on this topic."}</h2>
-        {question.subtext && <p className="text-white/50 mt-2 text-sm">{question.subtext}</p>}
+        <h2 className="text-2xl font-semibold text-foreground leading-relaxed">{question.text || "Please share your thoughts on this topic."}</h2>
+        {question.subtext && <p className="text-muted-foreground mt-2 text-sm">{question.subtext}</p>}
       </div>
 
       {/* AI Conversation History — shown during active conversation AND when reviewing a previous conversation */}
@@ -295,13 +295,13 @@ export default function QuestionCard({ question, sessionId, onSubmit, onConversa
                       {!sameSpeaker && (
                         <span className="text-[10px] font-medium uppercase tracking-wider mb-1.5 px-1 text-blue-400/50">You</span>
                       )}
-                      <div className="max-w-[85%] px-4 py-3 text-sm leading-relaxed bg-blue-500/15 text-white/90 border border-blue-500/20 rounded-2xl rounded-br-md">
+                      <div className="max-w-[85%] px-4 py-3 text-sm leading-relaxed bg-blue-500/15 text-foreground/90 border border-blue-500/20 rounded-2xl rounded-br-md">
                         {msg.content}
                       </div>
                     </div>
                   ) : (
                     /* Interviewer messages as plain text, no bubble */
-                    <div className="text-sm leading-relaxed text-white/90">
+                    <div className="text-sm leading-relaxed text-foreground/90">
                       {formatAiMessage(msg.content)}
                     </div>
                   )}
@@ -320,7 +320,7 @@ export default function QuestionCard({ question, sessionId, onSubmit, onConversa
                 <span className="text-red-300 text-sm">{conversationError}</span>
                 <button
                   onClick={handleRetry}
-                  className="px-3 py-1 rounded-lg bg-white/10 hover:bg-white/15 text-white/80 text-xs font-medium transition-colors shrink-0"
+                  className="px-3 py-1 rounded-lg bg-muted hover:bg-white/15 text-foreground/90 text-xs font-medium transition-colors shrink-0"
                 >
                   Retry
                 </button>
@@ -335,13 +335,13 @@ export default function QuestionCard({ question, sessionId, onSubmit, onConversa
       {!isEditing && (canGoBack || onSkip) && (
         <div className="flex items-center justify-between mb-4">
           {canGoBack && onBack ? (
-            <button onClick={onBack} className="flex items-center gap-1.5 text-sm text-white/40 hover:text-white/60 transition-colors">
+            <button onClick={onBack} className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-muted-foreground transition-colors">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
               Back
             </button>
           ) : <div />}
           {onSkip && (
-            <button onClick={onSkip} className="text-sm text-white/30 hover:text-white/50 transition-colors">
+            <button onClick={onSkip} className="text-sm text-muted-foreground/70 hover:text-muted-foreground transition-colors">
               Skip this question
             </button>
           )}
@@ -354,7 +354,7 @@ export default function QuestionCard({ question, sessionId, onSubmit, onConversa
           <div className="space-y-6">
             <SliderInput min={question.sliderMin ?? 0} max={question.sliderMax ?? 10} minLabel={question.sliderLabels?.min} maxLabel={question.sliderLabels?.max} value={sliderValue ?? undefined} onChange={setSliderValue} />
             <div className="flex gap-3">
-              {isEditing && <button onClick={onCancelEdit} className="px-6 py-2.5 rounded-xl text-sm text-white/40 hover:text-white/60 hover:bg-white/5 transition-all">Cancel</button>}
+              {isEditing && <button onClick={onCancelEdit} className="px-6 py-2.5 rounded-xl text-sm text-muted-foreground hover:text-muted-foreground hover:bg-muted transition-all">Cancel</button>}
               <Button onClick={() => sliderValue !== null && onSubmit(sliderValue)} disabled={sliderValue === null} loading={isSubmitting} size="lg" className={isEditing ? "flex-1" : "w-full"}>{submitLabel}</Button>
             </div>
           </div>
@@ -364,7 +364,7 @@ export default function QuestionCard({ question, sessionId, onSubmit, onConversa
           <div className="space-y-4">
             <ButtonSelect options={question.options || []} multiSelect={question.inputType === "multi_select"} onChange={(v) => setButtonValue(v)} initialValue={initialAnswer as string | string[] | undefined} />
             <div className="flex gap-3">
-              {isEditing && <button onClick={onCancelEdit} className="px-6 py-2.5 rounded-xl text-sm text-white/40 hover:text-white/60 hover:bg-white/5 transition-all">Cancel</button>}
+              {isEditing && <button onClick={onCancelEdit} className="px-6 py-2.5 rounded-xl text-sm text-muted-foreground hover:text-muted-foreground hover:bg-muted transition-all">Cancel</button>}
               <Button onClick={() => buttonValue !== null && onSubmit(buttonValue)} disabled={buttonValue === null} loading={isSubmitting} size="lg" className={isEditing ? "flex-1" : "w-full"}>{submitLabel}</Button>
             </div>
           </div>
@@ -375,8 +375,8 @@ export default function QuestionCard({ question, sessionId, onSubmit, onConversa
             {/* Read-only review for AI conversation in edit mode */}
             {isEditing && question.inputType === "ai_conversation" && conversationHistory.length > 0 ? (
               <div className="space-y-4">
-                <p className="text-white/40 text-xs uppercase tracking-wider">Previous conversation</p>
-                <button onClick={onCancelEdit} className="w-full px-5 py-3 rounded-xl text-sm text-white/70 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 transition-all">
+                <p className="text-muted-foreground text-xs uppercase tracking-wider">Previous conversation</p>
+                <button onClick={onCancelEdit} className="w-full px-5 py-3 rounded-xl text-sm text-foreground/80 hover:text-foreground bg-muted hover:bg-muted border border-border transition-all">
                   Return to current question
                 </button>
               </div>
@@ -387,15 +387,15 @@ export default function QuestionCard({ question, sessionId, onSubmit, onConversa
                   onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleTextSubmit(); } }}
                   placeholder={isRecording ? "Listening..." : "Type or tap the mic to speak..."}
                   rows={3}
-                  className={`w-full border rounded-xl px-4 py-3 text-white text-sm placeholder-white/30 focus:outline-none transition-all resize-none ${
+                  className={`w-full border rounded-xl px-4 py-3 text-foreground text-sm placeholder-white/30 focus:outline-none transition-all resize-none ${
                     isRecording
-                      ? "bg-indigo-500/10 border-indigo-500/30 cursor-default"
-                      : "bg-white/5 border-white/10 focus:border-white/20 focus:bg-white/[0.08]"
+                      ? "bg-primary/10 border-primary/30 cursor-default"
+                      : "bg-muted border-border focus:border-border focus:bg-white/[0.08]"
                   }`} />
 
                 {/* Send button */}
                 <div className="flex gap-3 items-center">
-                  {isEditing && <button onClick={onCancelEdit} className="px-5 py-2.5 rounded-xl text-sm text-white/40 hover:text-white/60 hover:bg-white/5 transition-all">Cancel</button>}
+                  {isEditing && <button onClick={onCancelEdit} className="px-5 py-2.5 rounded-xl text-sm text-muted-foreground hover:text-muted-foreground hover:bg-muted transition-all">Cancel</button>}
                   <Button onClick={handleTextSubmit} disabled={!textValue.trim() || isAiThinking} loading={isSubmitting || isAiThinking} size="lg" className="w-full">
                     {submitLabel}
                   </Button>
@@ -408,9 +408,9 @@ export default function QuestionCard({ question, sessionId, onSubmit, onConversa
                     {question.inputType === "ai_conversation" && (
                       <div className="pt-2">
                         <div className="flex items-center gap-3 mb-3">
-                          <div className="flex-1 h-px bg-white/10" />
-                          <span className="text-xs text-white/30 uppercase tracking-wider">or take this assessment by phone</span>
-                          <div className="flex-1 h-px bg-white/10" />
+                          <div className="flex-1 h-px bg-muted" />
+                          <span className="text-xs text-muted-foreground/70 uppercase tracking-wider">or take this assessment by phone</span>
+                          <div className="flex-1 h-px bg-muted" />
                         </div>
                         {callStatus === "idle" ? (
                           <div className="space-y-2">
@@ -420,12 +420,12 @@ export default function QuestionCard({ question, sessionId, onSubmit, onConversa
                                 value={callPhone}
                                 onChange={(e) => setCallPhone(e.target.value)}
                                 placeholder="+1 (555) 123-4567"
-                                className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder-white/30 focus:outline-none focus:border-purple-500/40 transition-all"
+                                className="flex-1 bg-muted border border-border rounded-xl px-4 py-3 text-foreground text-sm placeholder-white/30 focus:outline-none focus:border-purple-500/40 transition-all"
                               />
                               <button
                                 onClick={handleRequestCall}
                                 disabled={!callPhone.trim() || callLoading}
-                                className="px-5 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-blue-600 text-white text-sm font-medium hover:opacity-90 disabled:opacity-40 transition-all flex items-center gap-2 whitespace-nowrap"
+                                className="px-5 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-blue-600 text-foreground text-sm font-medium hover:opacity-90 disabled:opacity-40 transition-all flex items-center gap-2 whitespace-nowrap"
                               >
                                 {callLoading ? (
                                   <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
@@ -460,9 +460,9 @@ export default function QuestionCard({ question, sessionId, onSubmit, onConversa
 
                     {/* Deepgram mic button — speech-to-text dictation */}
                     <div className="flex items-center gap-3">
-                      <div className="flex-1 h-px bg-white/10" />
-                      <span className="text-xs text-white/30 uppercase tracking-wider">or dictate</span>
-                      <div className="flex-1 h-px bg-white/10" />
+                      <div className="flex-1 h-px bg-muted" />
+                      <span className="text-xs text-muted-foreground/70 uppercase tracking-wider">or dictate</span>
+                      <div className="flex-1 h-px bg-muted" />
                     </div>
                     <VoiceRecorder
                       onTranscription={handleVoiceTranscription}
@@ -474,7 +474,7 @@ export default function QuestionCard({ question, sessionId, onSubmit, onConversa
                     />
 
                     {/* Hint */}
-                    <p className="text-center text-white/30 text-xs">
+                    <p className="text-center text-muted-foreground/70 text-xs">
                       {question.inputType === "ai_conversation"
                         ? "Enter your phone number for a voice assessment, or type / dictate your responses"
                         : "Tap the mic or press Space to speak \u00B7 Live transcription as you talk"}

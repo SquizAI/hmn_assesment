@@ -127,4 +127,25 @@ router.post("/:id/test", async (req, res) => {
   }
 });
 
+// List recent deliveries (optionally filtered by webhook_id)
+router.get("/deliveries", async (req, res) => {
+  try {
+    const webhookId = req.query.webhook_id as string | undefined;
+    let query = getSupabase()
+      .from("cascade_webhook_deliveries")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(50);
+
+    if (webhookId) query = query.eq("webhook_id", webhookId);
+
+    const { data, error } = await query;
+    if (error) throw error;
+    res.json({ deliveries: data || [] });
+  } catch (err) {
+    console.error("[webhooks] deliveries error:", err);
+    res.status(500).json({ error: "Failed to list deliveries" });
+  }
+});
+
 export default router;

@@ -11,17 +11,17 @@ interface FilterBarProps {
 }
 
 const selectClass = (active: boolean) =>
-  `appearance-none bg-white/[0.05] border rounded-lg text-xs text-white/80 px-2.5 py-1.5 outline-none transition-colors cursor-pointer ${
+  `appearance-none bg-white/[0.05] border rounded-lg text-xs text-foreground/90 px-2.5 py-1.5 outline-none transition-colors cursor-pointer ${
     active
       ? "border-purple-500/40 bg-purple-500/10"
-      : "border-white/10 hover:border-white/20"
+      : "border-border hover:border-border"
   }`;
 
 const dateClass = (active: boolean) =>
-  `bg-white/[0.05] border rounded-lg text-xs text-white/80 px-2.5 py-1.5 outline-none transition-colors [color-scheme:dark] ${
+  `bg-white/[0.05] border rounded-lg text-xs text-foreground/90 px-2.5 py-1.5 outline-none transition-colors [color-scheme:dark] ${
     active
       ? "border-purple-500/40 bg-purple-500/10"
-      : "border-white/10 hover:border-white/20"
+      : "border-border hover:border-border"
   }`;
 
 export default function FilterBar({
@@ -90,7 +90,7 @@ export default function FilterBar({
   }, [onChange]);
 
   return (
-    <div className="bg-white/[0.03] rounded-2xl border border-white/10 px-4 py-3 flex flex-wrap items-center gap-2.5">
+    <div className="bg-muted/50 rounded-2xl border border-border px-4 py-3 flex flex-wrap items-center gap-2.5">
       {/* Company */}
       <select
         value={filters.company ?? ""}
@@ -120,7 +120,7 @@ export default function FilterBar({
       </select>
 
       {/* Date From */}
-      <label className="flex items-center gap-1.5 text-xs text-white/40">
+      <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
         From:
         <input
           type="date"
@@ -132,7 +132,7 @@ export default function FilterBar({
       </label>
 
       {/* Date To */}
-      <label className="flex items-center gap-1.5 text-xs text-white/40">
+      <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
         To:
         <input
           type="date"
@@ -175,7 +175,7 @@ export default function FilterBar({
       {hasFilters && (
         <button
           onClick={clearAll}
-          className="ml-auto flex items-center gap-1.5 text-xs text-white/40 hover:text-white/60 transition-colors"
+          className="ml-auto flex items-center gap-1.5 text-xs text-muted-foreground hover:text-muted-foreground transition-colors"
         >
           <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-purple-500/20 text-[10px] text-purple-300 font-medium">
             {activeCount}

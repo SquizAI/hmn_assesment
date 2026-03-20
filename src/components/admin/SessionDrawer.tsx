@@ -211,16 +211,16 @@ export default function SessionDrawer({ sessionId, onClose, onDelete }: SessionD
 
       {/* Drawer Panel */}
       <div
-        className={`absolute right-0 top-0 h-full w-full sm:max-w-lg bg-[#0a0a0f] border-l border-white/10 flex flex-col transition-transform duration-300 ease-in-out ${
+        className={`absolute right-0 top-0 h-full w-full sm:max-w-lg bg-background border-l border-border flex flex-col transition-transform duration-300 ease-in-out ${
           visible ? "translate-x-0" : "translate-x-full"
         }`}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-white/10 shrink-0">
-          <h2 className="text-lg font-semibold text-white">Session Details</h2>
+        <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-border shrink-0">
+          <h2 className="text-lg font-semibold text-foreground">Session Details</h2>
           <button
             onClick={handleClose}
-            className="text-white/40 hover:text-white transition-colors text-xl leading-none"
+            className="text-muted-foreground hover:text-foreground transition-colors text-xl leading-none"
           >
             &times;
           </button>
@@ -235,8 +235,8 @@ export default function SessionDrawer({ sessionId, onClose, onDelete }: SessionD
                 onClick={() => setActiveTab(tab.id)}
                 className={`px-3 py-2.5 text-xs font-medium transition-colors relative ${
                   activeTab === tab.id
-                    ? "text-white/90"
-                    : "text-white/30 hover:text-white/60"
+                    ? "text-foreground/90"
+                    : "text-muted-foreground/70 hover:text-muted-foreground"
                 }`}
               >
                 {tab.label}
@@ -255,60 +255,60 @@ export default function SessionDrawer({ sessionId, onClose, onDelete }: SessionD
         <div className="flex-1 overflow-y-auto">
           {loading ? (
             <div className="flex items-center justify-center py-24">
-              <div className="w-8 h-8 border-2 border-white/20 border-t-white/60 rounded-full animate-spin" />
+              <div className="w-8 h-8 border-2 border-border border-t-white/60 rounded-full animate-spin" />
             </div>
           ) : !session ? (
-            <div className="text-center text-white/30 py-24">Session not found</div>
+            <div className="text-center text-muted-foreground/70 py-24">Session not found</div>
           ) : (
             <div className="px-4 sm:px-6 py-6 space-y-6">
               {/* Details Tab */}
               {activeTab === "details" && (
                 <>
                   {/* Participant Info Card */}
-                  <div className="bg-white/[0.03] rounded-xl p-4 space-y-3">
+                  <div className="bg-muted/50 rounded-xl p-4 space-y-3">
                     <div className="flex items-start justify-between">
                       <div>
-                        <h3 className="text-lg font-semibold text-white">
+                        <h3 className="text-lg font-semibold text-foreground">
                           {session.participant.name}
                         </h3>
-                        <p className="text-sm text-white/50">{session.participant.role}</p>
+                        <p className="text-sm text-muted-foreground">{session.participant.role}</p>
                       </div>
                       <StatusBadge status={session.status} />
                     </div>
 
                     <div className="grid grid-cols-2 gap-3 text-sm">
                       <div>
-                        <span className="text-white/30">Company</span>
-                        <p className="text-white/70">{session.participant.company}</p>
+                        <span className="text-muted-foreground/70">Company</span>
+                        <p className="text-foreground/80">{session.participant.company}</p>
                       </div>
                       <div>
-                        <span className="text-white/30">Industry</span>
-                        <p className="text-white/70">{session.participant.industry}</p>
+                        <span className="text-muted-foreground/70">Industry</span>
+                        <p className="text-foreground/80">{session.participant.industry}</p>
                       </div>
                       <div>
-                        <span className="text-white/30">Team Size</span>
-                        <p className="text-white/70">{session.participant.teamSize}</p>
+                        <span className="text-muted-foreground/70">Team Size</span>
+                        <p className="text-foreground/80">{session.participant.teamSize}</p>
                       </div>
                       <div>
-                        <span className="text-white/30">Email</span>
-                        <p className="text-white/70">{session.participant.email}</p>
+                        <span className="text-muted-foreground/70">Email</span>
+                        <p className="text-foreground/80">{session.participant.email}</p>
                       </div>
                     </div>
 
-                    <div className="text-xs text-white/20 pt-1">
+                    <div className="text-xs text-muted-foreground/50 pt-1">
                       Created {formatTimestamp(session.createdAt)}
                     </div>
                   </div>
 
                   {/* Call Participant */}
-                  <div className="bg-white/[0.03] rounded-xl p-4 space-y-3">
-                    <p className="text-sm text-white/40 font-medium">Call Participant</p>
+                  <div className="bg-muted/50 rounded-xl p-4 space-y-3">
+                    <p className="text-sm text-muted-foreground font-medium">Call Participant</p>
 
                     {callStatus?.vapiCallId ? (
                       <div className="space-y-2">
                         <div className="flex items-center gap-2">
                           <span className={`w-2 h-2 rounded-full ${callStatus.callCompletedAt ? "bg-green-400" : "bg-yellow-400 animate-pulse"}`} />
-                          <span className="text-sm text-white/70">
+                          <span className="text-sm text-foreground/80">
                             {callStatus.callCompletedAt
                               ? `Call completed${callStatus.callDuration ? ` (${Math.round(callStatus.callDuration / 60)}m)` : ""}`
                               : "Call in progress..."}
@@ -336,7 +336,7 @@ export default function SessionDrawer({ sessionId, onClose, onDelete }: SessionD
                         )}
                         <button
                           onClick={() => { setCallStatus(null); setCallPhone(""); }}
-                          className="text-xs text-white/30 hover:text-white/50 transition-colors"
+                          className="text-xs text-muted-foreground/70 hover:text-muted-foreground transition-colors"
                         >
                           Call again
                         </button>
@@ -349,12 +349,12 @@ export default function SessionDrawer({ sessionId, onClose, onDelete }: SessionD
                             value={callPhone}
                             onChange={(e) => setCallPhone(e.target.value)}
                             placeholder="+1 (555) 123-4567"
-                            className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/30 focus:outline-none focus:border-white/20"
+                            className="flex-1 bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder-white/30 focus:outline-none focus:border-border"
                           />
                           <button
                             onClick={handleInitiateCall}
                             disabled={callLoading || !callPhone.trim()}
-                            className="px-4 py-2 rounded-lg text-sm font-medium bg-purple-600 hover:bg-purple-700 text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5"
+                            className="px-4 py-2 rounded-lg text-sm font-medium bg-purple-600 hover:bg-purple-700 text-foreground transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5"
                           >
                             {callLoading ? (
                               <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" /></svg>
@@ -367,18 +367,18 @@ export default function SessionDrawer({ sessionId, onClose, onDelete }: SessionD
                         {callError && (
                           <p className="text-red-400 text-xs">{callError}</p>
                         )}
-                        <p className="text-white/20 text-xs">Vappy will call and run the full assessment via voice</p>
+                        <p className="text-muted-foreground/50 text-xs">Vappy will call and run the full assessment via voice</p>
                       </div>
                     )}
                   </div>
 
                   {/* Delete Button */}
-                  <div className="pt-4 border-t border-white/10">
+                  <div className="pt-4 border-t border-border">
                     <button
                       onClick={handleDelete}
                       className={`w-full rounded-lg px-4 py-2.5 text-sm font-medium transition-colors ${
                         deleteConfirm
-                          ? "bg-red-600 text-white hover:bg-red-700"
+                          ? "bg-red-600 text-foreground hover:bg-red-700"
                           : "bg-white/[0.05] text-red-400 border border-red-500/20 hover:bg-red-500/10"
                       }`}
                     >
@@ -395,15 +395,15 @@ export default function SessionDrawer({ sessionId, onClose, onDelete }: SessionD
                     session.adaptabilityAnalysis ? (
                       <AdaptabilitySessionView analysis={session.adaptabilityAnalysis} />
                     ) : (
-                      <div className="text-center py-12 text-white/30">
+                      <div className="text-center py-12 text-muted-foreground/70">
                         <p>No adaptability analysis available yet</p>
-                        <p className="text-xs mt-1 text-white/20">Complete the session to generate analysis</p>
+                        <p className="text-xs mt-1 text-muted-foreground/50">Complete the session to generate analysis</p>
                       </div>
                     )
                   ) : session.analysis ? (
                     <div className="space-y-4">
                       {/* Overall Score */}
-                      <div className="bg-white/[0.03] rounded-xl p-4 flex items-center gap-4">
+                      <div className="bg-muted/50 rounded-xl p-4 flex items-center gap-4">
                         <div
                           className={`text-4xl font-bold ${scoreColor(
                             session.analysis.overallReadinessScore
@@ -412,24 +412,24 @@ export default function SessionDrawer({ sessionId, onClose, onDelete }: SessionD
                           {session.analysis.overallReadinessScore}
                         </div>
                         <div>
-                          <p className="text-sm text-white/40">Overall Readiness Score</p>
-                          <p className="text-white font-medium">
+                          <p className="text-sm text-muted-foreground">Overall Readiness Score</p>
+                          <p className="text-foreground font-medium">
                             {session.analysis.archetype}
                           </p>
-                          <p className="text-xs text-white/40 mt-1">
+                          <p className="text-xs text-muted-foreground mt-1">
                             {session.analysis.archetypeDescription}
                           </p>
                         </div>
                       </div>
 
                       {/* Dimension Scores */}
-                      <div className="bg-white/[0.03] rounded-xl p-4 space-y-3">
-                        <p className="text-sm text-white/40 font-medium">Dimension Scores</p>
+                      <div className="bg-muted/50 rounded-xl p-4 space-y-3">
+                        <p className="text-sm text-muted-foreground font-medium">Dimension Scores</p>
                         {session.analysis.dimensionScores.map((ds) => (
                           <div key={ds.dimension}>
                             <div className="flex justify-between text-xs mb-1">
-                              <span className="text-white/60">{ds.dimension}</span>
-                              <span className="text-white/40">{ds.score}</span>
+                              <span className="text-muted-foreground">{ds.dimension}</span>
+                              <span className="text-muted-foreground">{ds.score}</span>
                             </div>
                             <div className="w-full h-2 bg-white/[0.06] rounded-full overflow-hidden">
                               <div
@@ -444,7 +444,7 @@ export default function SessionDrawer({ sessionId, onClose, onDelete }: SessionD
                       {/* Red Flags */}
                       {session.analysis.redFlags.length > 0 && (
                         <div className="space-y-2">
-                          <p className="text-sm text-white/40 font-medium">Red Flags</p>
+                          <p className="text-sm text-muted-foreground font-medium">Red Flags</p>
                           {session.analysis.redFlags.map((flag, i) => (
                             <div
                               key={i}
@@ -459,7 +459,7 @@ export default function SessionDrawer({ sessionId, onClose, onDelete }: SessionD
                       {/* Green Lights */}
                       {session.analysis.greenLights.length > 0 && (
                         <div className="space-y-2">
-                          <p className="text-sm text-white/40 font-medium">Green Lights</p>
+                          <p className="text-sm text-muted-foreground font-medium">Green Lights</p>
                           {session.analysis.greenLights.map((light, i) => (
                             <div
                               key={i}
@@ -472,9 +472,9 @@ export default function SessionDrawer({ sessionId, onClose, onDelete }: SessionD
                       )}
                     </div>
                   ) : (
-                    <div className="text-center py-12 text-white/30">
+                    <div className="text-center py-12 text-muted-foreground/70">
                       <p>No analysis available yet</p>
-                      <p className="text-xs mt-1 text-white/20">Complete the session to generate analysis</p>
+                      <p className="text-xs mt-1 text-muted-foreground/50">Complete the session to generate analysis</p>
                     </div>
                   )}
                 </>
@@ -494,7 +494,7 @@ export default function SessionDrawer({ sessionId, onClose, onDelete }: SessionD
                 <>
                   {session.responses.length > 0 ? (
                     <div className="space-y-2">
-                      <p className="text-sm text-white/40 font-medium mb-3">
+                      <p className="text-sm text-muted-foreground font-medium mb-3">
                         {session.responses.length} Responses
                       </p>
                       {session.responses.map((resp, i) => (
@@ -504,8 +504,8 @@ export default function SessionDrawer({ sessionId, onClose, onDelete }: SessionD
                             i % 2 === 0 ? "bg-white/[0.02]" : "bg-white/[0.04]"
                           }`}
                         >
-                          <p className="text-sm text-white/50 mb-1">{resp.questionText}</p>
-                          <p className="text-white text-sm whitespace-pre-wrap">
+                          <p className="text-sm text-muted-foreground mb-1">{resp.questionText}</p>
+                          <p className="text-foreground text-sm whitespace-pre-wrap">
                             {(() => {
                               const raw = resp.answer;
                               if (typeof raw !== "string") return String(raw ?? "");
@@ -516,14 +516,14 @@ export default function SessionDrawer({ sessionId, onClose, onDelete }: SessionD
                               return raw;
                             })()}
                           </p>
-                          <p className="text-xs text-white/20 mt-1">
+                          <p className="text-xs text-muted-foreground/50 mt-1">
                             {formatTimestamp(resp.timestamp)}
                           </p>
                         </div>
                       ))}
                     </div>
                   ) : (
-                    <div className="text-center py-12 text-white/30">No responses yet</div>
+                    <div className="text-center py-12 text-muted-foreground/70">No responses yet</div>
                   )}
                 </>
               )}

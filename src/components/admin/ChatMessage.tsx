@@ -63,10 +63,10 @@ export default function ChatMessage({ role, content, onAction, isLatest, toolCal
               <thead>
                 <tr className="bg-white/[0.04]">
                   {tableRows[0].map((cell, i) => (
-                    <th key={i} className="text-left px-3 py-2 border-b border-white/10 text-white/70 font-semibold text-xs uppercase tracking-wider">{cell.trim()}</th>
+                    <th key={i} className="text-left px-3 py-2 border-b border-border text-foreground/80 font-semibold text-xs uppercase tracking-wider">{cell.trim()}</th>
                   ))}
                   {hasQuestions && (
-                    <th className="w-8 border-b border-white/10" />
+                    <th className="w-8 border-b border-border" />
                   )}
                 </tr>
               </thead>
@@ -80,12 +80,12 @@ export default function ChatMessage({ role, content, onAction, isLatest, toolCal
                       onClick={question ? () => setEditingQuestion(question) : undefined}
                     >
                       {row.map((cell, j) => (
-                        <td key={j} className={`px-3 py-2 border-b border-white/5 ${question ? "text-white/70 group-hover:text-white/90" : "text-white/60"}`}>
+                        <td key={j} className={`px-3 py-2 border-b border-border/50 ${question ? "text-foreground/80 group-hover:text-foreground/90" : "text-muted-foreground"}`}>
                           {cell.trim()}
                         </td>
                       ))}
                       {hasQuestions && (
-                        <td className="px-1 py-2 border-b border-white/5">
+                        <td className="px-1 py-2 border-b border-border/50">
                           {question && (
                             <svg className="w-3.5 h-3.5 text-purple-400/0 group-hover:text-purple-400/60 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                               <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
@@ -111,10 +111,10 @@ export default function ChatMessage({ role, content, onAction, isLatest, toolCal
     const flushCode = () => {
       elements.push(
         <div key={`code-${elements.length}`} className="my-3 rounded-lg overflow-hidden">
-          <div className="bg-white/[0.06] px-3 py-1.5 text-[10px] text-white/30 uppercase tracking-widest border-b border-white/5">
+          <div className="bg-white/[0.06] px-3 py-1.5 text-[10px] text-muted-foreground/70 uppercase tracking-widest border-b border-border/50">
             {codeLang || "code"}
           </div>
-          <pre className="bg-white/[0.03] px-4 py-3 overflow-x-auto text-sm">
+          <pre className="bg-muted/50 px-4 py-3 overflow-x-auto text-sm">
             <code className="text-green-300/80 font-mono">{codeLines.join("\n")}</code>
           </pre>
         </div>
@@ -161,21 +161,21 @@ export default function ChatMessage({ role, content, onAction, isLatest, toolCal
 
       // Headers
       if (line.startsWith("### ")) {
-        elements.push(<h4 key={i} className="font-semibold text-white mt-3 mb-1.5 text-sm">{formatInline(line.slice(4))}</h4>);
+        elements.push(<h4 key={i} className="font-semibold text-foreground mt-3 mb-1.5 text-sm">{formatInline(line.slice(4))}</h4>);
         continue;
       }
       if (line.startsWith("## ")) {
-        elements.push(<h3 key={i} className="font-bold text-white mt-4 mb-2 text-base border-b border-white/10 pb-1">{formatInline(line.slice(3))}</h3>);
+        elements.push(<h3 key={i} className="font-bold text-foreground mt-4 mb-2 text-base border-b border-border pb-1">{formatInline(line.slice(3))}</h3>);
         continue;
       }
       if (line.startsWith("# ")) {
-        elements.push(<h2 key={i} className="font-bold text-white mt-4 mb-2 text-lg">{formatInline(line.slice(2))}</h2>);
+        elements.push(<h2 key={i} className="font-bold text-foreground mt-4 mb-2 text-lg">{formatInline(line.slice(2))}</h2>);
         continue;
       }
 
       // Horizontal rule
       if (line.trim() === "---" || line.trim() === "***") {
-        elements.push(<hr key={i} className="border-white/10 my-3" />);
+        elements.push(<hr key={i} className="border-border my-3" />);
         continue;
       }
 
@@ -219,7 +219,7 @@ export default function ChatMessage({ role, content, onAction, isLatest, toolCal
       const boldMatch = remaining.match(/\*\*(.+?)\*\*/);
       if (boldMatch && boldMatch.index !== undefined) {
         if (boldMatch.index > 0) parts.push(remaining.slice(0, boldMatch.index));
-        parts.push(<strong key={key++} className="font-semibold text-white">{boldMatch[1]}</strong>);
+        parts.push(<strong key={key++} className="font-semibold text-foreground">{boldMatch[1]}</strong>);
         remaining = remaining.slice(boldMatch.index + boldMatch[0].length);
         continue;
       }
@@ -228,7 +228,7 @@ export default function ChatMessage({ role, content, onAction, isLatest, toolCal
       const codeMatch = remaining.match(/`(.+?)`/);
       if (codeMatch && codeMatch.index !== undefined) {
         if (codeMatch.index > 0) parts.push(remaining.slice(0, codeMatch.index));
-        parts.push(<code key={key++} className="bg-white/10 px-1.5 py-0.5 rounded text-xs font-mono text-purple-300">{codeMatch[1]}</code>);
+        parts.push(<code key={key++} className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono text-purple-300">{codeMatch[1]}</code>);
         remaining = remaining.slice(codeMatch.index + codeMatch[0].length);
         continue;
       }
@@ -237,7 +237,7 @@ export default function ChatMessage({ role, content, onAction, isLatest, toolCal
       const italicMatch = remaining.match(/\*(.+?)\*/);
       if (italicMatch && italicMatch.index !== undefined) {
         if (italicMatch.index > 0) parts.push(remaining.slice(0, italicMatch.index));
-        parts.push(<em key={key++} className="italic text-white/70">{italicMatch[1]}</em>);
+        parts.push(<em key={key++} className="italic text-foreground/80">{italicMatch[1]}</em>);
         remaining = remaining.slice(italicMatch.index + italicMatch[0].length);
         continue;
       }
@@ -253,7 +253,7 @@ export default function ChatMessage({ role, content, onAction, isLatest, toolCal
     <div className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
       <div className={`max-w-[85%] space-y-0 ${
         isUser
-          ? "bg-blue-500/15 rounded-2xl rounded-br-md px-4 py-3 text-sm leading-relaxed text-white border border-blue-500/20"
+          ? "bg-blue-500/15 rounded-2xl rounded-br-md px-4 py-3 text-sm leading-relaxed text-foreground border border-blue-500/20"
           : "space-y-3"
       }`}>
         {isUser ? (
@@ -264,7 +264,7 @@ export default function ChatMessage({ role, content, onAction, isLatest, toolCal
             {toolCalls && toolCalls.length > 0 && (
               <button
                 onClick={() => setToolsExpanded((e) => !e)}
-                className="flex items-center gap-2 text-[11px] text-white/30 hover:text-white/50 transition-colors py-1 px-1 group"
+                className="flex items-center gap-2 text-[11px] text-muted-foreground/70 hover:text-muted-foreground transition-colors py-1 px-1 group"
               >
                 <svg
                   className={`w-3 h-3 transition-transform duration-200 ${toolsExpanded ? "rotate-180" : ""}`}
@@ -279,7 +279,7 @@ export default function ChatMessage({ role, content, onAction, isLatest, toolCal
               </button>
             )}
             {toolsExpanded && toolCalls && (
-              <div className="bg-white/[0.03] rounded-xl border border-white/[0.06] px-3 py-2 space-y-1 mb-1">
+              <div className="bg-muted/50 rounded-xl border border-white/[0.06] px-3 py-2 space-y-1 mb-1">
                 {toolCalls.map((tc, i) => (
                   <div key={i} className="flex items-center gap-2 text-[11px]">
                     {tc.success ? (
@@ -291,12 +291,12 @@ export default function ChatMessage({ role, content, onAction, isLatest, toolCal
                         <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                       </svg>
                     )}
-                    <span className="text-white/40">{tc.summary || tc.displayName}</span>
+                    <span className="text-muted-foreground">{tc.summary || tc.displayName}</span>
                   </div>
                 ))}
               </div>
             )}
-            <div className="bg-white/[0.05] rounded-2xl rounded-bl-md px-4 py-3 text-sm leading-relaxed text-white/90 border border-white/[0.08]">
+            <div className="bg-white/[0.05] rounded-2xl rounded-bl-md px-4 py-3 text-sm leading-relaxed text-foreground/90 border border-white/[0.08]">
               {renderContent(body)}
             </div>
             {actions.length > 0 && isLatest && onAction && (

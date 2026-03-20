@@ -71,8 +71,8 @@ function StatCard({ label, value, active, onClick }: { label: string; value: num
       onClick={onClick}
       className={`flex flex-col items-center px-4 py-2.5 rounded-xl border transition-all min-w-[80px] ${
         active
-          ? "bg-white/[0.08] border-white/20 text-white"
-          : "bg-white/[0.03] border-white/5 text-white/40 hover:bg-white/[0.05] hover:border-white/10"
+          ? "bg-white/[0.08] border-border text-foreground"
+          : "bg-muted/50 border-border/50 text-muted-foreground hover:bg-white/[0.05] hover:border-border"
       }`}
     >
       <span className="text-lg font-semibold">{value}</span>
@@ -247,7 +247,7 @@ export default function AdminSessionsPage() {
   };
 
   const selectCls =
-    "bg-white/[0.05] border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-white/20 transition-colors appearance-none cursor-pointer";
+    "bg-white/[0.05] border border-border rounded-lg px-3 py-2 text-sm text-foreground outline-none focus:border-border transition-colors appearance-none cursor-pointer";
 
   return (
     <div className="px-4 md:px-6 py-6">
@@ -267,7 +267,7 @@ export default function AdminSessionsPage() {
           placeholder="Search by name or company..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full sm:w-auto bg-white/[0.05] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/30 outline-none focus:border-white/20 transition-colors"
+          className="w-full sm:w-auto bg-white/[0.05] border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder-white/30 outline-none focus:border-border transition-colors"
         />
 
         <div className="flex gap-2 sm:gap-3 flex-wrap">
@@ -307,21 +307,21 @@ export default function AdminSessionsPage() {
         <div className="sm:ml-auto relative" ref={exportRef}>
           <button
             onClick={() => setExportOpen(!exportOpen)}
-            className="w-full sm:w-auto bg-white/[0.05] border border-white/10 rounded-lg px-4 py-2 text-sm text-white hover:bg-white/[0.08] transition-colors"
+            className="w-full sm:w-auto bg-white/[0.05] border border-border rounded-lg px-4 py-2 text-sm text-foreground hover:bg-white/[0.08] transition-colors"
           >
             Export
           </button>
           {exportOpen && (
-            <div className="absolute right-0 sm:right-0 left-0 sm:left-auto top-full mt-1 bg-[#12121a] border border-white/10 rounded-lg overflow-hidden shadow-xl z-20 sm:min-w-[120px]">
+            <div className="absolute right-0 sm:right-0 left-0 sm:left-auto top-full mt-1 bg-[#12121a] border border-border rounded-lg overflow-hidden shadow-xl z-20 sm:min-w-[120px]">
               <button
                 onClick={() => handleExport("csv")}
-                className="block w-full text-left px-4 py-2 text-sm text-white hover:bg-white/[0.06] transition-colors"
+                className="block w-full text-left px-4 py-2 text-sm text-foreground hover:bg-white/[0.06] transition-colors"
               >
                 CSV
               </button>
               <button
                 onClick={() => handleExport("json")}
-                className="block w-full text-left px-4 py-2 text-sm text-white hover:bg-white/[0.06] transition-colors"
+                className="block w-full text-left px-4 py-2 text-sm text-foreground hover:bg-white/[0.06] transition-colors"
               >
                 JSON
               </button>
@@ -339,33 +339,33 @@ export default function AdminSessionsPage() {
       )}
 
       {/* Sessions Table */}
-      <div className="bg-white/[0.03] rounded-2xl border border-white/10 overflow-hidden">
+      <div className="bg-muted/50 rounded-2xl border border-border overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="bg-white/[0.02]">
-                <th className="text-left text-xs text-white/40 uppercase tracking-wider px-4 py-3">
+                <th className="text-left text-xs text-muted-foreground uppercase tracking-wider px-4 py-3">
                   Name
                 </th>
-                <th className="hidden sm:table-cell text-left text-xs text-white/40 uppercase tracking-wider px-4 py-3">
+                <th className="hidden sm:table-cell text-left text-xs text-muted-foreground uppercase tracking-wider px-4 py-3">
                   Company
                 </th>
-                <th className="hidden lg:table-cell text-left text-xs text-white/40 uppercase tracking-wider px-4 py-3">
+                <th className="hidden lg:table-cell text-left text-xs text-muted-foreground uppercase tracking-wider px-4 py-3">
                   Assessment
                 </th>
-                <th className="text-left text-xs text-white/40 uppercase tracking-wider px-4 py-3">
+                <th className="text-left text-xs text-muted-foreground uppercase tracking-wider px-4 py-3">
                   Status
                 </th>
-                <th className="hidden sm:table-cell text-left text-xs text-white/40 uppercase tracking-wider px-4 py-3">
+                <th className="hidden sm:table-cell text-left text-xs text-muted-foreground uppercase tracking-wider px-4 py-3">
                   Responses
                 </th>
                 <th
-                  className="hidden sm:table-cell text-left text-xs text-white/40 uppercase tracking-wider px-4 py-3 cursor-pointer select-none hover:text-white/60 transition-colors"
+                  className="hidden sm:table-cell text-left text-xs text-muted-foreground uppercase tracking-wider px-4 py-3 cursor-pointer select-none hover:text-muted-foreground transition-colors"
                   onClick={() => setUseRelativeTime((v) => !v)}
                   title={useRelativeTime ? "Click for date/time" : "Click for relative time"}
                 >
                   {useRelativeTime ? "Activity" : "Date / Time"}
-                  <span className="ml-1 text-[10px] text-white/20">⇄</span>
+                  <span className="ml-1 text-[10px] text-muted-foreground/50">⇄</span>
                 </th>
                 {shiftHeld && (
                   <th className="text-left text-xs text-red-400/50 uppercase tracking-wider px-4 py-3 w-[80px]">
@@ -377,13 +377,13 @@ export default function AdminSessionsPage() {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={shiftHeld ? 7 : 6} className="text-center text-white/30 py-12">
+                  <td colSpan={shiftHeld ? 7 : 6} className="text-center text-muted-foreground/70 py-12">
                     Loading sessions...
                   </td>
                 </tr>
               ) : filteredSessions.length === 0 ? (
                 <tr>
-                  <td colSpan={shiftHeld ? 7 : 6} className="text-center text-white/30 py-12">
+                  <td colSpan={shiftHeld ? 7 : 6} className="text-center text-muted-foreground/70 py-12">
                     No sessions found
                   </td>
                 </tr>
@@ -392,29 +392,29 @@ export default function AdminSessionsPage() {
                   <tr
                     key={session.id}
                     onClick={() => handleRowClick(session.id)}
-                    className={`hover:bg-white/[0.04] cursor-pointer transition-colors border-t border-white/5 ${
+                    className={`hover:bg-white/[0.04] cursor-pointer transition-colors border-t border-border/50 ${
                       shiftHeld ? "hover:bg-red-500/[0.04]" : ""
                     }`}
                   >
-                    <td className="px-4 py-3 font-medium text-white">
+                    <td className="px-4 py-3 font-medium text-foreground">
                       {session.participantName}
-                      <div className="text-xs text-white/30 mt-0.5 sm:hidden">
+                      <div className="text-xs text-muted-foreground/70 mt-0.5 sm:hidden">
                         {session.participantCompany}
                       </div>
                     </td>
-                    <td className="hidden sm:table-cell px-4 py-3 text-white/50">
+                    <td className="hidden sm:table-cell px-4 py-3 text-muted-foreground">
                       {session.participantCompany}
                     </td>
-                    <td className="hidden lg:table-cell px-4 py-3 text-white/40 text-sm max-w-[200px] truncate">
+                    <td className="hidden lg:table-cell px-4 py-3 text-muted-foreground text-sm max-w-[200px] truncate">
                       {assessmentMap.get(session.assessmentTypeId) || session.assessmentTypeId}
                     </td>
                     <td className="px-4 py-3">
                       <StatusBadge status={session.status} />
                     </td>
-                    <td className="hidden sm:table-cell px-4 py-3 text-white/40">
+                    <td className="hidden sm:table-cell px-4 py-3 text-muted-foreground">
                       {session.responseCount}
                     </td>
-                    <td className="hidden sm:table-cell px-4 py-3 text-white/30 text-sm">
+                    <td className="hidden sm:table-cell px-4 py-3 text-muted-foreground/70 text-sm">
                       {formatTs(session.createdAt)}
                     </td>
                     {shiftHeld && (
@@ -436,7 +436,7 @@ export default function AdminSessionsPage() {
         </div>
 
         {/* Table footer with count + pagination */}
-        <div className="border-t border-white/5 px-4 py-2.5 flex items-center justify-between text-xs text-white/30">
+        <div className="border-t border-border/50 px-4 py-2.5 flex items-center justify-between text-xs text-muted-foreground/70">
           <span>
             {filteredSessions.length === sessions.length
               ? `${totalSessions > sessions.length ? `${sessions.length} of ${totalSessions}` : `${sessions.length}`} sessions`
@@ -447,17 +447,17 @@ export default function AdminSessionsPage() {
               <button
                 onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                 disabled={currentPage <= 1}
-                className="px-2.5 py-1 rounded-lg border border-white/10 text-white/40 hover:text-white/70 hover:bg-white/5 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                className="px-2.5 py-1 rounded-lg border border-border text-muted-foreground hover:text-foreground/80 hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
               >
                 Prev
               </button>
-              <span className="text-white/50">
+              <span className="text-muted-foreground">
                 Page {currentPage} of {Math.ceil(totalSessions / pageSize)}
               </span>
               <button
                 onClick={() => setCurrentPage((p) => Math.min(Math.ceil(totalSessions / pageSize), p + 1))}
                 disabled={currentPage >= Math.ceil(totalSessions / pageSize)}
-                className="px-2.5 py-1 rounded-lg border border-white/10 text-white/40 hover:text-white/70 hover:bg-white/5 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                className="px-2.5 py-1 rounded-lg border border-border text-muted-foreground hover:text-foreground/80 hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
               >
                 Next
               </button>
@@ -469,7 +469,7 @@ export default function AdminSessionsPage() {
 
       {/* Toast */}
       {toast && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-[#1a1a2e] border border-white/10 text-white px-5 py-2.5 rounded-xl shadow-2xl text-sm animate-fade-in">
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-[#1a1a2e] border border-border text-foreground px-5 py-2.5 rounded-xl shadow-2xl text-sm animate-fade-in">
           {toast}
         </div>
       )}

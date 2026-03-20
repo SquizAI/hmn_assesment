@@ -13,11 +13,11 @@ interface RiskSignalsProps {
 export default function RiskSignals({ redFlags, greenLights, loading }: RiskSignalsProps) {
   if (loading) {
     return (
-      <div className="bg-white/[0.03] rounded-2xl border border-white/10 p-6">
-        <div className="h-4 w-28 bg-white/5 rounded animate-pulse mb-4" />
+      <div className="bg-muted/50 rounded-2xl border border-border p-6">
+        <div className="h-4 w-28 bg-muted rounded animate-pulse mb-4" />
         <div className="space-y-3">
           {[...Array(4)].map((_, i) => (
-            <div key={i} className="h-8 bg-white/5 rounded animate-pulse" />
+            <div key={i} className="h-8 bg-muted rounded animate-pulse" />
           ))}
         </div>
       </div>
@@ -28,11 +28,11 @@ export default function RiskSignals({ redFlags, greenLights, loading }: RiskSign
 
   if (!hasData) {
     return (
-      <div className="bg-white/[0.03] rounded-2xl border border-white/10 p-6">
-        <h2 className="text-xs font-semibold text-white/60 uppercase tracking-wider mb-4">
+      <div className="bg-muted/50 rounded-2xl border border-border p-6">
+        <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-4">
           Risk Signals
         </h2>
-        <div className="h-32 flex items-center justify-center text-white/30 text-sm">
+        <div className="h-32 flex items-center justify-center text-muted-foreground/70 text-sm">
           No risk signals detected yet
         </div>
       </div>
@@ -44,8 +44,8 @@ export default function RiskSignals({ redFlags, greenLights, loading }: RiskSign
   const sortedLights = [...greenLights].sort((a, b) => b.frequency - a.frequency).slice(0, 6);
 
   return (
-    <div className="bg-white/[0.03] rounded-2xl border border-white/10 p-4 md:p-6">
-      <h2 className="text-xs font-semibold text-white/60 uppercase tracking-wider mb-3">
+    <div className="bg-muted/50 rounded-2xl border border-border p-4 md:p-6">
+      <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
         Risk Signals
       </h2>
 
@@ -66,7 +66,7 @@ export default function RiskSignals({ redFlags, greenLights, loading }: RiskSign
                   className="flex items-start gap-2 px-2.5 py-1.5 rounded-lg bg-red-500/[0.06] border border-red-500/10"
                 >
                   <span className="text-red-400/60 text-xs mt-0.5 flex-shrink-0">!!</span>
-                  <span className="text-xs text-white/60 leading-tight flex-1 line-clamp-2">
+                  <span className="text-xs text-muted-foreground leading-tight flex-1 line-clamp-2">
                     {flag.description}
                   </span>
                   {flag.frequency > 1 && (
@@ -96,7 +96,7 @@ export default function RiskSignals({ redFlags, greenLights, loading }: RiskSign
                   className="flex items-start gap-2 px-2.5 py-1.5 rounded-lg bg-emerald-500/[0.06] border border-emerald-500/10"
                 >
                   <span className="text-emerald-400/60 text-xs mt-0.5 flex-shrink-0">++</span>
-                  <span className="text-xs text-white/60 leading-tight flex-1 line-clamp-2">
+                  <span className="text-xs text-muted-foreground leading-tight flex-1 line-clamp-2">
                     {light.description}
                   </span>
                   {light.frequency > 1 && (

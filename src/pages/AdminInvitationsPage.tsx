@@ -131,7 +131,7 @@ function StatPill({
   colorClass: string;
 }) {
   return (
-    <div className="bg-white/[0.03] border border-white/10 rounded-xl px-4 py-3">
+    <div className="bg-muted/50 border border-border rounded-xl px-4 py-3">
       <p className={`text-xs uppercase tracking-wider ${colorClass}`}>
         {label}
       </p>
@@ -484,7 +484,7 @@ export default function AdminInvitationsPage() {
   if (loading) {
     return (
       <div className="px-4 md:px-6 py-6 flex items-center justify-center min-h-[500px]">
-        <span className="text-white/30 text-sm">Loading...</span>
+        <span className="text-muted-foreground/70 text-sm">Loading...</span>
       </div>
     );
   }
@@ -495,10 +495,10 @@ export default function AdminInvitationsPage() {
       {/* STATS ROW                                                          */}
       {/* ================================================================== */}
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 md:gap-3">
-        <StatPill label="Total" count={counts.total} colorClass="text-white/30" />
+        <StatPill label="Total" count={counts.total} colorClass="text-muted-foreground/70" />
         <StatPill label="Sent" count={counts.sent} colorClass="text-sky-400/60" />
         <StatPill label="Opened" count={counts.opened} colorClass="text-amber-400/60" />
-        <StatPill label="Started" count={counts.started} colorClass="text-indigo-400/60" />
+        <StatPill label="Started" count={counts.started} colorClass="text-primary/60" />
         <StatPill label="Completed" count={counts.completed} colorClass="text-green-400/60" />
       </div>
 
@@ -511,13 +511,13 @@ export default function AdminInvitationsPage() {
           placeholder="Search by name, email, or company..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="bg-white/[0.05] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/30 outline-none focus:border-white/20 transition-colors sm:w-64"
+          className="bg-white/[0.05] border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder-white/30 outline-none focus:border-border transition-colors sm:w-64"
         />
 
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
-          className="bg-white/[0.05] border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-white/20 transition-colors appearance-none cursor-pointer"
+          className="bg-white/[0.05] border border-border rounded-lg px-3 py-2 text-sm text-foreground outline-none focus:border-border transition-colors appearance-none cursor-pointer"
         >
           <option value="all">All Statuses</option>
           <option value="sent">Sent</option>
@@ -529,7 +529,7 @@ export default function AdminInvitationsPage() {
         <select
           value={assessmentFilter}
           onChange={(e) => setAssessmentFilter(e.target.value)}
-          className="bg-white/[0.05] border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-white/20 transition-colors appearance-none cursor-pointer"
+          className="bg-white/[0.05] border border-border rounded-lg px-3 py-2 text-sm text-foreground outline-none focus:border-border transition-colors appearance-none cursor-pointer"
         >
           <option value="all">All Assessments</option>
           {activeAssessments.map((a) => (
@@ -542,13 +542,13 @@ export default function AdminInvitationsPage() {
         <div className="sm:ml-auto flex items-center gap-2">
           <button
             onClick={() => setShowCsvModal(true)}
-            className="px-4 py-2 text-sm font-medium rounded-xl transition-all border border-white/15 text-white/60 hover:bg-white/[0.06] hover:text-white/80"
+            className="px-4 py-2 text-sm font-medium rounded-xl transition-all border border-white/15 text-muted-foreground hover:bg-white/[0.06] hover:text-foreground/90"
           >
             Bulk Import
           </button>
           <button
             onClick={openCreateModal}
-            className="px-4 py-2 text-sm font-medium rounded-xl transition-all bg-gradient-to-r from-purple-500/20 to-blue-500/20 border border-purple-500/20 text-purple-200 hover:from-purple-500/30 hover:to-blue-500/30 hover:text-white"
+            className="px-4 py-2 text-sm font-medium rounded-xl transition-all bg-gradient-to-r from-purple-500/20 to-blue-500/20 border border-purple-500/20 text-purple-200 hover:from-purple-500/30 hover:to-blue-500/30 hover:text-foreground"
           >
             New Invitation
           </button>
@@ -558,31 +558,31 @@ export default function AdminInvitationsPage() {
       {/* ================================================================== */}
       {/* INVITATIONS TABLE                                                  */}
       {/* ================================================================== */}
-      <div className="bg-white/[0.03] rounded-2xl border border-white/10 overflow-x-auto">
+      <div className="bg-muted/50 rounded-2xl border border-border overflow-x-auto">
         <table className="w-full min-w-0">
           <thead>
             <tr className="bg-white/[0.02]">
-              <th className="text-left text-xs text-white/40 uppercase tracking-wider px-3 md:px-4 py-3">
+              <th className="text-left text-xs text-muted-foreground uppercase tracking-wider px-3 md:px-4 py-3">
                 Participant
               </th>
-              <th className="text-left text-xs text-white/40 uppercase tracking-wider px-3 md:px-4 py-3 hidden sm:table-cell">
+              <th className="text-left text-xs text-muted-foreground uppercase tracking-wider px-3 md:px-4 py-3 hidden sm:table-cell">
                 Email
               </th>
-              <th className="text-left text-xs text-white/40 uppercase tracking-wider px-3 md:px-4 py-3 hidden md:table-cell">
+              <th className="text-left text-xs text-muted-foreground uppercase tracking-wider px-3 md:px-4 py-3 hidden md:table-cell">
                 Assessment
               </th>
-              <th className="text-left text-xs text-white/40 uppercase tracking-wider px-3 md:px-4 py-3">
+              <th className="text-left text-xs text-muted-foreground uppercase tracking-wider px-3 md:px-4 py-3">
                 Status
               </th>
               <th
-                className="text-left text-xs text-white/40 uppercase tracking-wider px-3 md:px-4 py-3 hidden sm:table-cell cursor-pointer select-none hover:text-white/60 transition-colors"
+                className="text-left text-xs text-muted-foreground uppercase tracking-wider px-3 md:px-4 py-3 hidden sm:table-cell cursor-pointer select-none hover:text-muted-foreground transition-colors"
                 onClick={() => setUseRelativeTime((v) => !v)}
                 title={useRelativeTime ? "Click for date/time" : "Click for relative time"}
               >
                 {useRelativeTime ? "Activity" : "Date / Time"}
-                <span className="ml-1 text-[10px] text-white/20">⇄</span>
+                <span className="ml-1 text-[10px] text-muted-foreground/50">⇄</span>
               </th>
-              <th className="text-left text-xs text-white/40 uppercase tracking-wider px-3 md:px-4 py-3">
+              <th className="text-left text-xs text-muted-foreground uppercase tracking-wider px-3 md:px-4 py-3">
                 Actions
               </th>
             </tr>
@@ -590,7 +590,7 @@ export default function AdminInvitationsPage() {
           <tbody>
             {filtered.length === 0 ? (
               <tr>
-                <td colSpan={3} className="text-center text-white/30 py-12">
+                <td colSpan={3} className="text-center text-muted-foreground/70 py-12">
                   {invitations.length === 0
                     ? "No invitations yet \u2014 create one to get started."
                     : "No invitations match your filters."}
@@ -600,26 +600,26 @@ export default function AdminInvitationsPage() {
               filtered.map((inv) => (
                 <tr
                   key={inv.id}
-                  className="hover:bg-white/[0.04] cursor-pointer transition-colors border-t border-white/5"
+                  className="hover:bg-white/[0.04] cursor-pointer transition-colors border-t border-border/50"
                 >
                   <td className="px-3 md:px-4 py-3">
-                    <div className="font-medium text-white text-sm">
+                    <div className="font-medium text-foreground text-sm">
                       {inv.participantName}
                     </div>
                     {inv.participantCompany && (
-                      <div className="text-xs text-white/30 mt-0.5">
+                      <div className="text-xs text-muted-foreground/70 mt-0.5">
                         {inv.participantCompany}
                       </div>
                     )}
                     {/* Show email on mobile under name */}
-                    <div className="text-xs text-white/30 mt-0.5 sm:hidden">
+                    <div className="text-xs text-muted-foreground/70 mt-0.5 sm:hidden">
                       {inv.participantEmail}
                     </div>
                   </td>
-                  <td className="px-3 md:px-4 py-3 text-white/50 text-sm hidden sm:table-cell">
+                  <td className="px-3 md:px-4 py-3 text-muted-foreground text-sm hidden sm:table-cell">
                     {inv.participantEmail}
                   </td>
-                  <td className="px-3 md:px-4 py-3 text-white/50 text-sm hidden md:table-cell">
+                  <td className="px-3 md:px-4 py-3 text-muted-foreground text-sm hidden md:table-cell">
                     {inv.assessmentName}
                   </td>
                   <td className="px-3 md:px-4 py-3">
@@ -631,29 +631,29 @@ export default function AdminInvitationsPage() {
                       return (
                         <>
                           <span className="text-white/25 text-[10px] uppercase mr-1">{label}</span>
-                          <span className="text-white/40">{formatTs(date)}</span>
-                          <div className="absolute z-40 bottom-full left-0 mb-1 hidden group-hover/ts:block bg-[#12121a] border border-white/10 rounded-lg px-3 py-2 shadow-xl min-w-[210px]">
+                          <span className="text-muted-foreground">{formatTs(date)}</span>
+                          <div className="absolute z-40 bottom-full left-0 mb-1 hidden group-hover/ts:block bg-[#12121a] border border-border rounded-lg px-3 py-2 shadow-xl min-w-[210px]">
                             <div className="text-xs space-y-1">
                               <div className="flex justify-between gap-4">
-                                <span className="text-white/40">Created</span>
-                                <span className="text-white/60">{formatTs(inv.createdAt)}</span>
+                                <span className="text-muted-foreground">Created</span>
+                                <span className="text-muted-foreground">{formatTs(inv.createdAt)}</span>
                               </div>
                               {inv.openedAt && (
                                 <div className="flex justify-between gap-4">
-                                  <span className="text-white/40">Opened</span>
-                                  <span className="text-white/60">{formatTs(inv.openedAt)}</span>
+                                  <span className="text-muted-foreground">Opened</span>
+                                  <span className="text-muted-foreground">{formatTs(inv.openedAt)}</span>
                                 </div>
                               )}
                               {inv.startedAt && (
                                 <div className="flex justify-between gap-4">
-                                  <span className="text-white/40">Started</span>
-                                  <span className="text-white/60">{formatTs(inv.startedAt)}</span>
+                                  <span className="text-muted-foreground">Started</span>
+                                  <span className="text-muted-foreground">{formatTs(inv.startedAt)}</span>
                                 </div>
                               )}
                               {inv.completedAt && (
                                 <div className="flex justify-between gap-4">
-                                  <span className="text-white/40">Completed</span>
-                                  <span className="text-white/60">{formatTs(inv.completedAt)}</span>
+                                  <span className="text-muted-foreground">Completed</span>
+                                  <span className="text-muted-foreground">{formatTs(inv.completedAt)}</span>
                                 </div>
                               )}
                             </div>
@@ -669,7 +669,7 @@ export default function AdminInvitationsPage() {
                           e.stopPropagation();
                           handleCopyLink(inv);
                         }}
-                        className="px-2 md:px-2.5 py-1 text-xs rounded-lg border transition-colors bg-white/[0.04] border-white/10 text-white/40 hover:bg-white/[0.08] hover:text-white/60"
+                        className="px-2 md:px-2.5 py-1 text-xs rounded-lg border transition-colors bg-white/[0.04] border-border text-muted-foreground hover:bg-white/[0.08] hover:text-muted-foreground"
                       >
                         {copiedId === inv.id ? "Copied!" : "Copy"}
                       </button>
@@ -709,12 +709,12 @@ export default function AdminInvitationsPage() {
         <ModalBackdrop onClose={() => setShowCreateModal(false)}>
           <form
             onSubmit={handleCreateSubmit}
-            className="bg-[#0e0e16] border border-white/10 rounded-2xl p-6 shadow-2xl max-h-[85vh] overflow-y-auto"
+            className="bg-[#0e0e16] border border-border rounded-2xl p-6 shadow-2xl max-h-[85vh] overflow-y-auto"
           >
-            <h2 className="text-lg font-semibold text-white/90 mb-1">
+            <h2 className="text-lg font-semibold text-foreground/90 mb-1">
               New Invitation
             </h2>
-            <p className="text-sm text-white/40 mb-5">
+            <p className="text-sm text-muted-foreground mb-5">
               Send an assessment invitation. The link will be copied to your
               clipboard on creation.
             </p>
@@ -726,14 +726,14 @@ export default function AdminInvitationsPage() {
             )}
 
             {/* Assessment — Rich Picker */}
-            <label className="block text-xs text-white/40 mb-1.5">
+            <label className="block text-xs text-muted-foreground mb-1.5">
               Assessment <span className="text-red-400">*</span>
             </label>
             <div className="relative mb-4">
               <button
                 type="button"
                 onClick={() => setShowAssessmentPicker(!showAssessmentPicker)}
-                className="w-full bg-white/[0.05] border border-white/10 rounded-lg px-3 py-2 text-sm text-left text-white outline-none focus:border-white/20 transition-colors cursor-pointer"
+                className="w-full bg-white/[0.05] border border-border rounded-lg px-3 py-2 text-sm text-left text-foreground outline-none focus:border-border transition-colors cursor-pointer"
               >
                 {form.assessmentId ? (
                   (() => {
@@ -741,21 +741,21 @@ export default function AdminInvitationsPage() {
                     return sel ? (
                       <span className="flex items-center gap-2">
                         <span>{sel.icon || "\u{1F4CB}"}</span>
-                        <span className="text-white/90 truncate">{sel.name}</span>
-                        <span className="text-white/30 text-xs ml-auto flex-shrink-0">
+                        <span className="text-foreground/90 truncate">{sel.name}</span>
+                        <span className="text-muted-foreground/70 text-xs ml-auto flex-shrink-0">
                           {sel.questionCount}q &middot; {sel.estimatedMinutes}min
                         </span>
                       </span>
-                    ) : <span className="text-white/30">Select an assessment...</span>;
+                    ) : <span className="text-muted-foreground/70">Select an assessment...</span>;
                   })()
                 ) : (
-                  <span className="text-white/30">Select an assessment...</span>
+                  <span className="text-muted-foreground/70">Select an assessment...</span>
                 )}
               </button>
               {showAssessmentPicker && (
                 <>
                   <div className="fixed inset-0 z-20" onClick={() => setShowAssessmentPicker(false)} />
-                  <div className="absolute z-30 top-full mt-1 left-0 right-0 bg-[#12121a] border border-white/10 rounded-xl shadow-2xl overflow-hidden max-h-64 overflow-y-auto">
+                  <div className="absolute z-30 top-full mt-1 left-0 right-0 bg-[#12121a] border border-border rounded-xl shadow-2xl overflow-hidden max-h-64 overflow-y-auto">
                     {activeAssessments.map((a) => (
                       <button
                         key={a.id}
@@ -764,7 +764,7 @@ export default function AdminInvitationsPage() {
                           updateForm("assessmentId", a.id);
                           setShowAssessmentPicker(false);
                         }}
-                        className={`w-full text-left px-3 py-3 flex items-start gap-3 transition-colors border-b border-white/5 last:border-b-0 ${
+                        className={`w-full text-left px-3 py-3 flex items-start gap-3 transition-colors border-b border-border/50 last:border-b-0 ${
                           form.assessmentId === a.id
                             ? "bg-white/[0.08]"
                             : "hover:bg-white/[0.04]"
@@ -772,8 +772,8 @@ export default function AdminInvitationsPage() {
                       >
                         <span className="text-xl leading-none mt-0.5">{a.icon || "\u{1F4CB}"}</span>
                         <div className="flex-1 min-w-0">
-                          <div className="text-sm font-medium text-white/90">{a.name}</div>
-                          <div className="text-xs text-white/30 line-clamp-1 mt-0.5">{a.description}</div>
+                          <div className="text-sm font-medium text-foreground/90">{a.name}</div>
+                          <div className="text-xs text-muted-foreground/70 line-clamp-1 mt-0.5">{a.description}</div>
                           <div className="flex items-center gap-3 mt-1 text-xs text-white/25">
                             <span>{a.questionCount} questions</span>
                             <span>{a.estimatedMinutes} min</span>
@@ -790,7 +790,7 @@ export default function AdminInvitationsPage() {
             </div>
 
             {/* Name */}
-            <label className="block text-xs text-white/40 mb-1.5">
+            <label className="block text-xs text-muted-foreground mb-1.5">
               Name <span className="text-red-400">*</span>
             </label>
             <input
@@ -798,11 +798,11 @@ export default function AdminInvitationsPage() {
               value={form.name}
               onChange={(e) => updateForm("name", e.target.value)}
               placeholder="Participant name"
-              className="w-full bg-white/[0.05] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/20 outline-none focus:border-white/20 transition-colors mb-4"
+              className="w-full bg-white/[0.05] border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder-white/20 outline-none focus:border-border transition-colors mb-4"
             />
 
             {/* Email — with auto-suggest */}
-            <label className="block text-xs text-white/40 mb-1.5">
+            <label className="block text-xs text-muted-foreground mb-1.5">
               Email <span className="text-red-400">*</span>
             </label>
             <div className="relative mb-4">
@@ -817,15 +817,15 @@ export default function AdminInvitationsPage() {
                   }, 150);
                 }}
                 placeholder="participant@company.com"
-                className="w-full bg-white/[0.05] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/20 outline-none focus:border-white/20 transition-colors"
+                className="w-full bg-white/[0.05] border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder-white/20 outline-none focus:border-border transition-colors"
               />
               {enriching && (
                 <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                  <div className="animate-spin w-4 h-4 border-2 border-white/20 border-t-purple-400 rounded-full" />
+                  <div className="animate-spin w-4 h-4 border-2 border-border border-t-purple-400 rounded-full" />
                 </div>
               )}
               {showEmailSuggestions && emailSuggestions.length > 0 && (
-                <div className="absolute z-30 top-full mt-1 left-0 right-0 bg-[#12121a] border border-white/10 rounded-lg shadow-xl overflow-hidden">
+                <div className="absolute z-30 top-full mt-1 left-0 right-0 bg-[#12121a] border border-border rounded-lg shadow-xl overflow-hidden">
                   {emailSuggestions.map((email) => {
                     const data = emailLookup.get(email);
                     return (
@@ -836,9 +836,9 @@ export default function AdminInvitationsPage() {
                           setForm((prev) => ({ ...prev, email }));
                           autoFillFromEmail(email);
                         }}
-                        className="w-full text-left px-3 py-2 text-sm hover:bg-white/[0.06] transition-colors border-b border-white/5 last:border-b-0"
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-white/[0.06] transition-colors border-b border-border/50 last:border-b-0"
                       >
-                        <span className="text-white/70">{email}</span>
+                        <span className="text-foreground/80">{email}</span>
                         {data && (
                           <span className="text-white/25 text-xs ml-2">
                             {data.name}{data.company ? ` \u2014 ${data.company}` : ""}
@@ -852,7 +852,7 @@ export default function AdminInvitationsPage() {
             </div>
 
             {/* Company */}
-            <label className="block text-xs text-white/40 mb-1.5">
+            <label className="block text-xs text-muted-foreground mb-1.5">
               Company
             </label>
             <input
@@ -860,13 +860,13 @@ export default function AdminInvitationsPage() {
               value={form.company}
               onChange={(e) => updateForm("company", e.target.value)}
               placeholder="Company name"
-              className="w-full bg-white/[0.05] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/20 outline-none focus:border-white/20 transition-colors mb-4"
+              className="w-full bg-white/[0.05] border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder-white/20 outline-none focus:border-border transition-colors mb-4"
             />
 
             {/* Role + Industry side by side */}
             <div className="grid grid-cols-2 gap-3 mb-4">
               <div>
-                <label className="block text-xs text-white/40 mb-1.5">
+                <label className="block text-xs text-muted-foreground mb-1.5">
                   Role
                 </label>
                 <input
@@ -874,11 +874,11 @@ export default function AdminInvitationsPage() {
                   value={form.role}
                   onChange={(e) => updateForm("role", e.target.value)}
                   placeholder="e.g. VP Engineering"
-                  className="w-full bg-white/[0.05] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/20 outline-none focus:border-white/20 transition-colors"
+                  className="w-full bg-white/[0.05] border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder-white/20 outline-none focus:border-border transition-colors"
                 />
               </div>
               <div>
-                <label className="block text-xs text-white/40 mb-1.5">
+                <label className="block text-xs text-muted-foreground mb-1.5">
                   Industry
                 </label>
                 <input
@@ -886,13 +886,13 @@ export default function AdminInvitationsPage() {
                   value={form.industry}
                   onChange={(e) => updateForm("industry", e.target.value)}
                   placeholder="e.g. SaaS"
-                  className="w-full bg-white/[0.05] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/20 outline-none focus:border-white/20 transition-colors"
+                  className="w-full bg-white/[0.05] border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder-white/20 outline-none focus:border-border transition-colors"
                 />
               </div>
             </div>
 
             {/* Team Size */}
-            <label className="block text-xs text-white/40 mb-1.5">
+            <label className="block text-xs text-muted-foreground mb-1.5">
               Team Size
             </label>
             <input
@@ -900,11 +900,11 @@ export default function AdminInvitationsPage() {
               value={form.teamSize}
               onChange={(e) => updateForm("teamSize", e.target.value)}
               placeholder="e.g. 50-100"
-              className="w-full bg-white/[0.05] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/20 outline-none focus:border-white/20 transition-colors mb-4"
+              className="w-full bg-white/[0.05] border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder-white/20 outline-none focus:border-border transition-colors mb-4"
             />
 
             {/* Note */}
-            <label className="block text-xs text-white/40 mb-1.5">
+            <label className="block text-xs text-muted-foreground mb-1.5">
               Note
             </label>
             <textarea
@@ -912,21 +912,21 @@ export default function AdminInvitationsPage() {
               onChange={(e) => updateForm("note", e.target.value)}
               placeholder="Optional note for this invitation..."
               rows={3}
-              className="w-full bg-white/[0.05] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/20 outline-none focus:border-white/20 transition-colors mb-6 resize-none"
+              className="w-full bg-white/[0.05] border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder-white/20 outline-none focus:border-border transition-colors mb-6 resize-none"
             />
 
             {/* Email toggle */}
             {emailEnabled && (
-              <label className="flex items-center gap-2.5 mb-6 px-3 py-2.5 rounded-xl bg-white/[0.03] border border-white/5 cursor-pointer">
+              <label className="flex items-center gap-2.5 mb-6 px-3 py-2.5 rounded-xl bg-muted/50 border border-border/50 cursor-pointer">
                 <input
                   type="checkbox"
                   checked={sendEmailOnCreate}
                   onChange={(e) => setSendEmailOnCreate(e.target.checked)}
-                  className="w-4 h-4 rounded border-white/20 bg-white/5 text-purple-500 focus:ring-purple-500/30"
+                  className="w-4 h-4 rounded border-border bg-muted text-purple-500 focus:ring-purple-500/30"
                 />
                 <div>
-                  <span className="text-sm text-white/70">Send invitation email</span>
-                  <p className="text-xs text-white/30">The participant will receive an email with their unique link</p>
+                  <span className="text-sm text-foreground/80">Send invitation email</span>
+                  <p className="text-xs text-muted-foreground/70">The participant will receive an email with their unique link</p>
                 </div>
               </label>
             )}
@@ -936,7 +936,7 @@ export default function AdminInvitationsPage() {
               <button
                 type="button"
                 onClick={() => setShowCreateModal(false)}
-                className="px-4 py-2 text-sm rounded-xl border border-white/10 text-white/50 hover:bg-white/[0.04] transition-colors"
+                className="px-4 py-2 text-sm rounded-xl border border-border text-muted-foreground hover:bg-white/[0.04] transition-colors"
               >
                 Cancel
               </button>
@@ -945,8 +945,8 @@ export default function AdminInvitationsPage() {
                 disabled={creating}
                 className={`px-5 py-2 text-sm font-medium rounded-xl border transition-all ${
                   creating
-                    ? "bg-white/[0.04] border-white/10 text-white/25 cursor-not-allowed"
-                    : "bg-white/[0.10] border-white/15 text-white hover:bg-white/[0.15]"
+                    ? "bg-white/[0.04] border-border text-white/25 cursor-not-allowed"
+                    : "bg-white/[0.10] border-white/15 text-foreground hover:bg-white/[0.15]"
                 }`}
               >
                 {creating ? "Creating..." : sendEmailOnCreate ? "Create & Send Email" : "Create & Copy Link"}
@@ -961,11 +961,11 @@ export default function AdminInvitationsPage() {
       {/* ================================================================== */}
       {deleteTargetId && (
         <ModalBackdrop onClose={() => setDeleteTargetId(null)}>
-          <div className="bg-[#0e0e16] border border-white/10 rounded-2xl p-6 shadow-2xl">
-            <h2 className="text-lg font-semibold text-white/90 mb-1">
+          <div className="bg-[#0e0e16] border border-border rounded-2xl p-6 shadow-2xl">
+            <h2 className="text-lg font-semibold text-foreground/90 mb-1">
               Delete Invitation
             </h2>
-            <p className="text-sm text-white/40 mb-5">
+            <p className="text-sm text-muted-foreground mb-5">
               Are you sure you want to delete this invitation? This action
               cannot be undone.
             </p>
@@ -973,7 +973,7 @@ export default function AdminInvitationsPage() {
               <button
                 type="button"
                 onClick={() => setDeleteTargetId(null)}
-                className="px-4 py-2 text-sm rounded-xl border border-white/10 text-white/50 hover:bg-white/[0.04] transition-colors"
+                className="px-4 py-2 text-sm rounded-xl border border-border text-muted-foreground hover:bg-white/[0.04] transition-colors"
               >
                 Cancel
               </button>

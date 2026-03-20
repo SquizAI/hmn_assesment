@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { API_BASE } from "../lib/api";
+import { lookupInvitation, fetchSessionPublic, createSession, lookupSessionsByEmail } from "../lib/api";
 import Button from "../components/ui/Button";
+import { ThemeToggle } from "../components/ui/ThemeToggle";
 
 export default function HomePage() {
   const navigate = useNavigate();
@@ -42,11 +43,7 @@ export default function HomePage() {
     setInviteToken(token);
     setInviteLoading(true);
 
-    fetch(`${API_BASE}/api/invitations/lookup?token=${encodeURIComponent(token)}`)
-      .then((r) => {
-        if (!r.ok) throw new Error("Invalid invitation");
-        return r.json();
-      })
+    lookupInvitation(token)
       .then(async (data) => {
         const p = data.invitation.participant;
         setName(p.name || "");
@@ -64,11 +61,8 @@ export default function HomePage() {
         if (data.invitation.sessionId) {
           // Auto-resume: redirect to the existing session instead of blocking
           try {
-            const sessionRes = await fetch(
-              `${API_BASE}/api/sessions/${data.invitation.sessionId}`
-            );
-            if (sessionRes.ok) {
-              const sessionData = await sessionRes.json();
+            const sessionData = await fetchSessionPublic(data.invitation.sessionId);
+            {
               const s = sessionData.session;
               if (s) {
                 if (s.status === "analyzed" || s.status === "completed") {
@@ -99,16 +93,11 @@ export default function HomePage() {
     if (!name || !company || !email || !inviteToken) return;
     setIsCreating(true);
     try {
-      const res = await fetch(`${API_BASE}/api/sessions`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          participant: { name, role, company, industry, teamSize, email },
-          assessmentTypeId: assessmentId || "ai-readiness",
-          inviteToken,
-        }),
-      });
-      const data = await res.json();
+      const data = await createSession(
+        { name, role, company, industry, teamSize, email },
+        assessmentId || "ai-readiness",
+        inviteToken,
+      );
       if (data.session?.id) navigate(`/research/${data.session.id}`);
     } catch (err) {
       console.error(err);
@@ -123,8 +112,7 @@ export default function HomePage() {
     setSignInError("");
     setSignInSessions(null);
     try {
-      const res = await fetch(`${API_BASE}/api/sessions/lookup?email=${encodeURIComponent(signInEmail)}`);
-      const data = await res.json();
+      const data = await lookupSessionsByEmail(signInEmail);
       if (data.sessions?.length > 0) {
         setSignInSessions(data.sessions);
       } else {
@@ -169,22 +157,25 @@ export default function HomePage() {
   // ─── Render ────────────────────────────────────────────────
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#0a0a0f]">
+    <div className="min-h-screen flex flex-col bg-background">
       {/* Header */}
-      <header className="border-b border-white/5 px-4 sm:px-6 py-4">
+      <header className="border-b border-border/50 px-4 sm:px-6 py-4">
         <div className="max-w-5xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             <img src="/hmn_logo.png" alt="HMN" className="h-8 w-auto" />
-            <span className="font-semibold text-white/90">Cascade</span>
+            <span className="font-semibold text-foreground/90">Cascade</span>
           </div>
-          {!inviteToken && !showSignIn && (
-            <button
-              onClick={() => setShowSignIn(true)}
-              className="text-white/30 hover:text-white/50 text-sm transition-colors"
-            >
-              Continue Assessment
-            </button>
-          )}
+          <div className="flex items-center gap-4">
+            <ThemeToggle />
+            {!inviteToken && !showSignIn && (
+              <button
+                onClick={() => setShowSignIn(true)}
+                className="text-muted-foreground/70 hover:text-muted-foreground text-sm transition-colors"
+              >
+                Continue Assessment
+              </button>
+            )}
+          </div>
         </div>
       </header>
 
@@ -192,16 +183,16 @@ export default function HomePage() {
         {/* ── Loading invite ── */}
         {inviteLoading ? (
           <div className="w-full max-w-md text-center space-y-4">
-            <div className="animate-spin w-8 h-8 border-2 border-white/20 border-t-white/60 rounded-full mx-auto" />
-            <p className="text-white/40 text-sm">Loading your invitation...</p>
+            <div className="animate-spin w-8 h-8 border-2 border-border border-t-white/60 rounded-full mx-auto" />
+            <p className="text-muted-foreground text-sm">Loading your invitation...</p>
           </div>
 
         /* ── Invalid invite ── */
         ) : inviteError && inviteError !== "already_used" ? (
           <div className="w-full max-w-md text-center space-y-6">
             <div className="space-y-2">
-              <h2 className="text-2xl font-semibold text-white">Invitation Not Found</h2>
-              <p className="text-white/40 text-sm">{inviteError}</p>
+              <h2 className="text-2xl font-semibold text-foreground">Invitation Not Found</h2>
+              <p className="text-muted-foreground text-sm">{inviteError}</p>
             </div>
             <Button variant="ghost" onClick={() => { setInviteError(""); setInviteToken(null); }}>
               Return Home
@@ -212,8 +203,8 @@ export default function HomePage() {
         ) : inviteError === "already_used" ? (
           <div className="w-full max-w-md text-center space-y-6">
             <div className="space-y-2">
-              <h2 className="text-2xl font-semibold text-white">Invitation Already Used</h2>
-              <p className="text-white/40 text-sm">This invitation has already been used to start an assessment.</p>
+              <h2 className="text-2xl font-semibold text-foreground">Invitation Already Used</h2>
+              <p className="text-muted-foreground text-sm">This invitation has already been used to start an assessment.</p>
             </div>
             <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 justify-center">
               <Button variant="ghost" onClick={() => { setInviteError(""); setInviteToken(null); }}>
@@ -229,13 +220,13 @@ export default function HomePage() {
         ) : showSignIn ? (
           <div className="w-full max-w-md space-y-8">
             <div className="text-center space-y-2">
-              <h2 className="text-2xl font-semibold text-white">Welcome back</h2>
-              <p className="text-white/30 text-sm">Enter your email to find your assessment.</p>
+              <h2 className="text-2xl font-semibold text-foreground">Welcome back</h2>
+              <p className="text-muted-foreground/70 text-sm">Enter your email to find your assessment.</p>
             </div>
             {!signInSessions ? (
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm text-white/50 mb-1.5">Business Email</label>
+                  <label className="block text-sm text-muted-foreground mb-1.5">Business Email</label>
                   <input
                     type="email"
                     value={signInEmail}
@@ -243,7 +234,7 @@ export default function HomePage() {
                     onKeyDown={(e) => e.key === "Enter" && handleSignIn()}
                     placeholder="you@company.com"
                     autoFocus
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/20 focus:outline-none focus:border-white/30 transition-colors"
+                    className="w-full bg-muted border border-border rounded-xl px-4 py-3 text-foreground placeholder-white/20 focus:outline-none focus:border-white/30 transition-colors"
                   />
                 </div>
                 {signInError && <p className="text-yellow-400/80 text-sm text-center">{signInError}</p>}
@@ -254,31 +245,31 @@ export default function HomePage() {
               </div>
             ) : (
               <div className="space-y-4">
-                <p className="text-white/40 text-sm text-center">
-                  Found {signInSessions.length} assessment{signInSessions.length !== 1 ? "s" : ""} for <span className="text-white/70">{signInEmail}</span>
+                <p className="text-muted-foreground text-sm text-center">
+                  Found {signInSessions.length} assessment{signInSessions.length !== 1 ? "s" : ""} for <span className="text-foreground/80">{signInEmail}</span>
                 </p>
                 <div className="space-y-2">
                   {signInSessions.map((s) => (
                     <button
                       key={s.id}
                       onClick={() => handleResumeSession(s)}
-                      className="w-full text-left bg-white/[0.03] border border-white/10 rounded-xl p-4 hover:bg-white/[0.06] hover:border-white/20 transition-all"
+                      className="w-full text-left bg-muted/50 border border-border rounded-xl p-4 hover:bg-white/[0.06] hover:border-border transition-all"
                     >
                       <div className="flex items-center justify-between mb-1">
-                        <span className="text-white font-medium">{s.participantName}</span>
-                        <span className={`text-xs font-medium ${STATUS_COLORS[s.status] || "text-white/40"}`}>
+                        <span className="text-foreground font-medium">{s.participantName}</span>
+                        <span className={`text-xs font-medium ${STATUS_COLORS[s.status] || "text-muted-foreground"}`}>
                           {STATUS_LABELS[s.status] || s.status}
                         </span>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className="text-xs text-white/30">{s.participantCompany} — {formatDate(s.createdAt)}</span>
+                        <span className="text-xs text-muted-foreground/70">{s.participantCompany} — {formatDate(s.createdAt)}</span>
                         {s.score != null && (
                           <span className={`text-xs font-semibold ${s.score >= 70 ? "text-green-400" : s.score >= 45 ? "text-yellow-400" : "text-red-400"}`}>
                             {s.score}/100
                           </span>
                         )}
                       </div>
-                      <div className="text-xs text-white/20 mt-1">
+                      <div className="text-xs text-muted-foreground/50 mt-1">
                         {s.status === "analyzed" ? "View your results" : s.status === "completed" ? "View analysis" : "Continue where you left off"}
                       </div>
                     </button>
@@ -295,11 +286,11 @@ export default function HomePage() {
         ) : showForm && inviteToken ? (
           <div className="w-full max-w-md space-y-6 sm:space-y-8">
             <div className="text-center space-y-2">
-              <h2 className="text-2xl font-semibold text-white">You've been invited</h2>
+              <h2 className="text-2xl font-semibold text-foreground">You've been invited</h2>
               {assessmentName && (
-                <p className="text-white/40 text-sm">{assessmentName}</p>
+                <p className="text-muted-foreground text-sm">{assessmentName}</p>
               )}
-              <p className="text-white/30 text-xs">Please confirm your details and begin.</p>
+              <p className="text-muted-foreground/70 text-xs">Please confirm your details and begin.</p>
             </div>
             <div className="space-y-4">
               {([
@@ -311,7 +302,7 @@ export default function HomePage() {
                 { label: "Business Email", value: email, set: setEmail, ph: "you@company.com", req: true },
               ] as const).map((f) => (
                 <div key={f.label}>
-                  <label className="block text-sm text-white/50 mb-1.5">
+                  <label className="block text-sm text-muted-foreground mb-1.5">
                     {f.label} {"req" in f && f.req && <span className="text-red-400">*</span>}
                   </label>
                   <input
@@ -319,7 +310,7 @@ export default function HomePage() {
                     value={f.value}
                     onChange={(e) => f.set(e.target.value)}
                     placeholder={f.ph}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/20 focus:outline-none focus:border-white/30 transition-colors"
+                    className="w-full bg-muted border border-border rounded-xl px-4 py-3 text-foreground placeholder-white/20 focus:outline-none focus:border-white/30 transition-colors"
                   />
                 </div>
               ))}
@@ -348,21 +339,21 @@ export default function HomePage() {
                     Cascade Assessments
                   </span>
                 </h1>
-                <p className="text-base sm:text-lg text-white/40 max-w-md mx-auto leading-relaxed">
+                <p className="text-base sm:text-lg text-muted-foreground max-w-md mx-auto leading-relaxed">
                   AI-powered diagnostic assessments for organizations navigating the future of work.
                 </p>
               </div>
             </div>
 
-            <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-6 sm:p-8 max-w-sm mx-auto">
+            <div className="bg-muted/50 border border-border rounded-2xl p-6 sm:p-8 max-w-sm mx-auto">
               <div className="space-y-3">
-                <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center mx-auto">
-                  <svg className="w-5 h-5 text-white/40" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <div className="w-10 h-10 rounded-xl bg-muted border border-border flex items-center justify-center mx-auto">
+                  <svg className="w-5 h-5 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
                   </svg>
                 </div>
-                <h3 className="text-sm font-medium text-white/70">Invitation Required</h3>
-                <p className="text-xs text-white/30 leading-relaxed">
+                <h3 className="text-sm font-medium text-foreground/80">Invitation Required</h3>
+                <p className="text-xs text-muted-foreground/70 leading-relaxed">
                   Assessments are available by invitation only. Check your email for an invitation link from your organization.
                 </p>
               </div>
@@ -370,7 +361,7 @@ export default function HomePage() {
 
             <button
               onClick={() => setShowSignIn(true)}
-              className="text-white/30 hover:text-white/50 text-sm transition-colors"
+              className="text-muted-foreground/70 hover:text-muted-foreground text-sm transition-colors"
             >
               Already started? Continue your assessment
             </button>
@@ -378,8 +369,8 @@ export default function HomePage() {
         )}
       </main>
 
-      <footer className="border-t border-white/5 px-4 sm:px-6 py-4">
-        <div className="max-w-5xl mx-auto text-center text-xs text-white/20">
+      <footer className="border-t border-border/50 px-4 sm:px-6 py-4">
+        <div className="max-w-5xl mx-auto text-center text-xs text-muted-foreground/50">
           beHMN Assessment Platform
         </div>
       </footer>

@@ -119,7 +119,7 @@ export default function AdminCompaniesPage() {
   if (loading) {
     return (
       <div className="px-4 md:px-6 py-4 md:py-6 flex items-center justify-center h-full">
-        <span className="text-white/30">Loading companies...</span>
+        <span className="text-muted-foreground/70">Loading companies...</span>
       </div>
     );
   }
@@ -129,8 +129,8 @@ export default function AdminCompaniesPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-semibold text-white/90">Companies</h2>
-          <p className="text-sm text-white/40">{companies.length} companies across all sessions</p>
+          <h2 className="text-lg font-semibold text-foreground/90">Companies</h2>
+          <p className="text-sm text-muted-foreground">{companies.length} companies across all sessions</p>
         </div>
         <button
           onClick={() => setShowAddModal(true)}
@@ -150,12 +150,12 @@ export default function AdminCompaniesPage() {
           placeholder="Search companies or industries..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="bg-white/[0.05] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/30 outline-none focus:border-white/20 transition-colors w-full sm:w-72"
+          className="bg-white/[0.05] border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder-white/30 outline-none focus:border-border transition-colors w-full sm:w-72"
         />
         <select
           value={sortBy}
           onChange={(e) => setSortBy(e.target.value as "activity" | "sessions" | "score")}
-          className="bg-white/[0.05] border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-white/20 transition-colors appearance-none cursor-pointer"
+          className="bg-white/[0.05] border border-border rounded-lg px-3 py-2 text-sm text-foreground outline-none focus:border-border transition-colors appearance-none cursor-pointer"
         >
           <option value="activity">Recent Activity</option>
           <option value="sessions">Most Sessions</option>
@@ -173,14 +173,14 @@ export default function AdminCompaniesPage() {
 
       {/* Company Cards */}
       {filtered.length === 0 ? (
-        <div className="text-center py-16 text-white/30">No companies found</div>
+        <div className="text-center py-16 text-muted-foreground/70">No companies found</div>
       ) : (
         <div className="space-y-3">
           {filtered.map((company) => (
             <div
               key={company.company}
-              className={`bg-white/[0.03] rounded-2xl border overflow-hidden transition-colors ${
-                shiftHeld ? "border-red-500/15 hover:border-red-500/30" : "border-white/10"
+              className={`bg-muted/50 rounded-2xl border overflow-hidden transition-colors ${
+                shiftHeld ? "border-red-500/15 hover:border-red-500/30" : "border-border"
               }`}
             >
               {/* Company Header */}
@@ -189,8 +189,8 @@ export default function AdminCompaniesPage() {
                 className="flex flex-wrap items-center gap-3 md:gap-4 px-4 md:px-5 py-3 md:py-4 cursor-pointer hover:bg-white/[0.02] transition-colors"
               >
                 {/* Company icon */}
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500/20 to-blue-500/20 border border-white/10 flex items-center justify-center flex-shrink-0">
-                  <span className="text-sm font-bold text-white/60">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500/20 to-blue-500/20 border border-border flex items-center justify-center flex-shrink-0">
+                  <span className="text-sm font-bold text-muted-foreground">
                     {company.company.charAt(0).toUpperCase()}
                   </span>
                 </div>
@@ -198,7 +198,7 @@ export default function AdminCompaniesPage() {
                 {/* Company info */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <h3 className="text-sm font-semibold text-white/90 truncate">{company.company}</h3>
+                    <h3 className="text-sm font-semibold text-foreground/90 truncate">{company.company}</h3>
                     {company.hasResearch && (
                       <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/20">
                         Research
@@ -207,7 +207,7 @@ export default function AdminCompaniesPage() {
                   </div>
                   <div className="flex items-center gap-3 mt-0.5">
                     {company.industries.map((ind) => (
-                      <span key={ind} className="text-[11px] text-white/30">{ind}</span>
+                      <span key={ind} className="text-[11px] text-muted-foreground/70">{ind}</span>
                     ))}
                   </div>
                 </div>
@@ -215,24 +215,24 @@ export default function AdminCompaniesPage() {
                 {/* Stats */}
                 <div className="flex items-center gap-3 md:gap-6 flex-shrink-0 flex-wrap">
                   <div className="text-center">
-                    <span className="text-lg font-semibold text-white/80">{company.sessionCount}</span>
-                    <p className="text-[10px] text-white/30">Sessions</p>
+                    <span className="text-lg font-semibold text-foreground/90">{company.sessionCount}</span>
+                    <p className="text-[10px] text-muted-foreground/70">Sessions</p>
                   </div>
                   <div className="text-center">
-                    <span className="text-lg font-semibold text-white/80">{company.participantCount}</span>
-                    <p className="text-[10px] text-white/30">People</p>
+                    <span className="text-lg font-semibold text-foreground/90">{company.participantCount}</span>
+                    <p className="text-[10px] text-muted-foreground/70">People</p>
                   </div>
                   <div className="text-center">
-                    <span className={`text-lg font-semibold ${company.averageScore ? scoreColor(company.averageScore) : "text-white/30"}`}>
+                    <span className={`text-lg font-semibold ${company.averageScore ? scoreColor(company.averageScore) : "text-muted-foreground/70"}`}>
                       {company.averageScore ?? "\u2014"}
                     </span>
-                    <p className="text-[10px] text-white/30">Avg Score</p>
+                    <p className="text-[10px] text-muted-foreground/70">Avg Score</p>
                   </div>
                   <div className="text-center">
-                    <span className="text-lg font-semibold text-white/80">{company.completionRate}%</span>
-                    <p className="text-[10px] text-white/30">Complete</p>
+                    <span className="text-lg font-semibold text-foreground/90">{company.completionRate}%</span>
+                    <p className="text-[10px] text-muted-foreground/70">Complete</p>
                   </div>
-                  <span className="text-xs text-white/20">{relativeDate(company.lastActivity)}</span>
+                  <span className="text-xs text-muted-foreground/50">{relativeDate(company.lastActivity)}</span>
                 </div>
 
                 {/* Delete button (shift mode) */}
@@ -260,7 +260,7 @@ export default function AdminCompaniesPage() {
                 {/* Chevron */}
                 {!shiftHeld && (
                   <svg
-                    className={`w-4 h-4 text-white/20 transition-transform ${expandedCompany === company.company ? "rotate-180" : ""}`}
+                    className={`w-4 h-4 text-muted-foreground/50 transition-transform ${expandedCompany === company.company ? "rotate-180" : ""}`}
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -274,7 +274,7 @@ export default function AdminCompaniesPage() {
               {/* Expanded: View detail link */}
               {expandedCompany === company.company && (
                 <div className="border-t border-white/[0.06] px-5 py-3 flex items-center justify-between">
-                  <span className="text-xs text-white/30">
+                  <span className="text-xs text-muted-foreground/70">
                     {company.completedCount} completed, {company.analyzedCount} analyzed
                   </span>
                   <button
@@ -292,7 +292,7 @@ export default function AdminCompaniesPage() {
 
       {/* Toast */}
       {toast && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-[#1a1a2e] border border-white/10 text-white px-5 py-2.5 rounded-xl shadow-2xl text-sm animate-fade-in">
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-[#1a1a2e] border border-border text-foreground px-5 py-2.5 rounded-xl shadow-2xl text-sm animate-fade-in">
           {toast}
         </div>
       )}

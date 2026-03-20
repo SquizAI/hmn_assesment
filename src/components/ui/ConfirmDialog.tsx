@@ -44,7 +44,7 @@ export default function ConfirmDialog({
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onCancel} />
 
       {/* Dialog */}
-      <div className="relative bg-[#12121a] border border-white/10 rounded-2xl shadow-2xl w-full max-w-sm p-6 space-y-4">
+      <div className="relative bg-[#12121a] border border-border rounded-2xl shadow-2xl w-full max-w-sm p-6 space-y-4">
         {/* Icon */}
         <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isDanger ? "bg-red-500/15" : "bg-amber-500/15"}`}>
           <svg className={`w-5 h-5 ${isDanger ? "text-red-400" : "text-amber-400"}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -54,8 +54,8 @@ export default function ConfirmDialog({
 
         {/* Text */}
         <div className="space-y-1">
-          <h3 className="text-white font-medium">{title}</h3>
-          <p className="text-sm text-white/50 leading-relaxed">{message}</p>
+          <h3 className="text-foreground font-medium">{title}</h3>
+          <p className="text-sm text-muted-foreground leading-relaxed">{message}</p>
         </div>
 
         {/* Actions */}
@@ -63,7 +63,7 @@ export default function ConfirmDialog({
           <button
             ref={cancelRef}
             onClick={onCancel}
-            className="flex-1 px-4 py-2 text-sm font-medium text-white/70 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl transition-colors"
+            className="flex-1 px-4 py-2 text-sm font-medium text-foreground/80 bg-muted hover:bg-muted border border-border rounded-xl transition-colors"
           >
             {cancelLabel}
           </button>

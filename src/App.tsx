@@ -33,7 +33,7 @@ const ComparePage = lazy(() => import("./pages/ComparePage"));
 function LazyFallback() {
   return (
     <div className="flex items-center justify-center h-full min-h-[60vh]">
-      <div className="text-white/30 text-sm">Loading...</div>
+      <div className="text-muted-foreground/70 text-sm">Loading...</div>
     </div>
   );
 }
@@ -52,8 +52,8 @@ class AdminErrorBoundary extends Component<{ children: React.ReactNode }, { hasE
       return (
         <div className="min-h-screen flex items-center justify-center">
           <div className="text-center space-y-4">
-            <h1 className="text-xl font-semibold text-white/80">Something went wrong</h1>
-            <p className="text-white/40 text-sm">An error occurred in the admin panel.</p>
+            <h1 className="text-xl font-semibold text-foreground/90">Something went wrong</h1>
+            <p className="text-muted-foreground text-sm">An error occurred in the admin panel.</p>
             <a href="/admin/dashboard" className="text-blue-400 hover:text-blue-300 text-sm">Return to Dashboard</a>
           </div>
         </div>

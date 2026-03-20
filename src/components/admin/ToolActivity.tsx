@@ -81,7 +81,7 @@ export default function ToolActivity({ events }: Props) {
           {/* Header — always visible */}
           <button
             onClick={() => setExpanded((e) => !e)}
-            className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/[0.03] transition-colors"
+            className="w-full flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors"
           >
             {/* Pulsing indicator */}
             <div className="relative flex-shrink-0">
@@ -91,11 +91,11 @@ export default function ToolActivity({ events }: Props) {
 
             {/* Status text */}
             <div className="flex-1 text-left">
-              <span className="text-sm text-white/70 font-medium">
+              <span className="text-sm text-foreground/80 font-medium">
                 {totalCount === 0 ? thinkingMessage : `Building... ${completedCount}/${totalCount} steps`}
               </span>
               {totalCount > 0 && (
-                <span className="text-xs text-white/30 ml-2">
+                <span className="text-xs text-muted-foreground/70 ml-2">
                   {completedCount === totalCount ? "finishing up" : steps.find((s) => s.status === "running")?.displayName || "working"}
                 </span>
               )}
@@ -103,7 +103,7 @@ export default function ToolActivity({ events }: Props) {
 
             {/* Chevron */}
             <svg
-              className={`w-4 h-4 text-white/30 transition-transform duration-200 ${expanded ? "rotate-180" : ""}`}
+              className={`w-4 h-4 text-muted-foreground/70 transition-transform duration-200 ${expanded ? "rotate-180" : ""}`}
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -146,8 +146,8 @@ export default function ToolActivity({ events }: Props) {
 
                   {/* Label */}
                   <span className={`text-xs flex-1 ${
-                    step.status === "running" ? "text-white/60" :
-                    step.status === "done" ? "text-white/40" :
+                    step.status === "running" ? "text-muted-foreground" :
+                    step.status === "done" ? "text-muted-foreground" :
                     "text-red-400/60"
                   }`}>
                     {step.status === "done" && step.summary ? step.summary : step.displayName}
@@ -155,7 +155,7 @@ export default function ToolActivity({ events }: Props) {
 
                   {/* Duration badge */}
                   {step.endTime && (
-                    <span className="text-[10px] text-white/20 tabular-nums flex-shrink-0">
+                    <span className="text-[10px] text-muted-foreground/50 tabular-nums flex-shrink-0">
                       {((step.endTime - step.startTime) / 1000).toFixed(1)}s
                     </span>
                   )}

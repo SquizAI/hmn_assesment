@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import type { ConversationMessage, AdaptabilityPhase, AdaptabilitySection } from "../lib/types";
-import { API_BASE } from "../lib/api";
+import { startInterview, submitAnswer, skipQuestion, analyzeSession } from "../lib/api";
 import QuestionCard from "../components/interview/QuestionCard";
 import ProgressBar from "../components/interview/ProgressBar";
 import Button from "../components/ui/Button";
@@ -78,13 +78,7 @@ export default function AdaptabilityInterviewPage() {
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch(`${API_BASE}/api/interview/start`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ sessionId }),
-        });
-        if (!res.ok) throw new Error("Failed to start");
-        const data = await res.json();
+        const data = await startInterview(sessionId!);
         setCurrentQuestion(data.currentQuestion);
         setProgress({ ...data.progress, completedPercentage: 0 });
         if (data.skippedQuestionIds) setSkippedQuestionIds(data.skippedQuestionIds);
@@ -135,17 +129,7 @@ export default function AdaptabilityInterviewPage() {
     if (!currentQuestion) return;
     setIsSubmitting(true);
     try {
-      const res = await fetch(`${API_BASE}/api/interview/respond`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          sessionId,
-          questionId: currentQuestion.id,
-          answer,
-          conversationHistory,
-        }),
-      });
-      const data = await res.json();
+      const data = await submitAnswer(sessionId!, currentQuestion.id as string, answer as string, conversationHistory);
       if (data.type === "follow_up") return; // QuestionCard handles follow-ups
 
       // Save conversation history
@@ -234,17 +218,7 @@ export default function AdaptabilityInterviewPage() {
     if (!currentQuestion) return;
     setIsSubmitting(true);
     try {
-      const res = await fetch(`${API_BASE}/api/interview/respond`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          sessionId,
-          questionId: currentQuestion.id,
-          answer: "[SKIPPED]",
-          skip: true,
-        }),
-      });
-      const data = await res.json();
+      const data = await skipQuestion(sessionId!, currentQuestion.id as string);
       setSkippedQuestionIds((prev) => [...prev, currentQuestion.id as string]);
 
       if (data.type === "complete") {
@@ -269,12 +243,7 @@ export default function AdaptabilityInterviewPage() {
   const handleAnalyze = async () => {
     setIsAnalyzing(true);
     try {
-      const res = await fetch(`${API_BASE}/api/interview/analyze`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sessionId }),
-      });
-      if (!res.ok) throw new Error("Analysis failed");
+      await analyzeSession(sessionId!);
       navigate(`/adaptability-profile/${sessionId}`);
     } catch {
       setError("Analysis failed.");
@@ -301,8 +270,8 @@ export default function AdaptabilityInterviewPage() {
         <div className="text-center space-y-6">
           <div className="w-16 h-16 border-2 border-emerald-500/20 border-t-emerald-400 rounded-full animate-spin mx-auto" />
           <div className="space-y-2">
-            <p className="text-white/60 text-lg">Preparing your Adaptability conversation...</p>
-            <p className="text-white/30 text-sm">This is a reflective conversation, not a test.</p>
+            <p className="text-muted-foreground text-lg">Preparing your Adaptability conversation...</p>
+            <p className="text-muted-foreground/70 text-sm">This is a reflective conversation, not a test.</p>
           </div>
         </div>
       </div>
@@ -333,10 +302,10 @@ export default function AdaptabilityInterviewPage() {
             </span>
           </div>
           <div className="space-y-2">
-            <h2 className="text-xl font-medium text-white">
+            <h2 className="text-xl font-medium text-foreground">
               {PHASE_LABELS[transitionPhase]}
             </h2>
-            <p className="text-white/40 text-sm">
+            <p className="text-muted-foreground text-sm">
               {PHASE_DESCRIPTIONS[transitionPhase]}
             </p>
           </div>
@@ -347,7 +316,7 @@ export default function AdaptabilityInterviewPage() {
                 className={`h-1 rounded-full transition-all duration-500 ${
                   i <= PHASE_ORDER.indexOf(transitionPhase)
                     ? "w-8 bg-emerald-500/60"
-                    : "w-4 bg-white/10"
+                    : "w-4 bg-muted"
                 }`}
               />
             ))}
@@ -378,16 +347,16 @@ export default function AdaptabilityInterviewPage() {
             </svg>
           </div>
           <div className="space-y-3">
-            <h2 className="text-2xl font-semibold text-white">
+            <h2 className="text-2xl font-semibold text-foreground">
               Conversation Complete
             </h2>
-            <p className="text-white/50 leading-relaxed">
+            <p className="text-muted-foreground leading-relaxed">
               Thank you for your honesty and openness. Your responses will now be
               analyzed to generate your personal Adaptability Profile — a
               strengths-led report with a 90-day development plan tailored to
               your specific pattern.
             </p>
-            <p className="text-white/30 text-sm">
+            <p className="text-muted-foreground/70 text-sm">
               Remember: adaptability is a set of muscles, not a personality
               trait. The profile is a starting point, not a verdict.
             </p>
@@ -412,18 +381,18 @@ export default function AdaptabilityInterviewPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
       {/* Header with phase indicator */}
-      <div className="sticky top-0 z-10 bg-slate-950/80 backdrop-blur-xl border-b border-white/5">
+      <div className="sticky top-0 z-10 bg-slate-950/80 backdrop-blur-xl border-b border-border/50">
         <div className="max-w-2xl mx-auto px-6 py-3">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
               <span className="text-xs font-medium text-emerald-400/80">
                 {PHASE_LABELS[currentPhase]}
               </span>
-              <span className="text-xs text-white/20">
+              <span className="text-xs text-muted-foreground/50">
                 {progress?.questionNumber}/{progress?.totalQuestions}
               </span>
             </div>
-            <span className="text-xs text-white/20">
+            <span className="text-xs text-muted-foreground/50">
               Adaptability Index
             </span>
           </div>
@@ -437,7 +406,7 @@ export default function AdaptabilityInterviewPage() {
                     ? "bg-emerald-500/60"
                     : i === phaseProgress.current
                     ? "bg-emerald-400"
-                    : "bg-white/10"
+                    : "bg-muted"
                 }`}
               />
             ))}

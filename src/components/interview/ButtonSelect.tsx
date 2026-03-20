@@ -126,7 +126,7 @@ export default function ButtonSelect({ options, multiSelect = false, onChange, i
           <div key={opt.value}>
             <button onClick={() => handleSelect(opt.value)}
               className={`w-full text-left p-4 rounded-xl border transition-all duration-200 group
-                ${active ? "bg-white/15 border-white/40 shadow-lg shadow-white/5" : "bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20"}`}>
+                ${active ? "bg-white/15 border-white/40 shadow-lg shadow-white/5" : "bg-muted border-border hover:bg-muted hover:border-border"}`}>
               <div className="flex items-center gap-3">
                 <div className={`w-5 h-5 ${multiSelect ? "rounded-md" : "rounded-full"} border-2 flex items-center justify-center flex-shrink-0 transition-all
                   ${active ? "border-white bg-white" : "border-white/30 group-hover:border-white/50"}`}>
@@ -137,8 +137,8 @@ export default function ButtonSelect({ options, multiSelect = false, onChange, i
                   )}
                 </div>
                 <div>
-                  <div className={`font-medium ${active ? "text-white" : "text-white/80"}`}>{opt.label}</div>
-                  {opt.description && <div className="text-sm text-white/40 mt-0.5">{opt.description}</div>}
+                  <div className={`font-medium ${active ? "text-foreground" : "text-foreground/90"}`}>{opt.label}</div>
+                  {opt.description && <div className="text-sm text-muted-foreground mt-0.5">{opt.description}</div>}
                 </div>
               </div>
             </button>
@@ -149,7 +149,7 @@ export default function ButtonSelect({ options, multiSelect = false, onChange, i
                 onChange={(e) => handleOtherTextChange(e.target.value)}
                 placeholder="Please specify..."
                 autoFocus
-                className="mt-2 w-full bg-white/5 border border-white/20 rounded-xl px-4 py-3 text-white text-sm placeholder-white/30 focus:outline-none focus:border-white/40 focus:bg-white/[0.08] transition-all"
+                className="mt-2 w-full bg-muted border border-border rounded-xl px-4 py-3 text-foreground text-sm placeholder-white/30 focus:outline-none focus:border-white/40 focus:bg-white/[0.08] transition-all"
               />
             )}
           </div>

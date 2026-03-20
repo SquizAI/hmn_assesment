@@ -291,12 +291,12 @@ export default function CsvUploadModal({ assessments, onClose, onComplete }: Pro
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
       <div className="relative z-10 w-full max-w-2xl mx-3 sm:mx-4 max-h-[90vh] flex flex-col">
-        <div className="bg-[#0e0e16] border border-white/10 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+        <div className="bg-[#0e0e16] border border-border rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
           {/* Header */}
-          <div className="px-6 py-4 border-b border-white/5 flex items-center justify-between flex-shrink-0">
+          <div className="px-6 py-4 border-b border-border/50 flex items-center justify-between flex-shrink-0">
             <div>
-              <h2 className="text-lg font-semibold text-white/90">Bulk Import</h2>
-              <p className="text-xs text-white/30 mt-0.5">
+              <h2 className="text-lg font-semibold text-foreground/90">Bulk Import</h2>
+              <p className="text-xs text-muted-foreground/70 mt-0.5">
                 {step === "upload" && "Upload a CSV file with participant data"}
                 {step === "mapping" && "Map CSV columns to fields"}
                 {step === "preview" && `${validRows.length} of ${rows.length} rows ready`}
@@ -304,19 +304,19 @@ export default function CsvUploadModal({ assessments, onClose, onComplete }: Pro
                 {step === "results" && "Import complete"}
               </p>
             </div>
-            <button onClick={onClose} className="text-white/20 hover:text-white/40 text-xl leading-none">&times;</button>
+            <button onClick={onClose} className="text-muted-foreground/50 hover:text-muted-foreground text-xl leading-none">&times;</button>
           </div>
 
           {/* Steps indicator */}
-          <div className="px-6 py-3 border-b border-white/5 flex items-center gap-2 flex-shrink-0">
+          <div className="px-6 py-3 border-b border-border/50 flex items-center gap-2 flex-shrink-0">
             {["Upload", "Map Fields", "Preview", "Import"].map((label, i) => {
               const stepOrder: Step[] = ["upload", "mapping", "preview", "importing"];
               const current = stepOrder.indexOf(step === "results" ? "importing" : step);
               const isActive = i <= current;
               return (
                 <div key={label} className="flex items-center gap-2">
-                  {i > 0 && <div className={`w-6 h-px ${isActive ? "bg-purple-500/50" : "bg-white/10"}`} />}
-                  <div className={`text-xs font-medium ${isActive ? "text-purple-400" : "text-white/20"}`}>
+                  {i > 0 && <div className={`w-6 h-px ${isActive ? "bg-purple-500/50" : "bg-muted"}`} />}
+                  <div className={`text-xs font-medium ${isActive ? "text-purple-400" : "text-muted-foreground/50"}`}>
                     {label}
                   </div>
                 </div>
@@ -330,13 +330,13 @@ export default function CsvUploadModal({ assessments, onClose, onComplete }: Pro
             {step === "upload" && (
               <div className="space-y-4">
                 <div>
-                  <label className="block text-xs text-white/40 mb-1.5">
+                  <label className="block text-xs text-muted-foreground mb-1.5">
                     Assessment <span className="text-red-400">*</span>
                   </label>
                   <select
                     value={assessmentId}
                     onChange={(e) => setAssessmentId(e.target.value)}
-                    className="w-full bg-white/[0.05] border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-white/20 appearance-none cursor-pointer"
+                    className="w-full bg-white/[0.05] border border-border rounded-lg px-3 py-2 text-sm text-foreground outline-none focus:border-border appearance-none cursor-pointer"
                   >
                     <option value="">Select an assessment...</option>
                     {assessments.filter((a) => a.status === "active").map((a) => (
@@ -352,15 +352,15 @@ export default function CsvUploadModal({ assessments, onClose, onComplete }: Pro
                   className={`border-2 border-dashed rounded-xl p-10 text-center transition-colors ${
                     dragOver
                       ? "border-purple-500/50 bg-purple-500/5"
-                      : "border-white/10 hover:border-white/20"
+                      : "border-border hover:border-border"
                   }`}
                 >
                   <div className="text-3xl mb-3 opacity-30">CSV</div>
-                  <p className="text-sm text-white/50 mb-2">
+                  <p className="text-sm text-muted-foreground mb-2">
                     Drag & drop your CSV file here
                   </p>
-                  <p className="text-xs text-white/20 mb-4">or</p>
-                  <label className="inline-block px-4 py-2 text-sm font-medium rounded-xl border border-white/15 text-white/70 hover:bg-white/[0.05] cursor-pointer transition-colors">
+                  <p className="text-xs text-muted-foreground/50 mb-4">or</p>
+                  <label className="inline-block px-4 py-2 text-sm font-medium rounded-xl border border-white/15 text-foreground/80 hover:bg-white/[0.05] cursor-pointer transition-colors">
                     Browse Files
                     <input
                       type="file"
@@ -382,10 +382,10 @@ export default function CsvUploadModal({ assessments, onClose, onComplete }: Pro
             {/* ---- STEP 2: MAPPING ---- */}
             {step === "mapping" && csvData && (
               <div className="space-y-4">
-                <div className="text-sm text-white/40">
-                  Detected <strong className="text-white/70">{csvData.headers.length}</strong> columns and{" "}
-                  <strong className="text-white/70">{csvData.rows.length}</strong> rows in{" "}
-                  <strong className="text-white/70">{fileName}</strong>
+                <div className="text-sm text-muted-foreground">
+                  Detected <strong className="text-foreground/80">{csvData.headers.length}</strong> columns and{" "}
+                  <strong className="text-foreground/80">{csvData.rows.length}</strong> rows in{" "}
+                  <strong className="text-foreground/80">{fileName}</strong>
                 </div>
 
                 <div className="space-y-2">
@@ -400,18 +400,18 @@ export default function CsvUploadModal({ assessments, onClose, onComplete }: Pro
                             ? "border-green-500/20 bg-green-500/5"
                             : required
                             ? "border-red-500/20 bg-red-500/5"
-                            : "border-white/5 bg-white/[0.02]"
+                            : "border-border/50 bg-white/[0.02]"
                         }`}
                       >
                         <div className="w-24 flex-shrink-0">
-                          <span className="text-sm text-white/70">{label}</span>
+                          <span className="text-sm text-foreground/80">{label}</span>
                           {required && <span className="text-red-400 text-xs ml-1">*</span>}
                         </div>
-                        <span className="text-white/20">&rarr;</span>
+                        <span className="text-muted-foreground/50">&rarr;</span>
                         <select
                           value={mapping?.csvColumn || ""}
                           onChange={(e) => updateMapping(field, e.target.value || null)}
-                          className="flex-1 bg-white/[0.05] border border-white/10 rounded-lg px-2 py-1.5 text-sm text-white outline-none focus:border-white/20 appearance-none cursor-pointer"
+                          className="flex-1 bg-white/[0.05] border border-border rounded-lg px-2 py-1.5 text-sm text-foreground outline-none focus:border-border appearance-none cursor-pointer"
                         >
                           <option value="">Not mapped</option>
                           {field === "name" && nameDetection.type === "composite" && (
@@ -430,7 +430,7 @@ export default function CsvUploadModal({ assessments, onClose, onComplete }: Pro
                 </div>
 
                 {unmappedColumns.length > 0 && (
-                  <div className="text-xs text-white/20">
+                  <div className="text-xs text-muted-foreground/50">
                     Ignored columns: {unmappedColumns.join(", ")}
                   </div>
                 )}
@@ -441,16 +441,16 @@ export default function CsvUploadModal({ assessments, onClose, onComplete }: Pro
             {step === "preview" && (
               <div className="space-y-4">
                 {emailEnabled && (
-                  <label className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-white/[0.03] border border-white/5">
+                  <label className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-muted/50 border border-border/50">
                     <input
                       type="checkbox"
                       checked={sendEmail}
                       onChange={(e) => setSendEmail(e.target.checked)}
-                      className="w-4 h-4 rounded border-white/20 bg-white/5 text-purple-500 focus:ring-purple-500/30"
+                      className="w-4 h-4 rounded border-border bg-muted text-purple-500 focus:ring-purple-500/30"
                     />
                     <div>
-                      <span className="text-sm text-white/70">Send invitation emails</span>
-                      <p className="text-xs text-white/30">Each participant will receive an email with their unique link</p>
+                      <span className="text-sm text-foreground/80">Send invitation emails</span>
+                      <p className="text-xs text-muted-foreground/70">Each participant will receive an email with their unique link</p>
                     </div>
                   </label>
                 )}
@@ -460,27 +460,27 @@ export default function CsvUploadModal({ assessments, onClose, onComplete }: Pro
                   <span className="text-red-400">{rows.filter((r) => r.errors.length > 0).length} errors</span>
                   <span className="text-amber-400">{rows.filter((r) => r.warnings.length > 0).length} warnings</span>
                   {selectedAssessment && (
-                    <span className="text-white/30 ml-auto">{selectedAssessment.name}</span>
+                    <span className="text-muted-foreground/70 ml-auto">{selectedAssessment.name}</span>
                   )}
                 </div>
 
-                <div className="overflow-x-auto rounded-xl border border-white/10">
+                <div className="overflow-x-auto rounded-xl border border-border">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="bg-white/[0.03]">
-                        <th className="px-2 py-2 text-left text-xs text-white/30 w-8"></th>
-                        <th className="px-2 py-2 text-left text-xs text-white/30">Name</th>
-                        <th className="px-2 py-2 text-left text-xs text-white/30">Email</th>
-                        <th className="px-2 py-2 text-left text-xs text-white/30 hidden sm:table-cell">Company</th>
-                        <th className="px-2 py-2 text-left text-xs text-white/30 hidden md:table-cell">Role</th>
-                        <th className="px-2 py-2 text-left text-xs text-white/30 w-16">Status</th>
+                      <tr className="bg-muted/50">
+                        <th className="px-2 py-2 text-left text-xs text-muted-foreground/70 w-8"></th>
+                        <th className="px-2 py-2 text-left text-xs text-muted-foreground/70">Name</th>
+                        <th className="px-2 py-2 text-left text-xs text-muted-foreground/70">Email</th>
+                        <th className="px-2 py-2 text-left text-xs text-muted-foreground/70 hidden sm:table-cell">Company</th>
+                        <th className="px-2 py-2 text-left text-xs text-muted-foreground/70 hidden md:table-cell">Role</th>
+                        <th className="px-2 py-2 text-left text-xs text-muted-foreground/70 w-16">Status</th>
                       </tr>
                     </thead>
                     <tbody>
                       {rows.slice(0, 100).map((row) => (
                         <tr
                           key={row.index}
-                          className={`border-t border-white/5 ${
+                          className={`border-t border-border/50 ${
                             row.excluded
                               ? "opacity-40"
                               : row.errors.length > 0
@@ -495,13 +495,13 @@ export default function CsvUploadModal({ assessments, onClose, onComplete }: Pro
                               type="checkbox"
                               checked={!row.excluded}
                               onChange={() => toggleRowExclusion(row.index)}
-                              className="w-3.5 h-3.5 rounded border-white/20 bg-white/5"
+                              className="w-3.5 h-3.5 rounded border-border bg-muted"
                             />
                           </td>
-                          <td className="px-2 py-1.5 text-white/70">{row.name || "\u2014"}</td>
-                          <td className="px-2 py-1.5 text-white/50">{row.email || "\u2014"}</td>
-                          <td className="px-2 py-1.5 text-white/40 hidden sm:table-cell">{row.company || "\u2014"}</td>
-                          <td className="px-2 py-1.5 text-white/40 hidden md:table-cell">{row.role || "\u2014"}</td>
+                          <td className="px-2 py-1.5 text-foreground/80">{row.name || "\u2014"}</td>
+                          <td className="px-2 py-1.5 text-muted-foreground">{row.email || "\u2014"}</td>
+                          <td className="px-2 py-1.5 text-muted-foreground hidden sm:table-cell">{row.company || "\u2014"}</td>
+                          <td className="px-2 py-1.5 text-muted-foreground hidden md:table-cell">{row.role || "\u2014"}</td>
                           <td className="px-2 py-1.5">
                             {row.errors.length > 0 && (
                               <span className="text-xs text-red-400" title={row.errors.join(", ")}>Error</span>
@@ -518,7 +518,7 @@ export default function CsvUploadModal({ assessments, onClose, onComplete }: Pro
                     </tbody>
                   </table>
                   {rows.length > 100 && (
-                    <div className="px-3 py-2 text-xs text-white/20 text-center border-t border-white/5">
+                    <div className="px-3 py-2 text-xs text-muted-foreground/50 text-center border-t border-border/50">
                       Showing first 100 of {rows.length} rows
                     </div>
                   )}
@@ -529,16 +529,16 @@ export default function CsvUploadModal({ assessments, onClose, onComplete }: Pro
             {/* ---- STEP 4: IMPORTING ---- */}
             {step === "importing" && (
               <div className="py-12 text-center space-y-4">
-                <p className="text-sm text-white/50">
+                <p className="text-sm text-muted-foreground">
                   Creating {validRows.length} invitation{validRows.length !== 1 ? "s" : ""}...
                 </p>
-                <div className="w-full bg-white/5 rounded-full h-2 max-w-xs mx-auto">
+                <div className="w-full bg-muted rounded-full h-2 max-w-xs mx-auto">
                   <div
                     className="bg-gradient-to-r from-purple-500 to-blue-500 h-2 rounded-full transition-all duration-300"
                     style={{ width: `${importProgress}%` }}
                   />
                 </div>
-                <p className="text-xs text-white/30">{importProgress}%</p>
+                <p className="text-xs text-muted-foreground/70">{importProgress}%</p>
               </div>
             )}
 
@@ -546,7 +546,7 @@ export default function CsvUploadModal({ assessments, onClose, onComplete }: Pro
             {step === "results" && results && (
               <div className="space-y-4">
                 <div className="text-center py-6">
-                  <h3 className="text-lg font-semibold text-white/90">
+                  <h3 className="text-lg font-semibold text-foreground/90">
                     {results.created} invitation{results.created !== 1 ? "s" : ""} created
                   </h3>
                   {results.emailsSent > 0 && (
@@ -568,8 +568,8 @@ export default function CsvUploadModal({ assessments, onClose, onComplete }: Pro
                     </div>
                     <div className="max-h-40 overflow-y-auto">
                       {results.errors.map((err, i) => (
-                        <div key={i} className="px-3 py-1.5 text-xs text-white/40 border-t border-red-500/10">
-                          {err.email && <span className="text-white/60">{err.email}: </span>}
+                        <div key={i} className="px-3 py-1.5 text-xs text-muted-foreground border-t border-red-500/10">
+                          {err.email && <span className="text-muted-foreground">{err.email}: </span>}
                           {err.error}
                         </div>
                       ))}
@@ -581,12 +581,12 @@ export default function CsvUploadModal({ assessments, onClose, onComplete }: Pro
           </div>
 
           {/* Footer */}
-          <div className="px-6 py-4 border-t border-white/5 flex items-center justify-between flex-shrink-0">
+          <div className="px-6 py-4 border-t border-border/50 flex items-center justify-between flex-shrink-0">
             <div>
               {step === "mapping" && (
                 <button
                   onClick={() => { setStep("upload"); setCsvData(null); setFileName(""); }}
-                  className="px-3 py-1.5 text-sm text-white/40 hover:text-white/60 transition-colors"
+                  className="px-3 py-1.5 text-sm text-muted-foreground hover:text-muted-foreground transition-colors"
                 >
                   &larr; Back
                 </button>
@@ -594,7 +594,7 @@ export default function CsvUploadModal({ assessments, onClose, onComplete }: Pro
               {step === "preview" && (
                 <button
                   onClick={() => setStep("mapping")}
-                  className="px-3 py-1.5 text-sm text-white/40 hover:text-white/60 transition-colors"
+                  className="px-3 py-1.5 text-sm text-muted-foreground hover:text-muted-foreground transition-colors"
                 >
                   &larr; Back
                 </button>
@@ -604,7 +604,7 @@ export default function CsvUploadModal({ assessments, onClose, onComplete }: Pro
               {step !== "importing" && step !== "results" && (
                 <button
                   onClick={onClose}
-                  className="px-4 py-2 text-sm rounded-xl border border-white/10 text-white/50 hover:bg-white/[0.04] transition-colors"
+                  className="px-4 py-2 text-sm rounded-xl border border-border text-muted-foreground hover:bg-white/[0.04] transition-colors"
                 >
                   Cancel
                 </button>
@@ -615,8 +615,8 @@ export default function CsvUploadModal({ assessments, onClose, onComplete }: Pro
                   disabled={!requiredFieldsMapped}
                   className={`px-5 py-2 text-sm font-medium rounded-xl border transition-all ${
                     requiredFieldsMapped
-                      ? "bg-white/[0.10] border-white/15 text-white hover:bg-white/[0.15]"
-                      : "bg-white/[0.04] border-white/10 text-white/25 cursor-not-allowed"
+                      ? "bg-white/[0.10] border-white/15 text-foreground hover:bg-white/[0.15]"
+                      : "bg-white/[0.04] border-border text-white/25 cursor-not-allowed"
                   }`}
                 >
                   Preview &rarr;
@@ -628,8 +628,8 @@ export default function CsvUploadModal({ assessments, onClose, onComplete }: Pro
                   disabled={validRows.length === 0 || !assessmentId}
                   className={`px-5 py-2 text-sm font-medium rounded-xl border transition-all ${
                     validRows.length > 0 && assessmentId
-                      ? "bg-gradient-to-r from-purple-500/20 to-blue-500/20 border-purple-500/20 text-purple-200 hover:from-purple-500/30 hover:to-blue-500/30 hover:text-white"
-                      : "bg-white/[0.04] border-white/10 text-white/25 cursor-not-allowed"
+                      ? "bg-gradient-to-r from-purple-500/20 to-blue-500/20 border-purple-500/20 text-purple-200 hover:from-purple-500/30 hover:to-blue-500/30 hover:text-foreground"
+                      : "bg-white/[0.04] border-border text-white/25 cursor-not-allowed"
                   }`}
                 >
                   Import {validRows.length} invitation{validRows.length !== 1 ? "s" : ""}
@@ -639,7 +639,7 @@ export default function CsvUploadModal({ assessments, onClose, onComplete }: Pro
               {step === "results" && (
                 <button
                   onClick={() => { onComplete(); onClose(); }}
-                  className="px-5 py-2 text-sm font-medium rounded-xl border bg-white/[0.10] border-white/15 text-white hover:bg-white/[0.15] transition-all"
+                  className="px-5 py-2 text-sm font-medium rounded-xl border bg-white/[0.10] border-white/15 text-foreground hover:bg-white/[0.15] transition-all"
                 >
                   Done
                 </button>

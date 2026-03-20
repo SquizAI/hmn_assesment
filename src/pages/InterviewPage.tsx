@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import type { Question, ConversationMessage } from "../lib/types";
-import { API_BASE } from "../lib/api";
+import { startInterview, submitAnswer, updateAnswer, skipQuestion, analyzeSession } from "../lib/api";
 import { QUESTION_BANK } from "../data/question-bank";
 import QuestionCard from "../components/interview/QuestionCard";
 import ProgressBar from "../components/interview/ProgressBar";
@@ -75,13 +75,7 @@ export default function InterviewPage() {
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch(`${API_BASE}/api/interview/start`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ sessionId }),
-        });
-        if (!res.ok) throw new Error("Failed to start");
-        const data = await res.json();
+        const data = await startInterview(sessionId!);
         setCurrentQuestion(data.currentQuestion);
         setProgress({ ...data.progress, completedPercentage: 0 });
 
@@ -161,12 +155,7 @@ export default function InterviewPage() {
     setIsSubmitting(true);
     setSaveStatus("saving");
     try {
-      const res = await fetch(`${API_BASE}/api/interview/respond`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sessionId, questionId: currentQuestion.id, answer, conversationHistory }),
-      });
-      const data = await res.json();
+      const data = await submitAnswer(sessionId!, currentQuestion.id, answer as string, conversationHistory);
       if (data.type === "follow_up") { setSaveStatus("idle"); return; } // QuestionCard handles this
 
       // Save conversation history if present (fallback path for AI conversations)
@@ -246,12 +235,7 @@ export default function InterviewPage() {
     setIsSubmitting(true);
     setSaveStatus("saving");
     try {
-      const res = await fetch(`${API_BASE}/api/interview/respond`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sessionId, questionId: editingQuestion.question.id, answer }),
-      });
-      if (!res.ok) throw new Error("Update failed");
+      await updateAnswer(sessionId!, editingQuestion.question.id, answer as string);
 
       // Update answeredQuestions in-place
       setAnsweredQuestions((prev) =>
@@ -289,12 +273,7 @@ export default function InterviewPage() {
     setIsSubmitting(true);
     setSaveStatus("saving");
     try {
-      const res = await fetch(`${API_BASE}/api/interview/respond`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sessionId, questionId: currentQuestion.id, answer: "[SKIPPED]", skip: true }),
-      });
-      const data = await res.json();
+      const data = await skipQuestion(sessionId!, currentQuestion.id);
 
       // Track as skipped
       setSkippedQuestionIds((prev) => [...prev, currentQuestion.id]);
@@ -311,12 +290,7 @@ export default function InterviewPage() {
   const handleAnalyze = async () => {
     setIsAnalyzing(true);
     try {
-      const res = await fetch(`${API_BASE}/api/interview/analyze`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sessionId }),
-      });
-      if (!res.ok) throw new Error("Analysis failed");
+      await analyzeSession(sessionId!);
       navigate(`/analysis/${sessionId}`);
     } catch { setError("Analysis failed."); }
     finally { setIsAnalyzing(false); }
@@ -325,8 +299,8 @@ export default function InterviewPage() {
   if (isStarting) return (
     <div className="min-h-screen flex items-center justify-center">
       <div className="text-center space-y-4">
-        <div className="w-12 h-12 border-2 border-white/20 border-t-white rounded-full animate-spin mx-auto" />
-        <p className="text-white/40">Preparing your interview...</p>
+        <div className="w-12 h-12 border-2 border-border border-t-white rounded-full animate-spin mx-auto" />
+        <p className="text-muted-foreground">Preparing your interview...</p>
       </div>
     </div>
   );
@@ -357,12 +331,12 @@ export default function InterviewPage() {
           {isAiReadiness ? (
             <>
               <div className="space-y-2">
-                <h2 className="text-2xl font-semibold text-white">Interview Complete</h2>
-                <p className="text-white/50">Ready to generate your personalized AI readiness analysis.</p>
+                <h2 className="text-2xl font-semibold text-foreground">Interview Complete</h2>
+                <p className="text-muted-foreground">Ready to generate your personalized AI readiness analysis.</p>
               </div>
               <div className="space-y-3">
                 <Button onClick={handleAnalyze} loading={isAnalyzing} size="lg">{isAnalyzing ? "Analyzing..." : "Generate My Analysis"}</Button>
-                <button onClick={handleBackFromComplete} className="flex items-center gap-1.5 mx-auto text-sm text-white/40 hover:text-white/60 transition-colors">
+                <button onClick={handleBackFromComplete} className="flex items-center gap-1.5 mx-auto text-sm text-muted-foreground hover:text-muted-foreground transition-colors">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
                   Back to review answers
                 </button>
@@ -371,15 +345,15 @@ export default function InterviewPage() {
           ) : (
             <>
               <div className="space-y-3">
-                <h2 className="text-2xl font-semibold text-white">Thank You!</h2>
-                <p className="text-white/60 text-lg">Your responses have been submitted successfully.</p>
-                <p className="text-white/40 text-sm leading-relaxed">
-                  We've received your feedback for the <span className="text-white/60 font-medium">{completionInfo.assessmentName}</span>. Our team is reviewing your insights and will follow up with you shortly to discuss next steps.
+                <h2 className="text-2xl font-semibold text-foreground">Thank You!</h2>
+                <p className="text-muted-foreground text-lg">Your responses have been submitted successfully.</p>
+                <p className="text-muted-foreground text-sm leading-relaxed">
+                  We've received your feedback for the <span className="text-muted-foreground font-medium">{completionInfo.assessmentName}</span>. Our team is reviewing your insights and will follow up with you shortly to discuss next steps.
                 </p>
               </div>
               <div className="space-y-3">
                 <Button onClick={() => navigate("/")} variant="secondary" size="lg">Return Home</Button>
-                <button onClick={handleBackFromComplete} className="flex items-center gap-1.5 mx-auto text-sm text-white/40 hover:text-white/60 transition-colors">
+                <button onClick={handleBackFromComplete} className="flex items-center gap-1.5 mx-auto text-sm text-muted-foreground hover:text-muted-foreground transition-colors">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
                   Back to review answers
                 </button>
@@ -393,7 +367,7 @@ export default function InterviewPage() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <header className="sticky top-0 z-10 bg-[#0a0a0f]/80 backdrop-blur-lg border-b border-white/5 px-6 py-3">
+      <header className="sticky top-0 z-10 bg-background/80 backdrop-blur-lg border-b border-border/50 px-6 py-3">
         <div className="max-w-3xl mx-auto space-y-2">
           {/* Section Stepper */}
           <SectionStepper
@@ -424,8 +398,8 @@ export default function InterviewPage() {
                 )}
                 {/* Save status indicator */}
                 {saveStatus === "saving" && (
-                  <span className="ml-auto flex items-center gap-1 text-[10px] text-white/30">
-                    <span className="w-3 h-3 border border-white/20 border-t-white/50 rounded-full animate-spin" />
+                  <span className="ml-auto flex items-center gap-1 text-[10px] text-muted-foreground/70">
+                    <span className="w-3 h-3 border border-border border-t-white/50 rounded-full animate-spin" />
                     Saving...
                   </span>
                 )}
@@ -449,7 +423,7 @@ export default function InterviewPage() {
 
       {/* Question pills — answered questions for quick backward navigation */}
       {visibleAnswered.length > 0 && (
-        <div className="sticky top-[110px] z-10 bg-[#0a0a0f]/60 backdrop-blur-sm border-b border-white/5 px-6 py-2">
+        <div className="sticky top-[110px] z-10 bg-background/60 backdrop-blur-sm border-b border-border/50 px-6 py-2">
           <div className="max-w-3xl mx-auto">
             <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: "none" }}>
               {visibleAnswered.map((q, i) => {
@@ -461,7 +435,7 @@ export default function InterviewPage() {
                     className={`shrink-0 flex items-center gap-1.5 px-3 py-1 rounded-full text-xs transition-all
                       ${isBeingEdited
                         ? "bg-amber-500/20 border border-amber-500/30 text-amber-300"
-                        : "bg-white/5 border border-white/10 text-white/50 hover:bg-white/10 hover:text-white/70"
+                        : "bg-muted border border-border text-muted-foreground hover:bg-muted hover:text-foreground/80"
                       }`}
                     title={q.questionText}
                   >
@@ -482,8 +456,8 @@ export default function InterviewPage() {
               })}
               {/* Current question indicator */}
               {!editingQuestion && (
-                <div className="shrink-0 flex items-center gap-1.5 px-3 py-1 rounded-full text-xs bg-indigo-500/20 border border-indigo-500/30 text-indigo-300">
-                  <span className="w-4 h-4 rounded-full bg-indigo-500/30 border border-indigo-500/40 flex items-center justify-center shrink-0">
+                <div className="shrink-0 flex items-center gap-1.5 px-3 py-1 rounded-full text-xs bg-primary/20 border border-primary/30 text-primary">
+                  <span className="w-4 h-4 rounded-full bg-primary/30 border border-primary/40 flex items-center justify-center shrink-0">
                     <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse" />
                   </span>
                   <span>Q{visibleAnswered.length + 1}</span>

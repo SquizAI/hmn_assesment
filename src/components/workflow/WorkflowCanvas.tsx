@@ -73,19 +73,19 @@ function BuilderStepNode({ data }: NodeProps) {
       ? "border-purple-500/50 shadow-lg shadow-purple-500/10"
       : status === "complete"
         ? "border-emerald-500/30"
-        : "border-white/10 opacity-50";
+        : "border-border opacity-50";
 
   return (
     <div
       className={`w-[200px] h-[80px] rounded-xl border bg-[#0f0f18] flex flex-col items-center justify-center gap-1.5 px-3 ${borderClass}`}
     >
-      <Handle type="target" position={Position.Left} className="!bg-white/10 !w-2 !h-2 !border-0" />
-      <Handle type="source" position={Position.Right} className="!bg-white/10 !w-2 !h-2 !border-0" />
+      <Handle type="target" position={Position.Left} className="!bg-muted !w-2 !h-2 !border-0" />
+      <Handle type="source" position={Position.Right} className="!bg-muted !w-2 !h-2 !border-0" />
       <Handle type="source" position={Position.Bottom} id="bottom" className="!bg-purple-500/30 !w-2 !h-2 !border-0" />
 
       <div className="flex items-center gap-2">
         <span className="text-base">{icon}</span>
-        <span className="text-xs font-medium text-white/80 truncate">{label}</span>
+        <span className="text-xs font-medium text-foreground/90 truncate">{label}</span>
       </div>
 
       <div className="flex items-center gap-1.5">
@@ -107,7 +107,7 @@ function BuilderStepNode({ data }: NodeProps) {
           </div>
         )}
         {status === "pending" && (
-          <span className="text-[10px] text-white/20">Pending</span>
+          <span className="text-[10px] text-muted-foreground/50">Pending</span>
         )}
       </div>
     </div>
@@ -127,21 +127,21 @@ function PhaseNode({ data }: NodeProps) {
 
   return (
     <div
-      className={`w-[240px] h-[70px] rounded-lg border border-white/10 ${borderColor} border-l-2 bg-[#0f0f18] flex items-center justify-between px-3`}
+      className={`w-[240px] h-[70px] rounded-lg border border-border ${borderColor} border-l-2 bg-[#0f0f18] flex items-center justify-between px-3`}
     >
-      <Handle type="target" position={Position.Top} className="!bg-white/10 !w-2 !h-2 !border-0" />
-      <Handle type="source" position={Position.Bottom} className="!bg-white/10 !w-2 !h-2 !border-0" />
+      <Handle type="target" position={Position.Top} className="!bg-muted !w-2 !h-2 !border-0" />
+      <Handle type="source" position={Position.Bottom} className="!bg-muted !w-2 !h-2 !border-0" />
 
       <div className="min-w-0 flex-1">
-        <p className="text-xs font-medium text-white/70 truncate">{label}</p>
+        <p className="text-xs font-medium text-foreground/80 truncate">{label}</p>
         {sectionCount > 0 && (
-          <span className="text-[10px] text-white/30">{sectionCount} section{sectionCount !== 1 ? "s" : ""}</span>
+          <span className="text-[10px] text-muted-foreground/70">{sectionCount} section{sectionCount !== 1 ? "s" : ""}</span>
         )}
       </div>
 
       {expandable && (
         <svg
-          className="w-4 h-4 text-white/20 shrink-0"
+          className="w-4 h-4 text-muted-foreground/50 shrink-0"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -165,11 +165,11 @@ function SectionNode({ data }: NodeProps) {
 
   return (
     <div className="w-[220px] h-[60px] rounded-lg border border-white/[0.08] bg-[#0c0c14] flex items-center justify-between px-3">
-      <Handle type="target" position={Position.Top} className="!bg-white/10 !w-2 !h-2 !border-0" />
-      <Handle type="source" position={Position.Bottom} className="!bg-white/10 !w-2 !h-2 !border-0" />
+      <Handle type="target" position={Position.Top} className="!bg-muted !w-2 !h-2 !border-0" />
+      <Handle type="source" position={Position.Bottom} className="!bg-muted !w-2 !h-2 !border-0" />
 
       <div className="min-w-0 flex-1">
-        <p className="text-[11px] font-medium text-white/60 truncate">{label}</p>
+        <p className="text-[11px] font-medium text-muted-foreground truncate">{label}</p>
         {questionCount > 0 && (
           <span className="text-[10px] text-white/25">{questionCount} question{questionCount !== 1 ? "s" : ""}</span>
         )}
@@ -199,14 +199,14 @@ function QuestionNode({ data }: NodeProps) {
   const inputType = data.inputType as string;
   const weight = data.weight as number;
   const truncated = text.length > 50 ? text.slice(0, 50) + "..." : text;
-  const colors = INPUT_TYPE_COLORS[inputType] || { bg: "bg-white/10", text: "text-white/50" };
+  const colors = INPUT_TYPE_COLORS[inputType] || { bg: "bg-muted", text: "text-muted-foreground" };
 
   return (
     <div className="w-[260px] h-[50px] rounded-md border border-white/[0.06] bg-[#0a0a12] flex flex-col justify-center px-3 gap-1">
-      <Handle type="target" position={Position.Top} className="!bg-white/10 !w-1.5 !h-1.5 !border-0" />
+      <Handle type="target" position={Position.Top} className="!bg-muted !w-1.5 !h-1.5 !border-0" />
 
       <div className="flex items-center justify-between gap-2">
-        <span className="text-[10px] text-white/50 truncate flex-1">{truncated}</span>
+        <span className="text-[10px] text-muted-foreground truncate flex-1">{truncated}</span>
         <span className={`text-[9px] px-1.5 py-0.5 rounded-full ${colors.bg} ${colors.text} shrink-0`}>
           {inputType.replace(/_/g, " ")}
         </span>
@@ -235,10 +235,10 @@ function DimensionNode({ data }: NodeProps) {
 
   return (
     <div className="w-[180px] h-[50px] rounded-md border border-white/[0.06] bg-[#0a0a12] flex flex-col justify-center px-3 gap-1">
-      <Handle type="target" position={Position.Top} className="!bg-white/10 !w-1.5 !h-1.5 !border-0" />
+      <Handle type="target" position={Position.Top} className="!bg-muted !w-1.5 !h-1.5 !border-0" />
 
       <div className="flex items-center justify-between gap-1.5">
-        <span className="text-[10px] text-white/60 truncate flex-1">{label}</span>
+        <span className="text-[10px] text-muted-foreground truncate flex-1">{label}</span>
         <span className="text-[9px] text-white/25 tabular-nums shrink-0">{questionCount}q</span>
       </div>
 

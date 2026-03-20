@@ -420,3 +420,174 @@ export async function getCallStatus(sessionId: string): Promise<{
   const res = await adminFetch(`/api/admin/calls/${sessionId}/status`);
   return res.json();
 }
+
+// --- Contacts API ---
+
+export async function fetchContacts(filters?: { search?: string; status?: string; page?: number; limit?: number }) {
+  const params = new URLSearchParams();
+  if (filters?.search) params.set("search", filters.search);
+  if (filters?.status) params.set("status", filters.status);
+  if (filters?.page) params.set("page", String(filters.page));
+  if (filters?.limit) params.set("limit", String(filters.limit));
+  const qs = params.toString();
+  const res = await adminFetch(`/api/admin/contacts${qs ? `?${qs}` : ""}`);
+  return res.json();
+}
+
+export async function createContact(contact: Record<string, unknown>) {
+  const res = await adminFetch("/api/admin/contacts", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(contact),
+  });
+  return res.json();
+}
+
+export async function deleteContact(id: string) {
+  const res = await adminFetch(`/api/admin/contacts/${id}`, { method: "DELETE" });
+  return res.json();
+}
+
+export async function callContacts(contactIds: string[]) {
+  const res = await adminFetch("/api/admin/calls/initiate", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ contactIds }),
+  });
+  return res.json();
+}
+
+// --- Campaigns API ---
+
+export async function fetchCampaigns() {
+  const res = await adminFetch("/api/admin/campaigns");
+  return res.json();
+}
+
+export async function createCampaign(payload: Record<string, unknown>) {
+  const res = await adminFetch("/api/admin/campaigns", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  return res.json();
+}
+
+export async function fetchCampaignDetail(id: string) {
+  const res = await adminFetch(`/api/admin/campaigns/${id}`);
+  return res.json();
+}
+
+export async function deleteCampaign(id: string) {
+  const res = await adminFetch(`/api/admin/campaigns/${id}`, { method: "DELETE" });
+  return res.json();
+}
+
+export async function controlCampaign(id: string, action: "start" | "pause") {
+  const res = await adminFetch(`/api/admin/campaigns/${id}/${action}`, { method: "POST" });
+  return res.json();
+}
+
+// --- Settings API ---
+
+export async function fetchRetentionSettings() {
+  const res = await adminFetch("/api/admin/settings/retention");
+  return res.json();
+}
+
+export async function saveRetentionSettings(settings: { retention_days: number | null; auto_cleanup: boolean; last_cleanup_at: string | null }) {
+  const res = await adminFetch("/api/admin/settings/retention", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(settings),
+  });
+  return res.json();
+}
+
+export async function previewCleanup(days: number) {
+  const res = await adminFetch(`/api/admin/settings/retention/preview?days=${days}`);
+  return res.json();
+}
+
+export async function runCleanup() {
+  const res = await adminFetch("/api/admin/cron/cleanup", { method: "POST" });
+  return res.json();
+}
+
+// --- Webhooks API ---
+
+export async function fetchWebhooks() {
+  const res = await adminFetch("/api/admin/webhooks");
+  return res.json();
+}
+
+export async function createWebhook(data: Record<string, unknown>) {
+  const res = await adminFetch("/api/admin/webhooks", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+}
+
+export async function updateWebhook(id: string, data: Record<string, unknown>) {
+  const res = await adminFetch(`/api/admin/webhooks/${id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+}
+
+export async function deleteWebhook(id: string) {
+  const res = await adminFetch(`/api/admin/webhooks/${id}`, { method: "DELETE" });
+  return res.json();
+}
+
+export async function testWebhook(id: string) {
+  const res = await adminFetch(`/api/admin/webhooks/${id}/test`, { method: "POST" });
+  return res.json();
+}
+
+// --- Auth API ---
+
+export async function adminLogin(password: string) {
+  const res = await fetch(`${API_BASE}/api/admin/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify({ password }),
+  });
+  return { ok: res.ok, data: await res.json() };
+}
+
+// --- Analytics API ---
+
+export async function fetchAnalytics(period: string) {
+  const res = await adminFetch(`/api/admin/analytics?period=${period}`);
+  return res.json();
+}
+
+// --- Search API ---
+
+export async function adminSearch(params: { q: string; type?: string; page?: number; limit?: number }) {
+  const searchParams = new URLSearchParams();
+  searchParams.set("q", params.q);
+  if (params.type) searchParams.set("type", params.type);
+  if (params.page) searchParams.set("page", String(params.page));
+  if (params.limit) searchParams.set("limit", String(params.limit));
+  const res = await adminFetch(`/api/admin/search?${searchParams.toString()}`);
+  return res.json();
+}
+
+// --- Calls API ---
+
+export async function fetchCalls(filters?: { status?: string; page?: number; limit?: number }) {
+  const params = new URLSearchParams();
+  if (filters?.status) params.set("status", filters.status);
+  if (filters?.page) params.set("page", String(filters.page));
+  if (filters?.limit) params.set("limit", String(filters.limit));
+  const qs = params.toString();
+  const res = await adminFetch(`/api/admin/calls${qs ? `?${qs}` : ""}`);
+  return res.json();
+}

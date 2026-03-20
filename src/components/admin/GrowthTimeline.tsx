@@ -68,20 +68,20 @@ export default function GrowthTimeline({ data, loading }: GrowthTimelineProps) {
 
   if (loading) {
     return (
-      <div className="bg-white/[0.03] rounded-2xl border border-white/10 p-6">
-        <div className="h-4 w-32 bg-white/5 rounded animate-pulse mb-4" />
-        <div className="h-48 bg-white/5 rounded animate-pulse" />
+      <div className="bg-muted/50 rounded-2xl border border-border p-6">
+        <div className="h-4 w-32 bg-muted rounded animate-pulse mb-4" />
+        <div className="h-48 bg-muted rounded animate-pulse" />
       </div>
     );
   }
 
   if (data.length === 0) {
     return (
-      <div className="bg-white/[0.03] rounded-2xl border border-white/10 p-6">
-        <h2 className="text-xs font-semibold text-white/60 uppercase tracking-wider mb-4">
+      <div className="bg-muted/50 rounded-2xl border border-border p-6">
+        <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-4">
           Growth Timeline
         </h2>
-        <div className="h-48 flex items-center justify-center text-white/30 text-sm">
+        <div className="h-48 flex items-center justify-center text-muted-foreground/70 text-sm">
           No timeline data yet
         </div>
       </div>
@@ -95,14 +95,14 @@ export default function GrowthTimeline({ data, loading }: GrowthTimelineProps) {
     : 100;
 
   return (
-    <div className="bg-white/[0.03] rounded-2xl border border-white/10 p-4 md:p-6">
+    <div className="bg-muted/50 rounded-2xl border border-border p-4 md:p-6">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xs font-semibold text-white/60 uppercase tracking-wider">
+        <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
           Growth Timeline
         </h2>
         <div className="flex items-center gap-2">
-          <span className="text-lg font-bold text-white/90 tabular-nums">{latest.cumulativeSessions}</span>
-          <span className="text-xs text-white/40">total</span>
+          <span className="text-lg font-bold text-foreground/90 tabular-nums">{latest.cumulativeSessions}</span>
+          <span className="text-xs text-muted-foreground">total</span>
           {growth !== 0 && (
             <span className={`text-xs font-medium ${growth > 0 ? "text-green-400" : "text-red-400"}`}>
               {growth > 0 ? "+" : ""}{growth}%
@@ -203,15 +203,15 @@ export default function GrowthTimeline({ data, loading }: GrowthTimelineProps) {
         {/* Tooltip */}
         {hoveredIdx !== null && points[hoveredIdx] && (
           <div
-            className="absolute bg-black/80 border border-white/10 rounded-lg px-2.5 py-1.5 pointer-events-none"
+            className="absolute bg-black/80 border border-border rounded-lg px-2.5 py-1.5 pointer-events-none"
             style={{
               left: `${points[hoveredIdx].x}%`,
               top: `${points[hoveredIdx].y - 12}%`,
               transform: "translate(-50%, -100%)",
             }}
           >
-            <div className="text-[10px] text-white/50">{points[hoveredIdx].date}</div>
-            <div className="text-xs font-medium text-white/90">
+            <div className="text-[10px] text-muted-foreground">{points[hoveredIdx].date}</div>
+            <div className="text-xs font-medium text-foreground/90">
               {points[hoveredIdx].cumulativeSessions} sessions
               {points[hoveredIdx].sessions > 0 && (
                 <span className="text-green-400 ml-1">+{points[hoveredIdx].sessions}</span>

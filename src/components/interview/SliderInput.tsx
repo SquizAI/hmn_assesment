@@ -34,11 +34,11 @@ export default function SliderInput({ min, max, minLabel, maxLabel, value: initi
   return (
     <div className="w-full space-y-4">
       <div className="text-center">
-        <span className="text-5xl font-bold text-white tabular-nums">{value}</span>
-        <span className="text-white/40 text-lg ml-1">/ {max}</span>
+        <span className="text-5xl font-bold text-foreground tabular-nums">{value}</span>
+        <span className="text-muted-foreground text-lg ml-1">/ {max}</span>
       </div>
       <div className="relative px-2">
-        <div className="absolute inset-x-2 top-1/2 -translate-y-1/2 h-2 rounded-full bg-white/10" />
+        <div className="absolute inset-x-2 top-1/2 -translate-y-1/2 h-2 rounded-full bg-muted" />
         <div className={`absolute left-2 top-1/2 -translate-y-1/2 h-2 rounded-full bg-gradient-to-r ${color} transition-all duration-150`} style={{ width: `calc(${pct}% - 4px)` }} />
         <input type="range" min={min} max={max} value={value} onChange={handleChange}
           className="relative w-full h-2 appearance-none bg-transparent cursor-pointer z-10
@@ -58,7 +58,7 @@ export default function SliderInput({ min, max, minLabel, maxLabel, value: initi
               className={`w-8 h-8 rounded-full text-xs font-medium transition-all duration-150 cursor-pointer
                 ${n === value
                   ? "bg-white text-black shadow-lg scale-110"
-                  : "bg-white/10 text-white/60 hover:bg-white/20 hover:text-white"
+                  : "bg-muted text-muted-foreground hover:bg-white/20 hover:text-foreground"
                 }`}
             >
               {n}
@@ -66,13 +66,13 @@ export default function SliderInput({ min, max, minLabel, maxLabel, value: initi
           ))}
         </div>
       ) : (
-        <div className="flex justify-between text-xs text-white/50 px-2">
+        <div className="flex justify-between text-xs text-muted-foreground px-2">
           <span>{minLabel || min}</span>
           <span>{maxLabel || max}</span>
         </div>
       )}
       {showNumbers && (minLabel || maxLabel) && (
-        <div className="flex justify-between text-xs text-white/50 px-2">
+        <div className="flex justify-between text-xs text-muted-foreground px-2">
           <span>{minLabel || min}</span>
           <span>{maxLabel || max}</span>
         </div>
