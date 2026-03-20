@@ -972,7 +972,9 @@ app.post("/api/interview/conversation-stream", async (req, res) => {
     history.push({ role: "user", content: String(answer), timestamp: new Date().toISOString(), questionId });
 
     const userTurns = history.filter((m: { role: string }) => m.role === "user").length;
-    const MAX_CONVERSATION_TURNS = 5;
+    // Use shorter turn limits for surveys/short assessments
+    const estimatedMinutes = (assessment as Record<string, unknown>)?.estimatedMinutes as number | undefined;
+    const MAX_CONVERSATION_TURNS = estimatedMinutes && estimatedMinutes <= 15 ? 3 : 5;
 
     // Set up SSE headers
     res.setHeader("Content-Type", "text/event-stream");
@@ -988,7 +990,7 @@ app.post("/api/interview/conversation-stream", async (req, res) => {
       res.write(`data: ${JSON.stringify({ type: "token", text: aiResponse.replace("[QUESTION_COMPLETE]", "").trim() })}\n\n`);
     } else {
       // Stream the follow-up response
-      aiResponse = await streamFollowUp(res, session as unknown as Record<string, unknown>, currentQuestion, history, assessment);
+      aiResponse = await streamFollowUp(res, session as unknown as Record<string, unknown>, currentQuestion, history, assessment, userTurns);
     }
 
     // Check completion
@@ -1020,9 +1022,12 @@ app.post("/api/interview/conversation-stream", async (req, res) => {
     const smartRemaining = filterDeducibleQuestions(remaining, session);
     const questionsForAI = smartRemaining.length > 0 ? smartRemaining : remaining;
 
+    // For custom assessments (non-default), use sequential ordering to avoid skipping questions
+    const useSequentialOrder = !!assessment;
+
     const [confidence, selection] = await Promise.all([
       analyzeResponseConfidence(fullAnswer, currentQuestion.text as string, session.responses),
-      remaining.length > 0 ? selectNextQuestion(questionsForAI, session).catch(() => null) : Promise.resolve(null),
+      (!useSequentialOrder && remaining.length > 0) ? selectNextQuestion(questionsForAI, session).catch(() => null) : Promise.resolve(null),
     ]);
 
     session.responses.push({
@@ -1159,16 +1164,17 @@ app.post("/api/interview/respond", async (req, res) => {
         questionId,
       });
 
-      // Count user turns — force completion after 5 to prevent infinite loops
+      // Count user turns — force completion after max turns to prevent infinite loops
       const userTurns = history.filter((m: { role: string }) => m.role === "user").length;
-      const MAX_CONVERSATION_TURNS = 5;
+      const estimatedMinutesRespond = (assessment as Record<string, unknown>)?.estimatedMinutes as number | undefined;
+      const MAX_CONVERSATION_TURNS = estimatedMinutesRespond && estimatedMinutesRespond <= 15 ? 3 : 5;
 
       let aiResponse: string;
       if (userTurns >= MAX_CONVERSATION_TURNS) {
         aiResponse = "Thank you for sharing all of that — really helpful context. [QUESTION_COMPLETE]";
         console.log(`[INTERVIEW] Forcing conversation completion after ${userTurns} turns for question ${questionId}`);
       } else {
-        aiResponse = await generateFollowUp(session as unknown as Record<string, unknown>, currentQuestion, history, assessment);
+        aiResponse = await generateFollowUp(session as unknown as Record<string, unknown>, currentQuestion, history, assessment, userTurns);
       }
 
       // Detect conversation completion: explicit marker OR farewell-like response
@@ -1306,11 +1312,14 @@ app.post("/api/interview/respond", async (req, res) => {
     const respondFilteredOutIds = remaining.filter((q) => !smartRemaining.some((sq) => sq.id === q.id)).map((q) => q.id as string);
     const questionsForAI = smartRemaining.length > 0 ? smartRemaining : remaining;
 
+    // For custom assessments (non-default), use sequential ordering to avoid skipping questions
+    const useSequentialOrderRespond = !!assessment;
+
     // Run next question selection + pending confidence in PARALLEL
     const pending = (session as unknown as Record<string, unknown>)._pendingConfidence as { promise: Promise<{ specificity: number; emotionalCharge: number; consistency: number }> | null; responseIndex: number } | undefined;
 
     const [selection, resolvedConfidence] = await Promise.all([
-      selectNextQuestion(questionsForAI, session).catch(() => null),
+      (!useSequentialOrderRespond) ? selectNextQuestion(questionsForAI, session).catch(() => null) : Promise.resolve(null),
       pending?.promise ?? Promise.resolve(null),
     ]);
 
@@ -1827,6 +1836,7 @@ async function streamFollowUp(
   currentQuestion: Record<string, unknown>,
   conversationHistory: Array<{ role: string; content: string }>,
   assessment?: Record<string, unknown> | null,
+  userTurns?: number,
 ): Promise<string> {
   const client = getAnthropicClient();
   const participant = session.participant as { name: string; role: string; company: string; industry: string; teamSize: string };
@@ -1852,6 +1862,13 @@ async function streamFollowUp(
 - Never break character. You are a human interviewer.
 - Do NOT include internal annotations, bracketed notes, or markdown formatting.`;
 
+  // Build turn-aware completion guidance
+  const turns = userTurns ?? conversationHistory.filter((m) => m.role === "user").length;
+  let completionUrgency = "";
+  if (turns >= 2) {
+    completionUrgency = `\n\nCRITICAL: This is user turn ${turns}. You MUST wrap up this question NOW. Acknowledge their response briefly (1 sentence max), then end your response with the exact marker [QUESTION_COMPLETE]. Do NOT ask another follow-up question. Do NOT introduce new topics.`;
+  }
+
   const systemPrompt = `${assessmentInterviewPrompt || `You are an expert interviewer for HMN (Human Machine Network), conducting an AI readiness assessment.`}
 
 PARTICIPANT: ${participant.name}, ${participant.role} at ${participant.company} (${participant.industry}, team size: ${participant.teamSize})
@@ -1865,7 +1882,7 @@ SCORING: ${(currentQuestion.scoringDimensions as string[])?.join(", ") || "gener
 
 ${currentQuestion.aiFollowUpPrompt ? `FOLLOW-UP GUIDANCE:\n${currentQuestion.aiFollowUpPrompt}` : ""}
 
-${assessmentInterviewPrompt ? "" : defaultInterviewRole}`;
+${assessmentInterviewPrompt ? "" : defaultInterviewRole}${completionUrgency}`;
 
   const messages = conversationHistory
     .filter((m) => m.role !== "system")
@@ -1912,6 +1929,7 @@ async function generateFollowUp(
   currentQuestion: Record<string, unknown>,
   conversationHistory: Array<{ role: string; content: string }>,
   assessment?: Record<string, unknown> | null,
+  userTurns?: number,
 ) {
   const client = getAnthropicClient();
   const participant = session.participant as { name: string; role: string; company: string; industry: string; teamSize: string };
@@ -1940,6 +1958,13 @@ async function generateFollowUp(
 - Never break character. You are a human interviewer.
 - Do NOT include internal annotations, bracketed notes, or markdown formatting.`;
 
+  // Build turn-aware completion guidance
+  const turns = userTurns ?? conversationHistory.filter((m) => m.role === "user").length;
+  let completionUrgency = "";
+  if (turns >= 2) {
+    completionUrgency = `\n\nCRITICAL: This is user turn ${turns}. You MUST wrap up this question NOW. Acknowledge their response briefly (1 sentence max), then end your response with the exact marker [QUESTION_COMPLETE]. Do NOT ask another follow-up question. Do NOT introduce new topics.`;
+  }
+
   const systemPrompt = `${assessmentInterviewPrompt || `You are an expert interviewer for HMN (Human Machine Network), conducting an AI readiness assessment.`}
 
 PARTICIPANT: ${participant.name}, ${participant.role} at ${participant.company} (${participant.industry}, team size: ${participant.teamSize})
@@ -1953,7 +1978,7 @@ SCORING: ${(currentQuestion.scoringDimensions as string[])?.join(", ") || "gener
 
 ${currentQuestion.aiFollowUpPrompt ? `FOLLOW-UP GUIDANCE:\n${currentQuestion.aiFollowUpPrompt}` : ""}
 
-${assessmentInterviewPrompt ? "" : defaultInterviewRole}`;
+${assessmentInterviewPrompt ? "" : defaultInterviewRole}${completionUrgency}`;
 
   // Limit conversation messages to last 10 (5 exchanges) to prevent token bloat
   const messages = conversationHistory
