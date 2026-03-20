@@ -1020,14 +1020,13 @@ app.post("/api/interview/conversation-stream", async (req, res) => {
     answeredIds.add(questionId); // include this one
     const remaining = bankQuestions.filter((q) => !answeredIds.has(q.id as string));
     const smartRemaining = filterDeducibleQuestions(remaining, session);
-    const questionsForAI = smartRemaining.length > 0 ? smartRemaining : remaining;
 
     // For custom assessments (non-default), use sequential ordering to avoid skipping questions
     const useSequentialOrder = !!assessment;
 
     const [confidence, selection] = await Promise.all([
       analyzeResponseConfidence(fullAnswer, currentQuestion.text as string, session.responses),
-      (!useSequentialOrder && remaining.length > 0) ? selectNextQuestion(questionsForAI, session).catch(() => null) : Promise.resolve(null),
+      (!useSequentialOrder && smartRemaining.length > 0) ? selectNextQuestion(smartRemaining, session as unknown as Record<string, unknown>).catch(() => null) : Promise.resolve(null),
     ]);
 
     session.responses.push({
@@ -1047,7 +1046,7 @@ app.post("/api/interview/conversation-stream", async (req, res) => {
     });
     session.conversationHistory.push(...history);
 
-    if (remaining.length === 0) {
+    if (remaining.length === 0 || smartRemaining.length === 0) {
       session.status = "completed";
       await saveSession(session);
       const completionAssessmentName = (assessment as Record<string, unknown>)?.name as string || "HMN Assessment";
@@ -1073,7 +1072,7 @@ app.post("/api/interview/conversation-stream", async (req, res) => {
         nextQuestion = { ...selected, text: adaptedText || (selected.text as string) };
       }
     }
-    if (!nextQuestion) nextQuestion = remaining[0];
+    if (!nextQuestion) nextQuestion = smartRemaining[0];
 
     // Apply [Company] substitution
     const companyName = (session.participant as { company?: string })?.company || "";
@@ -1307,10 +1306,46 @@ app.post("/api/interview/respond", async (req, res) => {
       return;
     }
 
-    // Filter out questions that can be trivially deduced
+    // Filter out questions that can be trivially deduced or whose showCondition is not met
     const smartRemaining = filterDeducibleQuestions(remaining, session);
     const respondFilteredOutIds = remaining.filter((q) => !smartRemaining.some((sq) => sq.id === q.id)).map((q) => q.id as string);
-    const questionsForAI = smartRemaining.length > 0 ? smartRemaining : remaining;
+
+    // If ALL remaining questions were filtered out (e.g. showCondition not met), survey is complete
+    if (smartRemaining.length === 0) {
+      const pending = (session as unknown as Record<string, unknown>)._pendingConfidence as { promise: Promise<{ specificity: number; emotionalCharge: number; consistency: number }> | null; responseIndex: number } | undefined;
+      if (pending?.promise) {
+        const confidence = await pending.promise;
+        (session.responses[pending.responseIndex] as unknown as Record<string, unknown>).confidenceIndicators = confidence;
+      }
+      delete (session as unknown as Record<string, unknown>)._pendingConfidence;
+
+      session.status = "completed";
+      await saveSession(session as unknown as Record<string, unknown>);
+
+      invalidateCache("stats:");
+      const participantInfo = session.participant as { name?: string; email?: string; company?: string };
+      emitAdminEvent({
+        type: "session_completed",
+        data: { sessionId: session.id, name: participantInfo?.name || "Unknown", company: participantInfo?.company || "" },
+        timestamp: new Date().toISOString(),
+      });
+
+      const participant = session.participant as { name?: string; email?: string };
+      const completionAssessmentName = (assessment as Record<string, unknown>)?.name as string || "HMN Assessment";
+      if (isEmailEnabled() && participant?.email) {
+        sendCompletionEmail({
+          to: participant.email,
+          participantName: participant.name || "there",
+          assessmentName: completionAssessmentName,
+        }).catch((err) => console.error("[EMAIL] Completion email failed:", err));
+      }
+
+      const completionTypeId = (session.assessmentTypeId as string) || "ai-readiness";
+      res.json({ type: "complete", session, assessmentTypeId: completionTypeId, assessmentName: completionAssessmentName, ...(aiConversationHistory && { conversationHistory: aiConversationHistory }) });
+      return;
+    }
+
+    const questionsForAI = smartRemaining;
 
     // For custom assessments (non-default), use sequential ordering to avoid skipping questions
     const useSequentialOrderRespond = !!assessment;
@@ -2332,7 +2367,18 @@ app.get("/api/admin/sessions", requireAdmin, async (req, res) => {
         limit: limit ? parseInt(limit) : 50,
         since, status, assessmentTypeId, company,
       });
-      res.json(result);
+      // Map to SessionSummary format expected by the frontend
+      const sessions = result.sessions.map((s) => ({
+        id: s.id,
+        participantName: s.participant?.name ?? "Unknown",
+        participantCompany: s.participant?.company ?? "Unknown",
+        status: s.status,
+        createdAt: s.createdAt,
+        assessmentTypeId: s.assessmentTypeId,
+        responseCount: s.responses?.length ?? 0,
+        hasResearch: !!(s as unknown as Record<string, unknown>).research,
+      }));
+      res.json({ sessions, total: result.total, page: result.page, limit: result.limit });
       return;
     }
 

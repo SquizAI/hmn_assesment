@@ -283,14 +283,14 @@ export default function VapiVoiceAgent({
             title={callStatus === "idle" ? "Talk to Kascade" : "End call"}
           >
             {callStatus === "idle" ? (
-              <svg className="w-7 h-7 text-foreground" fill="currentColor" viewBox="0 0 24 24">
+              <svg className="w-7 h-7 text-white" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z" />
                 <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z" />
                 <circle cx="19" cy="5" r="1.5" className="animate-pulse" opacity="0.8" />
                 <circle cx="20.5" cy="3" r="0.8" className="animate-pulse" opacity="0.6" />
               </svg>
             ) : callStatus === "connecting" ? (
-              <svg className="animate-spin h-7 w-7 text-foreground" fill="none" viewBox="0 0 24 24">
+              <svg className="animate-spin h-7 w-7 text-white" fill="none" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
               </svg>

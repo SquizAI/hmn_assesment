@@ -113,7 +113,7 @@ export default function AdminWebhooksPage() {
           <h1 className="text-3xl font-bold text-foreground">Webhooks</h1>
           <p className="text-sm text-muted-foreground mt-1">Configure webhook URLs to receive event notifications</p>
         </div>
-        <button onClick={() => { resetForm(); setShowForm(true); }} className="px-5 py-2.5 text-sm font-medium rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 text-foreground hover:from-blue-500 hover:to-blue-500 transition-all">Add Webhook</button>
+        <button onClick={() => { resetForm(); setShowForm(true); }} className="px-5 py-2.5 text-sm font-medium rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 text-white hover:from-blue-500 hover:to-blue-500 transition-all">Add Webhook</button>
       </div>
 
       {showForm && (
@@ -154,7 +154,7 @@ export default function AdminWebhooksPage() {
               <span className="text-sm text-muted-foreground">Active</span>
             </div>
             <div className="flex items-center gap-3 pt-2">
-              <button type="submit" disabled={saving || !formUrl.trim() || formEvents.length === 0} className="px-5 py-2.5 text-sm font-medium rounded-lg bg-gradient-to-r from-blue-600 to-cyan-600 text-foreground disabled:opacity-50 transition-all">{saving ? "Saving..." : editingWebhook ? "Update" : "Create"}</button>
+              <button type="submit" disabled={saving || !formUrl.trim() || formEvents.length === 0} className="px-5 py-2.5 text-sm font-medium rounded-lg bg-gradient-to-r from-blue-600 to-cyan-600 text-white disabled:opacity-50 transition-all">{saving ? "Saving..." : editingWebhook ? "Update" : "Create"}</button>
               <button type="button" onClick={() => { resetForm(); setShowForm(false); }} className="px-4 py-2.5 text-sm text-muted-foreground hover:text-muted-foreground">Cancel</button>
             </div>
           </form>

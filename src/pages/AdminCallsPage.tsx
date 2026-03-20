@@ -52,7 +52,7 @@ function TranscriptViewer({ messages }: { messages: Array<{ role: string; messag
     <div className="space-y-2 max-h-60 overflow-y-auto">
       {messages.map((msg, i) => (
         <div key={i} className={`flex gap-2 ${msg.role === "assistant" ? "" : "flex-row-reverse"}`}>
-          <div className={`max-w-[80%] px-3 py-2 rounded-lg text-xs ${msg.role === "assistant" ? "bg-blue-500/10 text-blue-200" : "bg-muted text-foreground/80"}`}>
+          <div className={`max-w-[80%] px-3 py-2 rounded-lg text-xs ${msg.role === "assistant" ? "bg-primary text-primary-foreground" : "bg-muted text-foreground"}`}>
             {msg.message}
           </div>
         </div>

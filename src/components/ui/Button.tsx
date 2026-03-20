@@ -16,7 +16,7 @@ export default function Button({
   const base = "inline-flex items-center justify-center font-medium rounded-xl transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-background disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 hover:scale-[1.02] shadow-sm";
 
   const variants: Record<string, string> = {
-    primary: "bg-primary text-primary-foreground shadow-[0_4px_14px_0_theme(colors.primary.500/30)] hover:shadow-[0_6px_20px_theme(colors.primary.500/40)] hover:bg-primary/90 focus:ring-primary/50",
+    primary: "bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-[0_4px_14px_0_rgba(37,99,235,0.3)] hover:shadow-[0_6px_20px_rgba(37,99,235,0.4)] hover:from-blue-500 hover:to-cyan-400 focus:ring-blue-500/50",
     secondary: "bg-card/80 backdrop-blur-md text-foreground hover:bg-card/100 focus:ring-muted-foreground/50 border border-border shadow-inner",
     ghost: "bg-transparent text-foreground/80 hover:text-foreground hover:bg-muted focus:ring-muted-foreground/30 !shadow-none",
     danger: "bg-red-500/10 text-red-500 hover:bg-red-500/20 focus:ring-red-500/50 border border-red-500/20 hover:border-red-500/30",

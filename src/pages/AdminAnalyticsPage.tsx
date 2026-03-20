@@ -274,7 +274,7 @@ export default function AdminAnalyticsPage() {
                 onClick={() => setPeriod(p.value)}
                 className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${
                   period === p.value
-                    ? "bg-gradient-to-r from-blue-600 to-cyan-600 text-foreground shadow-lg shadow-blue-500/20"
+                    ? "bg-gradient-to-r from-blue-600 to-cyan-600 text-white shadow-lg shadow-blue-500/20"
                     : "text-muted-foreground hover:text-foreground/90"
                 }`}
               >

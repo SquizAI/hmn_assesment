@@ -425,7 +425,7 @@ export default function QuestionCard({ question, sessionId, onSubmit, onConversa
                               <button
                                 onClick={handleRequestCall}
                                 disabled={!callPhone.trim() || callLoading}
-                                className="px-5 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 text-foreground text-sm font-medium hover:opacity-90 disabled:opacity-40 transition-all flex items-center gap-2 whitespace-nowrap"
+                                className="px-5 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 text-white text-sm font-medium hover:opacity-90 disabled:opacity-40 transition-all flex items-center gap-2 whitespace-nowrap"
                               >
                                 {callLoading ? (
                                   <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">

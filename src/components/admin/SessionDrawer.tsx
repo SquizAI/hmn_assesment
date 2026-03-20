@@ -269,9 +269,9 @@ export default function SessionDrawer({ sessionId, onClose, onDelete }: SessionD
                     <div className="flex items-start justify-between">
                       <div>
                         <h3 className="text-lg font-semibold text-foreground">
-                          {session.participant.name}
+                          {session.participant?.name || (session as any).participantName || "Unknown Participant"}
                         </h3>
-                        <p className="text-sm text-muted-foreground">{session.participant.role}</p>
+                        <p className="text-sm text-muted-foreground">{session.participant?.role || (session as any).participantRole || ""}</p>
                       </div>
                       <StatusBadge status={session.status} />
                     </div>
@@ -279,19 +279,19 @@ export default function SessionDrawer({ sessionId, onClose, onDelete }: SessionD
                     <div className="grid grid-cols-2 gap-3 text-sm">
                       <div>
                         <span className="text-muted-foreground">Company</span>
-                        <p className="text-foreground/80">{session.participant.company}</p>
+                        <p className="text-foreground/80">{session.participant?.company || (session as any).participantCompany || "—"}</p>
                       </div>
                       <div>
                         <span className="text-muted-foreground">Industry</span>
-                        <p className="text-foreground/80">{session.participant.industry}</p>
+                        <p className="text-foreground/80">{session.participant?.industry || (session as any).participantIndustry || "—"}</p>
                       </div>
                       <div>
                         <span className="text-muted-foreground">Team Size</span>
-                        <p className="text-foreground/80">{session.participant.teamSize}</p>
+                        <p className="text-foreground/80">{session.participant?.teamSize || (session as any).participantTeamSize || "—"}</p>
                       </div>
                       <div>
                         <span className="text-muted-foreground">Email</span>
-                        <p className="text-foreground/80">{session.participant.email}</p>
+                        <p className="text-foreground/80">{session.participant?.email || (session as any).participantEmail || "—"}</p>
                       </div>
                     </div>
 

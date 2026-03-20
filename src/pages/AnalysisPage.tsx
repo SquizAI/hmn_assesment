@@ -79,7 +79,7 @@ export default function AnalysisPage() {
     <div className="min-h-screen pb-20">
       <header className="border-b border-border px-6 py-4">
         <div className="max-w-5xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3"><div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-600 flex items-center justify-center text-sm font-bold">H</div><span className="font-semibold text-foreground/90">HMN Cascade</span></div>
+          <div className="flex items-center gap-3"><div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-600 flex items-center justify-center text-sm font-bold text-white">H</div><span className="font-semibold text-white/90">HMN Cascade</span></div>
           <div className="flex items-center gap-2">
             <Button variant="ghost" onClick={handleDownloadPdf} disabled={downloading}>
               {downloading ? "Generating..." : "Download PDF"}

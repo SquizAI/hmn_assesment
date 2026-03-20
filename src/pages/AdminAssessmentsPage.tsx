@@ -443,7 +443,7 @@ export default function AdminAssessmentsPage() {
 
         <button
           onClick={() => navigate("/admin/builder")}
-          className="w-full sm:w-auto px-4 py-2 text-sm font-medium rounded-xl transition-all bg-gradient-to-r from-blue-500/20 to-blue-500/20 border border-blue-500/20 text-blue-200 hover:from-blue-500/30 hover:to-blue-500/30 hover:text-foreground"
+          className="w-full sm:w-auto px-4 py-2 text-sm font-medium rounded-xl transition-all bg-gradient-to-r from-blue-600 to-cyan-500 text-white hover:opacity-90 shadow-lg shadow-blue-500/20"
         >
           Build Assessment
         </button>

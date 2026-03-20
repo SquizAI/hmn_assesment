@@ -124,13 +124,13 @@ export default function AdminContactsPage() {
         <select value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }} className="bg-muted border border-border rounded-lg px-4 py-2 text-sm text-foreground focus:border-border focus:outline-none appearance-none">
           {STATUS_OPTIONS.map((opt) => <option key={opt.value} value={opt.value} className="bg-[#12121a]">{opt.label}</option>)}
         </select>
-        <button onClick={() => setShowAddForm(!showAddForm)} className="px-4 py-2 text-sm font-medium rounded-lg bg-gradient-to-r from-blue-600 to-cyan-600 text-foreground hover:from-blue-500 hover:to-blue-500 transition-all">Add Contact</button>
+        <button onClick={() => setShowAddForm(!showAddForm)} className="px-4 py-2 text-sm font-medium rounded-lg bg-gradient-to-r from-blue-600 to-cyan-600 text-white hover:from-blue-500 hover:to-blue-500 transition-all">Add Contact</button>
       </div>
 
       {selectedIds.size > 0 && (
         <div className="mb-4 flex items-center gap-4 p-3 bg-blue-500/10 border border-blue-500/20 rounded-xl">
           <span className="text-sm text-blue-400">{selectedIds.size} contact{selectedIds.size !== 1 ? "s" : ""} selected</span>
-          <button onClick={handleCallSelected} disabled={calling} className="px-4 py-1.5 text-sm font-medium rounded-lg bg-gradient-to-r from-blue-600 to-cyan-600 text-foreground disabled:opacity-50 transition-all">
+          <button onClick={handleCallSelected} disabled={calling} className="px-4 py-1.5 text-sm font-medium rounded-lg bg-gradient-to-r from-blue-600 to-cyan-600 text-white disabled:opacity-50 transition-all">
             {calling ? "Initiating..." : `Call Selected (${selectedIds.size})`}
           </button>
           <button onClick={() => setSelectedIds(new Set())} className="text-sm text-muted-foreground hover:text-muted-foreground transition-colors">Clear</button>
@@ -149,7 +149,7 @@ export default function AdminContactsPage() {
             <input type="text" placeholder="Industry" value={newContact.industry} onChange={(e) => setNewContact({ ...newContact, industry: e.target.value })} className="bg-muted border border-border rounded-lg px-4 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-border focus:outline-none" />
             <input type="text" placeholder="Team Size" value={newContact.team_size} onChange={(e) => setNewContact({ ...newContact, team_size: e.target.value })} className="bg-muted border border-border rounded-lg px-4 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-border focus:outline-none" />
             <div className="flex gap-2">
-              <button type="submit" className="flex-1 px-4 py-2 text-sm font-medium rounded-lg bg-gradient-to-r from-blue-600 to-cyan-600 text-foreground transition-all">Add</button>
+              <button type="submit" className="flex-1 px-4 py-2 text-sm font-medium rounded-lg bg-gradient-to-r from-blue-600 to-cyan-600 text-white transition-all">Add</button>
               <button type="button" onClick={() => setShowAddForm(false)} className="px-4 py-2 text-sm text-muted-foreground hover:text-muted-foreground">Cancel</button>
             </div>
           </form>

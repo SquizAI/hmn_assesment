@@ -77,7 +77,7 @@ function BuilderStepNode({ data }: NodeProps) {
 
   return (
     <div
-      className={`w-[200px] h-[80px] rounded-xl border bg-[#0f0f18] flex flex-col items-center justify-center gap-1.5 px-3 ${borderClass}`}
+      className={`w-[200px] h-[80px] rounded-xl border bg-card dark:bg-[#0f0f18] flex flex-col items-center justify-center gap-1.5 px-3 ${borderClass}`}
     >
       <Handle type="target" position={Position.Left} className="!bg-muted !w-2 !h-2 !border-0" />
       <Handle type="source" position={Position.Right} className="!bg-muted !w-2 !h-2 !border-0" />
@@ -127,7 +127,7 @@ function PhaseNode({ data }: NodeProps) {
 
   return (
     <div
-      className={`w-[240px] h-[70px] rounded-lg border border-border ${borderColor} border-l-2 bg-[#0f0f18] flex items-center justify-between px-3`}
+      className={`w-[240px] h-[70px] rounded-lg border border-border ${borderColor} border-l-2 bg-card dark:bg-[#0f0f18] flex items-center justify-between px-3`}
     >
       <Handle type="target" position={Position.Top} className="!bg-muted !w-2 !h-2 !border-0" />
       <Handle type="source" position={Position.Bottom} className="!bg-muted !w-2 !h-2 !border-0" />
@@ -164,7 +164,7 @@ function SectionNode({ data }: NodeProps) {
   const expandable = data.expandable as boolean;
 
   return (
-    <div className="w-[220px] h-[60px] rounded-lg border border-border bg-[#0c0c14] flex items-center justify-between px-3">
+    <div className="w-[220px] h-[60px] rounded-lg border border-border bg-background dark:bg-[#0c0c14] flex items-center justify-between px-3">
       <Handle type="target" position={Position.Top} className="!bg-muted !w-2 !h-2 !border-0" />
       <Handle type="source" position={Position.Bottom} className="!bg-muted !w-2 !h-2 !border-0" />
 
@@ -202,7 +202,7 @@ function QuestionNode({ data }: NodeProps) {
   const colors = INPUT_TYPE_COLORS[inputType] || { bg: "bg-muted", text: "text-muted-foreground" };
 
   return (
-    <div className="w-[260px] h-[50px] rounded-md border border-border bg-[#0a0a12] flex flex-col justify-center px-3 gap-1">
+    <div className="w-[260px] h-[50px] rounded-md border border-border bg-muted dark:bg-[#0a0a12] flex flex-col justify-center px-3 gap-1">
       <Handle type="target" position={Position.Top} className="!bg-muted !w-1.5 !h-1.5 !border-0" />
 
       <div className="flex items-center justify-between gap-2">
@@ -234,7 +234,7 @@ function DimensionNode({ data }: NodeProps) {
   const questionCount = data.questionCount as number;
 
   return (
-    <div className="w-[180px] h-[50px] rounded-md border border-border bg-[#0a0a12] flex flex-col justify-center px-3 gap-1">
+    <div className="w-[180px] h-[50px] rounded-md border border-border bg-muted dark:bg-[#0a0a12] flex flex-col justify-center px-3 gap-1">
       <Handle type="target" position={Position.Top} className="!bg-muted !w-1.5 !h-1.5 !border-0" />
 
       <div className="flex items-center justify-between gap-1.5">
@@ -278,6 +278,17 @@ function WorkflowCanvasInner({
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
   const { fitView } = useReactFlow();
   const fitViewTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [isDarkTheme, setIsDarkTheme] = useState(true);
+
+  // Sync theme
+  useEffect(() => {
+    setIsDarkTheme(document.documentElement.classList.contains("dark"));
+    const observer = new MutationObserver(() => {
+      setIsDarkTheme(document.documentElement.classList.contains("dark"));
+    });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+    return () => observer.disconnect();
+  }, []);
 
   // Rebuild graph when assessment, phase, or expanded nodes change
   useEffect(() => {
@@ -359,19 +370,20 @@ function WorkflowCanvasInner({
         onNodeClick={handleNodeClick}
         fitView
         proOptions={{ hideAttribution: true }}
-        style={{ background: "#0a0a0f" }}
+        style={{ background: "transparent" }}
+        className="bg-[#fafafa] dark:bg-[#0a0a0f]"
       >
         <Background
           variant={BackgroundVariant.Dots}
-          color="rgba(255,255,255,0.04)"
+          color={isDarkTheme ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.08)"}
           gap={24}
           size={1}
         />
-        <Controls className="react-flow-controls-dark" />
+        <Controls className={isDarkTheme ? "react-flow-controls-dark" : ""} />
         <MiniMap
           nodeColor={minimapNodeColor}
-          maskColor="rgba(0,0,0,0.8)"
-          style={{ background: "rgba(255,255,255,0.03)" }}
+          maskColor={isDarkTheme ? "rgba(0,0,0,0.8)" : "rgba(255,255,255,0.7)"}
+          style={{ background: isDarkTheme ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.03)" }}
         />
       </ReactFlow>
 

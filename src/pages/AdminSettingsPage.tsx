@@ -121,7 +121,7 @@ export default function AdminSettingsPage() {
         )}
 
         <div className="flex items-center gap-3 pt-4 border-t border-border">
-          <button onClick={handleSave} disabled={saving} className="px-5 py-2.5 text-sm font-medium rounded-lg bg-gradient-to-r from-blue-600 to-cyan-600 text-foreground disabled:opacity-50 transition-all">{saving ? "Saving..." : "Save Settings"}</button>
+          <button onClick={handleSave} disabled={saving} className="px-5 py-2.5 text-sm font-medium rounded-lg bg-gradient-to-r from-blue-600 to-cyan-600 text-white disabled:opacity-50 transition-all">{saving ? "Saving..." : "Save Settings"}</button>
           <button onClick={() => setShowCleanupConfirm(true)} disabled={cleaning || !settings.retention_days} className="px-4 py-2.5 text-sm font-medium rounded-lg bg-muted text-foreground hover:bg-muted border border-border disabled:opacity-50 transition-colors">{cleaning ? "Cleaning..." : "Run Cleanup Now"}</button>
         </div>
       </div>

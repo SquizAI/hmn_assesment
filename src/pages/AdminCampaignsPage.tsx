@@ -131,7 +131,7 @@ export default function AdminCampaignsPage() {
 
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-3xl font-bold text-foreground">Campaigns</h1>
-        <button onClick={() => setShowNewForm(!showNewForm)} className="px-5 py-2.5 text-sm font-medium rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 text-foreground hover:from-blue-500 hover:to-blue-500 transition-all">
+        <button onClick={() => setShowNewForm(!showNewForm)} className="px-5 py-2.5 text-sm font-medium rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 text-white hover:from-blue-500 hover:to-blue-500 transition-all">
           New Campaign
         </button>
       </div>
@@ -179,7 +179,7 @@ export default function AdminCampaignsPage() {
               </div>
             )}
             <div className="flex items-center gap-3">
-              <button type="submit" disabled={creating || !newName.trim() || (enableScheduling && !scheduleDate)} className="px-5 py-2.5 text-sm font-medium rounded-lg bg-gradient-to-r from-blue-600 to-cyan-600 text-foreground hover:from-blue-500 hover:to-blue-500 disabled:opacity-50 transition-all">
+              <button type="submit" disabled={creating || !newName.trim() || (enableScheduling && !scheduleDate)} className="px-5 py-2.5 text-sm font-medium rounded-lg bg-gradient-to-r from-blue-600 to-cyan-600 text-white hover:from-blue-500 hover:to-blue-500 disabled:opacity-50 transition-all">
                 {creating ? "Creating..." : enableScheduling ? "Create & Schedule" : "Create"}
               </button>
               <button type="button" onClick={() => { resetForm(); setShowNewForm(false); }} className="px-4 py-2.5 text-sm text-muted-foreground hover:text-muted-foreground transition-colors">Cancel</button>

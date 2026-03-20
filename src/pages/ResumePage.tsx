@@ -89,7 +89,7 @@ export default function ResumePage() {
       <div className="min-h-screen flex flex-col bg-background">
         <header className="border-b border-border px-6 py-4">
           <div className="max-w-5xl mx-auto flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-600 flex items-center justify-center text-sm font-bold text-foreground">H</div>
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-600 flex items-center justify-center text-sm font-bold text-white">H</div>
             <span className="font-semibold text-foreground/90">HMN Cascade</span>
           </div>
         </header>
@@ -120,7 +120,7 @@ export default function ResumePage() {
     <div className="min-h-screen flex flex-col bg-background">
       <header className="border-b border-border px-6 py-4">
         <div className="max-w-5xl mx-auto flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-600 flex items-center justify-center text-sm font-bold text-foreground">H</div>
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-600 flex items-center justify-center text-sm font-bold text-white">H</div>
           <span className="font-semibold text-foreground/90">HMN Cascade</span>
         </div>
       </header>
@@ -163,12 +163,12 @@ export default function ResumePage() {
           <div className="space-y-3">
             {isAlreadyComplete ? (
               <>
-                <button onClick={() => navigate(`/analysis/${session.id}`)} className="w-full px-6 py-3 text-sm font-medium rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 text-foreground transition-all">View Your Results</button>
+                <button onClick={() => navigate(`/analysis/${session.id}`)} className="w-full px-6 py-3 text-sm font-medium rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 text-white transition-all">View Your Results</button>
                 <p className="text-center text-xs text-muted-foreground">This assessment is already complete.</p>
               </>
             ) : (
               <>
-                <button onClick={handleContinue} disabled={resuming} className="w-full px-6 py-3 text-sm font-medium rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 text-foreground disabled:opacity-50 transition-all">{resuming ? "Resuming..." : "Continue Assessment"}</button>
+                <button onClick={handleContinue} disabled={resuming} className="w-full px-6 py-3 text-sm font-medium rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 text-white disabled:opacity-50 transition-all">{resuming ? "Resuming..." : "Continue Assessment"}</button>
                 <button onClick={() => navigate("/")} className="w-full px-6 py-3 text-sm font-medium rounded-xl bg-muted text-muted-foreground hover:text-foreground/90 hover:bg-muted transition-all">Start Fresh Instead</button>
               </>
             )}

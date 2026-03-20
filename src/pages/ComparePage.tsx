@@ -122,7 +122,7 @@ export default function ComparePage() {
       <header className="border-b border-border px-6 py-4">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-600 flex items-center justify-center text-sm font-bold text-foreground">H</div>
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-600 flex items-center justify-center text-sm font-bold text-white">H</div>
             <span className="font-semibold text-foreground/90">HMN Cascade</span>
           </div>
           <button onClick={() => navigate("/")} className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground/90 transition-colors">New Assessment</button>
