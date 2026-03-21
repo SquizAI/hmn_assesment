@@ -47,7 +47,7 @@ export default function QuestionEditPopover({ question, onSave, onClose }: Props
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={onClose}>
       <div
-        className="bg-[#141420] border border-border rounded-2xl p-5 w-full max-w-md shadow-2xl space-y-4"
+        className="bg-card border border-border rounded-2xl p-5 w-full max-w-md shadow-2xl space-y-4"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -87,7 +87,7 @@ export default function QuestionEditPopover({ question, onSave, onClose }: Props
               className="w-full bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:border-blue-500/40 appearance-none"
             >
               {INPUT_TYPES.map((t) => (
-                <option key={t.value} value={t.value} className="bg-[#141420]">{t.label}</option>
+                <option key={t.value} value={t.value} className="bg-card">{t.label}</option>
               ))}
             </select>
           </div>

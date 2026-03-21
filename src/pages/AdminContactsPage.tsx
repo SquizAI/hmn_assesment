@@ -122,7 +122,7 @@ export default function AdminContactsPage() {
         <h1 className="text-3xl font-bold text-foreground mr-auto">Contacts</h1>
         <input type="text" placeholder="Search contacts..." value={searchInput} onChange={(e) => setSearchInput(e.target.value)} className="bg-muted border border-border rounded-lg px-4 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-border focus:outline-none w-64" />
         <select value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }} className="bg-muted border border-border rounded-lg px-4 py-2 text-sm text-foreground focus:border-border focus:outline-none appearance-none">
-          {STATUS_OPTIONS.map((opt) => <option key={opt.value} value={opt.value} className="bg-[#12121a]">{opt.label}</option>)}
+          {STATUS_OPTIONS.map((opt) => <option key={opt.value} value={opt.value} className="bg-card">{opt.label}</option>)}
         </select>
         <button onClick={() => setShowAddForm(!showAddForm)} className="px-4 py-2 text-sm font-medium rounded-lg bg-gradient-to-r from-blue-600 to-cyan-600 text-white hover:from-blue-500 hover:to-blue-500 transition-all">Add Contact</button>
       </div>

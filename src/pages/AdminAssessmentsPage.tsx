@@ -547,7 +547,7 @@ export default function AdminAssessmentsPage() {
               </svg>
               <span className="hidden sm:inline">Sort</span>
             </button>
-            <div className="absolute right-0 top-full mt-1 bg-[#12121a] border border-border rounded-lg overflow-hidden shadow-xl z-20 opacity-0 pointer-events-none group-focus-within:opacity-100 group-focus-within:pointer-events-auto transition-opacity min-w-[160px]">
+            <div className="absolute right-0 top-full mt-1 bg-card border border-border rounded-lg overflow-hidden shadow-xl z-20 opacity-0 pointer-events-none group-focus-within:opacity-100 group-focus-within:pointer-events-auto transition-opacity min-w-[160px]">
               {(
                 [
                   ["name", "Name"],
@@ -978,7 +978,7 @@ function DuplicateAssessmentModal({
     <ModalBackdrop onClose={onClose}>
       <form
         onSubmit={handleSubmit}
-        className="bg-[#0e0e16] border border-border rounded-2xl p-6 shadow-2xl"
+        className="bg-card border border-border rounded-2xl p-6 shadow-2xl"
       >
         <h2 className="text-lg font-semibold text-foreground/90 mb-1">
           Duplicate Assessment

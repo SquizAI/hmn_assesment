@@ -632,7 +632,7 @@ export default function AdminInvitationsPage() {
                         <>
                           <span className="text-muted-foreground text-[10px] uppercase mr-1">{label}</span>
                           <span className="text-muted-foreground">{formatTs(date)}</span>
-                          <div className="absolute z-40 bottom-full left-0 mb-1 hidden group-hover/ts:block bg-[#12121a] border border-border rounded-lg px-3 py-2 shadow-xl min-w-[210px]">
+                          <div className="absolute z-40 bottom-full left-0 mb-1 hidden group-hover/ts:block bg-card border border-border rounded-lg px-3 py-2 shadow-xl min-w-[210px]">
                             <div className="text-xs space-y-1">
                               <div className="flex justify-between gap-4">
                                 <span className="text-muted-foreground">Created</span>
@@ -709,7 +709,7 @@ export default function AdminInvitationsPage() {
         <ModalBackdrop onClose={() => setShowCreateModal(false)}>
           <form
             onSubmit={handleCreateSubmit}
-            className="bg-[#0e0e16] border border-border rounded-2xl p-6 shadow-2xl max-h-[85vh] overflow-y-auto"
+            className="bg-card border border-border rounded-2xl p-6 shadow-2xl max-h-[85vh] overflow-y-auto"
           >
             <h2 className="text-lg font-semibold text-foreground/90 mb-1">
               New Invitation
@@ -755,7 +755,7 @@ export default function AdminInvitationsPage() {
               {showAssessmentPicker && (
                 <>
                   <div className="fixed inset-0 z-20" onClick={() => setShowAssessmentPicker(false)} />
-                  <div className="absolute z-30 top-full mt-1 left-0 right-0 bg-[#12121a] border border-border rounded-xl shadow-2xl overflow-hidden max-h-64 overflow-y-auto">
+                  <div className="absolute z-30 top-full mt-1 left-0 right-0 bg-card border border-border rounded-xl shadow-2xl overflow-hidden max-h-64 overflow-y-auto">
                     {activeAssessments.map((a) => (
                       <button
                         key={a.id}
@@ -825,7 +825,7 @@ export default function AdminInvitationsPage() {
                 </div>
               )}
               {showEmailSuggestions && emailSuggestions.length > 0 && (
-                <div className="absolute z-30 top-full mt-1 left-0 right-0 bg-[#12121a] border border-border rounded-lg shadow-xl overflow-hidden">
+                <div className="absolute z-30 top-full mt-1 left-0 right-0 bg-card border border-border rounded-lg shadow-xl overflow-hidden">
                   {emailSuggestions.map((email) => {
                     const data = emailLookup.get(email);
                     return (
@@ -961,7 +961,7 @@ export default function AdminInvitationsPage() {
       {/* ================================================================== */}
       {deleteTargetId && (
         <ModalBackdrop onClose={() => setDeleteTargetId(null)}>
-          <div className="bg-[#0e0e16] border border-border rounded-2xl p-6 shadow-2xl">
+          <div className="bg-card border border-border rounded-2xl p-6 shadow-2xl">
             <h2 className="text-lg font-semibold text-foreground/90 mb-1">
               Delete Invitation
             </h2>

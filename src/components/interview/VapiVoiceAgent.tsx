@@ -177,7 +177,7 @@ export default function VapiVoiceAgent({
     <div className="flex flex-col items-center gap-4">
       {/* Live transcript panel */}
       {callStatus === "active" && showTranscript && (
-        <div className="w-full max-w-sm bg-[#12121a]/95 backdrop-blur-xl border border-border rounded-2xl p-4 max-h-48 overflow-y-auto">
+        <div className="w-full max-w-sm bg-card/95 backdrop-blur-xl border border-border rounded-2xl p-4 max-h-48 overflow-y-auto">
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Live Transcript</span>
             <div className="flex items-center gap-1.5">

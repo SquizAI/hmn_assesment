@@ -312,7 +312,7 @@ export default function AdminSessionsPage() {
             Export
           </button>
           {exportOpen && (
-            <div className="absolute right-0 sm:right-0 left-0 sm:left-auto top-full mt-1 bg-[#12121a] border border-border rounded-lg overflow-hidden shadow-xl z-20 sm:min-w-[120px]">
+            <div className="absolute right-0 sm:right-0 left-0 sm:left-auto top-full mt-1 bg-card border border-border rounded-lg overflow-hidden shadow-xl z-20 sm:min-w-[120px]">
               <button
                 onClick={() => handleExport("csv")}
                 className="block w-full text-left px-4 py-2 text-sm text-foreground hover:bg-muted transition-colors"
@@ -469,7 +469,7 @@ export default function AdminSessionsPage() {
 
       {/* Toast */}
       {toast && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-[#1a1a2e] border border-border text-foreground px-5 py-2.5 rounded-xl shadow-2xl text-sm animate-fade-in">
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-foreground text-background shadow-lg px-5 py-2.5 rounded-xl shadow-2xl text-sm animate-fade-in">
           {toast}
         </div>
       )}

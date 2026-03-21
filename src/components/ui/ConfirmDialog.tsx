@@ -44,7 +44,7 @@ export default function ConfirmDialog({
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onCancel} />
 
       {/* Dialog */}
-      <div className="relative bg-[#12121a] border border-border rounded-2xl shadow-2xl w-full max-w-sm p-6 space-y-4">
+      <div className="relative bg-card border border-border rounded-2xl shadow-2xl w-full max-w-sm p-6 space-y-4">
         {/* Icon */}
         <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isDanger ? "bg-red-500/15" : "bg-amber-500/15"}`}>
           <svg className={`w-5 h-5 ${isDanger ? "text-red-400" : "text-amber-400"}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">

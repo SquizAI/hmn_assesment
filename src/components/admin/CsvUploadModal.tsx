@@ -291,7 +291,7 @@ export default function CsvUploadModal({ assessments, onClose, onComplete }: Pro
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
       <div className="relative z-10 w-full max-w-2xl mx-3 sm:mx-4 max-h-[90vh] flex flex-col">
-        <div className="bg-[#0e0e16] border border-border rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+        <div className="bg-card border border-border rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
           {/* Header */}
           <div className="px-6 py-4 border-b border-border flex items-center justify-between flex-shrink-0">
             <div>

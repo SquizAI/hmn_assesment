@@ -874,7 +874,7 @@ export default function AssessmentDrawer({
                                           className="w-full bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:border-blue-500/40 appearance-none"
                                         >
                                           {INPUT_TYPES.map((t) => (
-                                            <option key={t.value} value={t.value} className="bg-[#141420]">
+                                            <option key={t.value} value={t.value} className="bg-card">
                                               {t.label}
                                             </option>
                                           ))}
@@ -1224,7 +1224,7 @@ export default function AssessmentDrawer({
             className="absolute inset-0 bg-black/60"
             onClick={() => setShowDuplicate(false)}
           />
-          <div className="relative bg-[#111118] border border-border rounded-2xl p-6 w-full max-w-md mx-4 shadow-2xl">
+          <div className="relative bg-card border border-border rounded-2xl p-6 w-full max-w-md mx-4 shadow-2xl">
             <h3 className="text-lg font-semibold text-foreground mb-1">
               Duplicate Assessment
             </h3>

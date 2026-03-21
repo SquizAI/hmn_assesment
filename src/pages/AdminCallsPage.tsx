@@ -88,7 +88,7 @@ export default function AdminCallsPage() {
       <div className="flex flex-wrap items-center gap-4 mb-8">
         <h1 className="text-3xl font-bold text-foreground mr-auto">Call History</h1>
         <select value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }} className="bg-muted border border-border rounded-lg px-4 py-2 text-sm text-foreground focus:border-border focus:outline-none appearance-none">
-          {STATUS_OPTIONS.map((opt) => <option key={opt.value} value={opt.value} className="bg-[#12121a]">{opt.label}</option>)}
+          {STATUS_OPTIONS.map((opt) => <option key={opt.value} value={opt.value} className="bg-card">{opt.label}</option>)}
         </select>
       </div>
 
