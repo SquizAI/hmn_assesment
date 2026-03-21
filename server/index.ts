@@ -2820,24 +2820,26 @@ app.post("/api/admin/invitations", requireAdmin, async (req, res) => {
     }
     const result = await createInvitationAdmin({ assessmentId, participant, note });
 
-    let emailResult: { ok: boolean; error?: string } | undefined;
+    let emailQueued = false;
     console.log(`[EMAIL] sendEmail=${sendEmail}, isEmailEnabled=${isEmailEnabled()}`);
     if (sendEmail && isEmailEnabled()) {
+      emailQueued = true;
+      // Fire-and-forget: send email async so mobile clients don't timeout
       const assessmentName = await getAssessmentName(assessmentId);
       console.log(`[EMAIL] Sending to ${participant.email} for "${assessmentName}" token=${result.invitation.token}`);
-      emailResult = await sendInvitationEmail({
+      sendInvitationEmail({
         to: participant.email,
         participantName: participant.name,
         assessmentName,
         inviteToken: result.invitation.token,
         note,
-      });
-      console.log(`[EMAIL] Result:`, JSON.stringify(emailResult));
+      }).then((r) => console.log(`[EMAIL] Result for ${participant.email}:`, JSON.stringify(r)))
+        .catch((err) => console.error(`[EMAIL] Failed for ${participant.email}:`, err));
     } else {
       console.log(`[EMAIL] Skipped — sendEmail=${sendEmail}, enabled=${isEmailEnabled()}`);
     }
 
-    res.status(201).json({ ...result, emailSent: emailResult?.ok ?? false, emailError: emailResult?.error });
+    res.status(201).json({ ...result, emailSent: emailQueued });
   } catch (err) {
     console.error("Admin create invitation error:", err);
     res.status(500).json({ error: "Failed to create invitation" });
@@ -2901,22 +2903,24 @@ app.post("/api/admin/invitations/:id/resend", requireAdmin, async (req, res) => 
     const inv = await loadInvitationById(String(req.params.id));
     if (!inv) { res.status(404).json({ error: "Invitation not found" }); return; }
 
-    let emailResult: { ok: boolean; error?: string } = { ok: false, error: "Email not configured" };
+    let emailQueued = false;
     console.log(`[EMAIL-RESEND] isEmailEnabled=${isEmailEnabled()}, to=${inv.participant.email}`);
     if (isEmailEnabled()) {
+      emailQueued = true;
       const assessmentName = await getAssessmentName(inv.assessmentId);
       console.log(`[EMAIL-RESEND] Sending to ${inv.participant.email} for "${assessmentName}"`);
-      emailResult = await sendInvitationEmail({
+      // Fire-and-forget so mobile clients don't timeout
+      sendInvitationEmail({
         to: inv.participant.email,
         participantName: inv.participant.name,
         assessmentName,
         inviteToken: inv.token,
-      });
-      console.log(`[EMAIL-RESEND] Result:`, JSON.stringify(emailResult));
+      }).then((r) => console.log(`[EMAIL-RESEND] Result:`, JSON.stringify(r)))
+        .catch((err) => console.error(`[EMAIL-RESEND] Failed:`, err));
     }
 
     await updateInvitationStatus(inv.token, "sent");
-    res.json({ ok: true, token: inv.token, emailSent: emailResult.ok, emailError: emailResult.error });
+    res.json({ ok: true, token: inv.token, emailSent: emailQueued });
   } catch (err) {
     console.error("Admin resend invitation error:", err);
     res.status(500).json({ error: "Failed to resend invitation" });
