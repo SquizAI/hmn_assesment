@@ -3934,7 +3934,7 @@ app.get("/api/admin/calls/:sessionId/status", requireAdmin, async (req, res) => 
 
 app.use("/api/admin/campaigns", requireAdmin, campaignRoutes);
 app.use("/api/admin/contacts", requireAdmin, contactRoutes);
-app.use("/api/admin/calls-history", requireAdmin, callRoutes);
+app.use("/api/admin/calls", requireAdmin, callRoutes);
 app.use("/api/admin/webhooks", requireAdmin, webhookRoutes);
 app.use("/api/admin/search", requireAdmin, searchRoutes);
 app.use("/api/admin/analytics", requireAdmin, analyticsRoutes);
