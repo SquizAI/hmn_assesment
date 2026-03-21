@@ -709,13 +709,26 @@ app.get("/api/sessions/lookup", async (req, res) => {
       return;
     }
     const rawSessions = await lookupSessionsByEmail(email);
+
+    // Resolve assessment names from IDs
+    const assessmentIds = [...new Set(rawSessions.map((s) => s.assessmentTypeId).filter(Boolean))];
+    const assessmentNames: Record<string, string> = {};
+    for (const aid of assessmentIds) {
+      try {
+        const a = await loadAssessment(aid as string);
+        if (a?.name) assessmentNames[aid as string] = a.name as string;
+      } catch { /* skip */ }
+    }
+
     const sessions = rawSessions.map((s) => ({
       id: s.id,
       status: s.status,
       createdAt: s.createdAt,
       assessmentTypeId: s.assessmentTypeId,
+      assessmentName: assessmentNames[s.assessmentTypeId as string] || (s.assessmentTypeId === "ai-readiness" ? "AI Readiness Assessment" : s.assessmentTypeId || "Assessment"),
       participantName: s.participant?.name,
       participantCompany: s.participant?.company,
+      responseCount: s.responses?.length || 0,
       score: (s.analysis as { overallReadinessScore?: number } | undefined)?.overallReadinessScore,
     }));
     res.json({ sessions });

@@ -31,7 +31,9 @@ export default function HomePage() {
   const [signInLoading, setSignInLoading] = useState(false);
   const [signInSessions, setSignInSessions] = useState<Array<{
     id: string; status: string; createdAt: string;
-    participantName?: string; participantCompany?: string; score?: number;
+    assessmentName?: string; assessmentTypeId?: string;
+    participantName?: string; participantCompany?: string;
+    responseCount?: number; score?: number;
   }> | null>(null);
   const [signInError, setSignInError] = useState("");
 
@@ -147,13 +149,6 @@ export default function HomePage() {
     analyzed: "Results ready",
   };
 
-  const STATUS_COLORS: Record<string, string> = {
-    intake: "text-muted-foreground",
-    in_progress: "text-blue-400",
-    completed: "text-green-400",
-    analyzed: "text-blue-400",
-  };
-
   // ─── Render ────────────────────────────────────────────────
 
   return (
@@ -249,29 +244,34 @@ export default function HomePage() {
                 <p className="text-muted-foreground text-sm text-center">
                   Found {signInSessions.length} assessment{signInSessions.length !== 1 ? "s" : ""} for <span className="text-foreground/80">{signInEmail}</span>
                 </p>
-                <div className="space-y-2">
+                <div className="space-y-3">
                   {signInSessions.map((s) => (
                     <button
                       key={s.id}
                       onClick={() => handleResumeSession(s)}
-                      className="w-full text-left bg-muted border border-border rounded-xl p-4 hover:bg-muted hover:border-border transition-all"
+                      className="w-full text-left bg-muted border border-border rounded-xl p-4 hover:bg-foreground/[0.08] hover:border-primary/30 transition-all group"
                     >
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-foreground font-medium">{s.participantName}</span>
-                        <span className={`text-xs font-medium ${STATUS_COLORS[s.status] || "text-muted-foreground"}`}>
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-foreground font-semibold text-sm">{s.assessmentName || "Assessment"}</span>
+                        <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                          s.status === "analyzed" ? "bg-blue-500/15 text-blue-400" :
+                          s.status === "completed" ? "bg-green-500/15 text-green-400" :
+                          s.status === "in_progress" ? "bg-amber-500/15 text-amber-400" :
+                          "bg-muted text-muted-foreground"
+                        }`}>
                           {STATUS_LABELS[s.status] || s.status}
                         </span>
                       </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs text-muted-foreground">{s.participantCompany} — {formatDate(s.createdAt)}</span>
+                      <div className="flex items-center justify-between text-xs text-muted-foreground">
+                        <span>{s.participantCompany} — {formatDate(s.createdAt)}</span>
                         {s.score != null && (
-                          <span className={`text-xs font-semibold ${s.score >= 70 ? "text-green-400" : s.score >= 45 ? "text-yellow-400" : "text-red-400"}`}>
+                          <span className={`font-semibold ${s.score >= 70 ? "text-green-400" : s.score >= 45 ? "text-yellow-400" : "text-red-400"}`}>
                             {s.score}/100
                           </span>
                         )}
                       </div>
-                      <div className="text-xs text-muted-foreground mt-1">
-                        {s.status === "analyzed" ? "View your results" : s.status === "completed" ? "View analysis" : "Continue where you left off"}
+                      <div className="text-xs text-primary/70 mt-2 group-hover:text-primary transition-colors">
+                        {s.status === "analyzed" ? "View your results →" : s.status === "completed" ? "View analysis →" : "Continue where you left off →"}
                       </div>
                     </button>
                   ))}
