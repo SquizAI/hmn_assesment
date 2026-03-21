@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0a0a0f"/>
+      <stop offset="50%" style="stop-color:#0f0f1a"/>
+      <stop offset="100%" style="stop-color:#0a0a0f"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#4f46e5"/>
+      <stop offset="50%" style="stop-color:#6366f1"/>
+      <stop offset="100%" style="stop-color:#06b6d4"/>
+    </linearGradient>
+    <linearGradient id="textGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#a5b4fc"/>
+      <stop offset="50%" style="stop-color:#818cf8"/>
+      <stop offset="100%" style="stop-color:#22d3ee"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="40" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bg)"/>
+
+  <!-- Subtle grid -->
+  <g opacity="0.025" stroke="#ffffff" stroke-width="0.5">
+    <line x1="100" y1="0" x2="100" y2="630"/><line x1="200" y1="0" x2="200" y2="630"/>
+    <line x1="300" y1="0" x2="300" y2="630"/><line x1="400" y1="0" x2="400" y2="630"/>
+    <line x1="500" y1="0" x2="500" y2="630"/><line x1="600" y1="0" x2="600" y2="630"/>
+    <line x1="700" y1="0" x2="700" y2="630"/><line x1="800" y1="0" x2="800" y2="630"/>
+    <line x1="900" y1="0" x2="900" y2="630"/><line x1="1000" y1="0" x2="1000" y2="630"/>
+    <line x1="1100" y1="0" x2="1100" y2="630"/>
+    <line x1="0" y1="100" x2="1200" y2="100"/><line x1="0" y1="200" x2="1200" y2="200"/>
+    <line x1="0" y1="300" x2="1200" y2="300"/><line x1="0" y1="400" x2="1200" y2="400"/>
+    <line x1="0" y1="500" x2="1200" y2="500"/>
+  </g>
+
+  <!-- Ambient glow - subtle -->
+  <ellipse cx="350" cy="315" rx="200" ry="180" fill="#4f46e5" opacity="0.04" filter="url(#glow)"/>
+  <ellipse cx="850" cy="315" rx="200" ry="180" fill="#06b6d4" opacity="0.04" filter="url(#glow)"/>
+
+  <!-- Top accent line -->
+  <rect x="0" y="0" width="1200" height="3" fill="url(#accent)"/>
+
+  <!-- Cascade bars motif -->
+  <g transform="translate(500, 170)">
+    <rect x="0" y="8" width="6" height="36" rx="3" fill="#818cf8" opacity="0.8"/>
+    <rect x="14" y="16" width="6" height="32" rx="3" fill="#818cf8" opacity="0.65"/>
+    <rect x="28" y="4" width="6" height="42" rx="3" fill="#6366f1" opacity="0.75"/>
+    <rect x="42" y="12" width="6" height="34" rx="3" fill="#6366f1" opacity="0.6"/>
+    <rect x="56" y="0" width="6" height="48" rx="3" fill="#4f46e5" opacity="0.85"/>
+    <rect x="76" y="6" width="6" height="38" rx="3" fill="#4f46e5" opacity="0.65"/>
+    <rect x="90" y="2" width="6" height="44" rx="3" fill="#3b82f6" opacity="0.75"/>
+    <rect x="104" y="14" width="6" height="30" rx="3" fill="#3b82f6" opacity="0.55"/>
+    <rect x="118" y="4" width="6" height="42" rx="3" fill="#0ea5e9" opacity="0.8"/>
+    <rect x="132" y="10" width="6" height="36" rx="3" fill="#06b6d4" opacity="0.65"/>
+    <rect x="146" y="18" width="6" height="28" rx="3" fill="#06b6d4" opacity="0.7"/>
+    <rect x="160" y="6" width="6" height="40" rx="3" fill="#22d3ee" opacity="0.55"/>
+    <rect x="174" y="12" width="6" height="34" rx="3" fill="#22d3ee" opacity="0.75"/>
+  </g>
+
+  <!-- Main title -->
+  <text x="600" y="310" text-anchor="middle" font-family="Outfit, system-ui, sans-serif" font-weight="800" font-size="88" fill="url(#textGrad)" letter-spacing="4">CASCADE</text>
+
+  <!-- Subtitle -->
+  <text x="600" y="365" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-weight="500" font-size="20" fill="rgba(255,255,255,0.45)" letter-spacing="4">AI-POWERED ASSESSMENTS</text>
+
+  <!-- Divider -->
+  <rect x="500" y="395" width="200" height="1" fill="url(#accent)" opacity="0.35" rx="0.5"/>
+
+  <!-- Tagline -->
+  <text x="600" y="435" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-weight="400" font-size="17" fill="rgba(255,255,255,0.3)">Conversational intelligence meets human insight</text>
+
+  <!-- HMN branding -->
+  <text x="600" y="545" text-anchor="middle" font-family="Outfit, system-ui, sans-serif" font-weight="600" font-size="15" fill="rgba(255,255,255,0.18)" letter-spacing="3">BY HMN</text>
+
+  <!-- Bottom accent line -->
+  <rect x="0" y="627" width="1200" height="3" fill="url(#accent)"/>
+</svg>

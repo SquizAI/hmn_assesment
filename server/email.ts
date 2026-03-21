@@ -22,7 +22,7 @@ function getFromName(): string {
 }
 
 function getAppUrl(): string {
-  return process.env.APP_URL || "https://hmn-assessments-heih8.ondigitalocean.app";
+  return process.env.APP_URL || "https://cascade.behmn.com";
 }
 
 export function isEmailEnabled(): boolean {

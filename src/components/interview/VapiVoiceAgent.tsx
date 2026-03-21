@@ -144,7 +144,7 @@ export default function VapiVoiceAgent({
           voiceId: "uju3wxzG5OhpWcoi3SMy",
           stability: 0.55,
           similarityBoost: 0.8,
-          speed: 0.9,
+          speed: 1.0,
         },
         silenceTimeoutSeconds: 30,
         maxDurationSeconds: 300,

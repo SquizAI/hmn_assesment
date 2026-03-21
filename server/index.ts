@@ -1566,7 +1566,7 @@ PARTICIPANT CONTEXT:
 - Industry: ${participant.industry || ""}
 - Team Size: ${participant.teamSize || ""}
 
-RECENT PRIOR RESPONSES:
+RECENT PRIOR RESPONSES (already answered — do NOT re-ask these):
 ${contextSummary}
 
 CURRENT QUESTION:
@@ -1649,7 +1649,7 @@ app.post("/api/interview/request-call", async (req, res) => {
         voiceId: "uju3wxzG5OhpWcoi3SMy",
         stability: 0.55,
         similarityBoost: 0.8,
-        speed: 0.9,
+        speed: 1.0,
       },
       serverUrl: VAPI_WEBHOOK_URL,
       silenceTimeoutSeconds: 45,
@@ -1895,13 +1895,15 @@ async function streamFollowUp(
 - Keep responses concise (2-3 sentences before your follow-up)
 - When this topic feels complete (usually 2-3 exchanges), say: [QUESTION_COMPLETE]
 - Never break character. You are a human interviewer.
-- Do NOT include internal annotations, bracketed notes, or markdown formatting.`;
+- Do NOT include internal annotations, bracketed notes, or markdown formatting.
+- IMPORTANT: Stay on the current topic ONLY. Do NOT ask about other survey topics, do NOT ask numeric rating/scale questions, and do NOT introduce new questions — those are handled by other parts of the assessment.
+- Do NOT repeat or rephrase questions that appear in PRIOR RESPONSES below.`;
 
   // Build turn-aware completion guidance
   const turns = userTurns ?? conversationHistory.filter((m) => m.role === "user").length;
   let completionUrgency = "";
   if (turns >= 2) {
-    completionUrgency = `\n\nCRITICAL: This is user turn ${turns}. You MUST wrap up this question NOW. Acknowledge their response briefly (1 sentence max), then end your response with the exact marker [QUESTION_COMPLETE]. Do NOT ask another follow-up question. Do NOT introduce new topics.`;
+    completionUrgency = `\n\nCRITICAL: This is user turn ${turns}. You MUST wrap up this question NOW. Acknowledge their response briefly (1 sentence max), then end your response with the exact marker [QUESTION_COMPLETE]. Do NOT ask another follow-up question. Do NOT introduce new topics. Do NOT ask for ratings or scales.`;
   }
 
   const systemPrompt = `${assessmentInterviewPrompt || `You are an expert interviewer for HMN (Human Machine Network), conducting an AI readiness assessment.`}
@@ -1909,7 +1911,7 @@ async function streamFollowUp(
 PARTICIPANT: ${participant.name}, ${participant.role} at ${participant.company} (${participant.industry}, team size: ${participant.teamSize})
 ${researchContext}
 
-PRIOR RESPONSES:
+PRIOR RESPONSES (already answered — do NOT re-ask these):
 ${contextSummary}
 
 CURRENT QUESTION: ${currentQuestion.section} / ${currentQuestion.phase}
@@ -1928,6 +1930,7 @@ ${assessmentInterviewPrompt ? "" : defaultInterviewRole}${completionUrgency}`;
     }));
 
   let fullText = "";
+  let pendingBuffer = ""; // Buffer to catch [QUESTION_COMPLETE] split across tokens
 
   try {
     const stream = client.messages.stream({
@@ -1937,15 +1940,50 @@ ${assessmentInterviewPrompt ? "" : defaultInterviewRole}${completionUrgency}`;
       messages,
     });
 
+    const MARKER = "[QUESTION_COMPLETE]";
+
     for await (const event of stream) {
       if (event.type === "content_block_delta" && (event.delta as { type: string; text?: string }).type === "text_delta") {
         const text = (event.delta as { text: string }).text;
         fullText += text;
-        // Strip [QUESTION_COMPLETE] and annotations from streamed tokens
-        const cleanToken = text.replace("[QUESTION_COMPLETE]", "").replace(/\*\*\[.*?\]\*\*/g, "");
-        if (cleanToken) {
-          sseRes.write(`data: ${JSON.stringify({ type: "token", text: cleanToken })}\n\n`);
+
+        // Buffer approach: accumulate text that might be part of [QUESTION_COMPLETE]
+        pendingBuffer += text;
+
+        // Check if the buffer contains the full marker
+        if (pendingBuffer.includes(MARKER)) {
+          // Strip the marker and flush
+          const clean = pendingBuffer.replace(MARKER, "").replace(/\*\*\[.*?\]\*\*/g, "");
+          if (clean) {
+            sseRes.write(`data: ${JSON.stringify({ type: "token", text: clean })}\n\n`);
+          }
+          pendingBuffer = "";
+        } else {
+          // Check if buffer ends with a prefix of [QUESTION_COMPLETE] — keep buffering
+          let mightMatch = false;
+          for (let len = 1; len < MARKER.length; len++) {
+            if (pendingBuffer.endsWith(MARKER.slice(0, len))) {
+              mightMatch = true;
+              break;
+            }
+          }
+          if (!mightMatch) {
+            // No chance of matching — flush the buffer
+            const clean = pendingBuffer.replace(/\*\*\[.*?\]\*\*/g, "");
+            if (clean) {
+              sseRes.write(`data: ${JSON.stringify({ type: "token", text: clean })}\n\n`);
+            }
+            pendingBuffer = "";
+          }
         }
+      }
+    }
+
+    // Flush any remaining buffer
+    if (pendingBuffer) {
+      const clean = pendingBuffer.replace(MARKER, "").replace(/\*\*\[.*?\]\*\*/g, "");
+      if (clean) {
+        sseRes.write(`data: ${JSON.stringify({ type: "token", text: clean })}\n\n`);
       }
     }
   } catch (err) {
@@ -1991,13 +2029,15 @@ async function generateFollowUp(
 - Keep responses concise (2-3 sentences before your follow-up)
 - When this topic feels complete (usually 2-3 exchanges), say: [QUESTION_COMPLETE]
 - Never break character. You are a human interviewer.
-- Do NOT include internal annotations, bracketed notes, or markdown formatting.`;
+- Do NOT include internal annotations, bracketed notes, or markdown formatting.
+- IMPORTANT: Stay on the current topic ONLY. Do NOT ask about other survey topics, do NOT ask numeric rating/scale questions, and do NOT introduce new questions — those are handled by other parts of the assessment.
+- Do NOT repeat or rephrase questions that appear in PRIOR RESPONSES below.`;
 
   // Build turn-aware completion guidance
   const turns = userTurns ?? conversationHistory.filter((m) => m.role === "user").length;
   let completionUrgency = "";
   if (turns >= 2) {
-    completionUrgency = `\n\nCRITICAL: This is user turn ${turns}. You MUST wrap up this question NOW. Acknowledge their response briefly (1 sentence max), then end your response with the exact marker [QUESTION_COMPLETE]. Do NOT ask another follow-up question. Do NOT introduce new topics.`;
+    completionUrgency = `\n\nCRITICAL: This is user turn ${turns}. You MUST wrap up this question NOW. Acknowledge their response briefly (1 sentence max), then end your response with the exact marker [QUESTION_COMPLETE]. Do NOT ask another follow-up question. Do NOT introduce new topics. Do NOT ask for ratings or scales.`;
   }
 
   const systemPrompt = `${assessmentInterviewPrompt || `You are an expert interviewer for HMN (Human Machine Network), conducting an AI readiness assessment.`}
@@ -2005,7 +2045,7 @@ async function generateFollowUp(
 PARTICIPANT: ${participant.name}, ${participant.role} at ${participant.company} (${participant.industry}, team size: ${participant.teamSize})
 ${researchContext}
 
-PRIOR RESPONSES:
+PRIOR RESPONSES (already answered — do NOT re-ask these):
 ${contextSummary}
 
 CURRENT QUESTION: ${currentQuestion.section} / ${currentQuestion.phase}
@@ -3722,7 +3762,7 @@ app.post("/api/admin/calls/initiate", requireAdmin, async (req, res) => {
         voiceId: "uju3wxzG5OhpWcoi3SMy",
         stability: 0.55,
         similarityBoost: 0.8,
-        speed: 0.9,
+        speed: 1.0,
       },
       serverUrl: VAPI_WEBHOOK_URL,
       silenceTimeoutSeconds: 45,

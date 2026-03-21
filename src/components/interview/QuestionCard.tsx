@@ -8,8 +8,8 @@ import Button from "../ui/Button";
 
 /** Strip internal AI annotations and render basic markdown emphasis as JSX */
 function formatAiMessage(text: string): React.ReactNode {
-  // Remove internal annotations like **[capturing: ...]** or **[RED FLAG: ...]**
-  let cleaned = text.replace(/\*\*\[.*?\]\*\*\s*/g, "").trim();
+  // Remove [QUESTION_COMPLETE] marker and internal annotations like **[capturing: ...]** or **[RED FLAG: ...]**
+  let cleaned = text.replace(/\[QUESTION_COMPLETE\]/g, "").replace(/\*\*\[.*?\]\*\*\s*/g, "").trim();
 
   // Split on *emphasis* markers and render as <em>
   const parts = cleaned.split(/\*(.*?)\*/g);
@@ -33,9 +33,10 @@ interface Props {
   onBack?: () => void;
   onSkip?: () => void;
   canGoBack?: boolean;
+  showPhoneOption?: boolean;
 }
 
-export default function QuestionCard({ question, sessionId, onSubmit, onConversationComplete, isSubmitting, initialAnswer, initialConversationHistory, isEditing, onCancelEdit, onBack, onSkip, canGoBack }: Props) {
+export default function QuestionCard({ question, sessionId, onSubmit, onConversationComplete, isSubmitting, initialAnswer, initialConversationHistory, isEditing, onCancelEdit, onBack, onSkip, canGoBack, showPhoneOption = true }: Props) {
   const [textValue, setTextValue] = useState("");
   const [sliderValue, setSliderValue] = useState<number | null>(null);
   const [buttonValue, setButtonValue] = useState<string | string[] | null>(null);
@@ -175,10 +176,11 @@ export default function QuestionCard({ question, sessionId, onSubmit, onConversa
 
             if (event.type === "token") {
               streamedText += event.text;
-              // Update conversation with streaming assistant message
+              // Update conversation with streaming assistant message (strip any leaked markers)
+              const displayText = streamedText.replace(/\[QUESTION_COMPLETE\]/g, "").trim();
               setConversationHistory([
                 ...historyWithUser,
-                { role: "assistant" as const, content: streamedText, timestamp: new Date().toISOString(), questionId: question.id },
+                { role: "assistant" as const, content: displayText, timestamp: new Date().toISOString(), questionId: question.id },
               ]);
             } else if (event.type === "done") {
               setIsAiThinking(false);
@@ -404,8 +406,8 @@ export default function QuestionCard({ question, sessionId, onSubmit, onConversa
                 {/* Voice input options */}
                 {!isEditing && (
                   <div className="space-y-4">
-                    {/* Phone call option — take assessment by phone */}
-                    {question.inputType === "ai_conversation" && (
+                    {/* Phone call option — take assessment by phone (first question only) */}
+                    {question.inputType === "ai_conversation" && showPhoneOption && (
                       <div className="pt-2">
                         <div className="flex items-center gap-3 mb-3">
                           <div className="flex-1 h-px bg-muted" />

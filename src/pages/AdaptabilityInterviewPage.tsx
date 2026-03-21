@@ -200,9 +200,10 @@ export default function AdaptabilityInterviewPage() {
 
     if (serverData.skippedQuestionIds) setSkippedQuestionIds(serverData.skippedQuestionIds);
 
-    if (serverData.type === "complete") {
+    const resolvedType = serverData.type === "done" ? (serverData as Record<string, unknown>).responseType as string : serverData.type;
+    if (resolvedType === "complete") {
       setIsComplete(true);
-    } else if (serverData.type === "next_question") {
+    } else if (resolvedType === "next_question") {
       const newQuestion = serverData.currentQuestion as Record<string, unknown>;
       const newPhase = newQuestion?.phase as AdaptabilityPhase | undefined;
       if (newPhase && newPhase !== currentPhase) {

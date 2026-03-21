@@ -200,10 +200,11 @@ export default function InterviewPage() {
     // Update skipped IDs if server provides them
     if (serverData.skippedQuestionIds) setSkippedQuestionIds(serverData.skippedQuestionIds);
 
-    if (serverData.type === "complete") {
+    const resolvedType = serverData.type === "done" ? (serverData as Record<string, unknown>).responseType as string : serverData.type;
+    if (resolvedType === "complete") {
       setCompletionInfo({ assessmentTypeId: serverData.assessmentTypeId, assessmentName: serverData.assessmentName });
       setIsComplete(true);
-    } else if (serverData.type === "next_question") {
+    } else if (resolvedType === "next_question") {
       setCurrentQuestion(serverData.currentQuestion as Question);
       setProgress(serverData.progress as Progress);
     }
@@ -493,6 +494,7 @@ export default function InterviewPage() {
               onBack={handleGoBack}
               onSkip={handleSkip}
               canGoBack={visibleAnswered.length > 0}
+              showPhoneOption={answeredQuestions.length === 0}
             />
           )
         )}
