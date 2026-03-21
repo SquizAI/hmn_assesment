@@ -84,8 +84,8 @@ body::after {
   opacity: 0.06;
 }
 
-.dark body::before { opacity: 0.15; }
-.dark body::after { opacity: 0.1; }
+.dark body::before { opacity: 0; display: none; }
+.dark body::after { opacity: 0; display: none; }
 
 
 html {
