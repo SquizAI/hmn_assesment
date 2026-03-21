@@ -257,7 +257,7 @@ export async function lookupSessionsByEmail(email: string): Promise<InterviewSes
   const { data, error } = await getSupabase()
     .from("cascade_sessions")
     .select("*")
-    .filter("participant->email", "eq", email)
+    .filter("participant->>email", "eq", email)
     .order("created_at", { ascending: false });
 
   if (error || !data) return [];
