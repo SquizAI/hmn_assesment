@@ -2,7 +2,7 @@ import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import jwt from "jsonwebtoken";
-import { writeFileSync } from "fs";
+import { writeFileSync, readFileSync } from "fs";
 import { join } from "path";
 import Anthropic from "@anthropic-ai/sdk";
 import dotenv from "dotenv";
@@ -3923,9 +3923,8 @@ if (IS_PROD) {
 
     // Inject route-specific OG meta tags for social crawlers
     if (req.path.startsWith("/admin")) {
-      const fs = require("fs");
       try {
-        let html = fs.readFileSync(indexPath, "utf-8");
+        let html = readFileSync(indexPath, "utf-8");
         html = html
           .replace(/og-image\.png/g, "og-image-admin.png")
           .replace(/Cascade — AI-Powered Assessments/g, "Cascade Admin — AI-Powered Assessments")
