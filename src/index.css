@@ -30,10 +30,10 @@
 .dark {
   --background: #0a0a0f;
   --foreground: #ffffff;
-  --muted: rgba(255, 255, 255, 0.05);
+  --muted: #16161b;
   --muted-foreground: rgba(255, 255, 255, 0.4);
   --border: rgba(255, 255, 255, 0.1);
-  --card: rgba(255, 255, 255, 0.03);
+  --card: #111116;
   --primary: #6366f1;
   --primary-foreground: #ffffff;
   --success: #34d399;
