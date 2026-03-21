@@ -841,6 +841,15 @@ app.post("/api/interview/start", async (req, res) => {
       session.status = "completed";
       await saveSession(session as unknown as Record<string, unknown>);
 
+      // Notify admin dashboard
+      invalidateCache("stats:");
+      const resumeParticipantInfo = session.participant as { name?: string; email?: string; company?: string };
+      emitAdminEvent({
+        type: "session_completed",
+        data: { sessionId: session.id, name: resumeParticipantInfo?.name || "Unknown", company: resumeParticipantInfo?.company || "" },
+        timestamp: new Date().toISOString(),
+      });
+
       // Send completion thank-you email (fire-and-forget)
       const resumeParticipant = session.participant as { name?: string; email?: string };
       const resumeAssessmentName = (assessment as Record<string, unknown>)?.name as string || "HMN Assessment";
@@ -1062,6 +1071,16 @@ app.post("/api/interview/conversation-stream", async (req, res) => {
     if (remaining.length === 0 || smartRemaining.length === 0) {
       session.status = "completed";
       await saveSession(session);
+
+      // Notify admin dashboard
+      invalidateCache("stats:");
+      const streamParticipantInfo = session.participant as { name?: string; email?: string; company?: string };
+      emitAdminEvent({
+        type: "session_completed",
+        data: { sessionId: session.id, name: streamParticipantInfo?.name || "Unknown", company: streamParticipantInfo?.company || "" },
+        timestamp: new Date().toISOString(),
+      });
+
       const completionAssessmentName = (assessment as Record<string, unknown>)?.name as string || "HMN Assessment";
       const completionTypeId = (session.assessmentTypeId as string) || "ai-readiness";
 
@@ -1401,6 +1420,15 @@ app.post("/api/interview/respond", async (req, res) => {
       console.error("[INTERVIEW] No next question available despite remaining questions existing");
       session.status = "completed";
       await saveSession(session as unknown as Record<string, unknown>);
+
+      // Notify admin dashboard
+      invalidateCache("stats:");
+      const fbParticipantInfo = session.participant as { name?: string; email?: string; company?: string };
+      emitAdminEvent({
+        type: "session_completed",
+        data: { sessionId: session.id, name: fbParticipantInfo?.name || "Unknown", company: fbParticipantInfo?.company || "" },
+        timestamp: new Date().toISOString(),
+      });
 
       // Send completion thank-you email (fire-and-forget)
       const fbParticipant = session.participant as { name?: string; email?: string };
