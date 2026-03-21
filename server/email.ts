@@ -257,6 +257,24 @@ function buildCompletionEmailHtml(params: {
             </td>
           </tr>
 
+          <!-- Masterclass Access -->
+          <tr>
+            <td style="padding:0 40px 24px">
+              <div style="background:#f5f3ff;border:1px solid #ddd6fe;border-radius:12px;padding:24px;text-align:center">
+                <h2 style="margin:0 0 8px;font-size:16px;font-weight:700;color:#4c1d95">Access Your Masterclass Resources</h2>
+                <p style="margin:0 0 16px;font-size:14px;color:#6b7280;line-height:1.6">
+                  Revisit session materials, recordings, and resources from your Masterclass.
+                </p>
+                <a href="https://mc.behmn.com/" style="display:inline-block;padding:12px 32px;background:linear-gradient(135deg,#7c3aed 0%,#6366f1 100%);color:#ffffff;text-decoration:none;font-size:15px;font-weight:600;border-radius:10px;letter-spacing:0.3px">
+                  Go to Masterclass Portal
+                </a>
+                <p style="margin:12px 0 0;font-size:13px;color:#9ca3af">
+                  Password: <strong style="color:#7c3aed">hmn2026</strong>
+                </p>
+              </div>
+            </td>
+          </tr>
+
           <tr>
             <td style="padding:0 40px 32px;text-align:center">
               <p style="margin:0;font-size:14px;color:#6b7280;line-height:1.6">
