@@ -3732,6 +3732,10 @@ app.post("/api/admin/calls/initiate", requireAdmin, async (req, res) => {
       endCallMessage: "Thank you so much for your time and honesty today. Your responses are going to give us a really clear picture. Someone from HMN will be in touch soon with your personalized profile. Take care!",
     };
 
+    // Normalize phone to E.164
+    let normalizedPhone = phone.replace(/[\s\-\(\)\.]/g, "");
+    if (!normalizedPhone.startsWith("+")) normalizedPhone = "+1" + normalizedPhone;
+
     // Call VAPI API
     const vapiRes = await fetch(VAPI_API_URL, {
       method: "POST",
@@ -3742,7 +3746,7 @@ app.post("/api/admin/calls/initiate", requireAdmin, async (req, res) => {
       body: JSON.stringify({
         assistant: assistantConfig,
         phoneNumberId: process.env.VAPI_PHONE_NUMBER_ID,
-        customer: { number: phone, name: participant.name || "Participant" },
+        customer: { number: normalizedPhone, name: participant.name || "Participant" },
       }),
     });
 
@@ -3759,7 +3763,7 @@ app.post("/api/admin/calls/initiate", requireAdmin, async (req, res) => {
     // Store the call reference on the session
     const sessionRec = session as unknown as Record<string, unknown>;
     sessionRec.vapiCallId = vapiCallId;
-    sessionRec.callPhone = phone;
+    sessionRec.callPhone = normalizedPhone;
     sessionRec.callInitiatedAt = new Date().toISOString();
     await saveSession(sessionRec);
 
