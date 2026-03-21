@@ -3905,8 +3905,24 @@ app.get("/ready", (_req, res) => { res.status(200).send("OK"); });
 // ============================================================
 
 if (IS_PROD) {
-  app.get("/{*splat}", (_req, res) => {
-    res.sendFile(join(process.cwd(), "dist", "index.html"));
+  app.get("/{*splat}", (req, res) => {
+    const indexPath = join(process.cwd(), "dist", "index.html");
+
+    // Inject route-specific OG meta tags for social crawlers
+    if (req.path.startsWith("/admin")) {
+      const fs = require("fs");
+      try {
+        let html = fs.readFileSync(indexPath, "utf-8");
+        html = html
+          .replace(/og-image\.png/g, "og-image-admin.png")
+          .replace(/Cascade — AI-Powered Assessments/g, "Cascade Admin — AI-Powered Assessments")
+          .replace(/Conversational intelligence meets human insight\./g, "Administration & analytics dashboard for Cascade assessments.");
+        res.type("html").send(html);
+        return;
+      } catch { /* fall through to sendFile */ }
+    }
+
+    res.sendFile(indexPath);
   });
 }
 
