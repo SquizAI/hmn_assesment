@@ -134,7 +134,20 @@ export default function AdminAssessmentBuilderPage() {
     try {
       const data = await fetchAssessment(id);
       if (data?.assessment) {
-        setAssessment(data.assessment);
+        const a = data.assessment;
+        // Normalize arrays that may come as null/undefined from the API
+        a.scoringDimensions = Array.isArray(a.scoringDimensions) ? a.scoringDimensions : [];
+        a.phases = Array.isArray(a.phases) ? a.phases : [];
+        a.sections = Array.isArray(a.sections) ? a.sections : [];
+        a.questions = Array.isArray(a.questions)
+          ? a.questions.map((q: Question) => ({
+              ...q,
+              scoringDimensions: Array.isArray(q.scoringDimensions) ? q.scoringDimensions : [],
+              options: Array.isArray(q.options) ? q.options : [],
+              followUps: Array.isArray(q.followUps) ? q.followUps : [],
+            }))
+          : [];
+        setAssessment(a);
         setDirty(false);
       }
     } catch {
