@@ -54,11 +54,11 @@ const WORD_BANKS: Record<ToastCategory, string[]> = {
   ],
 };
 
-const CATEGORY_EMOJI: Record<ToastCategory, string> = {
-  loading: "🤖",
-  success: "🎉",
-  error: "💥",
-  action: "⚡",
+const CATEGORY_ICONS: Record<ToastCategory, JSX.Element> = {
+  loading: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="8" width="16" height="12" rx="2" /><path d="M9 8V6a3 3 0 016 0v2" /><circle cx="9" cy="14" r="1.5" fill="currentColor" stroke="none" /><circle cx="15" cy="14" r="1.5" fill="currentColor" stroke="none" /><path d="M10 17h4" /></svg>,
+  success: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14" /><path d="M22 4L12 14.01l-3-3" /></svg>,
+  error: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" /><path d="M12 9v4M12 17h.01" /></svg>,
+  action: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" /></svg>,
 };
 
 interface RobotContextValue {
@@ -112,8 +112,8 @@ export function RobotProvider({ children }: { children: ReactNode }) {
             }`}
             style={{ minWidth: 280 }}
           >
-            <span className={`text-lg ${toast.category === "loading" ? "animate-spin" : "animate-bounce"}`}>
-              {CATEGORY_EMOJI[toast.category]}
+            <span className={`flex items-center justify-center ${toast.category === "loading" ? "animate-spin" : "animate-bounce"}`}>
+              {CATEGORY_ICONS[toast.category]}
             </span>
             <span className="text-sm font-mono font-medium">{toast.message}</span>
           </div>

@@ -28,7 +28,7 @@ interface PhaseConfig {
   id: BuilderPhase;
   label: string;
   description: string;
-  icon: string;
+  icon: (props: { className?: string }) => JSX.Element;
 }
 
 const PHASES: PhaseConfig[] = [
@@ -36,31 +36,31 @@ const PHASES: PhaseConfig[] = [
     id: "purpose",
     label: "Purpose & Context",
     description: "Define what this assessment measures and who takes it",
-    icon: "🎯",
+    icon: ({ className }) => <svg className={className} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><circle cx="12" cy="12" r="6" /><circle cx="12" cy="12" r="2" /><path d="M12 2v4M12 18v4M2 12h4M18 12h4" /></svg>,
   },
   {
     id: "framework",
     label: "Framework",
     description: "Design phases, sections, and scoring dimensions",
-    icon: "🏗",
+    icon: ({ className }) => <svg className={className} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z" /></svg>,
   },
   {
     id: "questions",
     label: "Question Design",
     description: "Build questions with proper input types and mapping",
-    icon: "💬",
+    icon: ({ className }) => <svg className={className} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" /></svg>,
   },
   {
     id: "scoring",
     label: "Scoring & Calibration",
     description: "Calibrate weights and verify dimension coverage",
-    icon: "⚖️",
+    icon: ({ className }) => <svg className={className} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3v18" /><path d="M4.5 7.5L12 5l7.5 2.5" /><path d="M4.5 7.5L2 14h5l-2.5-6.5z" /><path d="M19.5 7.5L22 14h-5l2.5-6.5z" /><path d="M2 14a3 3 0 005 0M17 14a3 3 0 005 0" /></svg>,
   },
   {
     id: "review",
     label: "Review & Activate",
     description: "Preview, test, and finalize the assessment",
-    icon: "✅",
+    icon: ({ className }) => <svg className={className} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14" /><path d="M22 4L12 14.01l-3-3" /></svg>,
   },
 ];
 
@@ -184,7 +184,7 @@ export default function ProcessMap({
                       <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
                     </svg>
                   ) : (
-                    <span>{phase.icon}</span>
+                    <span className="flex items-center justify-center">{phase.icon({})}</span>
                   )}
                 </div>
 

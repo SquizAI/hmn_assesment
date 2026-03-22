@@ -3,6 +3,7 @@ import { Outlet, useNavigate, useLocation, Link } from "react-router-dom";
 import { API_BASE } from "../../lib/api";
 import { fetchSessions, fetchInvitations, fetchCompanies, fetchAssessments } from "../../lib/admin-api";
 import AdminChatDrawer from "./AdminChatDrawer";
+import { DetailDrawerProvider } from "./DetailDrawer";
 
 /* ── Page-level error boundary — wraps only the content area, NOT the sidebar ── */
 class PageErrorBoundary extends Component<
@@ -299,12 +300,14 @@ export default function AdminLayout() {
           </div>
         </header>
 
-        {/* Content */}
-        <main className="flex-1 overflow-y-auto overflow-x-hidden">
-          <PageErrorBoundary resetKey={location.pathname}>
-            <Outlet />
-          </PageErrorBoundary>
-        </main>
+        {/* Content + Detail Drawer (push layout) */}
+        <DetailDrawerProvider>
+          <main className="flex-1 overflow-y-auto overflow-x-hidden min-w-0">
+            <PageErrorBoundary resetKey={location.pathname}>
+              <Outlet />
+            </PageErrorBoundary>
+          </main>
+        </DetailDrawerProvider>
       </div>
 
       {/* Floating AI Chat button — hidden on mobile and when drawer is open */}

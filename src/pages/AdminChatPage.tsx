@@ -16,10 +16,10 @@ const MAX_FILE_SIZE = 500_000;
 const MAX_FILES = 5;
 
 const QUICK_ACTIONS = [
-  { label: "Create invitations from a list", icon: "✉️" },
-  { label: "Show me all companies", icon: "🏢" },
-  { label: "View recent sessions", icon: "👥" },
-  { label: "Build a new assessment", icon: "✨" },
+  { label: "Create invitations from a list", icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="4" width="20" height="16" rx="2" /><path d="M22 4l-10 8L2 4" /></svg> },
+  { label: "Show me all companies", icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="2" width="16" height="20" rx="1" /><path d="M9 22V12h6v10" /><path d="M8 6h.01M16 6h.01M8 10h.01M16 10h.01" /></svg> },
+  { label: "View recent sessions", icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" /></svg> },
+  { label: "Build a new assessment", icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8L12 2z" /></svg> },
 ];
 
 function formatFileSize(bytes: number): string {
@@ -223,7 +223,7 @@ export default function AdminChatPage() {
             <div className="text-center py-12 space-y-6">
               <div className="space-y-3">
                 <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500/20 to-blue-500/20 border border-border">
-                  <span className="text-3xl">🤖</span>
+                  <svg className="w-8 h-8 text-foreground/70" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="8" width="16" height="12" rx="2" /><path d="M9 8V6a3 3 0 016 0v2" /><circle cx="9" cy="14" r="1.5" fill="currentColor" stroke="none" /><circle cx="15" cy="14" r="1.5" fill="currentColor" stroke="none" /><path d="M10 17h4" /></svg>
                 </div>
                 <h2 className="text-xl font-semibold text-foreground">Admin Assistant</h2>
                 <p className="text-muted-foreground text-sm max-w-lg mx-auto leading-relaxed">

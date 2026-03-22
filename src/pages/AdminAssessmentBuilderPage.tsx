@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import StatusBadge from "../components/admin/StatusBadge";
+import { Icon } from "../components/admin/Icons";
 import {
   fetchAssessments,
   fetchAssessment,
@@ -511,7 +512,7 @@ export default function AdminAssessmentBuilderPage() {
                 className="group relative bg-muted border border-border rounded-2xl p-5 hover:border-foreground/15 transition-all cursor-pointer"
               >
                 <div className="flex items-start justify-between mb-3">
-                  <span className="text-3xl leading-none">{a.icon}</span>
+                  <span className="text-muted-foreground leading-none"><Icon name={a.icon} size={28} /></span>
                   <StatusBadge status={a.status} />
                 </div>
                 <h3 className="text-sm md:text-base font-semibold text-foreground/90 leading-snug">{a.name}</h3>
@@ -590,7 +591,7 @@ export default function AdminAssessmentBuilderPage() {
           </button>
           {assessment && (
             <div className="flex items-center gap-2">
-              <span className="text-xl">{assessment.icon}</span>
+              <span className="text-muted-foreground"><Icon name={assessment.icon} size={20} /></span>
               <div>
                 <h1 className="text-sm font-semibold text-foreground/90">{assessment.name}</h1>
                 <p className="text-[11px] text-muted-foreground font-mono">{assessment.id}</p>
@@ -691,13 +692,18 @@ export default function AdminAssessmentBuilderPage() {
                   <div className="grid grid-cols-[80px_1fr] gap-4 items-start">
                     <div>
                       <label className="block text-xs text-muted-foreground uppercase tracking-wider mb-1.5">Icon</label>
-                      <input
-                        type="text"
-                        value={assessment.icon || ""}
-                        onChange={(e) => handleMetadataChange("icon", e.target.value)}
-                        className="w-full bg-muted border border-border rounded-lg px-3 py-3 text-2xl text-center outline-none focus:border-border transition-colors"
-                        maxLength={4}
-                      />
+                      <div className="flex items-center gap-2">
+                        <div className="w-12 h-12 bg-muted border border-border rounded-lg flex items-center justify-center text-muted-foreground">
+                          <Icon name={assessment.icon} size={24} />
+                        </div>
+                        <input
+                          type="text"
+                          value={assessment.icon || ""}
+                          onChange={(e) => handleMetadataChange("icon", e.target.value)}
+                          placeholder="clipboard"
+                          className="flex-1 bg-muted border border-border rounded-lg px-3 py-2.5 text-sm outline-none focus:border-border transition-colors"
+                        />
+                      </div>
                     </div>
                     <div>
                       <label className="block text-xs text-muted-foreground uppercase tracking-wider mb-1.5">Name</label>

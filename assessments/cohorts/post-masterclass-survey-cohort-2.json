@@ -2,7 +2,7 @@
   "id": "post-masterclass-survey-cohort-2",
   "name": "Post-Masterclass Survey \u2014 Cohort 2",
   "description": "A conversational post-masterclass feedback survey for Cohort 2 members. Captures value perception, capability shift, action commitments, and testimonial willingness.",
-  "icon": "\ud83d\udccb",
+  "icon": "clipboard",
   "estimatedMinutes": 8,
   "status": "active",
   "uxNotes": [

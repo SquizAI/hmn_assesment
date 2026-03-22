@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
 import StatusBadge from "../components/admin/StatusBadge";
 import AddCompanyModal from "../components/admin/AddCompanyModal";
+import CompanyDrawerContent from "../components/admin/CompanyDrawerContent";
+import { useDetailDrawer } from "../components/admin/DetailDrawer";
 import { fetchCompanies, removeCompany } from "../lib/admin-api";
 
 interface CompanySummary {
@@ -38,12 +39,11 @@ function scoreColor(score: number): string {
 }
 
 export default function AdminCompaniesPage() {
-  const navigate = useNavigate();
+  const { openDrawer, closeDrawer } = useDetailDrawer();
   const [companies, setCompanies] = useState<CompanySummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState<"activity" | "sessions" | "score">("activity");
-  const [expandedCompany, setExpandedCompany] = useState<string | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [shiftHeld, setShiftHeld] = useState(false);
   const [deletingCompany, setDeletingCompany] = useState<string | null>(null);
@@ -188,7 +188,12 @@ export default function AdminCompaniesPage() {
             >
               {/* Company Header */}
               <div
-                onClick={() => setExpandedCompany(expandedCompany === company.company ? null : company.company)}
+                onClick={() => openDrawer(
+                  <CompanyDrawerContent
+                    companyName={company.company}
+                    onClose={closeDrawer}
+                  />
+                )}
                 className="flex flex-wrap items-center gap-3 md:gap-4 px-4 md:px-5 py-3 md:py-4 cursor-pointer hover:bg-muted transition-colors"
               >
                 {/* Company icon */}
@@ -274,31 +279,18 @@ export default function AdminCompaniesPage() {
                 {/* Chevron */}
                 {!shiftHeld && (
                   <svg
-                    className={`w-4 h-4 text-muted-foreground transition-transform ${expandedCompany === company.company ? "rotate-180" : ""}`}
+                    className="w-4 h-4 text-muted-foreground"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
                     strokeWidth={2}
                   >
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
                   </svg>
                 )}
               </div>
 
-              {/* Expanded: View detail link */}
-              {expandedCompany === company.company && (
-                <div className="border-t border-border px-5 py-3 flex items-center justify-between">
-                  <span className="text-xs text-muted-foreground">
-                    {company.completedCount} completed, {company.analyzedCount} analyzed
-                  </span>
-                  <button
-                    onClick={() => navigate(`/admin/companies/${encodeURIComponent(company.company)}`)}
-                    className="px-3 py-1.5 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-300 text-xs font-medium hover:bg-blue-500/20 transition-all"
-                  >
-                    View Company Detail
-                  </button>
-                </div>
-              )}
+              {/* Company detail now opens in the push DetailDrawer */}
             </div>
           ))}
         </div>

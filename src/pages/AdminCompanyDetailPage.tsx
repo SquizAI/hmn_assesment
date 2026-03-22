@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import StatusBadge from "../components/admin/StatusBadge";
 import ResearchCard from "../components/admin/ResearchCard";
-import SessionDrawer from "../components/admin/SessionDrawer";
+import { SessionDrawerContent } from "../components/admin/SessionDrawer";
+import { useDetailDrawer } from "../components/admin/DetailDrawer";
 import { fetchCompanyDetail, triggerResearch } from "../lib/admin-api";
 import { fetchCompanyIntelligence, seedGraph } from "../lib/graph-api";
 import type { ResearchData } from "../lib/types";
@@ -112,9 +113,9 @@ export default function AdminCompanyDetailPage() {
   const navigate = useNavigate();
   const companyName = decodeURIComponent(companyParam || "");
 
+  const { openDrawer, closeDrawer } = useDetailDrawer();
   const [detail, setDetail] = useState<CompanyDetail | null>(null);
   const [loading, setLoading] = useState(true);
-  const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
   const [researchLoading, setResearchLoading] = useState(false);
   const [activeIntelTab, setActiveIntelTab] = useState<IntelTab>("themes");
   const [intel, setIntel] = useState<CompanyIntelligence | null>(null);
@@ -314,7 +315,7 @@ export default function AdminCompanyDetailPage() {
                 {detail.sessions.map((session) => (
                   <tr
                     key={session.id}
-                    onClick={() => setSelectedSessionId(session.id)}
+                    onClick={() => openDrawer(<SessionDrawerContent sessionId={session.id} onClose={closeDrawer} onDelete={() => { closeDrawer(); loadDetail(); }} />)}
                     className="hover:bg-foreground/[0.04] cursor-pointer transition-colors border-t border-border"
                   >
                     <td className="px-4 py-2.5">
@@ -436,7 +437,7 @@ export default function AdminCompanyDetailPage() {
                       {intel.participants.map((p) => (
                         <div
                           key={p.sessionId}
-                          onClick={() => setSelectedSessionId(p.sessionId)}
+                          onClick={() => openDrawer(<SessionDrawerContent sessionId={p.sessionId} onClose={closeDrawer} onDelete={() => { closeDrawer(); loadDetail(); }} />)}
                           className="bg-muted rounded-xl border border-border p-4 hover:bg-muted cursor-pointer transition-colors"
                         >
                           <div className="flex items-center justify-between mb-2">
@@ -555,14 +556,7 @@ export default function AdminCompanyDetailPage() {
         </div>
       </div>
 
-      {/* Session Drawer */}
-      {selectedSessionId && (
-        <SessionDrawer
-          sessionId={selectedSessionId}
-          onClose={() => setSelectedSessionId(null)}
-          onDelete={() => { setSelectedSessionId(null); loadDetail(); }}
-        />
-      )}
+      {/* Session detail now opens in the push DetailDrawer context */}
     </div>
   );
 }

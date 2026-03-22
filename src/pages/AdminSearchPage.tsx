@@ -2,6 +2,8 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import { adminSearch } from "../lib/admin-api";
 import StatusBadge from "../components/admin/StatusBadge";
+import { SessionDrawerContent } from "../components/admin/SessionDrawer";
+import { useDetailDrawer } from "../components/admin/DetailDrawer";
 
 interface SessionResult { id: string; participant_name: string; participant_company: string; participant_email: string | null; status: string; overall_score: number | null; archetype: string | null; created_at: string; }
 interface ContactResult { id: string; name: string; phone: string; email: string | null; company: string | null; status: string; created_at: string; }
@@ -17,6 +19,7 @@ function formatDuration(s: number | null) { if (!s) return "--:--"; return `${Ma
 
 export default function AdminSearchPage() {
   const navigate = useNavigate();
+  const { openDrawer, closeDrawer } = useDetailDrawer();
   const [searchParams] = useSearchParams();
   const initialQuery = searchParams.get("q") || "";
   const [inputValue, setInputValue] = useState(initialQuery);
@@ -91,7 +94,7 @@ export default function AdminSearchPage() {
               <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">Sessions <span className="ml-2 text-muted-foreground font-normal normal-case">({data.sessions.total})</span></h2>
               <div className="space-y-2">
                 {data.sessions.results.map((s) => (
-                  <Link key={s.id} to={`/analysis/${s.id}`} className="block bg-muted border border-border rounded-xl p-4 hover:bg-foreground/[0.08] transition-all">
+                  <div key={s.id} onClick={() => openDrawer(<SessionDrawerContent sessionId={s.id} onClose={closeDrawer} />)} className="block bg-muted border border-border rounded-xl p-4 hover:bg-foreground/[0.08] transition-all cursor-pointer">
                     <div className="flex items-center gap-4">
                       <div className="flex-1 min-w-0">
                         <span className="text-sm font-medium text-foreground">{s.participant_name}</span>
@@ -103,7 +106,7 @@ export default function AdminSearchPage() {
                         <span className="text-xs text-muted-foreground">{formatDate(s.created_at)}</span>
                       </div>
                     </div>
-                  </Link>
+                  </div>
                 ))}
               </div>
             </div>
@@ -153,7 +156,7 @@ export default function AdminSearchPage() {
               <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">Profiles <span className="ml-2 text-muted-foreground font-normal normal-case">({data.profiles.total})</span></h2>
               <div className="space-y-2">
                 {data.profiles.results.map((profile) => (
-                  <Link key={profile.id} to={`/analysis/${profile.session_id}`} className="block bg-muted border border-border rounded-xl p-4 hover:bg-foreground/[0.08] transition-all">
+                  <div key={profile.id} onClick={() => openDrawer(<SessionDrawerContent sessionId={profile.session_id} onClose={closeDrawer} />)} className="block bg-muted border border-border rounded-xl p-4 hover:bg-foreground/[0.08] transition-all cursor-pointer">
                     <div className="flex items-center gap-4">
                       <div className="flex-1 min-w-0">
                         <span className="text-sm font-medium text-foreground">{profile.participant_name || "Unknown"}</span>
@@ -176,7 +179,7 @@ export default function AdminSearchPage() {
                         <span className="text-xs text-muted-foreground">{formatDate(profile.created_at)}</span>
                       </div>
                     </div>
-                  </Link>
+                  </div>
                 ))}
               </div>
             </div>

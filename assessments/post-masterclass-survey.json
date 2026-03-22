@@ -2,7 +2,7 @@
   "id": "post-masterclass-survey",
   "name": "Post-Masterclass Survey — Founding Cohort",
   "description": "A conversational post-masterclass feedback survey for founding cohort members. Captures value perception, capability shift, action commitments, and testimonial willingness.",
-  "icon": "📋",
+  "icon": "clipboard",
   "estimatedMinutes": 8,
   "status": "active",
   "uxNotes": [

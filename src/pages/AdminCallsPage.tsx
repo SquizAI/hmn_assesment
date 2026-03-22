@@ -2,6 +2,8 @@ import { useEffect, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { fetchCalls as fetchCallsApi } from "../lib/admin-api";
 import StatusBadge from "../components/admin/StatusBadge";
+import CallDrawerContent from "../components/admin/CallDrawerContent";
+import { useDetailDrawer } from "../components/admin/DetailDrawer";
 
 interface Call {
   id: string;
@@ -40,34 +42,12 @@ function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
 }
 
-function AudioPlayer({ src }: { src: string }) {
-  return (
-    <audio controls className="w-full h-10" preload="metadata">
-      <source src={src} />
-    </audio>
-  );
-}
-
-function TranscriptViewer({ messages }: { messages: Array<{ role: string; message: string }> | null }) {
-  if (!messages || messages.length === 0) return <p className="text-xs text-muted-foreground">No transcript available</p>;
-  return (
-    <div className="space-y-2 max-h-60 overflow-y-auto">
-      {messages.map((msg, i) => (
-        <div key={i} className={`flex gap-2 ${msg.role === "assistant" ? "" : "flex-row-reverse"}`}>
-          <div className={`max-w-[80%] px-3 py-2 rounded-lg text-xs ${msg.role === "assistant" ? "bg-primary text-primary-foreground" : "bg-muted text-foreground"}`}>
-            {msg.message}
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
 
 export default function AdminCallsPage() {
   const [calls, setCalls] = useState<Call[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState("");
-  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const { openDrawer, closeDrawer } = useDetailDrawer();
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
 
@@ -116,7 +96,9 @@ export default function AdminCallsPage() {
                 <tr><td colSpan={8} className="px-6 py-8 text-center text-muted-foreground text-sm">No calls found.</td></tr>
               ) : calls.map((call) => (
                 <>
-                  <tr key={call.id} onClick={() => setExpandedId(expandedId === call.id ? null : call.id)} className="border-b border-border hover:bg-muted cursor-pointer transition-all">
+                  <tr key={call.id} onClick={() => openDrawer(
+                    <CallDrawerContent call={call} onClose={closeDrawer} />
+                  )} className="border-b border-border hover:bg-muted cursor-pointer transition-all">
                     <td className="px-6 py-4">
                       <p className="text-sm font-medium text-foreground">{call.contact?.name || "Unknown"}</p>
                       {call.contact?.company && <p className="text-xs text-muted-foreground">{call.contact.company}</p>}
@@ -158,22 +140,7 @@ export default function AdminCallsPage() {
                     </td>
                     <td className="px-6 py-4 text-sm text-muted-foreground">{formatDate(call.created_at)}</td>
                   </tr>
-                  {expandedId === call.id && (
-                    <tr key={`${call.id}-expanded`}>
-                      <td colSpan={8} className="px-6 py-4 bg-muted">
-                        <div className="max-w-3xl space-y-4">
-                          <div>
-                            <h4 className="text-sm font-medium text-foreground/80 mb-2">Recording</h4>
-                            {call.recording_url ? <AudioPlayer src={call.recording_url} /> : <p className="text-xs text-muted-foreground">No recording available</p>}
-                          </div>
-                          <div>
-                            <h4 className="text-sm font-medium text-foreground/80 mb-2">Transcript</h4>
-                            <TranscriptViewer messages={call.transcript_messages} />
-                          </div>
-                        </div>
-                      </td>
-                    </tr>
-                  )}
+                  {/* Call detail now opens in the push DetailDrawer */}
                 </>
               ))}
             </tbody>

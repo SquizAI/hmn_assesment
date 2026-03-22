@@ -5,6 +5,7 @@ import ChatInput from "../components/admin/ChatInput";
 import ToolActivity from "../components/admin/ToolActivity";
 import WorkflowCanvas from "../components/workflow/WorkflowCanvas";
 import { inferPhase } from "../components/admin/ProcessMap";
+import { Icon } from "../components/admin/Icons";
 import { useToast } from "../components/ui/Toast";
 import type { BuilderPhase } from "../lib/graph-layout";
 import { adminChatStream, chatWithAssessmentStream, fetchAssessment, fetchAssessments } from "../lib/admin-api";
@@ -20,10 +21,10 @@ const MAX_FILE_SIZE = 500_000;
 const MAX_FILES = 5;
 
 const QUICK_ACTIONS = [
-  { label: "Build an assessment from scratch", icon: "✨" },
-  { label: "Build assessment from my uploaded file", icon: "📄" },
-  { label: "Help me design scoring dimensions", icon: "📐" },
-  { label: "Import and adapt an existing framework", icon: "🔄" },
+  { label: "Build an assessment from scratch", icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8L12 2z" /></svg> },
+  { label: "Build assessment from my uploaded file", icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" /><path d="M14 2v6h6" /><path d="M16 13H8M16 17H8M10 9H8" /></svg> },
+  { label: "Help me design scoring dimensions", icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><path d="M21.7 2.3a1 1 0 00-1.4 0L2.3 20.3a1 1 0 000 1.4l.7.7a1 1 0 001.4 0L22.4 4.4a1 1 0 000-1.4l-.7-.7z" /><path d="M18.5 5.5l-2 2M14.5 9.5l-2 2M10.5 13.5l-2 2M6.5 17.5l-2 2" /></svg> },
+  { label: "Import and adapt an existing framework", icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><path d="M1 4v6h6" /><path d="M23 20v-6h-6" /><path d="M20.49 9A9 9 0 005.64 5.64L1 10M23 14l-4.64 4.36A9 9 0 013.51 15" /></svg> },
 ];
 
 function formatFileSize(bytes: number): string {
@@ -472,7 +473,7 @@ export default function AssessmentBuilderPage() {
                 <div className="text-center py-8 space-y-6">
                   <div className="space-y-3">
                     <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500/20 to-blue-500/20 border border-border">
-                      <span className="text-2xl">🏗</span>
+                      <svg className="w-7 h-7 text-foreground/70" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z" /></svg>
                     </div>
                     <h2 className="text-lg font-semibold text-foreground">Assessment Developer</h2>
                     <p className="text-muted-foreground text-sm max-w-md mx-auto leading-relaxed">
@@ -537,7 +538,7 @@ export default function AssessmentBuilderPage() {
               {messages.length === 0 && assessmentId && assessment && (
                 <div className="text-center py-8 space-y-4">
                   <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500/20 to-blue-500/20 border border-border">
-                    <span className="text-2xl">{assessment.icon || "📋"}</span>
+                    <span className="text-muted-foreground"><Icon name={assessment.icon} size={24} /></span>
                   </div>
                   <h2 className="text-lg font-semibold text-foreground">{assessment.name}</h2>
                   <p className="text-muted-foreground text-sm max-w-md mx-auto">

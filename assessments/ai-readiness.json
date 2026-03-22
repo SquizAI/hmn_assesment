@@ -2,7 +2,7 @@
   "id": "ai-readiness",
   "name": "AI Readiness Assessment",
   "description": "A diagnostic conversation that uncovers where you are with AI, where the gaps are, and exactly what to do next.",
-  "icon": "\ud83e\udd16",
+  "icon": "robot",
   "estimatedMinutes": 25,
   "status": "active",
   "phases": [

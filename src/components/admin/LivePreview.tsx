@@ -1,5 +1,7 @@
+import type { ReactNode } from "react";
 import type { AssessmentType } from "../../lib/types";
 import type { BuilderPhase } from "./ProcessMap";
+import { Icon, TargetIcon, WrenchIcon, ChatBubbleIcon, ScaleIcon, CheckCircleIcon, ClipboardIcon } from "./Icons";
 
 // ============================================================
 // Input type display helpers
@@ -42,7 +44,7 @@ export default function LivePreview({ assessment, currentPhase }: LivePreviewPro
         </h3>
         {assessment && (
           <div className="flex items-center gap-2 mt-2">
-            <span className="text-lg">{assessment.icon || "📋"}</span>
+            <span className="text-muted-foreground"><Icon name={assessment.icon} size={20} /></span>
             <span className="text-sm font-medium text-foreground/90 truncate">{assessment.name}</span>
           </div>
         )}
@@ -90,8 +92,8 @@ export default function LivePreview({ assessment, currentPhase }: LivePreviewPro
 function EmptyPreview({ currentPhase }: { currentPhase: BuilderPhase }) {
   return (
     <div className="flex flex-col items-center justify-center h-full text-center px-6">
-      <div className="w-12 h-12 rounded-xl bg-foreground/[0.04] border border-border flex items-center justify-center mb-3">
-        <span className="text-xl opacity-30">📋</span>
+      <div className="w-12 h-12 rounded-xl bg-foreground/[0.04] border border-border flex items-center justify-center mb-3 text-muted-foreground opacity-30">
+        <ClipboardIcon size={24} />
       </div>
       <p className="text-sm text-muted-foreground leading-relaxed">
         {currentPhase === "purpose"
@@ -109,11 +111,11 @@ function EmptyPreview({ currentPhase }: { currentPhase: BuilderPhase }) {
 function PurposeSection({ assessment }: { assessment: AssessmentType }) {
   return (
     <div className="space-y-2">
-      <SectionHeader label="Purpose" icon="🎯" />
+      <SectionHeader label="Purpose" icon={<TargetIcon size={14} />} />
       <div className="bg-muted border border-border rounded-xl p-3 space-y-2">
         <div>
           <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Name</span>
-          <p className="text-sm text-foreground/90">{assessment.name || "—"}</p>
+          <p className="text-sm text-foreground/90">{assessment.name || "\u2014"}</p>
         </div>
         {assessment.description && (
           <div>
@@ -144,7 +146,7 @@ function FrameworkSection({ assessment }: { assessment: AssessmentType }) {
   if (!phases.length && !sections.length && !dims.length) {
     return (
       <div className="space-y-2">
-        <SectionHeader label="Framework" icon="🏗" />
+        <SectionHeader label="Framework" icon={<WrenchIcon size={14} />} />
         <GhostPlaceholder text="Phases, sections, and scoring dimensions will appear here" />
       </div>
     );
@@ -152,9 +154,9 @@ function FrameworkSection({ assessment }: { assessment: AssessmentType }) {
 
   return (
     <div className="space-y-2">
-      <SectionHeader label="Framework" icon="🏗" />
+      <SectionHeader label="Framework" icon={<WrenchIcon size={14} />} />
 
-      {/* Phases → Sections tree */}
+      {/* Phases -> Sections tree */}
       {phases.length > 0 && (
         <div className="bg-muted border border-border rounded-xl p-3 space-y-2">
           <span className="text-[10px] text-muted-foreground uppercase tracking-wider">
@@ -227,7 +229,7 @@ function QuestionsSection({ assessment }: { assessment: AssessmentType }) {
   if (!questions.length) {
     return (
       <div className="space-y-2">
-        <SectionHeader label="Questions" icon="💬" count={0} />
+        <SectionHeader label="Questions" icon={<ChatBubbleIcon size={14} />} count={0} />
         <GhostPlaceholder text="Questions will appear here as they are designed" />
       </div>
     );
@@ -246,7 +248,7 @@ function QuestionsSection({ assessment }: { assessment: AssessmentType }) {
 
   return (
     <div className="space-y-2">
-      <SectionHeader label="Questions" icon="💬" count={questions.length} />
+      <SectionHeader label="Questions" icon={<ChatBubbleIcon size={14} />} count={questions.length} />
       {[...sectionMap.entries()].map(([sectionId, qs]) => (
         <div key={sectionId} className="space-y-1">
           <span className="text-[10px] text-muted-foreground uppercase tracking-wider pl-1">
@@ -310,7 +312,7 @@ function ScoringSection({ assessment }: { assessment: AssessmentType }) {
 
   return (
     <div className="space-y-2">
-      <SectionHeader label="Scoring Coverage" icon="⚖️" />
+      <SectionHeader label="Scoring Coverage" icon={<ScaleIcon size={14} />} />
       <div className="bg-muted border border-border rounded-xl p-3 space-y-2">
         {totalWeight > 0 && Math.abs(totalWeight - 1) > 0.01 && (
           <div className="text-[10px] text-yellow-400/70 bg-yellow-500/10 border border-yellow-500/20 rounded-lg px-2 py-1">
@@ -359,7 +361,7 @@ function ReviewSection({ assessment }: { assessment: AssessmentType }) {
 
   return (
     <div className="space-y-2">
-      <SectionHeader label="Summary" icon="✅" />
+      <SectionHeader label="Summary" icon={<CheckCircleIcon size={14} />} />
       <div className="bg-muted border border-border rounded-xl p-3 space-y-3">
         <div className="grid grid-cols-2 gap-2">
           <StatBlock label="Questions" value={questions.length} />
@@ -394,10 +396,10 @@ function ReviewSection({ assessment }: { assessment: AssessmentType }) {
 // Shared Primitives
 // ============================================================
 
-function SectionHeader({ label, icon, count }: { label: string; icon: string; count?: number }) {
+function SectionHeader({ label, icon, count }: { label: string; icon: ReactNode; count?: number }) {
   return (
     <div className="flex items-center gap-2">
-      <span className="text-sm">{icon}</span>
+      <span className="text-muted-foreground">{icon}</span>
       <span className="text-xs font-medium text-muted-foreground">{label}</span>
       {count !== undefined && (
         <span className="text-[10px] text-muted-foreground tabular-nums">({count})</span>

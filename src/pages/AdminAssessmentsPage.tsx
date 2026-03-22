@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import StatusBadge from "../components/admin/StatusBadge";
 import AssessmentDrawer from "../components/admin/AssessmentDrawer";
+import { Icon, PencilIcon, CheckCircleIcon, ArchiveIcon, ClipboardIcon } from "../components/admin/Icons";
 import {
   fetchAssessments,
   updateAssessmentStatus,
@@ -146,8 +147,8 @@ function EmptyState({
   if (filter !== "all") {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center">
-        <div className="text-4xl mb-4 opacity-30">
-          {filter === "draft" ? "📝" : filter === "active" ? "✅" : "📦"}
+        <div className="mb-4 opacity-30 text-muted-foreground flex justify-center">
+          {filter === "draft" ? <PencilIcon size={40} /> : filter === "active" ? <CheckCircleIcon size={40} /> : <ArchiveIcon size={40} />}
         </div>
         <p className="text-muted-foreground text-sm mb-1">
           No {filter} assessments found.
@@ -164,7 +165,7 @@ function EmptyState({
 
   return (
     <div className="flex flex-col items-center justify-center py-20 text-center">
-      <div className="text-5xl mb-4 opacity-30">📋</div>
+      <div className="mb-4 opacity-30 text-muted-foreground flex justify-center"><ClipboardIcon size={48} /></div>
       <p className="text-muted-foreground text-sm mb-1">No assessments yet.</p>
       <p className="text-muted-foreground text-xs mb-5">
         Create your first assessment to get started.
@@ -666,8 +667,8 @@ export default function AdminAssessmentsPage() {
               >
                 {/* Top row: icon + status + edit */}
                 <div className="flex items-start justify-between mb-3">
-                  <span className="text-3xl leading-none">
-                    {assessment.icon}
+                  <span className="text-muted-foreground leading-none">
+                    <Icon name={assessment.icon} size={28} />
                   </span>
                   <div className="flex items-center gap-1.5">
                     <button
@@ -842,7 +843,7 @@ export default function AdminAssessmentsPage() {
                   }`}
                 >
                   {/* Icon */}
-                  <span className="text-2xl leading-none flex-shrink-0">{assessment.icon}</span>
+                  <span className="text-muted-foreground leading-none flex-shrink-0"><Icon name={assessment.icon} size={24} /></span>
 
                   {/* Name + description */}
                   <div className="flex-1 min-w-0">
@@ -997,7 +998,7 @@ function DuplicateAssessmentModal({
 
         {/* Source preview */}
         <div className="bg-muted border border-border rounded-xl p-3 mb-5 flex items-center gap-3">
-          <span className="text-2xl">{source.icon}</span>
+          <span className="text-muted-foreground"><Icon name={source.icon} size={24} /></span>
           <div>
             <p className="text-sm text-foreground/80 font-medium">{source.name}</p>
             <p className="text-xs text-muted-foreground">

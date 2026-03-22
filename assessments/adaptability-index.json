@@ -2,7 +2,7 @@
   "id": "adaptability-index",
   "name": "Adaptability Index",
   "description": "A diagnostic conversation that reveals how you learn, let go, take initiative, and handle uncertainty — the four capacities that predict how well you navigate change.",
-  "icon": "🧭",
+  "icon": "compass",
   "estimatedMinutes": 50,
   "status": "active",
   "phases": [

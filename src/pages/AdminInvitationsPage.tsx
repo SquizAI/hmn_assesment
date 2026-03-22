@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
-import SessionDrawer from "../components/admin/SessionDrawer";
+import { SessionDrawerContent } from "../components/admin/SessionDrawer";
+import { useDetailDrawer } from "../components/admin/DetailDrawer";
+import { Icon } from "../components/admin/Icons";
 import StatusBadge from "../components/admin/StatusBadge";
 import {
   fetchInvitations,
@@ -188,8 +190,8 @@ export default function AdminInvitationsPage() {
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
 
-  // ---- Session drawer ----
-  const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
+  // ---- Detail drawer ----
+  const { openDrawer, closeDrawer } = useDetailDrawer();
 
   // ---- Timestamp display mode ----
   const [useRelativeTime, setUseRelativeTime] = useState(true);
@@ -607,7 +609,13 @@ export default function AdminInvitationsPage() {
                   className={`hover:bg-foreground/[0.04] transition-colors border-t border-border ${inv.sessionId ? "cursor-pointer" : "cursor-default"}`}
                   onClick={() => {
                     if (inv.sessionId) {
-                      setSelectedSessionId(inv.sessionId);
+                      openDrawer(
+                        <SessionDrawerContent
+                          sessionId={inv.sessionId}
+                          onClose={closeDrawer}
+                          onDelete={() => { closeDrawer(); loadInvitations(); }}
+                        />
+                      );
                     }
                   }}
                   title={inv.sessionId ? "View session details" : "No session started yet"}
@@ -750,7 +758,7 @@ export default function AdminInvitationsPage() {
                     const sel = activeAssessments.find(a => a.id === form.assessmentId);
                     return sel ? (
                       <span className="flex items-center gap-2">
-                        <span>{sel.icon || "\u{1F4CB}"}</span>
+                        <span className="text-muted-foreground"><Icon name={sel.icon} size={16} /></span>
                         <span className="text-foreground/90 truncate">{sel.name}</span>
                         <span className="text-muted-foreground text-xs ml-auto flex-shrink-0">
                           {sel.questionCount}q &middot; {sel.estimatedMinutes}min
@@ -780,7 +788,7 @@ export default function AdminInvitationsPage() {
                             : "hover:bg-foreground/[0.04]"
                         }`}
                       >
-                        <span className="text-xl leading-none mt-0.5">{a.icon || "\u{1F4CB}"}</span>
+                        <span className="text-muted-foreground leading-none mt-0.5"><Icon name={a.icon} size={20} /></span>
                         <div className="flex-1 min-w-0">
                           <div className="text-sm font-medium text-foreground/90">{a.name}</div>
                           <div className="text-xs text-muted-foreground line-clamp-1 mt-0.5">{a.description}</div>
@@ -1015,16 +1023,7 @@ export default function AdminInvitationsPage() {
         />
       )}
 
-      {/* ================================================================== */}
-      {/* SESSION DRAWER                                                     */}
-      {/* ================================================================== */}
-      {selectedSessionId && (
-        <SessionDrawer
-          sessionId={selectedSessionId}
-          onClose={() => setSelectedSessionId(null)}
-          onDelete={() => { setSelectedSessionId(null); loadInvitations(); }}
-        />
-      )}
+      {/* Session detail now opens in the push DetailDrawer context */}
 
       {/* ================================================================== */}
       {/* SUCCESS TOAST                                                      */}

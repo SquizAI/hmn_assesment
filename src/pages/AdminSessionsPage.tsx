@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import StatusBadge from "../components/admin/StatusBadge";
-import SessionDrawer from "../components/admin/SessionDrawer";
+import { SessionDrawerContent } from "../components/admin/SessionDrawer";
+import { useDetailDrawer } from "../components/admin/DetailDrawer";
 import { fetchSessions, removeSession, exportSessionsData, fetchAssessments } from "../lib/admin-api";
 import type { AssessmentSummary } from "../lib/types";
 
@@ -86,6 +87,7 @@ function StatCard({ label, value, active, onClick }: { label: string; value: num
 // ---------------------------------------------------------------------------
 
 export default function AdminSessionsPage() {
+  const { openDrawer, closeDrawer } = useDetailDrawer();
   const [sessions, setSessions] = useState<Session[]>([]);
   const [assessments, setAssessments] = useState<AssessmentSummary[]>([]);
   const [loading, setLoading] = useState(true);
@@ -94,7 +96,6 @@ export default function AdminSessionsPage() {
   const [dateFilter, setDateFilter] = useState("all");
   const [assessmentFilter, setAssessmentFilter] = useState("all");
   const [companyFilter, setCompanyFilter] = useState("all");
-  const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
   const [exportOpen, setExportOpen] = useState(false);
   const [useRelativeTime, setUseRelativeTime] = useState(true);
   const [shiftHeld, setShiftHeld] = useState(false);
@@ -243,7 +244,13 @@ export default function AdminSessionsPage() {
   };
 
   const handleRowClick = (id: string) => {
-    setSelectedSessionId(id);
+    openDrawer(
+      <SessionDrawerContent
+        sessionId={id}
+        onClose={closeDrawer}
+        onDelete={() => { closeDrawer(); loadSessions(); }}
+      />
+    );
   };
 
   const selectCls =
@@ -474,14 +481,7 @@ export default function AdminSessionsPage() {
         </div>
       )}
 
-      {/* Session Drawer */}
-      {selectedSessionId && (
-        <SessionDrawer
-          sessionId={selectedSessionId}
-          onClose={() => setSelectedSessionId(null)}
-          onDelete={() => { setSelectedSessionId(null); loadSessions(); }}
-        />
-      )}
+      {/* Session detail now opens in the push DrawerContext — see handleRowClick */}
     </div>
   );
 }

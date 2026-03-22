@@ -2,7 +2,7 @@
   "id": "combined-readiness-adaptability",
   "name": "AI Readiness + Adaptability Assessment",
   "description": "A comprehensive assessment combining AI readiness diagnostics (8 dimensions) with adaptability profiling (4 pillars) to produce a unified 12-dimension leader profile.",
-  "icon": "\ud83e\udde9",
+  "icon": "brain",
   "estimatedMinutes": 40,
   "status": "active",
   "phases": [

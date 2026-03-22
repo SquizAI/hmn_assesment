@@ -1,8 +1,9 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { Link } from "react-router-dom";
-import { fetchContacts as fetchContactsApi, createContact, deleteContact, callContacts, fetchContactAssessments } from "../lib/admin-api";
+import { fetchContacts as fetchContactsApi, createContact, deleteContact, callContacts } from "../lib/admin-api";
 import StatusBadge from "../components/admin/StatusBadge";
 import ConfirmDialog from "../components/ui/ConfirmDialog";
+import ContactDrawerContent from "../components/admin/ContactDrawerContent";
+import { useDetailDrawer } from "../components/admin/DetailDrawer";
 
 interface Contact {
   id: string;
@@ -48,9 +49,7 @@ export default function AdminContactsPage() {
   const [newContact, setNewContact] = useState({ name: "", phone: "", email: "", company: "", role: "", industry: "", team_size: "" });
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
-  const [expandedContact, setExpandedContact] = useState<string | null>(null);
-  const [contactAssessments, setContactAssessments] = useState<Record<string, unknown>[]>([]);
-  const [loadingAssessments, setLoadingAssessments] = useState(false);
+  const { openDrawer, closeDrawer } = useDetailDrawer();
 
   const showToast = (message: string, type: "success" | "error") => {
     setToast({ message, type });
@@ -110,21 +109,13 @@ export default function AdminContactsPage() {
     } catch (err) { showToast("Failed to add contact", "error"); console.error("Failed to add contact:", err); }
   };
 
-  const handleExpandContact = async (id: string) => {
-    if (expandedContact === id) {
-      setExpandedContact(null);
-      return;
-    }
-    setExpandedContact(id);
-    setLoadingAssessments(true);
-    try {
-      const data = await fetchContactAssessments(id);
-      setContactAssessments(data.assessments || []);
-    } catch {
-      setContactAssessments([]);
-    } finally {
-      setLoadingAssessments(false);
-    }
+  const handleExpandContact = (contact: Contact) => {
+    openDrawer(
+      <ContactDrawerContent
+        contact={contact}
+        onClose={closeDrawer}
+      />
+    );
   };
 
   const handleDeleteContact = async (id: string) => {
@@ -199,7 +190,7 @@ export default function AdminContactsPage() {
                 <tr><td colSpan={8} className="px-6 py-8 text-center text-muted-foreground text-sm">No contacts found. Add contacts manually.</td></tr>
               ) : contacts.map((contact) => (
                 <React.Fragment key={contact.id}>
-                <tr onClick={() => handleExpandContact(contact.id)} className="border-b border-border hover:bg-muted transition-colors cursor-pointer">
+                <tr onClick={() => handleExpandContact(contact)} className="border-b border-border hover:bg-muted transition-colors cursor-pointer">
                   <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}><input type="checkbox" checked={selectedIds.has(contact.id)} onChange={() => toggleSelect(contact.id)} className="rounded border-border bg-muted" /></td>
                   <td className="px-4 py-3"><p className="text-sm font-medium text-foreground">{contact.name}</p>{contact.role && <p className="text-xs text-muted-foreground">{contact.role}</p>}</td>
                   <td className="px-4 py-3 text-sm text-muted-foreground font-mono">{contact.phone}</td>
@@ -213,51 +204,7 @@ export default function AdminContactsPage() {
                     </button>
                   </td>
                 </tr>
-                {expandedContact === contact.id && (
-                  <tr>
-                    <td colSpan={8} className="px-6 py-4 bg-muted border-b border-border">
-                      <div className="max-w-2xl">
-                        <h4 className="text-sm font-medium text-foreground/80 mb-3">Assessment History</h4>
-                        {loadingAssessments ? (
-                          <p className="text-xs text-muted-foreground">Loading assessments...</p>
-                        ) : contactAssessments.length === 0 ? (
-                          <p className="text-xs text-muted-foreground">No assessments found for this contact.</p>
-                        ) : (
-                          <div className="space-y-2">
-                            {contactAssessments.map((assessment) => (
-                              <div key={assessment.id as string} className="flex items-center gap-3 px-3 py-2 bg-muted rounded-lg border border-border">
-                                <span className="text-xs text-muted-foreground w-24 shrink-0">
-                                  {formatDate(assessment.created_at as string)}
-                                </span>
-                                {assessment.overall_score !== null && (
-                                  <span className={`text-sm font-semibold tabular-nums ${
-                                    (assessment.overall_score as number) >= 70 ? "text-green-400" : (assessment.overall_score as number) >= 45 ? "text-yellow-400" : "text-red-400"
-                                  }`}>
-                                    {Math.round(assessment.overall_score as number)}
-                                  </span>
-                                )}
-                                {assessment.archetype ? (
-                                  <span className="px-2 py-0.5 text-[10px] font-medium bg-blue-500/10 text-blue-300 rounded-full border border-blue-500/20">
-                                    {assessment.archetype as string}
-                                  </span>
-                                ) : null}
-                                <span className="text-[10px] text-muted-foreground">{assessment.assessment_type as string}</span>
-                                <div className="flex-1" />
-                                <Link
-                                  to={`/analysis/${assessment.session_id as string}`}
-                                  onClick={(e) => e.stopPropagation()}
-                                  className="text-xs text-blue-400 hover:text-blue-300 underline underline-offset-2 transition-colors"
-                                >
-                                  View Analysis
-                                </Link>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                )}
+                {/* Contact detail now opens in the push DetailDrawer */}
                 </React.Fragment>
               ))}
             </tbody>

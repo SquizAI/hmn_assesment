@@ -56,12 +56,6 @@ interface InterviewSession {
   assessmentTypeId?: string;
 }
 
-interface SessionDrawerProps {
-  sessionId: string;
-  onClose: () => void;
-  onDelete?: () => void;
-}
-
 type TabId = "details" | "analysis" | "research" | "responses";
 
 const TABS: { id: TabId; label: string }[] = [
@@ -94,10 +88,19 @@ function formatTimestamp(ts: string): string {
   });
 }
 
-export default function SessionDrawer({ sessionId, onClose, onDelete }: SessionDrawerProps) {
+// ─── SessionDrawerContent ────────────────────────────────────────────────────
+// Standalone content component that renders inside the DetailDrawer push panel.
+// No fixed overlay, no backdrop — just the content.
+
+interface SessionDrawerContentProps {
+  sessionId: string;
+  onClose: () => void;
+  onDelete?: () => void;
+}
+
+export function SessionDrawerContent({ sessionId, onClose, onDelete }: SessionDrawerContentProps) {
   const [session, setSession] = useState<InterviewSession | null>(null);
   const [loading, setLoading] = useState(true);
-  const [visible, setVisible] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [activeTab, setActiveTab] = useState<TabId>("details");
   const [researchLoading, setResearchLoading] = useState(false);
@@ -127,27 +130,10 @@ export default function SessionDrawer({ sessionId, onClose, onDelete }: SessionD
 
   useEffect(() => {
     loadSession();
-    // Load call status
     getCallStatus(sessionId).then(setCallStatus).catch(() => {});
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        setVisible(true);
-      });
-    });
+    setActiveTab("details");
+    setDeleteConfirm(false);
   }, [sessionId]);
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") handleClose();
-    };
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, []);
-
-  const handleClose = () => {
-    setVisible(false);
-    setTimeout(onClose, 300);
-  };
 
   const handleDelete = async () => {
     if (!deleteConfirm) {
@@ -157,7 +143,7 @@ export default function SessionDrawer({ sessionId, onClose, onDelete }: SessionD
     try {
       await removeSession(sessionId);
       onDelete?.();
-      handleClose();
+      onClose();
     } catch {
       setDeleteConfirm(false);
     }
@@ -201,6 +187,354 @@ export default function SessionDrawer({ sessionId, onClose, onDelete }: SessionD
   };
 
   return (
+    <div className="flex flex-col h-full">
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-border shrink-0">
+        <h2 className="text-lg font-semibold text-foreground">Session Details</h2>
+        <button
+          onClick={onClose}
+          className="text-muted-foreground hover:text-foreground transition-colors text-xl leading-none hidden md:block"
+        >
+          &times;
+        </button>
+      </div>
+
+      {/* Tabs */}
+      {!loading && session && (
+        <div className="flex border-b border-border px-4 sm:px-6 shrink-0">
+          {TABS.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`px-3 py-2.5 text-xs font-medium transition-colors relative ${
+                activeTab === tab.id
+                  ? "text-foreground/90"
+                  : "text-muted-foreground hover:text-muted-foreground"
+              }`}
+            >
+              {tab.label}
+              {tab.id === "research" && session.research && (
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 absolute top-2 -right-0.5" />
+              )}
+              {activeTab === tab.id && (
+                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500 rounded-t" />
+              )}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Content */}
+      <div className="flex-1 overflow-y-auto">
+        {loading ? (
+          <div className="flex items-center justify-center py-24">
+            <div className="w-8 h-8 border-2 border-border border-t-white/60 rounded-full animate-spin" />
+          </div>
+        ) : !session ? (
+          <div className="text-center py-24 space-y-2">
+            <p className="text-muted-foreground">Session not found</p>
+            <p className="text-muted-foreground/60 text-xs">This session may have been deleted or not yet started.</p>
+          </div>
+        ) : (
+          <div className="px-4 sm:px-6 py-6 space-y-6">
+            {/* Details Tab */}
+            {activeTab === "details" && (
+              <>
+                {/* Participant Info Card */}
+                <div className="bg-muted rounded-xl p-4 space-y-3">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <h3 className="text-lg font-semibold text-foreground">
+                        {session.participant?.name || (session as any).participantName || "Unknown Participant"}
+                      </h3>
+                      <p className="text-sm text-muted-foreground">{session.participant?.role || (session as any).participantRole || ""}</p>
+                    </div>
+                    <StatusBadge status={session.status} />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div>
+                      <span className="text-muted-foreground">Company</span>
+                      <p className="text-foreground/80">{session.participant?.company || (session as any).participantCompany || "\u2014"}</p>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Industry</span>
+                      <p className="text-foreground/80">{session.participant?.industry || (session as any).participantIndustry || "\u2014"}</p>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Team Size</span>
+                      <p className="text-foreground/80">{session.participant?.teamSize || (session as any).participantTeamSize || "\u2014"}</p>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Email</span>
+                      <p className="text-foreground/80">{session.participant?.email || (session as any).participantEmail || "\u2014"}</p>
+                    </div>
+                  </div>
+
+                  <div className="text-xs text-muted-foreground pt-1">
+                    Created {formatTimestamp(session.createdAt)}
+                  </div>
+                </div>
+
+                {/* Call Participant */}
+                <div className="bg-muted rounded-xl p-4 space-y-3">
+                  <p className="text-sm text-muted-foreground font-medium">Call Participant</p>
+
+                  {callStatus?.vapiCallId ? (
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <span className={`w-2 h-2 rounded-full ${callStatus.callCompletedAt ? "bg-green-400" : "bg-yellow-400 animate-pulse"}`} />
+                        <span className="text-sm text-foreground/80">
+                          {callStatus.callCompletedAt
+                            ? `Call completed${callStatus.callDuration ? ` (${Math.round(callStatus.callDuration / 60)}m)` : ""}`
+                            : "Call in progress..."}
+                        </span>
+                      </div>
+                      {callStatus.callRecordingUrl && (
+                        <a
+                          href={callStatus.callRecordingUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 text-xs text-blue-400 hover:text-blue-300 transition-colors"
+                        >
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          Listen to recording
+                        </a>
+                      )}
+                      {callStatus.hasTranscript && (
+                        <span className="inline-flex items-center gap-1 text-xs text-green-400/70">
+                          <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
+                          Transcript saved
+                        </span>
+                      )}
+                      <button
+                        onClick={() => { setCallStatus(null); setCallPhone(""); }}
+                        className="text-xs text-muted-foreground hover:text-muted-foreground transition-colors"
+                      >
+                        Call again
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <div className="flex gap-2">
+                        <input
+                          type="tel"
+                          value={callPhone}
+                          onChange={(e) => setCallPhone(e.target.value)}
+                          placeholder="+1 (555) 123-4567"
+                          className="flex-1 bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-border"
+                        />
+                        <button
+                          onClick={handleInitiateCall}
+                          disabled={callLoading || !callPhone.trim()}
+                          className="px-4 py-2 rounded-lg text-sm font-medium bg-blue-600 hover:bg-blue-700 text-foreground transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5"
+                        >
+                          {callLoading ? (
+                            <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" /></svg>
+                          ) : (
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>
+                          )}
+                          Call
+                        </button>
+                      </div>
+                      {callError && (
+                        <p className="text-red-400 text-xs">{callError}</p>
+                      )}
+                      <p className="text-muted-foreground text-xs">Vappy will call and run the full assessment via voice</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Delete Button */}
+                <div className="pt-4 border-t border-border">
+                  <button
+                    onClick={handleDelete}
+                    className={`w-full rounded-lg px-4 py-2.5 text-sm font-medium transition-colors ${
+                      deleteConfirm
+                        ? "bg-red-600 text-foreground hover:bg-red-700"
+                        : "bg-muted text-red-400 border border-red-500/20 hover:bg-red-500/10"
+                    }`}
+                  >
+                    {deleteConfirm ? "Confirm Delete?" : "Delete Session"}
+                  </button>
+                </div>
+              </>
+            )}
+
+            {/* Analysis Tab */}
+            {activeTab === "analysis" && (
+              <>
+                {session.assessmentTypeId === "adaptability-index" ? (
+                  session.adaptabilityAnalysis ? (
+                    <AdaptabilitySessionView analysis={session.adaptabilityAnalysis} />
+                  ) : (
+                    <div className="text-center py-12 text-muted-foreground">
+                      <p>No adaptability analysis available yet</p>
+                      <p className="text-xs mt-1 text-muted-foreground">Complete the session to generate analysis</p>
+                    </div>
+                  )
+                ) : session.analysis ? (
+                  <div className="space-y-4">
+                    {/* Overall Score */}
+                    <div className="bg-muted rounded-xl p-4 flex items-center gap-4">
+                      <div
+                        className={`text-4xl font-bold ${scoreColor(
+                          session.analysis.overallReadinessScore
+                        )}`}
+                      >
+                        {session.analysis.overallReadinessScore}
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">Overall Readiness Score</p>
+                        <p className="text-foreground font-medium">
+                          {session.analysis.archetype}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {session.analysis.archetypeDescription}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Dimension Scores */}
+                    <div className="bg-muted rounded-xl p-4 space-y-3">
+                      <p className="text-sm text-muted-foreground font-medium">Dimension Scores</p>
+                      {session.analysis.dimensionScores.map((ds) => (
+                        <div key={ds.dimension}>
+                          <div className="flex justify-between text-xs mb-1">
+                            <span className="text-muted-foreground">{ds.dimension}</span>
+                            <span className="text-muted-foreground">{ds.score}</span>
+                          </div>
+                          <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
+                            <div
+                              className={`h-full rounded-full transition-all ${scoreBarColor(ds.score)}`}
+                              style={{ width: `${ds.score}%` }}
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Red Flags */}
+                    {session.analysis.redFlags.length > 0 && (
+                      <div className="space-y-2">
+                        <p className="text-sm text-muted-foreground font-medium">Red Flags</p>
+                        {session.analysis.redFlags.map((flag, i) => (
+                          <div
+                            key={i}
+                            className="bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2 text-sm text-red-300"
+                          >
+                            {flag.description}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Green Lights */}
+                    {session.analysis.greenLights.length > 0 && (
+                      <div className="space-y-2">
+                        <p className="text-sm text-muted-foreground font-medium">Green Lights</p>
+                        {session.analysis.greenLights.map((light, i) => (
+                          <div
+                            key={i}
+                            className="bg-green-500/10 border border-green-500/20 rounded-lg px-3 py-2 text-sm text-green-300"
+                          >
+                            {light.description}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="text-center py-12 text-muted-foreground">
+                    <p>No analysis available yet</p>
+                    <p className="text-xs mt-1 text-muted-foreground">Complete the session to generate analysis</p>
+                  </div>
+                )}
+              </>
+            )}
+
+            {/* Research Tab */}
+            {activeTab === "research" && (
+              <ResearchCard
+                research={(session.research as ResearchData) || null}
+                onTriggerResearch={handleTriggerResearch}
+                triggerLoading={researchLoading}
+              />
+            )}
+
+            {/* Responses Tab */}
+            {activeTab === "responses" && (
+              <>
+                {session.responses.length > 0 ? (
+                  <div className="space-y-2">
+                    <p className="text-sm text-muted-foreground font-medium mb-3">
+                      {session.responses.length} Responses
+                    </p>
+                    {session.responses.map((resp, i) => (
+                      <div
+                        key={resp.questionId}
+                        className={`rounded-lg p-3 ${
+                          i % 2 === 0 ? "bg-muted" : "bg-foreground/[0.04]"
+                        }`}
+                      >
+                        <p className="text-sm text-muted-foreground mb-1">{resp.questionText}</p>
+                        <p className="text-foreground text-sm whitespace-pre-wrap">
+                          {(() => {
+                            const raw = resp.answer;
+                            if (typeof raw !== "string") return String(raw ?? "");
+                            if (raw.startsWith('"') && raw.endsWith('"')) {
+                              try { return JSON.parse(raw); } catch { /* fall through */ }
+                            }
+                            return raw;
+                          })()}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {formatTimestamp(resp.timestamp)}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-12 text-muted-foreground">No responses yet</div>
+                )}
+              </>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── Legacy SessionDrawer (overlay wrapper) ──────────────────────────────────
+// Kept for backward compatibility in pages not yet using DetailDrawer context.
+
+interface SessionDrawerProps {
+  sessionId: string;
+  onClose: () => void;
+  onDelete?: () => void;
+}
+
+export default function SessionDrawer({ sessionId, onClose, onDelete }: SessionDrawerProps) {
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        setVisible(true);
+      });
+    });
+  }, []);
+
+  const handleClose = () => {
+    setVisible(false);
+    setTimeout(onClose, 300);
+  };
+
+  return (
     <div className="fixed inset-0 z-40">
       {/* Backdrop */}
       <div
@@ -215,324 +549,11 @@ export default function SessionDrawer({ sessionId, onClose, onDelete }: SessionD
           visible ? "translate-x-0" : "translate-x-full"
         }`}
       >
-        {/* Header */}
-        <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-border shrink-0">
-          <h2 className="text-lg font-semibold text-foreground">Session Details</h2>
-          <button
-            onClick={handleClose}
-            className="text-muted-foreground hover:text-foreground transition-colors text-xl leading-none"
-          >
-            &times;
-          </button>
-        </div>
-
-        {/* Tabs */}
-        {!loading && session && (
-          <div className="flex border-b border-border px-4 sm:px-6 shrink-0">
-            {TABS.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`px-3 py-2.5 text-xs font-medium transition-colors relative ${
-                  activeTab === tab.id
-                    ? "text-foreground/90"
-                    : "text-muted-foreground hover:text-muted-foreground"
-                }`}
-              >
-                {tab.label}
-                {tab.id === "research" && session.research && (
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 absolute top-2 -right-0.5" />
-                )}
-                {activeTab === tab.id && (
-                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500 rounded-t" />
-                )}
-              </button>
-            ))}
-          </div>
-        )}
-
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto">
-          {loading ? (
-            <div className="flex items-center justify-center py-24">
-              <div className="w-8 h-8 border-2 border-border border-t-white/60 rounded-full animate-spin" />
-            </div>
-          ) : !session ? (
-            <div className="text-center py-24 space-y-2">
-              <p className="text-muted-foreground">Session not found</p>
-              <p className="text-muted-foreground/60 text-xs">This session may have been deleted or not yet started.</p>
-            </div>
-          ) : (
-            <div className="px-4 sm:px-6 py-6 space-y-6">
-              {/* Details Tab */}
-              {activeTab === "details" && (
-                <>
-                  {/* Participant Info Card */}
-                  <div className="bg-muted rounded-xl p-4 space-y-3">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <h3 className="text-lg font-semibold text-foreground">
-                          {session.participant?.name || (session as any).participantName || "Unknown Participant"}
-                        </h3>
-                        <p className="text-sm text-muted-foreground">{session.participant?.role || (session as any).participantRole || ""}</p>
-                      </div>
-                      <StatusBadge status={session.status} />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3 text-sm">
-                      <div>
-                        <span className="text-muted-foreground">Company</span>
-                        <p className="text-foreground/80">{session.participant?.company || (session as any).participantCompany || "—"}</p>
-                      </div>
-                      <div>
-                        <span className="text-muted-foreground">Industry</span>
-                        <p className="text-foreground/80">{session.participant?.industry || (session as any).participantIndustry || "—"}</p>
-                      </div>
-                      <div>
-                        <span className="text-muted-foreground">Team Size</span>
-                        <p className="text-foreground/80">{session.participant?.teamSize || (session as any).participantTeamSize || "—"}</p>
-                      </div>
-                      <div>
-                        <span className="text-muted-foreground">Email</span>
-                        <p className="text-foreground/80">{session.participant?.email || (session as any).participantEmail || "—"}</p>
-                      </div>
-                    </div>
-
-                    <div className="text-xs text-muted-foreground pt-1">
-                      Created {formatTimestamp(session.createdAt)}
-                    </div>
-                  </div>
-
-                  {/* Call Participant */}
-                  <div className="bg-muted rounded-xl p-4 space-y-3">
-                    <p className="text-sm text-muted-foreground font-medium">Call Participant</p>
-
-                    {callStatus?.vapiCallId ? (
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2">
-                          <span className={`w-2 h-2 rounded-full ${callStatus.callCompletedAt ? "bg-green-400" : "bg-yellow-400 animate-pulse"}`} />
-                          <span className="text-sm text-foreground/80">
-                            {callStatus.callCompletedAt
-                              ? `Call completed${callStatus.callDuration ? ` (${Math.round(callStatus.callDuration / 60)}m)` : ""}`
-                              : "Call in progress..."}
-                          </span>
-                        </div>
-                        {callStatus.callRecordingUrl && (
-                          <a
-                            href={callStatus.callRecordingUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1.5 text-xs text-blue-400 hover:text-blue-300 transition-colors"
-                          >
-                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            Listen to recording
-                          </a>
-                        )}
-                        {callStatus.hasTranscript && (
-                          <span className="inline-flex items-center gap-1 text-xs text-green-400/70">
-                            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
-                            Transcript saved
-                          </span>
-                        )}
-                        <button
-                          onClick={() => { setCallStatus(null); setCallPhone(""); }}
-                          className="text-xs text-muted-foreground hover:text-muted-foreground transition-colors"
-                        >
-                          Call again
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="space-y-2">
-                        <div className="flex gap-2">
-                          <input
-                            type="tel"
-                            value={callPhone}
-                            onChange={(e) => setCallPhone(e.target.value)}
-                            placeholder="+1 (555) 123-4567"
-                            className="flex-1 bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-border"
-                          />
-                          <button
-                            onClick={handleInitiateCall}
-                            disabled={callLoading || !callPhone.trim()}
-                            className="px-4 py-2 rounded-lg text-sm font-medium bg-blue-600 hover:bg-blue-700 text-foreground transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5"
-                          >
-                            {callLoading ? (
-                              <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" /></svg>
-                            ) : (
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>
-                            )}
-                            Call
-                          </button>
-                        </div>
-                        {callError && (
-                          <p className="text-red-400 text-xs">{callError}</p>
-                        )}
-                        <p className="text-muted-foreground text-xs">Vappy will call and run the full assessment via voice</p>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Delete Button */}
-                  <div className="pt-4 border-t border-border">
-                    <button
-                      onClick={handleDelete}
-                      className={`w-full rounded-lg px-4 py-2.5 text-sm font-medium transition-colors ${
-                        deleteConfirm
-                          ? "bg-red-600 text-foreground hover:bg-red-700"
-                          : "bg-muted text-red-400 border border-red-500/20 hover:bg-red-500/10"
-                      }`}
-                    >
-                      {deleteConfirm ? "Confirm Delete?" : "Delete Session"}
-                    </button>
-                  </div>
-                </>
-              )}
-
-              {/* Analysis Tab */}
-              {activeTab === "analysis" && (
-                <>
-                  {session.assessmentTypeId === "adaptability-index" ? (
-                    session.adaptabilityAnalysis ? (
-                      <AdaptabilitySessionView analysis={session.adaptabilityAnalysis} />
-                    ) : (
-                      <div className="text-center py-12 text-muted-foreground">
-                        <p>No adaptability analysis available yet</p>
-                        <p className="text-xs mt-1 text-muted-foreground">Complete the session to generate analysis</p>
-                      </div>
-                    )
-                  ) : session.analysis ? (
-                    <div className="space-y-4">
-                      {/* Overall Score */}
-                      <div className="bg-muted rounded-xl p-4 flex items-center gap-4">
-                        <div
-                          className={`text-4xl font-bold ${scoreColor(
-                            session.analysis.overallReadinessScore
-                          )}`}
-                        >
-                          {session.analysis.overallReadinessScore}
-                        </div>
-                        <div>
-                          <p className="text-sm text-muted-foreground">Overall Readiness Score</p>
-                          <p className="text-foreground font-medium">
-                            {session.analysis.archetype}
-                          </p>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            {session.analysis.archetypeDescription}
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* Dimension Scores */}
-                      <div className="bg-muted rounded-xl p-4 space-y-3">
-                        <p className="text-sm text-muted-foreground font-medium">Dimension Scores</p>
-                        {session.analysis.dimensionScores.map((ds) => (
-                          <div key={ds.dimension}>
-                            <div className="flex justify-between text-xs mb-1">
-                              <span className="text-muted-foreground">{ds.dimension}</span>
-                              <span className="text-muted-foreground">{ds.score}</span>
-                            </div>
-                            <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
-                              <div
-                                className={`h-full rounded-full transition-all ${scoreBarColor(ds.score)}`}
-                                style={{ width: `${ds.score}%` }}
-                              />
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-
-                      {/* Red Flags */}
-                      {session.analysis.redFlags.length > 0 && (
-                        <div className="space-y-2">
-                          <p className="text-sm text-muted-foreground font-medium">Red Flags</p>
-                          {session.analysis.redFlags.map((flag, i) => (
-                            <div
-                              key={i}
-                              className="bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2 text-sm text-red-300"
-                            >
-                              {flag.description}
-                            </div>
-                          ))}
-                        </div>
-                      )}
-
-                      {/* Green Lights */}
-                      {session.analysis.greenLights.length > 0 && (
-                        <div className="space-y-2">
-                          <p className="text-sm text-muted-foreground font-medium">Green Lights</p>
-                          {session.analysis.greenLights.map((light, i) => (
-                            <div
-                              key={i}
-                              className="bg-green-500/10 border border-green-500/20 rounded-lg px-3 py-2 text-sm text-green-300"
-                            >
-                              {light.description}
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="text-center py-12 text-muted-foreground">
-                      <p>No analysis available yet</p>
-                      <p className="text-xs mt-1 text-muted-foreground">Complete the session to generate analysis</p>
-                    </div>
-                  )}
-                </>
-              )}
-
-              {/* Research Tab */}
-              {activeTab === "research" && (
-                <ResearchCard
-                  research={(session.research as ResearchData) || null}
-                  onTriggerResearch={handleTriggerResearch}
-                  triggerLoading={researchLoading}
-                />
-              )}
-
-              {/* Responses Tab */}
-              {activeTab === "responses" && (
-                <>
-                  {session.responses.length > 0 ? (
-                    <div className="space-y-2">
-                      <p className="text-sm text-muted-foreground font-medium mb-3">
-                        {session.responses.length} Responses
-                      </p>
-                      {session.responses.map((resp, i) => (
-                        <div
-                          key={resp.questionId}
-                          className={`rounded-lg p-3 ${
-                            i % 2 === 0 ? "bg-muted" : "bg-foreground/[0.04]"
-                          }`}
-                        >
-                          <p className="text-sm text-muted-foreground mb-1">{resp.questionText}</p>
-                          <p className="text-foreground text-sm whitespace-pre-wrap">
-                            {(() => {
-                              const raw = resp.answer;
-                              if (typeof raw !== "string") return String(raw ?? "");
-                              // Unwrap double-serialized JSON strings: "\"value\"" → value
-                              if (raw.startsWith('"') && raw.endsWith('"')) {
-                                try { return JSON.parse(raw); } catch { /* fall through */ }
-                              }
-                              return raw;
-                            })()}
-                          </p>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            {formatTimestamp(resp.timestamp)}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-12 text-muted-foreground">No responses yet</div>
-                  )}
-                </>
-              )}
-            </div>
-          )}
-        </div>
+        <SessionDrawerContent
+          sessionId={sessionId}
+          onClose={handleClose}
+          onDelete={onDelete}
+        />
       </div>
     </div>
   );
