@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import StatCard from "../components/admin/StatCard";
 import { API_BASE } from "../lib/api";
-import { fetchStats, fetchFunnel, fetchDimensions, fetchSessions, fetchCompanies, fetchAssessments } from "../lib/admin-api";
+import { fetchStats, fetchFunnel, fetchDimensions, fetchSessions, fetchCompanies, fetchAssessments, fetchProfileStats } from "../lib/admin-api";
 import type { DashboardFilters } from "../lib/admin-api";
 import {
   fetchGraphStatus,
@@ -173,6 +173,15 @@ export default function AdminDashboardPage() {
   const [redFlags, setRedFlags] = useState<{ description: string; frequency: number }[]>([]);
   const [greenLights, setGreenLights] = useState<{ description: string; frequency: number }[]>([]);
 
+  // Profile stats
+  const [profileStats, setProfileStats] = useState<{
+    total_profiles: number;
+    avg_score: number | null;
+    archetype_counts: Record<string, number>;
+    score_distribution: { label: string; count: number }[];
+    top_gaps: { gap: string; count: number }[];
+  } | null>(null);
+
   // Real-time notifications via SSE
   const [notifications, setNotifications] = useState<{ id: number; message: string; type: string }[]>([]);
   const notifIdRef = useRef(0);
@@ -237,12 +246,13 @@ export default function AdminDashboardPage() {
 
   // Load core data (re-fetches when filters change)
   const loadCoreData = useCallback(() => {
-    Promise.all([fetchStats(filters), fetchFunnel(filters), fetchDimensions(filters), fetchSessions(filters), fetchCompanies(filters)])
-      .then(([statsData, funnelData, _dimensionsData, _sessionsData, companiesData]) => {
+    Promise.all([fetchStats(filters), fetchFunnel(filters), fetchDimensions(filters), fetchSessions(filters), fetchCompanies(filters), fetchProfileStats(filters)])
+      .then(([statsData, funnelData, _dimensionsData, _sessionsData, companiesData, profileData]) => {
         setStats(statsData);
-        setFunnel(funnelData.funnel);
-        setDimensions(_dimensionsData.dimensions);
+        setFunnel(funnelData.funnel || []);
+        setDimensions(_dimensionsData.dimensions || []);
         setCompanies(companiesData.companies || []);
+        setProfileStats(profileData);
         setLoading(false);
       })
       .catch((err) => {
@@ -716,6 +726,102 @@ export default function AdminDashboardPage() {
           )}
         </div>
       </div>
+
+      {/* ============================================ */}
+      {/* ROW 5.5: Profile-Powered Insights            */}
+      {/* ============================================ */}
+      {profileStats && profileStats.total_profiles > 0 && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          {/* Profile Archetype Distribution */}
+          <div className="bg-muted rounded-2xl border border-border p-4 md:p-6">
+            <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+              Profile Archetypes
+            </h2>
+            {Object.keys(profileStats.archetype_counts).length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground text-sm">No archetype data</div>
+            ) : (
+              <div className="space-y-2">
+                {Object.entries(profileStats.archetype_counts)
+                  .sort(([, a], [, b]) => b - a)
+                  .map(([archetype, count]) => {
+                    const total = profileStats.total_profiles;
+                    const pct = total > 0 ? Math.round((count / total) * 100) : 0;
+                    return (
+                      <div key={archetype} className="flex items-center gap-2">
+                        <span className="text-xs text-muted-foreground flex-1 truncate">{humanize(archetype)}</span>
+                        <div className="w-24 bg-muted rounded h-3 overflow-hidden">
+                          <div
+                            className="h-full rounded bg-gradient-to-r from-blue-500/60 to-cyan-500/60"
+                            style={{ width: `${pct}%`, minWidth: "2px" }}
+                          />
+                        </div>
+                        <span className="text-[10px] text-muted-foreground tabular-nums w-6 text-right">{count}</span>
+                        <span className="text-[10px] text-muted-foreground tabular-nums w-8 text-right">{pct}%</span>
+                      </div>
+                    );
+                  })}
+              </div>
+            )}
+          </div>
+
+          {/* Profile Score Distribution */}
+          <div className="bg-muted rounded-2xl border border-border p-4 md:p-6">
+            <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+              Score Distribution
+            </h2>
+            {profileStats.score_distribution.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground text-sm">No score data</div>
+            ) : (
+              <div className="flex items-end gap-2 h-32">
+                {profileStats.score_distribution.map((item) => {
+                  const max = Math.max(...profileStats.score_distribution.map((d) => d.count), 1);
+                  return (
+                    <div key={item.label} className="flex-1 flex flex-col items-center justify-end h-full group relative">
+                      <span className="text-[10px] text-muted-foreground mb-1">{item.count}</span>
+                      <div className="w-full relative flex-1 flex items-end">
+                        <div
+                          className="w-full rounded-t-md bg-gradient-to-t from-blue-500/70 to-cyan-400/50 transition-all duration-500"
+                          style={{ height: `${Math.max((item.count / max) * 100, 3)}%` }}
+                        />
+                      </div>
+                      <span className="text-[9px] text-muted-foreground mt-1.5">{item.label}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* Top Gaps */}
+          <div className="bg-muted rounded-2xl border border-border p-4 md:p-6">
+            <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+              Top Gaps
+            </h2>
+            {profileStats.top_gaps.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground text-sm">No gap data</div>
+            ) : (
+              <div className="space-y-2">
+                {profileStats.top_gaps.slice(0, 8).map((gap, i) => {
+                  const maxCount = profileStats.top_gaps[0]?.count || 1;
+                  return (
+                    <div key={i} className="flex items-center gap-2">
+                      <span className="text-[10px] text-muted-foreground w-4 text-right shrink-0">{i + 1}</span>
+                      <span className="text-xs text-muted-foreground flex-1 truncate">{gap.gap}</span>
+                      <div className="w-16 bg-muted rounded h-2 overflow-hidden">
+                        <div
+                          className="h-full rounded bg-gradient-to-r from-amber-500/60 to-orange-500/60"
+                          style={{ width: `${(gap.count / maxCount) * 100}%`, minWidth: "2px" }}
+                        />
+                      </div>
+                      <span className="text-[10px] text-muted-foreground tabular-nums w-5 text-right">{gap.count}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* ============================================ */}
       {/* ROW 6: Funnel + Industry Benchmarks          */}

@@ -292,7 +292,7 @@ export default function AdminLayout() {
       </button>
 
       {/* AI Chat Drawer */}
-      <AdminChatDrawer open={chatOpen} onClose={() => setChatOpen(false)} />
+      <AdminChatDrawer open={chatOpen} onClose={() => setChatOpen(false)} pageContext={location.pathname.replace('/admin/', '') || 'dashboard'} />
     </div>
   );
 }

@@ -104,6 +104,23 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
+// Get assessments for a contact
+router.get("/:id/assessments", async (req, res) => {
+  try {
+    const { data, error } = await getSupabase()
+      .from("cascade_profiles")
+      .select("id, session_id, overall_score, archetype, assessment_type, executive_summary, created_at")
+      .eq("contact_id", req.params.id)
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+    res.json({ assessments: data || [] });
+  } catch (err) {
+    console.error("[contacts] assessments error:", err);
+    res.status(500).json({ error: "Failed to load contact assessments" });
+  }
+});
+
 // Bulk delete
 router.post("/bulk-delete", async (req, res) => {
   try {

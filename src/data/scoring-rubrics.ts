@@ -19,6 +19,10 @@ export const DIMENSION_LABELS: Record<ScoringDimension, string> = {
   team_capacity: "Team Capacity",
   mission_alignment: "Mission Alignment",
   investment_readiness: "Investment Readiness",
+  learning_velocity: "Learning Velocity",
+  unlearning_readiness: "Unlearning Readiness",
+  adaptive_agency: "Adaptive Agency",
+  beginner_tolerance: "Beginner Tolerance",
 };
 
 export const DIMENSION_DESCRIPTIONS: Record<ScoringDimension, string> = {
@@ -30,6 +34,10 @@ export const DIMENSION_DESCRIPTIONS: Record<ScoringDimension, string> = {
   team_capacity: "Team's ability to adopt and execute AI initiatives",
   mission_alignment: "How well AI adoption aligns with core mission",
   investment_readiness: "Ability to justify and fund AI initiatives",
+  learning_velocity: "How quickly and effectively you learn new skills, adapt learning strategies, and recover from learning failures",
+  unlearning_readiness: "Capacity to let go of outdated skills, beliefs, and identity attachments when they no longer serve you",
+  adaptive_agency: "Drive to take ownership of your own growth — self-directed learning, initiative without permission, and resourcefulness",
+  beginner_tolerance: "Comfort with incompetence, uncertainty, and the emotional experience of being a beginner",
 };
 
 // --- Archetype Definitions ---
@@ -226,6 +234,44 @@ export const GAP_DEFINITIONS: GapDefinition[] = [
     minDelta: 20,
     description: "Self-rating doesn't match observed behavior and specific examples.",
     serviceRecommendation: "Honest baseline assessment + personalized development plan. Start from reality, not aspiration.",
+  },
+
+  // --- Cross-Assessment Gaps (Cascade x Adaptability) ---
+  {
+    pattern: "awareness_learning_velocity",
+    label: "Knows But Can't Learn Fast Enough",
+    dimension1: "ai_awareness",
+    dimension2: "learning_velocity",
+    minDelta: 25,
+    description: "High AI awareness but low learning velocity. Understands what AI can do but lacks the learning speed to keep up with rapid changes.",
+    serviceRecommendation: "Learning Strategy Audit + AI-Accelerated Learning Sprints. Build systematic learning habits before adding more knowledge.",
+  },
+  {
+    pattern: "energy_unlearning",
+    label: "Wants Change But Can't Let Go",
+    dimension1: "change_energy",
+    dimension2: "unlearning_readiness",
+    minDelta: 25,
+    description: "High change energy but low unlearning readiness. Motivated to transform but identity is anchored to existing expertise.",
+    serviceRecommendation: "Identity Expansion coaching + Expertise Audit. Help them see that letting go of old methods IS the transformation they want.",
+  },
+  {
+    pattern: "clarity_agency",
+    label: "Sees the Vision But Waits to Act",
+    dimension1: "strategic_clarity",
+    dimension2: "adaptive_agency",
+    minDelta: 25,
+    description: "Clear strategic vision but low adaptive agency. Knows where to go but waits for permission or direction to start moving.",
+    serviceRecommendation: "Personal Learning Plan + Initiative Without Permission exercises. Convert strategic insight into self-directed action.",
+  },
+  {
+    pattern: "capacity_beginner_tolerance",
+    label: "Team Ready But Leader Can't Model Learning",
+    dimension1: "team_capacity",
+    dimension2: "beginner_tolerance",
+    minDelta: 25,
+    description: "Strong team capability but leader has low beginner tolerance. Team is ready but leader's need for expert status blocks visible learning.",
+    serviceRecommendation: "Public Learning Practice + Deliberate Beginner Experiences. The team needs to see the leader learning openly, not just directing.",
   },
 ];
 

@@ -35,9 +35,10 @@ function formatFileSize(bytes: number): string {
 interface Props {
   open: boolean;
   onClose: () => void;
+  pageContext?: string;
 }
 
-export default function AdminChatDrawer({ open, onClose }: Props) {
+export default function AdminChatDrawer({ open, onClose, pageContext }: Props) {
   const navigate = useNavigate();
 
   // --- Core state ---
@@ -174,7 +175,7 @@ export default function AdminChatDrawer({ open, onClose }: Props) {
 
     try {
       const result: { text: string; toolCalls: ToolCallRecord[] } =
-        await adminChatStream(recentMessages, onEvent, attachments.length > 0 ? attachments : undefined);
+        await adminChatStream(recentMessages, onEvent, attachments.length > 0 ? attachments : undefined, pageContext);
 
       const aiMsg: AdminChatMessage = {
         role: "assistant",
@@ -244,7 +245,9 @@ export default function AdminChatDrawer({ open, onClose }: Props) {
             </div>
             <div>
               <h2 className="text-sm font-semibold text-foreground/90">Admin Assistant</h2>
-              <p className="text-[10px] text-muted-foreground">AI-powered admin tools</p>
+              <p className="text-[10px] text-muted-foreground">
+                {pageContext ? `Chatting from: ${pageContext.charAt(0).toUpperCase() + pageContext.slice(1)}` : "AI-powered admin tools"}
+              </p>
             </div>
           </div>
           <button

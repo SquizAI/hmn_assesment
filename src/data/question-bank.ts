@@ -623,6 +623,200 @@ export const QUESTION_BANK: Question[] = [
     aiFollowUpPrompt: "Let this be reflective. This answer often contains the seed of their transformation narrative. Thank them sincerely for their time and honesty.",
     tags: ["closing", "reflection", "self_awareness"],
   },
+
+  // ========================================
+  // PHASE 5: ADAPTABILITY ASSESSMENT
+  // ========================================
+
+  // --- Learning Velocity ---
+  {
+    id: "adapt_lv_approach",
+    section: "learning_velocity",
+    phase: "adaptability_assessment",
+    text: "Think of the last time you had to learn something completely new for work. Walk me through your approach.",
+    inputType: "ai_conversation",
+    required: true,
+    scoringDimensions: ["learning_velocity"],
+    weight: 2.0,
+    aiFollowUpPrompt: "Listen for learning strategy clarity, timeline specificity, and help-seeking behavior. Probe: 'How long did it take you to go from zero to productive?' and 'What would you do differently next time?' Score for markers 1A (timeline), 1C (strategy), and 1D (help-seeking).",
+    tags: ["adaptability", "learning_velocity", "strategy"],
+  },
+  {
+    id: "adapt_lv_instinct",
+    section: "learning_velocity",
+    phase: "adaptability_assessment",
+    text: "When you encounter a tool or system you've never used, what's your first instinct?",
+    inputType: "buttons",
+    options: [
+      { label: "Dive in and experiment", value: "experiment", description: "Learn by doing" },
+      { label: "Read documentation first", value: "documentation", description: "Understand before acting" },
+      { label: "Ask someone to show me", value: "ask_someone", description: "Learn from others" },
+      { label: "Avoid until necessary", value: "avoid", description: "Wait until I have to" },
+    ],
+    required: true,
+    scoringDimensions: ["learning_velocity"],
+    weight: 1.5,
+    tags: ["adaptability", "learning_velocity", "instinct"],
+  },
+  {
+    id: "adapt_lv_speed",
+    section: "learning_velocity",
+    phase: "adaptability_assessment",
+    text: "How quickly do you typically go from 'I don't understand this' to 'I can teach this to someone'?",
+    subtext: "1 = Months or longer → 10 = Days",
+    inputType: "slider",
+    sliderMin: 1,
+    sliderMax: 10,
+    sliderLabels: { min: "Months or longer", max: "Days" },
+    required: true,
+    scoringDimensions: ["learning_velocity"],
+    weight: 1.5,
+    tags: ["adaptability", "learning_velocity", "timeline"],
+  },
+  {
+    id: "adapt_lv_pressure",
+    section: "learning_velocity",
+    phase: "adaptability_assessment",
+    text: "Describe a recent situation where you had to learn under pressure with no time for formal training.",
+    inputType: "open_text",
+    required: true,
+    scoringDimensions: ["learning_velocity"],
+    weight: 1.0,
+    tags: ["adaptability", "learning_velocity", "pressure", "failure"],
+  },
+
+  // --- Unlearning Readiness ---
+  {
+    id: "adapt_ur_reconsider",
+    section: "unlearning_readiness",
+    phase: "adaptability_assessment",
+    text: "What's a professional belief or practice you've held for years that you've recently had to reconsider?",
+    inputType: "ai_conversation",
+    required: true,
+    scoringDimensions: ["unlearning_readiness"],
+    weight: 2.0,
+    aiFollowUpPrompt: "Listen for identity attachment and belief update evidence. Probe: 'What made you reconsider?' and 'What did you replace it with?' Watch for whether this is genuine unlearning (letting go) or just adding new (which doesn't count). If they describe adding new, redirect: 'That sounds more like learning something new — can you think of something you actively stopped doing or believing?' Score for markers 2C (unlearning evidence) and 2D (belief update).",
+    tags: ["adaptability", "unlearning_readiness", "belief_update"],
+  },
+  {
+    id: "adapt_ur_process_change",
+    section: "unlearning_readiness",
+    phase: "adaptability_assessment",
+    text: "When your organization changes a process you've mastered, how do you typically respond?",
+    inputType: "buttons",
+    options: [
+      { label: "Embrace it immediately", value: "embrace", description: "I welcome new approaches" },
+      { label: "Cautiously adapt", value: "cautious", description: "I give it a fair try" },
+      { label: "Resist initially then adjust", value: "resist_then_adjust", description: "I push back but come around" },
+      { label: "Fight to keep the old way", value: "fight", description: "If it works, don't fix it" },
+    ],
+    required: true,
+    scoringDimensions: ["unlearning_readiness"],
+    weight: 1.5,
+    tags: ["adaptability", "unlearning_readiness", "change_response"],
+  },
+  {
+    id: "adapt_ur_comfort",
+    section: "unlearning_readiness",
+    phase: "adaptability_assessment",
+    text: "Rate your comfort level when being told 'everything you know about X is wrong.'",
+    subtext: "1 = Very uncomfortable → 10 = Energized by the challenge",
+    inputType: "slider",
+    sliderMin: 1,
+    sliderMax: 10,
+    sliderLabels: { min: "Very uncomfortable", max: "Energized by the challenge" },
+    required: true,
+    scoringDimensions: ["unlearning_readiness"],
+    weight: 1.5,
+    followUpTrigger: {
+      condition: "always",
+      aiGenerated: true,
+    },
+    aiFollowUpPrompt: "After they rate themselves, ask: 'Can you think of a specific time that happened? How did you actually react in the moment versus how you think you should have reacted?'",
+    tags: ["adaptability", "unlearning_readiness", "identity"],
+  },
+
+  // --- Adaptive Agency ---
+  {
+    id: "adapt_aa_no_solution",
+    section: "adaptive_agency",
+    phase: "adaptability_assessment",
+    text: "When facing a problem with no clear solution, describe your typical approach.",
+    inputType: "ai_conversation",
+    required: true,
+    scoringDimensions: ["adaptive_agency"],
+    weight: 2.0,
+    aiFollowUpPrompt: "Listen for self-directed action versus waiting for direction. Probe: 'Did anyone ask you to solve that, or did you take it on yourself?' and 'What resources did you find or create on your own?' Score for markers 3A (self-directed learning), 3B (initiative without permission), and 3C (resource constraint response).",
+    tags: ["adaptability", "adaptive_agency", "initiative"],
+  },
+  {
+    id: "adapt_aa_frequency",
+    section: "adaptive_agency",
+    phase: "adaptability_assessment",
+    text: "How often do you initiate changes in your work without being asked?",
+    inputType: "buttons",
+    options: [
+      { label: "Daily", value: "daily", description: "It's a constant habit" },
+      { label: "Weekly", value: "weekly", description: "Regularly but not every day" },
+      { label: "Monthly", value: "monthly", description: "When something is clearly broken" },
+      { label: "Rarely", value: "rarely", description: "I wait for direction" },
+    ],
+    required: true,
+    scoringDimensions: ["adaptive_agency"],
+    weight: 1.5,
+    tags: ["adaptability", "adaptive_agency", "initiative_frequency"],
+  },
+  {
+    id: "adapt_aa_ambiguity",
+    section: "adaptive_agency",
+    phase: "adaptability_assessment",
+    text: "Describe a situation where you had to navigate ambiguity without clear authority or direction.",
+    inputType: "open_text",
+    required: true,
+    scoringDimensions: ["adaptive_agency"],
+    weight: 1.5,
+    tags: ["adaptability", "adaptive_agency", "ambiguity"],
+  },
+
+  // --- Beginner Tolerance ---
+  {
+    id: "adapt_bt_least_knowledgeable",
+    section: "beginner_tolerance",
+    phase: "adaptability_assessment",
+    text: "How comfortable are you being the least knowledgeable person in a room?",
+    subtext: "1 = Very uncomfortable → 10 = Completely comfortable",
+    inputType: "slider",
+    sliderMin: 1,
+    sliderMax: 10,
+    sliderLabels: { min: "Very uncomfortable", max: "Completely comfortable" },
+    required: true,
+    scoringDimensions: ["beginner_tolerance"],
+    weight: 1.5,
+    tags: ["adaptability", "beginner_tolerance", "competence"],
+  },
+  {
+    id: "adapt_bt_mistake_response",
+    section: "beginner_tolerance",
+    phase: "adaptability_assessment",
+    text: "What's your internal response when you make a mistake while learning something new?",
+    inputType: "ai_conversation",
+    required: true,
+    scoringDimensions: ["beginner_tolerance"],
+    weight: 2.0,
+    aiFollowUpPrompt: "Listen for emotional processing patterns. Probe: 'Do you tend to hide that mistake or share it with others?' and 'How long does the sting last?' Watch for shame signals versus growth signals. Score for markers 4A (incompetence experience), 4B (emotional processing), and 4C (stupid question behavior).",
+    tags: ["adaptability", "beginner_tolerance", "emotional_processing"],
+  },
+  {
+    id: "adapt_bt_voluntary_beginner",
+    section: "beginner_tolerance",
+    phase: "adaptability_assessment",
+    text: "When was the last time you voluntarily put yourself in a situation where you were a complete beginner?",
+    inputType: "open_text",
+    required: true,
+    scoringDimensions: ["beginner_tolerance"],
+    weight: 1.5,
+    tags: ["adaptability", "beginner_tolerance", "recency", "choice"],
+  },
 ];
 
 // --- Question Selection Helpers ---
@@ -644,6 +838,7 @@ export const PHASE_ORDER: CascadePhase[] = [
   "org_reality",
   "domain_deep_dive",
   "strategic_alignment",
+  "adaptability_assessment",
 ];
 
 export const SECTION_ORDER: CascadeSection[] = [
@@ -659,6 +854,10 @@ export const SECTION_ORDER: CascadeSection[] = [
   "strategic_stakes",
   "hmn_anchor",
   "closing",
+  "learning_velocity",
+  "unlearning_readiness",
+  "adaptive_agency",
+  "beginner_tolerance",
 ];
 
 export const PHASE_LABELS: Record<CascadePhase, string> = {
@@ -666,6 +865,7 @@ export const PHASE_LABELS: Record<CascadePhase, string> = {
   org_reality: "Organizational Reality",
   domain_deep_dive: "Domain Deep Dive",
   strategic_alignment: "Strategic Alignment",
+  adaptability_assessment: "Adaptability Assessment",
 };
 
 export const SECTION_LABELS: Record<CascadeSection, string> = {
@@ -681,4 +881,8 @@ export const SECTION_LABELS: Record<CascadeSection, string> = {
   strategic_stakes: "Strategic Stakes",
   hmn_anchor: "Human Value",
   closing: "Reflection",
+  learning_velocity: "Learning Velocity",
+  unlearning_readiness: "Unlearning Readiness",
+  adaptive_agency: "Adaptive Agency",
+  beginner_tolerance: "Beginner Tolerance",
 };

@@ -1,0 +1,49 @@
+{
+  "id": "combined-readiness-adaptability",
+  "name": "AI Readiness + Adaptability Assessment",
+  "description": "A comprehensive assessment combining AI readiness diagnostics (8 dimensions) with adaptability profiling (4 pillars) to produce a unified 12-dimension leader profile.",
+  "icon": "\ud83e\udde9",
+  "estimatedMinutes": 40,
+  "status": "active",
+  "phases": [
+    { "id": "profile_baseline", "label": "Profile & Baseline", "order": 0 },
+    { "id": "org_reality", "label": "Organizational Reality", "order": 1 },
+    { "id": "domain_deep_dive", "label": "Domain Deep Dive", "order": 2 },
+    { "id": "strategic_alignment", "label": "Strategic Alignment", "order": 3 },
+    { "id": "adaptability_assessment", "label": "Adaptability Assessment", "order": 4 }
+  ],
+  "sections": [
+    { "id": "demographics", "label": "About You", "phase": "profile_baseline", "order": 0 },
+    { "id": "context_setting", "label": "Your Story", "phase": "profile_baseline", "order": 1 },
+    { "id": "change_capacity", "label": "Change Readiness", "phase": "profile_baseline", "order": 2 },
+    { "id": "personal_ai_reality", "label": "Your AI Reality", "phase": "profile_baseline", "order": 3 },
+    { "id": "vulnerability", "label": "Private Learning", "phase": "profile_baseline", "order": 4 },
+    { "id": "team_org_reality", "label": "Team & Organization", "phase": "org_reality", "order": 5 },
+    { "id": "business_process", "label": "Business Processes", "phase": "org_reality", "order": 6 },
+    { "id": "domain_specific", "label": "Your Industry", "phase": "domain_deep_dive", "order": 7 },
+    { "id": "customer_support", "label": "Customer Experience", "phase": "domain_deep_dive", "order": 8 },
+    { "id": "strategic_stakes", "label": "Strategic Stakes", "phase": "strategic_alignment", "order": 9 },
+    { "id": "hmn_anchor", "label": "Human Value", "phase": "strategic_alignment", "order": 10 },
+    { "id": "closing", "label": "Reflection", "phase": "strategic_alignment", "order": 11 },
+    { "id": "learning_velocity", "label": "Learning Velocity", "phase": "adaptability_assessment", "order": 12 },
+    { "id": "unlearning_readiness", "label": "Unlearning Readiness", "phase": "adaptability_assessment", "order": 13 },
+    { "id": "adaptive_agency", "label": "Adaptive Agency", "phase": "adaptability_assessment", "order": 14 },
+    { "id": "beginner_tolerance", "label": "Beginner Tolerance", "phase": "adaptability_assessment", "order": 15 }
+  ],
+  "scoringDimensions": [
+    { "id": "ai_awareness", "label": "AI Awareness", "description": "Understanding of what AI can do and where it applies", "weight": 1 },
+    { "id": "ai_action", "label": "AI Action", "description": "Actually using AI tools in day-to-day work", "weight": 1 },
+    { "id": "process_readiness", "label": "Process Readiness", "description": "How well processes are documented, structured, and automatable", "weight": 1 },
+    { "id": "strategic_clarity", "label": "Strategic Clarity", "description": "Clear vision of where AI fits in business strategy", "weight": 1 },
+    { "id": "change_energy", "label": "Change Energy", "description": "Personal drive and organizational will to transform", "weight": 1 },
+    { "id": "team_capacity", "label": "Team Capacity", "description": "Team's ability to adopt and execute AI initiatives", "weight": 1 },
+    { "id": "mission_alignment", "label": "Mission Alignment", "description": "How well AI adoption aligns with core mission", "weight": 1 },
+    { "id": "investment_readiness", "label": "Investment Readiness", "description": "Ability to justify and fund AI initiatives", "weight": 1 },
+    { "id": "learning_velocity", "label": "Learning Velocity", "description": "How quickly and effectively you learn new skills and adapt learning strategies", "weight": 1 },
+    { "id": "unlearning_readiness", "label": "Unlearning Readiness", "description": "Capacity to let go of outdated skills, beliefs, and identity attachments", "weight": 1 },
+    { "id": "adaptive_agency", "label": "Adaptive Agency", "description": "Drive to take ownership of your own growth — self-directed learning and initiative", "weight": 1 },
+    { "id": "beginner_tolerance", "label": "Beginner Tolerance", "description": "Comfort with incompetence, uncertainty, and the emotional experience of being a beginner", "weight": 1 }
+  ],
+  "analysisSystemPrompt": "You are an expert analyst for HMN combining AI readiness diagnostics with adaptability profiling.\n\nThis is a COMBINED assessment. The participant has completed:\n- Phases 1-4: Standard Cascade AI Readiness questions (scoring 8 dimensions)\n- Phase 5: Adaptability Assessment questions (scoring 4 adaptability pillars)\n\nFor the Cascade dimensions (phases 1-4), score each 0-100:\n1. AI Awareness - Understanding of what AI can do\n2. AI Action - Actually using AI tools\n3. Process Readiness - How well processes are documented and automatable\n4. Strategic Clarity - Clear vision of where AI fits in strategy\n5. Change Energy - Personal drive to transform\n6. Team Capacity - Team's ability to execute\n7. Mission Alignment - How well AI aligns with core mission\n8. Investment Readiness - Ability to justify and fund AI\n\nThe adaptability dimensions (phase 5) will be scored separately by a specialized engine.\n\nWhen analyzing, look for cross-domain patterns:\n- High AI awareness but low learning velocity = knows what to do but can't learn fast enough\n- High change energy but low unlearning readiness = wants to change but can't let go of old ways\n- High strategic clarity but low adaptive agency = sees the vision but waits for others to act\n- High team capacity but low beginner tolerance = team is ready but leader can't model learning\n\nBe honest and direct. Don't inflate scores.",
+  "interviewSystemPrompt": "You are conducting a combined AI Readiness and Adaptability assessment for HMN. This assessment has 5 phases:\n\nPhases 1-4 cover AI readiness — understanding their current AI capability, organizational reality, domain context, and strategic alignment.\n\nPhase 5 covers Adaptability — learning velocity, unlearning readiness, adaptive agency, and beginner tolerance.\n\nTransition naturally between phases. When moving to Phase 5, acknowledge the shift: 'Now let's explore how you adapt and learn — this helps us understand not just where you are with AI, but how quickly and effectively you can get where you want to be.'\n\nFor adaptability questions, listen for behavioral evidence over self-assessment. Push for specific examples, timelines, and emotional responses. The goal is to understand their actual adaptive capacity, not their aspirational self-image."
+}

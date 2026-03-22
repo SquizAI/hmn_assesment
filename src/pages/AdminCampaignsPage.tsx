@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { fetchCampaigns as fetchCampaignsApi, createCampaign } from "../lib/admin-api";
+import { fetchCampaigns as fetchCampaignsApi, createCampaign, fetchCampaignResults } from "../lib/admin-api";
 import StatusBadge from "../components/admin/StatusBadge";
 
 interface Campaign {
@@ -45,6 +45,14 @@ export default function AdminCampaignsPage() {
   const [timezone, setTimezone] = useState("America/New_York");
   const [maxConcurrent, setMaxConcurrent] = useState(3);
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
+  const [expandedCampaign, setExpandedCampaign] = useState<string | null>(null);
+  const [campaignResults, setCampaignResults] = useState<{
+    profile_count: number;
+    avg_score: number | null;
+    archetype_breakdown: { archetype: string; count: number }[];
+    profiles: Record<string, unknown>[];
+  } | null>(null);
+  const [loadingResults, setLoadingResults] = useState(false);
 
   const showToast = (message: string, type: "success" | "error") => {
     setToast({ message, type });
@@ -100,6 +108,24 @@ export default function AdminCampaignsPage() {
       console.error("Failed to create campaign:", err);
     } finally {
       setCreating(false);
+    }
+  };
+
+  const handleViewResults = async (e: React.MouseEvent, campaignId: string) => {
+    e.stopPropagation();
+    if (expandedCampaign === campaignId) {
+      setExpandedCampaign(null);
+      return;
+    }
+    setExpandedCampaign(campaignId);
+    setLoadingResults(true);
+    try {
+      const data = await fetchCampaignResults(campaignId);
+      setCampaignResults(data);
+    } catch {
+      setCampaignResults(null);
+    } finally {
+      setLoadingResults(false);
     }
   };
 
@@ -200,35 +226,93 @@ export default function AdminCampaignsPage() {
           {campaigns.map((campaign) => {
             const progress = getProgress(campaign);
             return (
-              <div key={campaign.id} onClick={() => navigate(`/admin/campaigns/${campaign.id}`)} className="bg-muted border border-border rounded-2xl p-6 hover:bg-foreground/[0.07] hover:border-border transition-all cursor-pointer group">
-                <div className="flex items-start justify-between mb-4">
-                  <h3 className="text-base font-semibold text-foreground group-hover:text-foreground/90 truncate pr-2">{campaign.name}</h3>
-                  <StatusBadge status={campaign.status} size="sm" />
-                </div>
-                {campaign.status === "scheduled" && campaign.scheduled_at && (
-                  <div className="mb-3 px-3 py-2 bg-blue-500/10 border border-blue-500/20 rounded-lg">
-                    <div className="flex items-center gap-1.5">
-                      <svg className="w-3.5 h-3.5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      <span className="text-xs text-blue-400">{formatScheduledDate(campaign.scheduled_at)}</span>
+              <div key={campaign.id} className="bg-muted border border-border rounded-2xl overflow-hidden hover:border-border transition-all">
+                <div onClick={() => navigate(`/admin/campaigns/${campaign.id}`)} className="p-6 hover:bg-foreground/[0.07] cursor-pointer group">
+                  <div className="flex items-start justify-between mb-4">
+                    <h3 className="text-base font-semibold text-foreground group-hover:text-foreground/90 truncate pr-2">{campaign.name}</h3>
+                    <StatusBadge status={campaign.status} size="sm" />
+                  </div>
+                  {campaign.status === "scheduled" && campaign.scheduled_at && (
+                    <div className="mb-3 px-3 py-2 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                      <div className="flex items-center gap-1.5">
+                        <svg className="w-3.5 h-3.5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span className="text-xs text-blue-400">{formatScheduledDate(campaign.scheduled_at)}</span>
+                      </div>
+                    </div>
+                  )}
+                  <div className="mb-4">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="text-xs text-muted-foreground">Progress</span>
+                      <span className="text-xs text-muted-foreground font-medium">{progress}%</span>
+                    </div>
+                    <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                      <div className="h-full bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full transition-all duration-500" style={{ width: `${progress}%` }} />
                     </div>
                   </div>
+                  <div className="flex items-center gap-4 text-xs">
+                    <div className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-green-400" /><span className="text-muted-foreground">{campaign.calls_completed} completed</span></div>
+                    <div className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-red-400" /><span className="text-muted-foreground">{campaign.calls_failed} failed</span></div>
+                    <div className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-muted" /><span className="text-muted-foreground">{campaign.calls_pending} pending</span></div>
+                  </div>
+                </div>
+                {/* View Results button for completed campaigns */}
+                {(campaign.status === "completed" || campaign.status === "active" || campaign.calls_completed > 0) && (
+                  <div className="border-t border-border px-6 py-3">
+                    <button
+                      onClick={(e) => handleViewResults(e, campaign.id)}
+                      className="text-xs text-blue-400 hover:text-blue-300 transition-colors"
+                    >
+                      {expandedCampaign === campaign.id ? "Hide Results" : "View Results"}
+                    </button>
+                  </div>
                 )}
-                <div className="mb-4">
-                  <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-xs text-muted-foreground">Progress</span>
-                    <span className="text-xs text-muted-foreground font-medium">{progress}%</span>
+                {expandedCampaign === campaign.id && (
+                  <div className="border-t border-border px-6 py-4 bg-muted">
+                    {loadingResults ? (
+                      <p className="text-xs text-muted-foreground">Loading results...</p>
+                    ) : !campaignResults || campaignResults.profile_count === 0 ? (
+                      <p className="text-xs text-muted-foreground">No profile results for this campaign yet.</p>
+                    ) : (
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-6">
+                          <div>
+                            <span className="text-lg font-semibold text-foreground">{campaignResults.profile_count}</span>
+                            <p className="text-[10px] text-muted-foreground">Assessed</p>
+                          </div>
+                          {campaignResults.avg_score !== null && (
+                            <div>
+                              <span className={`text-lg font-semibold ${
+                                campaignResults.avg_score >= 70 ? "text-green-400" : campaignResults.avg_score >= 45 ? "text-yellow-400" : "text-red-400"
+                              }`}>
+                                {campaignResults.avg_score}
+                              </span>
+                              <p className="text-[10px] text-muted-foreground">Avg Score</p>
+                            </div>
+                          )}
+                          {campaignResults.archetype_breakdown.length > 0 && (
+                            <div>
+                              <span className="px-2 py-0.5 text-[10px] font-medium bg-blue-500/10 text-blue-300 rounded-full border border-blue-500/20">
+                                {campaignResults.archetype_breakdown[0].archetype}
+                              </span>
+                              <p className="text-[10px] text-muted-foreground mt-1">Top Archetype</p>
+                            </div>
+                          )}
+                        </div>
+                        {campaignResults.archetype_breakdown.length > 1 && (
+                          <div className="flex flex-wrap gap-2">
+                            {campaignResults.archetype_breakdown.map((a) => (
+                              <span key={a.archetype} className="px-2 py-1 text-[10px] bg-muted rounded border border-border text-muted-foreground">
+                                {a.archetype}: {a.count}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
-                  <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-                    <div className="h-full bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full transition-all duration-500" style={{ width: `${progress}%` }} />
-                  </div>
-                </div>
-                <div className="flex items-center gap-4 text-xs">
-                  <div className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-green-400" /><span className="text-muted-foreground">{campaign.calls_completed} completed</span></div>
-                  <div className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-red-400" /><span className="text-muted-foreground">{campaign.calls_failed} failed</span></div>
-                  <div className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-muted" /><span className="text-muted-foreground">{campaign.calls_pending} pending</span></div>
-                </div>
+                )}
               </div>
             );
           })}

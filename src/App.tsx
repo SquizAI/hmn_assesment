@@ -11,7 +11,7 @@ import AdminLoginPage from "./pages/AdminLoginPage";
 import AdminLayout from "./components/admin/AdminLayout";
 import AdminDashboardPage from "./pages/AdminDashboardPage";
 import AdminSessionsPage from "./pages/AdminSessionsPage";
-import AdminAssessmentsPage from "./pages/AdminAssessmentsPage";
+import AdminAssessmentBuilderPage from "./pages/AdminAssessmentBuilderPage";
 import AssessmentBuilderPage from "./pages/AssessmentBuilderPage";
 import AdminPreviewPage from "./pages/AdminPreviewPage";
 import AdminCompaniesPage from "./pages/AdminCompaniesPage";
@@ -81,7 +81,7 @@ export default function App() {
           <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
           <Route path="/admin/sessions" element={<AdminSessionsPage />} />
           <Route path="/admin/invitations" element={<AdminInvitationsPage />} />
-          <Route path="/admin/assessments" element={<AdminAssessmentsPage />} />
+          <Route path="/admin/assessments" element={<AdminAssessmentBuilderPage />} />
           <Route path="/admin/companies" element={<AdminCompaniesPage />} />
           <Route path="/admin/companies/:company" element={<AdminCompanyDetailPage />} />
           <Route path="/admin/builder" element={<AssessmentBuilderPage />} />

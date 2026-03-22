@@ -15,6 +15,8 @@ interface Call {
   analysis_status: string;
   created_at: string;
   contact: { id: string; name: string; phone: string; company: string | null } | null;
+  profile_score: number | null;
+  profile_archetype: string | null;
 }
 
 const STATUS_OPTIONS = [
@@ -102,15 +104,16 @@ export default function AdminCallsPage() {
                 <th className="text-left px-6 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Status</th>
                 <th className="text-left px-6 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Duration</th>
                 <th className="text-left px-6 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Recording</th>
+                <th className="text-left px-6 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Profile</th>
                 <th className="text-left px-6 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Analysis</th>
                 <th className="text-left px-6 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Date</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={7} className="px-6 py-8 text-center text-muted-foreground text-sm">Loading...</td></tr>
+                <tr><td colSpan={8} className="px-6 py-8 text-center text-muted-foreground text-sm">Loading...</td></tr>
               ) : calls.length === 0 ? (
-                <tr><td colSpan={7} className="px-6 py-8 text-center text-muted-foreground text-sm">No calls found.</td></tr>
+                <tr><td colSpan={8} className="px-6 py-8 text-center text-muted-foreground text-sm">No calls found.</td></tr>
               ) : calls.map((call) => (
                 <>
                   <tr key={call.id} onClick={() => setExpandedId(expandedId === call.id ? null : call.id)} className="border-b border-border hover:bg-muted cursor-pointer transition-all">
@@ -130,6 +133,25 @@ export default function AdminCallsPage() {
                       ) : <span className="text-xs text-muted-foreground">&mdash;</span>}
                     </td>
                     <td className="px-6 py-4">
+                      <div className="flex items-center gap-2">
+                        {call.profile_archetype && (
+                          <span className="px-2 py-0.5 text-[10px] font-medium bg-blue-500/10 text-blue-300 rounded-full border border-blue-500/20">
+                            {call.profile_archetype}
+                          </span>
+                        )}
+                        {call.profile_score !== null && (
+                          <span className={`text-xs font-semibold tabular-nums ${
+                            call.profile_score >= 70 ? "text-green-400" : call.profile_score >= 45 ? "text-yellow-400" : "text-red-400"
+                          }`}>
+                            {Math.round(call.profile_score)}
+                          </span>
+                        )}
+                        {!call.profile_archetype && call.profile_score === null && (
+                          <span className="text-xs text-muted-foreground">&mdash;</span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
                       {call.analysis_status === "completed" && call.session_id ? (
                         <Link to={`/analysis/${call.session_id}`} onClick={(e) => e.stopPropagation()} className="text-xs text-blue-400 hover:text-blue-300 underline underline-offset-2 transition-colors">View Analysis</Link>
                       ) : <StatusBadge status={call.analysis_status} size="sm" />}
@@ -138,7 +160,7 @@ export default function AdminCallsPage() {
                   </tr>
                   {expandedId === call.id && (
                     <tr key={`${call.id}-expanded`}>
-                      <td colSpan={7} className="px-6 py-4 bg-muted">
+                      <td colSpan={8} className="px-6 py-4 bg-muted">
                         <div className="max-w-3xl space-y-4">
                           <div>
                             <h4 className="text-sm font-medium text-foreground/80 mb-2">Recording</h4>

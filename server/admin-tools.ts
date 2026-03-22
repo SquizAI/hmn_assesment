@@ -15,6 +15,10 @@ import {
   loadInvitationById,
   listAllInvitations,
   deleteInvitationFromDb,
+  getSupabase,
+  getProfileBySessionId,
+  getProfilesByCompany,
+  getProfileStats,
   type Invitation,
 } from "./supabase.js";
 import type {
@@ -1162,7 +1166,494 @@ export const TOOL_DEFINITIONS = [
       required: ["domain"],
     },
   },
+
+  // --- Profile-Aware Tools ---
+  {
+    name: "query_profiles",
+    description: "Search and filter assessment profiles by archetype, score range, company, industry, or gap pattern",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        archetype: { type: "string", description: "Filter by archetype name" },
+        minScore: { type: "number", description: "Minimum overall score" },
+        maxScore: { type: "number", description: "Maximum overall score" },
+        company: { type: "string", description: "Filter by company name (partial match)" },
+        industry: { type: "string", description: "Filter by industry" },
+        gap: { type: "string", description: "Filter by gap pattern (partial match)" },
+        limit: { type: "number", description: "Maximum results to return (default 20)" },
+      },
+      required: [] as string[],
+    },
+  },
+  {
+    name: "compare_profiles",
+    description: "Compare two or more participants' assessment results side by side",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        sessionIds: {
+          type: "array",
+          description: "Array of 2-5 session IDs to compare",
+          items: { type: "string" },
+        },
+      },
+      required: ["sessionIds"],
+    },
+  },
+  {
+    name: "company_insights",
+    description: "Get deep analysis of a company's assessment results including aggregate scores, common gaps, and team readiness",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        company: { type: "string", description: "Company name to analyze" },
+      },
+      required: ["company"],
+    },
+  },
+  {
+    name: "campaign_results",
+    description: "Summarize the outcomes and patterns from a specific campaign",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        campaignId: { type: "string", description: "Campaign ID to analyze" },
+      },
+      required: ["campaignId"],
+    },
+  },
+  {
+    name: "suggest_next_actions",
+    description: "Analyze the current pipeline and recommend prioritized next steps",
+    input_schema: {
+      type: "object" as const,
+      properties: {},
+      required: [] as string[],
+    },
+  },
+  {
+    name: "analyze_transcript",
+    description: "Deep-dive analysis of a specific call transcript, identifying key moments, concerns, and opportunities",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        sessionId: { type: "string", description: "Session ID to analyze the transcript for" },
+      },
+      required: ["sessionId"],
+    },
+  },
+  {
+    name: "gap_analysis",
+    description: "Cross-participant gap pattern analysis showing which gaps appear most and in what contexts",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        company: { type: "string", description: "Filter by company name (optional)" },
+        industry: { type: "string", description: "Filter by industry (optional)" },
+        assessmentType: { type: "string", description: "Filter by assessment type (optional)" },
+      },
+      required: [] as string[],
+    },
+  },
+  {
+    name: "export_report",
+    description: "Generate an exportable data report of profile results",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        format: { type: "string", description: "Export format", enum: ["json", "csv"] },
+        company: { type: "string", description: "Filter by company name (optional)" },
+        archetype: { type: "string", description: "Filter by archetype (optional)" },
+        dateFrom: { type: "string", description: "Filter from date (ISO string, optional)" },
+        dateTo: { type: "string", description: "Filter to date (ISO string, optional)" },
+      },
+      required: ["format"],
+    },
+  },
 ];
+
+// ============================================================
+// PROFILE-AWARE TOOL IMPLEMENTATIONS
+// ============================================================
+
+export async function queryProfilesAdmin(filters: {
+  archetype?: string;
+  minScore?: number;
+  maxScore?: number;
+  company?: string;
+  industry?: string;
+  gap?: string;
+  limit?: number;
+}): Promise<Record<string, unknown>[]> {
+  const sb = getSupabase();
+  let query = sb.from("cascade_profiles").select("*").order("created_at", { ascending: false });
+
+  if (filters.archetype) query = query.eq("archetype", filters.archetype);
+  if (filters.minScore != null) query = query.gte("overall_score", filters.minScore);
+  if (filters.maxScore != null) query = query.lte("overall_score", filters.maxScore);
+  if (filters.company) query = query.ilike("participant_company", `%${filters.company}%`);
+  if (filters.industry) query = query.ilike("participant_industry", `%${filters.industry}%`);
+  query = query.limit(filters.limit || 20);
+
+  const { data, error } = await query;
+  if (error || !data) return [];
+
+  let results = data as Record<string, unknown>[];
+
+  // Client-side gap filter (gaps is JSONB array)
+  if (filters.gap) {
+    const gapLower = filters.gap.toLowerCase();
+    results = results.filter((p) => {
+      const gaps = p.gaps as string[] | null;
+      return gaps?.some((g) => g.toLowerCase().includes(gapLower));
+    });
+  }
+
+  return results.map((p) => ({
+    session_id: p.session_id,
+    participant_name: p.participant_name,
+    participant_company: p.participant_company,
+    participant_industry: p.participant_industry,
+    overall_score: p.overall_score,
+    archetype: p.archetype,
+    gaps: p.gaps,
+    created_at: p.created_at,
+  }));
+}
+
+export async function compareProfilesAdmin(sessionIds: string[]): Promise<Record<string, unknown>> {
+  if (sessionIds.length < 2 || sessionIds.length > 5) {
+    return { error: "Provide 2-5 session IDs to compare" };
+  }
+
+  const profiles = await Promise.all(
+    sessionIds.map((id) => getProfileBySessionId(id))
+  );
+
+  const comparison: Record<string, unknown>[] = [];
+  for (let i = 0; i < sessionIds.length; i++) {
+    const p = profiles[i];
+    if (!p) {
+      comparison.push({ session_id: sessionIds[i], error: "Profile not found" });
+      continue;
+    }
+    comparison.push({
+      session_id: sessionIds[i],
+      participant_name: p.participant_name,
+      participant_company: p.participant_company,
+      overall_score: p.overall_score,
+      archetype: p.archetype,
+      dimension_scores: p.dimension_scores,
+      gaps: p.gaps,
+    });
+  }
+
+  return { profiles: comparison, count: comparison.length };
+}
+
+export async function companyInsightsAdmin(company: string): Promise<Record<string, unknown>> {
+  const profiles = await getProfilesByCompany(company);
+  if (profiles.length === 0) {
+    return { company, error: "No profiles found for this company" };
+  }
+
+  const scores = profiles
+    .map((p) => p.overall_score as number | null)
+    .filter((s): s is number => s !== null);
+
+  const avgScore = scores.length > 0
+    ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length)
+    : null;
+
+  // Archetype distribution
+  const archetypeMap: Record<string, number> = {};
+  for (const p of profiles) {
+    const arch = p.archetype as string | null;
+    if (arch) archetypeMap[arch] = (archetypeMap[arch] || 0) + 1;
+  }
+
+  // Gap frequency
+  const gapMap: Record<string, number> = {};
+  for (const p of profiles) {
+    const gaps = p.gaps as string[] | null;
+    if (gaps) {
+      for (const gap of gaps) {
+        gapMap[gap] = (gapMap[gap] || 0) + 1;
+      }
+    }
+  }
+
+  // Sort gaps by frequency
+  const sortedGaps = Object.entries(gapMap)
+    .sort((a, b) => b[1] - a[1])
+    .map(([gap, count]) => ({ gap, count, percentage: Math.round((count / profiles.length) * 100) }));
+
+  // Aggregate dimension scores
+  const dimMap = new Map<string, { total: number; count: number }>();
+  for (const p of profiles) {
+    const dimScores = p.dimension_scores as { dimension: string; score: number }[] | null;
+    if (dimScores) {
+      for (const ds of dimScores) {
+        const existing = dimMap.get(ds.dimension) ?? { total: 0, count: 0 };
+        existing.total += ds.score;
+        existing.count += 1;
+        dimMap.set(ds.dimension, existing);
+      }
+    }
+  }
+
+  const dimensionAverages = Array.from(dimMap.entries()).map(([dimension, data]) => ({
+    dimension,
+    average: Math.round(data.total / data.count),
+    count: data.count,
+  }));
+
+  return {
+    company,
+    totalProfiles: profiles.length,
+    averageScore: avgScore,
+    archetypeDistribution: archetypeMap,
+    dominantArchetype: Object.entries(archetypeMap).sort((a, b) => b[1] - a[1])[0]?.[0] || null,
+    topGaps: sortedGaps.slice(0, 10),
+    dimensionAverages,
+    teamReadiness: avgScore != null ? (avgScore >= 70 ? "High" : avgScore >= 50 ? "Moderate" : "Low") : "Unknown",
+  };
+}
+
+export async function campaignResultsAdmin(campaignId: string): Promise<Record<string, unknown>> {
+  const sb = getSupabase();
+  const { data: profiles, error } = await sb
+    .from("cascade_profiles")
+    .select("*")
+    .eq("campaign_id", campaignId)
+    .order("created_at", { ascending: false });
+
+  if (error || !profiles || profiles.length === 0) {
+    return { campaignId, error: "No profiles found for this campaign" };
+  }
+
+  const scores = profiles
+    .map((p: Record<string, unknown>) => p.overall_score as number | null)
+    .filter((s): s is number => s !== null);
+
+  const avgScore = scores.length > 0
+    ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length)
+    : null;
+
+  // Archetype breakdown
+  const archetypeMap: Record<string, number> = {};
+  for (const p of profiles) {
+    const arch = p.archetype as string | null;
+    if (arch) archetypeMap[arch] = (archetypeMap[arch] || 0) + 1;
+  }
+
+  return {
+    campaignId,
+    totalProfiles: profiles.length,
+    averageScore: avgScore,
+    archetypeBreakdown: archetypeMap,
+    completionCount: profiles.length,
+  };
+}
+
+export async function suggestNextActionsAdmin(): Promise<Record<string, unknown>> {
+  const [sessions, invitations, stats] = await Promise.all([
+    listAllSessions(),
+    listAllInvitations(),
+    getProfileStats(),
+  ]);
+
+  const actions: { priority: string; action: string; detail: string }[] = [];
+
+  // Check for pending invitations
+  const pendingInvitations = invitations.filter((i) => i.status === "sent");
+  if (pendingInvitations.length > 0) {
+    actions.push({
+      priority: "high",
+      action: "Follow up on pending invitations",
+      detail: `${pendingInvitations.length} invitations sent but not yet opened`,
+    });
+  }
+
+  // Check for incomplete sessions
+  const inProgress = sessions.filter((s) => s.status === "in_progress");
+  if (inProgress.length > 0) {
+    actions.push({
+      priority: "medium",
+      action: "Monitor in-progress sessions",
+      detail: `${inProgress.length} sessions currently in progress`,
+    });
+  }
+
+  // Check for completed but not analyzed
+  const needsAnalysis = sessions.filter((s) => s.status === "completed");
+  if (needsAnalysis.length > 0) {
+    actions.push({
+      priority: "high",
+      action: "Review completed assessments",
+      detail: `${needsAnalysis.length} sessions completed but awaiting analysis`,
+    });
+  }
+
+  // Low-score profiles needing attention
+  if (stats.avgScore != null && stats.avgScore < 50) {
+    actions.push({
+      priority: "medium",
+      action: "Address low readiness scores",
+      detail: `Average score is ${Math.round(stats.avgScore)} — consider targeted follow-ups`,
+    });
+  }
+
+  // Suggest expanding coverage
+  if (stats.total < 10) {
+    actions.push({
+      priority: "low",
+      action: "Expand assessment coverage",
+      detail: `Only ${stats.total} profiles collected — consider new campaigns`,
+    });
+  }
+
+  return {
+    actions: actions.sort((a, b) => {
+      const order: Record<string, number> = { high: 0, medium: 1, low: 2 };
+      return (order[a.priority] ?? 3) - (order[b.priority] ?? 3);
+    }),
+    summary: {
+      totalSessions: sessions.length,
+      pendingInvitations: pendingInvitations.length,
+      inProgressSessions: inProgress.length,
+      avgScore: stats.avgScore,
+    },
+  };
+}
+
+export async function analyzeTranscriptAdmin(sessionId: string): Promise<Record<string, unknown>> {
+  const session = await loadSessionFromDb(sessionId);
+  if (!session) return { error: "Session not found" };
+
+  const history = session.conversationHistory || [];
+  if (history.length === 0) {
+    return { sessionId, error: "No conversation history found for this session" };
+  }
+
+  // Extract key data from conversation
+  const userMessages = history.filter((m) => m.role === "user");
+  const aiMessages = history.filter((m) => m.role === "assistant");
+
+  return {
+    sessionId,
+    participantName: session.participant?.name ?? "Unknown",
+    participantCompany: session.participant?.company ?? "Unknown",
+    totalExchanges: history.length,
+    userMessageCount: userMessages.length,
+    aiMessageCount: aiMessages.length,
+    transcript: history.map((m) => ({
+      role: m.role,
+      content: typeof m.content === "string" ? m.content.slice(0, 500) : m.content,
+      questionId: m.questionId,
+    })),
+    analysis: session.analysis ? {
+      overallScore: (session.analysis as Record<string, unknown>).overallReadinessScore,
+      archetype: (session.analysis as Record<string, unknown>).archetype,
+      gaps: (session.analysis as Record<string, unknown>).gaps,
+      executiveSummary: (session.analysis as Record<string, unknown>).executiveSummary,
+    } : null,
+  };
+}
+
+export async function gapAnalysisAdmin(filters: {
+  company?: string;
+  industry?: string;
+  assessmentType?: string;
+}): Promise<Record<string, unknown>> {
+  const sb = getSupabase();
+  let query = sb.from("cascade_profiles").select("gaps, participant_company, participant_industry, assessment_type, archetype");
+
+  if (filters.company) query = query.ilike("participant_company", `%${filters.company}%`);
+  if (filters.industry) query = query.ilike("participant_industry", `%${filters.industry}%`);
+  if (filters.assessmentType) query = query.eq("assessment_type", filters.assessmentType);
+
+  const { data, error } = await query;
+  if (error || !data) return { error: "Failed to query profiles" };
+
+  const gapMap: Record<string, { count: number; companies: Set<string>; industries: Set<string>; archetypes: Set<string> }> = {};
+
+  for (const row of data) {
+    const gaps = row.gaps as string[] | null;
+    if (!gaps) continue;
+    for (const gap of gaps) {
+      if (!gapMap[gap]) {
+        gapMap[gap] = { count: 0, companies: new Set(), industries: new Set(), archetypes: new Set() };
+      }
+      gapMap[gap].count++;
+      if (row.participant_company) gapMap[gap].companies.add(row.participant_company as string);
+      if (row.participant_industry) gapMap[gap].industries.add(row.participant_industry as string);
+      if (row.archetype) gapMap[gap].archetypes.add(row.archetype as string);
+    }
+  }
+
+  const gapTable = Object.entries(gapMap)
+    .sort((a, b) => b[1].count - a[1].count)
+    .map(([gap, info]) => ({
+      gap,
+      count: info.count,
+      percentage: Math.round((info.count / data.length) * 100),
+      companies: Array.from(info.companies),
+      industries: Array.from(info.industries),
+      archetypes: Array.from(info.archetypes),
+    }));
+
+  return {
+    totalProfiles: data.length,
+    uniqueGaps: gapTable.length,
+    gaps: gapTable,
+  };
+}
+
+export async function exportReportAdmin(params: {
+  format: "json" | "csv";
+  company?: string;
+  archetype?: string;
+  dateFrom?: string;
+  dateTo?: string;
+}): Promise<string> {
+  const sb = getSupabase();
+  let query = sb.from("cascade_profiles").select("*").order("created_at", { ascending: false });
+
+  if (params.company) query = query.ilike("participant_company", `%${params.company}%`);
+  if (params.archetype) query = query.eq("archetype", params.archetype);
+  if (params.dateFrom) query = query.gte("created_at", params.dateFrom);
+  if (params.dateTo) query = query.lte("created_at", params.dateTo);
+
+  const { data, error } = await query;
+  if (error || !data) return params.format === "json" ? "[]" : "";
+
+  if (params.format === "json") {
+    return JSON.stringify(data, null, 2);
+  }
+
+  // CSV format
+  const headers = [
+    "session_id", "participant_name", "participant_company",
+    "participant_industry", "overall_score", "archetype", "gaps", "created_at",
+  ];
+
+  const rows = data.map((row: Record<string, unknown>) => {
+    const gaps = row.gaps as string[] | null;
+    return [
+      csvEscape(String(row.session_id || "")),
+      csvEscape(String(row.participant_name || "")),
+      csvEscape(String(row.participant_company || "")),
+      csvEscape(String(row.participant_industry || "")),
+      String(row.overall_score ?? ""),
+      csvEscape(String(row.archetype || "")),
+      csvEscape(gaps ? gaps.join("; ") : ""),
+      csvEscape(String(row.created_at || "")),
+    ].join(",");
+  });
+
+  return [headers.join(","), ...rows].join("\n");
+}
 
 // ============================================================
 // TOOL EXECUTOR (async)
@@ -1347,6 +1838,40 @@ export async function executeTool(
         return { domain, logoUrl: null, found: false };
       }
     }
+
+    // --- Profile-aware tools ---
+
+    case "query_profiles":
+      return queryProfilesAdmin(args as {
+        archetype?: string; minScore?: number; maxScore?: number;
+        company?: string; industry?: string; gap?: string; limit?: number;
+      });
+
+    case "compare_profiles":
+      return compareProfilesAdmin(args.sessionIds as string[]);
+
+    case "company_insights":
+      return companyInsightsAdmin(args.company as string);
+
+    case "campaign_results":
+      return campaignResultsAdmin(args.campaignId as string);
+
+    case "suggest_next_actions":
+      return suggestNextActionsAdmin();
+
+    case "analyze_transcript":
+      return analyzeTranscriptAdmin(args.sessionId as string);
+
+    case "gap_analysis":
+      return gapAnalysisAdmin(args as {
+        company?: string; industry?: string; assessmentType?: string;
+      });
+
+    case "export_report":
+      return exportReportAdmin(args as {
+        format: "json" | "csv"; company?: string; archetype?: string;
+        dateFrom?: string; dateTo?: string;
+      });
 
     default:
       return { error: `Unknown tool: ${name}` };

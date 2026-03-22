@@ -50,7 +50,11 @@ export type ScoringDimension =
   | "change_energy"
   | "team_capacity"
   | "mission_alignment"
-  | "investment_readiness";
+  | "investment_readiness"
+  | "learning_velocity"
+  | "unlearning_readiness"
+  | "adaptive_agency"
+  | "beginner_tolerance";
 
 export interface DimensionScore {
   dimension: ScoringDimension;
@@ -74,7 +78,11 @@ export type GapPattern =
   | "strategy_process"
   | "awareness_investment"
   | "self_team"
-  | "perception_reality";
+  | "perception_reality"
+  | "awareness_learning_velocity"
+  | "energy_unlearning"
+  | "clarity_agency"
+  | "capacity_beginner_tolerance";
 
 export interface GapAnalysis {
   pattern: GapPattern;
@@ -89,7 +97,8 @@ export type CascadePhase =
   | "profile_baseline"
   | "org_reality"
   | "domain_deep_dive"
-  | "strategic_alignment";
+  | "strategic_alignment"
+  | "adaptability_assessment";
 
 export type CascadeSection =
   | "demographics"
@@ -103,7 +112,11 @@ export type CascadeSection =
   | "customer_support"
   | "strategic_stakes"
   | "hmn_anchor"
-  | "closing";
+  | "closing"
+  | "learning_velocity"
+  | "unlearning_readiness"
+  | "adaptive_agency"
+  | "beginner_tolerance";
 
 export type LeaderArchetype =
   | "the_visionary"
@@ -799,6 +812,26 @@ export interface CrossPillarPatternMatch {
   description: string;
   recommendedFocus: string;
   pillarScores: Record<AdaptabilityPillar, number>;
+}
+
+// --- Unified Profile (Combined Cascade + Adaptability) ---
+
+export interface AdaptabilityPillarScore {
+  pillar: 'learning_velocity' | 'unlearning_readiness' | 'adaptive_agency' | 'beginner_tolerance';
+  score: number;        // 0-100
+  markerScores: { marker: string; score: number; evidence: string }[];
+  pillarLabel: string;
+  pillarDescription: string;
+}
+
+export interface UnifiedProfile {
+  cascadeScores: DimensionScore[];
+  archetype: LeaderArchetype;
+  gaps: GapAnalysis[];
+  adaptabilityScores?: AdaptabilityPillarScore[];
+  adaptabilityProfile?: AdaptabilityProfile;
+  overallReadinessScore: number;
+  compositeInsights?: string;
 }
 
 // --- Calibration & Validation ---

@@ -26,7 +26,33 @@ router.get("/", async (req, res) => {
     const { data, error, count } = await query;
     if (error) throw error;
 
-    res.json({ calls: data || [], total: count || 0, page: pageNum, limit: limitNum });
+    // Enrich calls with profile data where session_id exists
+    const callsWithProfiles = data || [];
+    const sessionIds = callsWithProfiles
+      .map((c: Record<string, unknown>) => c.session_id as string)
+      .filter(Boolean);
+
+    let profileMap = new Map<string, Record<string, unknown>>();
+    if (sessionIds.length > 0) {
+      const { data: profiles } = await getSupabase()
+        .from("cascade_profiles")
+        .select("session_id, overall_score, archetype")
+        .in("session_id", sessionIds);
+      if (profiles) {
+        profileMap = new Map(profiles.map((p: Record<string, unknown>) => [p.session_id as string, p]));
+      }
+    }
+
+    const enrichedCalls = callsWithProfiles.map((call: Record<string, unknown>) => {
+      const profile = profileMap.get(call.session_id as string);
+      return {
+        ...call,
+        profile_score: (profile?.overall_score as number) ?? null,
+        profile_archetype: (profile?.archetype as string) ?? null,
+      };
+    });
+
+    res.json({ calls: enrichedCalls, total: count || 0, page: pageNum, limit: limitNum });
   } catch (err) {
     console.error("[calls] list error:", err);
     res.status(500).json({ error: "Failed to list calls" });

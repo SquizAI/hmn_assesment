@@ -49,6 +49,63 @@ router.get("/:id", async (req, res) => {
   }
 });
 
+// Get campaign results (profile aggregation)
+router.get("/:id/results", async (req, res) => {
+  try {
+    const { data: profiles, error } = await getSupabase()
+      .from("cascade_profiles")
+      .select("id, session_id, overall_score, archetype, gaps, assessment_type, participant_name, participant_company, created_at")
+      .eq("campaign_id", req.params.id)
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+
+    const allProfiles = profiles || [];
+    const scores = allProfiles
+      .map((p: Record<string, unknown>) => p.overall_score as number)
+      .filter((s): s is number => s !== null && s !== undefined);
+    const avg_score = scores.length > 0
+      ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length)
+      : null;
+
+    // Archetype breakdown
+    const archCounts: Record<string, number> = {};
+    allProfiles.forEach((p: Record<string, unknown>) => {
+      const arch = (p.archetype as string) || "Unknown";
+      archCounts[arch] = (archCounts[arch] || 0) + 1;
+    });
+    const archetype_breakdown = Object.entries(archCounts)
+      .map(([archetype, count]) => ({ archetype, count }))
+      .sort((a, b) => b.count - a.count);
+
+    // Gap frequencies
+    const gapCounts: Record<string, number> = {};
+    allProfiles.forEach((p: Record<string, unknown>) => {
+      const gaps = p.gaps as Array<{ pattern?: string; gap?: string; title?: string }> | null;
+      if (Array.isArray(gaps)) {
+        gaps.forEach((g) => {
+          const label = g.pattern || g.gap || g.title || "Unknown";
+          gapCounts[label] = (gapCounts[label] || 0) + 1;
+        });
+      }
+    });
+    const gap_frequencies = Object.entries(gapCounts)
+      .map(([gap, count]) => ({ gap, count }))
+      .sort((a, b) => b.count - a.count);
+
+    res.json({
+      profile_count: allProfiles.length,
+      avg_score,
+      archetype_breakdown,
+      gap_frequencies,
+      profiles: allProfiles,
+    });
+  } catch (err) {
+    console.error("[campaigns] results error:", err);
+    res.status(500).json({ error: "Failed to load campaign results" });
+  }
+});
+
 // Create campaign
 router.post("/", async (req, res) => {
   try {

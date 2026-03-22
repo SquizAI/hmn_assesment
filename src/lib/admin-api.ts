@@ -113,6 +113,43 @@ export async function updateAssessmentStatus(id: string, status: string) {
   return res.json();
 }
 
+export async function archiveAssessment(id: string) {
+  const res = await adminFetch(`/api/admin/assessments/${id}`, { method: "DELETE" });
+  return res.json();
+}
+
+export async function addQuestion(assessmentId: string, question: Record<string, unknown>) {
+  const res = await adminFetch(`/api/admin/assessments/${assessmentId}/questions`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ question }),
+  });
+  return res.json();
+}
+
+export async function updateQuestion(assessmentId: string, questionId: string, changes: Record<string, unknown>) {
+  const res = await adminFetch(`/api/admin/assessments/${assessmentId}/questions/${questionId}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ changes }),
+  });
+  return res.json();
+}
+
+export async function removeQuestion(assessmentId: string, questionId: string) {
+  const res = await adminFetch(`/api/admin/assessments/${assessmentId}/questions/${questionId}`, { method: "DELETE" });
+  return res.json();
+}
+
+export async function reorderQuestions(assessmentId: string, questionIds: string[]) {
+  const res = await adminFetch(`/api/admin/assessments/${assessmentId}/questions/reorder`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ questionIds }),
+  });
+  return res.json();
+}
+
 export async function fetchFunnel(filters?: DashboardFilters) {
   const res = await adminFetch(`/api/admin/funnel${buildFilterQS(filters)}`);
   return res.json();
@@ -223,12 +260,13 @@ export async function adminChatStream(
   messages: { role: string; content: string; timestamp: string }[],
   onEvent: (event: ToolEvent) => void,
   attachments?: ChatAttachment[],
+  pageContext?: string,
 ): Promise<{ text: string; toolCalls: ToolCallRecord[] }> {
   const res = await fetch(`${API_BASE}/api/admin/chat`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     credentials: "include",
-    body: JSON.stringify({ messages, attachments }),
+    body: JSON.stringify({ messages, attachments, pageContext }),
   });
 
   if (res.status === 401) {
@@ -589,5 +627,22 @@ export async function fetchCalls(filters?: { status?: string; page?: number; lim
   if (filters?.limit) params.set("limit", String(filters.limit));
   const qs = params.toString();
   const res = await adminFetch(`/api/admin/calls${qs ? `?${qs}` : ""}`);
+  return res.json();
+}
+
+// --- Profile Stats API ---
+
+export async function fetchProfileStats(filters?: DashboardFilters) {
+  const res = await adminFetch(`/api/admin/profile-stats${buildFilterQS(filters)}`);
+  return res.json();
+}
+
+export async function fetchContactAssessments(contactId: string) {
+  const res = await adminFetch(`/api/admin/contacts/${contactId}/assessments`);
+  return res.json();
+}
+
+export async function fetchCampaignResults(campaignId: string) {
+  const res = await adminFetch(`/api/admin/campaigns/${campaignId}/results`);
   return res.json();
 }

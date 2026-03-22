@@ -6,10 +6,11 @@ import StatusBadge from "../components/admin/StatusBadge";
 interface SessionResult { id: string; participant_name: string; participant_company: string; participant_email: string | null; status: string; overall_score: number | null; archetype: string | null; created_at: string; }
 interface ContactResult { id: string; name: string; phone: string; email: string | null; company: string | null; status: string; created_at: string; }
 interface CallResult { id: string; status: string; duration_seconds: number | null; transcript_snippet: string | null; contact_name: string | null; contact_company: string | null; created_at: string; }
-interface SearchResponse { sessions: { results: SessionResult[]; total: number }; contacts: { results: ContactResult[]; total: number }; calls: { results: CallResult[]; total: number }; query: string; }
+interface ProfileResult { id: string; session_id: string; participant_name: string; participant_company: string | null; archetype: string | null; overall_score: number | null; executive_summary: string | null; assessment_type: string; created_at: string; }
+interface SearchResponse { sessions: { results: SessionResult[]; total: number }; contacts: { results: ContactResult[]; total: number }; calls: { results: CallResult[]; total: number }; profiles: { results: ProfileResult[]; total: number }; query: string; }
 
-type SearchType = "all" | "sessions" | "contacts" | "calls";
-const TABS: { label: string; value: SearchType }[] = [{ label: "All", value: "all" }, { label: "Sessions", value: "sessions" }, { label: "Contacts", value: "contacts" }, { label: "Calls", value: "calls" }];
+type SearchType = "all" | "sessions" | "contacts" | "calls" | "profiles";
+const TABS: { label: string; value: SearchType }[] = [{ label: "All", value: "all" }, { label: "Sessions", value: "sessions" }, { label: "Contacts", value: "contacts" }, { label: "Calls", value: "calls" }, { label: "Profiles", value: "profiles" }];
 
 function formatDate(iso: string) { return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }); }
 function formatDuration(s: number | null) { if (!s) return "--:--"; return `${Math.floor(s / 60).toString().padStart(2, "0")}:${(s % 60).toString().padStart(2, "0")}`; }
@@ -51,7 +52,7 @@ export default function AdminSearchPage() {
 
   useEffect(() => { fetchResults(); }, [fetchResults]);
 
-  const totalAll = (data?.sessions.total || 0) + (data?.contacts.total || 0) + (data?.calls.total || 0);
+  const totalAll = (data?.sessions.total || 0) + (data?.contacts.total || 0) + (data?.calls.total || 0) + (data?.profiles?.total || 0);
 
   return (
     <div className="max-w-5xl mx-auto p-6">
@@ -68,7 +69,7 @@ export default function AdminSearchPage() {
 
       <div className="flex gap-1 mb-6 p-1 bg-muted rounded-xl w-fit">
         {TABS.map((tab) => {
-          const count = tab.value === "all" ? totalAll : tab.value === "sessions" ? data?.sessions.total || 0 : tab.value === "contacts" ? data?.contacts.total || 0 : data?.calls.total || 0;
+          const count = tab.value === "all" ? totalAll : tab.value === "sessions" ? data?.sessions.total || 0 : tab.value === "contacts" ? data?.contacts.total || 0 : tab.value === "profiles" ? data?.profiles?.total || 0 : data?.calls.total || 0;
           return (
             <button key={tab.value} onClick={() => { setActiveTab(tab.value); setPage(1); }} className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${activeTab === tab.value ? "bg-muted text-foreground" : "text-muted-foreground hover:text-muted-foreground"}`}>
               {tab.label}{data && query && <span className="ml-1.5 text-xs text-muted-foreground">{count}</span>}
@@ -141,6 +142,39 @@ export default function AdminSearchPage() {
                       <StatusBadge status={call.status} size="sm" />
                       <span className="text-xs text-muted-foreground font-mono">{formatDuration(call.duration_seconds)}</span>
                       <span className="text-xs text-muted-foreground">{formatDate(call.created_at)}</span>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
+          {(activeTab === "all" || activeTab === "profiles") && data && data.profiles?.results && data.profiles.results.length > 0 && (
+            <div>
+              <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">Profiles <span className="ml-2 text-muted-foreground font-normal normal-case">({data.profiles.total})</span></h2>
+              <div className="space-y-2">
+                {data.profiles.results.map((profile) => (
+                  <Link key={profile.id} to={`/analysis/${profile.session_id}`} className="block bg-muted border border-border rounded-xl p-4 hover:bg-foreground/[0.08] transition-all">
+                    <div className="flex items-center gap-4">
+                      <div className="flex-1 min-w-0">
+                        <span className="text-sm font-medium text-foreground">{profile.participant_name || "Unknown"}</span>
+                        {profile.participant_company && <span className="ml-3 text-xs text-muted-foreground">{profile.participant_company}</span>}
+                        {profile.executive_summary && <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{profile.executive_summary}</p>}
+                      </div>
+                      <div className="flex items-center gap-3 shrink-0">
+                        {profile.overall_score !== null && (
+                          <span className={`text-sm font-semibold tabular-nums ${
+                            profile.overall_score >= 70 ? "text-green-400" : profile.overall_score >= 45 ? "text-yellow-400" : "text-red-400"
+                          }`}>
+                            {Math.round(profile.overall_score)}
+                          </span>
+                        )}
+                        {profile.archetype && (
+                          <span className="px-2 py-0.5 text-[10px] font-medium bg-blue-500/10 text-blue-300 rounded-full border border-blue-500/20">
+                            {profile.archetype}
+                          </span>
+                        )}
+                        <span className="text-xs text-muted-foreground">{formatDate(profile.created_at)}</span>
+                      </div>
                     </div>
                   </Link>
                 ))}

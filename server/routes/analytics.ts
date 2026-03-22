@@ -128,6 +128,80 @@ router.get("/", async (req, res) => {
     });
     const industry_breakdown = Object.entries(industryCounts).map(([industry, count]) => ({ industry, count })).sort((a, b) => b.count - a.count);
 
+    // Profile-based aggregations from cascade_profiles
+    let profileArchetypes: { archetype: string; count: number }[] = [];
+    let profileScoreDistribution: { label: string; count: number }[] = [];
+    let profileGapFrequency: { gap: string; count: number }[] = [];
+    let profileTimeSeries: { date: string; count: number }[] = [];
+    let totalProfiles = 0;
+
+    try {
+      let profileQuery = getSupabase()
+        .from("cascade_profiles")
+        .select("overall_score, archetype, gaps, created_at");
+      if (since) profileQuery = profileQuery.gte("created_at", since);
+
+      const { data: profiles } = await profileQuery;
+      const allProfiles = profiles || [];
+      totalProfiles = allProfiles.length;
+
+      // Profile archetype distribution
+      const pArchCounts: Record<string, number> = {};
+      allProfiles.forEach((p: Record<string, unknown>) => {
+        const arch = (p.archetype as string) || "Unknown";
+        pArchCounts[arch] = (pArchCounts[arch] || 0) + 1;
+      });
+      profileArchetypes = Object.entries(pArchCounts)
+        .map(([archetype, count]) => ({ archetype, count }))
+        .sort((a, b) => b.count - a.count);
+
+      // Profile score distribution
+      const pScores = allProfiles
+        .map((p: Record<string, unknown>) => p.overall_score as number)
+        .filter((s): s is number => s !== null && s !== undefined);
+      const pBuckets = [
+        { label: "0-20", min: 0, max: 20 },
+        { label: "21-40", min: 21, max: 40 },
+        { label: "41-60", min: 41, max: 60 },
+        { label: "61-80", min: 61, max: 80 },
+        { label: "81-100", min: 81, max: 100 },
+      ];
+      profileScoreDistribution = pBuckets.map(({ label, min, max }) => ({
+        label,
+        count: pScores.filter((s) => s >= min && s <= max).length,
+      }));
+
+      // Profile gap frequency
+      const pGapCounts: Record<string, number> = {};
+      allProfiles.forEach((p: Record<string, unknown>) => {
+        const gaps = p.gaps as Array<{ pattern?: string; gap?: string; title?: string }> | null;
+        if (Array.isArray(gaps)) {
+          gaps.forEach((g) => {
+            const label = g.pattern || g.gap || g.title || "Unknown";
+            pGapCounts[label] = (pGapCounts[label] || 0) + 1;
+          });
+        }
+      });
+      profileGapFrequency = Object.entries(pGapCounts)
+        .map(([gap, count]) => ({ gap, count }))
+        .sort((a, b) => b.count - a.count);
+
+      // Profile time series (by week)
+      const weekCounts: Record<string, number> = {};
+      allProfiles.forEach((p: Record<string, unknown>) => {
+        const d = new Date(p.created_at as string);
+        const weekStart = new Date(d);
+        weekStart.setDate(d.getDate() - d.getDay());
+        const key = weekStart.toISOString().slice(0, 10);
+        weekCounts[key] = (weekCounts[key] || 0) + 1;
+      });
+      profileTimeSeries = Object.entries(weekCounts)
+        .sort()
+        .map(([date, count]) => ({ date, count }));
+    } catch {
+      // profiles table may not exist yet — skip gracefully
+    }
+
     res.json({
       period,
       kpi: {
@@ -144,6 +218,12 @@ router.get("/", async (req, res) => {
       score_distribution,
       top_gaps,
       industry_breakdown,
+      // Profile-based aggregations
+      profile_archetype_distribution: profileArchetypes,
+      profile_score_distribution: profileScoreDistribution,
+      profile_gap_frequency: profileGapFrequency,
+      profile_time_series: profileTimeSeries,
+      total_profiles: totalProfiles,
     });
   } catch (err) {
     console.error("[analytics] error:", err);

@@ -22,6 +22,7 @@ router.get("/", async (req, res) => {
       sessions: { results: [], total: 0 },
       contacts: { results: [], total: 0 },
       calls: { results: [], total: 0 },
+      profiles: { results: [], total: 0 },
     };
 
     // Search sessions — participant is JSONB, use raw SQL via RPC or filter in-app
@@ -110,6 +111,23 @@ router.get("/", async (req, res) => {
         }),
         total: count || 0,
       };
+    }
+
+    // Search profiles
+    if (type === "all" || type === "profiles") {
+      try {
+        const { data: profileData } = await getSupabase()
+          .from("cascade_profiles")
+          .select("id, session_id, participant_name, participant_company, archetype, overall_score, executive_summary, assessment_type, created_at")
+          .or(`participant_name.ilike.%${searchTerm}%,participant_company.ilike.%${searchTerm}%,archetype.ilike.%${searchTerm}%,executive_summary.ilike.%${searchTerm}%`)
+          .order("created_at", { ascending: false })
+          .range(offset, offset + limitNum - 1);
+
+        const profileResults = profileData || [];
+        results.profiles = { results: profileResults, total: profileResults.length };
+      } catch {
+        // profiles table may not exist yet
+      }
     }
 
     res.json({ ...results, query: q });

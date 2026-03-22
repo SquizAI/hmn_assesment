@@ -15,6 +15,9 @@ interface CompanySummary {
   lastActivity: string;
   industries: string[];
   hasResearch: boolean;
+  profileCount?: number;
+  profileAvgScore?: number | null;
+  dominantArchetype?: string | null;
 }
 
 function relativeDate(dateStr: string): string {
@@ -233,6 +236,17 @@ export default function AdminCompaniesPage() {
                     <p className="text-[10px] text-muted-foreground">Complete</p>
                   </div>
                   <span className="text-xs text-muted-foreground">{relativeDate(company.lastActivity)}</span>
+                  {company.dominantArchetype && (
+                    <span className="px-2 py-0.5 text-[10px] font-medium bg-blue-500/10 text-blue-300 rounded-full border border-blue-500/20 shrink-0">
+                      {company.dominantArchetype}
+                    </span>
+                  )}
+                  {company.profileCount !== undefined && company.profileCount > 0 && (
+                    <div className="text-center shrink-0">
+                      <span className="text-lg font-semibold text-foreground/90">{company.profileCount}</span>
+                      <p className="text-[10px] text-muted-foreground">Assessed</p>
+                    </div>
+                  )}
                 </div>
 
                 {/* Delete button (shift mode) */}

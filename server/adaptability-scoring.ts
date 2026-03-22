@@ -901,3 +901,53 @@ function getHumanReviewSeverity(trigger: HumanReviewTrigger): "advisory" | "requ
   ];
   return required.includes(trigger) ? "required" : "advisory";
 }
+
+// --- Structured Q&A to AdaptabilityQuestionResponse converter ---
+// Used for combined assessments where adaptability questions are structured (not free-form conversation)
+
+const QUESTION_ID_TO_PILLAR: Record<string, AdaptabilityPillar> = {
+  adapt_lv_approach: "learning_velocity",
+  adapt_lv_instinct: "learning_velocity",
+  adapt_lv_speed: "learning_velocity",
+  adapt_lv_pressure: "learning_velocity",
+  adapt_ur_reconsider: "unlearning_readiness",
+  adapt_ur_process_change: "unlearning_readiness",
+  adapt_ur_comfort: "unlearning_readiness",
+  adapt_aa_no_solution: "adaptive_agency",
+  adapt_aa_frequency: "adaptive_agency",
+  adapt_aa_ambiguity: "adaptive_agency",
+  adapt_bt_least_knowledgeable: "beginner_tolerance",
+  adapt_bt_mistake_response: "beginner_tolerance",
+  adapt_bt_voluntary_beginner: "beginner_tolerance",
+};
+
+export function convertStructuredToAdaptabilityResponses(
+  responses: Array<{
+    questionId: string;
+    questionText: string;
+    answer: unknown;
+    timestamp: string;
+    durationMs?: number;
+    aiFollowUps?: Array<{ question: string; answer: string; timestamp?: string }>;
+  }>
+): AdaptabilityQuestionResponse[] {
+  return responses
+    .filter((r) => r.questionId.startsWith("adapt_"))
+    .map((r) => {
+      const pillar = QUESTION_ID_TO_PILLAR[r.questionId];
+      return {
+        questionId: r.questionId,
+        pillar,
+        questionText: r.questionText,
+        answer: typeof r.answer === "object" ? JSON.stringify(r.answer) : String(r.answer),
+        timestamp: r.timestamp,
+        durationMs: r.durationMs,
+        aiFollowUps: r.aiFollowUps?.map((f) => ({
+          action: "probe" as const,
+          question: f.question,
+          answer: f.answer,
+          timestamp: f.timestamp || r.timestamp,
+        })),
+      };
+    });
+}

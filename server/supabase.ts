@@ -612,3 +612,123 @@ export async function findInvitationBySessionId(sessionId: string): Promise<Invi
   if (error || !data) return null;
   return dbRowToInvitation(data);
 }
+
+// ============================================================
+// PROFILE HELPERS
+// ============================================================
+
+export async function getProfileBySessionId(sessionId: string): Promise<Record<string, unknown> | null> {
+  const { data, error } = await getSupabase()
+    .from("cascade_profiles")
+    .select("*")
+    .eq("session_id", sessionId)
+    .single();
+
+  if (error || !data) return null;
+  return data as Record<string, unknown>;
+}
+
+export async function getProfilesByCompany(company: string): Promise<Record<string, unknown>[]> {
+  const { data, error } = await getSupabase()
+    .from("cascade_profiles")
+    .select("*")
+    .ilike("participant_company", `%${company}%`)
+    .order("created_at", { ascending: false });
+
+  if (error || !data) return [];
+  return data as Record<string, unknown>[];
+}
+
+export async function getProfilesByContactId(contactId: string): Promise<Record<string, unknown>[]> {
+  const { data, error } = await getSupabase()
+    .from("cascade_profiles")
+    .select("*")
+    .eq("contact_id", contactId)
+    .order("created_at", { ascending: false });
+
+  if (error || !data) return [];
+  return data as Record<string, unknown>[];
+}
+
+export async function getProfileStats(filters?: {
+  company?: string;
+  assessmentType?: string;
+  dateFrom?: string;
+  dateTo?: string;
+}): Promise<{
+  total: number;
+  avgScore: number | null;
+  archetypeDistribution: Record<string, number>;
+  assessmentTypeCounts: Record<string, number>;
+}> {
+  let query = getSupabase()
+    .from("cascade_profiles")
+    .select("overall_score, archetype, assessment_type");
+
+  if (filters?.company) query = query.ilike("participant_company", `%${filters.company}%`);
+  if (filters?.assessmentType) query = query.eq("assessment_type", filters.assessmentType);
+  if (filters?.dateFrom) query = query.gte("created_at", filters.dateFrom);
+  if (filters?.dateTo) query = query.lte("created_at", filters.dateTo);
+
+  const { data, error } = await query;
+  if (error || !data) return { total: 0, avgScore: null, archetypeDistribution: {}, assessmentTypeCounts: {} };
+
+  const scores = data
+    .map((d) => d.overall_score as number | null)
+    .filter((s): s is number => s !== null);
+
+  const avgScore = scores.length > 0 ? scores.reduce((a, b) => a + b, 0) / scores.length : null;
+
+  const archetypeDistribution: Record<string, number> = {};
+  const assessmentTypeCounts: Record<string, number> = {};
+
+  for (const row of data) {
+    const arch = row.archetype as string | null;
+    if (arch) archetypeDistribution[arch] = (archetypeDistribution[arch] || 0) + 1;
+
+    const aType = row.assessment_type as string;
+    assessmentTypeCounts[aType] = (assessmentTypeCounts[aType] || 0) + 1;
+  }
+
+  return { total: data.length, avgScore, archetypeDistribution, assessmentTypeCounts };
+}
+
+// ============================================================
+// COPILOT CONVERSATION LOGGING
+// ============================================================
+
+export async function logCopilotConversation(params: {
+  adminUser: string;
+  pageContext: string;
+  messages: unknown[];
+  toolCalls?: unknown[];
+}): Promise<void> {
+  const sb = getSupabase();
+
+  // Ensure table exists (safe to call multiple times)
+  await sb.rpc("exec_sql", {
+    sql: `CREATE TABLE IF NOT EXISTS cascade_copilot_logs (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      admin_user TEXT NOT NULL,
+      page_context TEXT,
+      messages JSONB NOT NULL,
+      tool_calls JSONB,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )`,
+  }).then(() => {}).catch(() => {
+    // rpc may not exist; table might already exist — that's fine
+  });
+
+  const { error } = await sb
+    .from("cascade_copilot_logs")
+    .insert({
+      admin_user: params.adminUser,
+      page_context: params.pageContext,
+      messages: params.messages,
+      tool_calls: params.toolCalls || null,
+    });
+
+  if (error) {
+    console.error("Failed to log copilot conversation:", error.message);
+  }
+}

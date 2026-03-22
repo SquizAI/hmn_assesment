@@ -28,6 +28,9 @@ interface AnalyticsData {
   score_distribution: { label: string; count: number }[];
   top_gaps: { gap: string; count: number }[];
   industry_breakdown: { industry: string; count: number }[];
+  profile_gap_frequency?: { gap: string; count: number }[];
+  profile_time_series?: { date: string; count: number }[];
+  total_profiles?: number;
 }
 
 type Period = "7d" | "30d" | "90d" | "all";
@@ -266,6 +269,13 @@ export default function AdminAnalyticsPage() {
             className="px-4 py-2 text-sm font-medium rounded-lg bg-muted text-foreground hover:bg-muted border border-border disabled:opacity-50 transition-colors"
           >
             Export Assessments
+          </button>
+          <button
+            onClick={() => handleExport("profiles")}
+            disabled={exporting}
+            className="px-4 py-2 text-sm font-medium rounded-lg bg-muted text-foreground hover:bg-muted border border-border disabled:opacity-50 transition-colors"
+          >
+            Export Profiles
           </button>
           <div className="flex items-center bg-muted border border-border rounded-xl p-1">
             {PERIODS.map((p) => (
@@ -788,6 +798,40 @@ export default function AdminAnalyticsPage() {
                   />
                 </div>
               </div>
+
+              {/* Profile-based gap frequency */}
+              {data.profile_gap_frequency && data.profile_gap_frequency.length > 0 && (
+                <div className="bg-muted border border-border rounded-2xl p-6">
+                  <h3 className="text-base font-semibold text-foreground mb-2">Profile Gap Analysis</h3>
+                  <p className="text-xs text-muted-foreground mb-5">Gap patterns extracted from cascade profiles ({data.total_profiles || 0} profiles)</p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3">
+                    {data.profile_gap_frequency.slice(0, 20).map((g, i) => {
+                      const maxCount = data.profile_gap_frequency![0]?.count || 1;
+                      return (
+                        <div key={i} className="flex items-center gap-3">
+                          <span className="text-xs text-muted-foreground w-5 text-right shrink-0">{i + 1}</span>
+                          <span className="text-sm text-foreground/80 flex-1 truncate">{g.gap}</span>
+                          <div className="w-20 h-2 bg-muted rounded-full overflow-hidden shrink-0">
+                            <div
+                              className="h-full rounded-full bg-gradient-to-r from-amber-500/70 to-orange-400/70"
+                              style={{ width: `${Math.max((g.count / maxCount) * 100, 4)}%` }}
+                            />
+                          </div>
+                          <span className="text-xs text-muted-foreground tabular-nums w-5 text-right shrink-0">{g.count}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Profile time series */}
+              {data.profile_time_series && data.profile_time_series.length > 0 && (
+                <div className="bg-muted border border-border rounded-2xl p-6">
+                  <h3 className="text-base font-semibold text-foreground mb-5">Profiles Created Over Time</h3>
+                  <MiniTimeline data={data.profile_time_series} />
+                </div>
+              )}
 
               {/* Combined view — gaps + industry cross-reference */}
               <div className="bg-muted border border-border rounded-2xl p-6">

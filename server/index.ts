@@ -8,7 +8,8 @@ import Anthropic from "@anthropic-ai/sdk";
 import dotenv from "dotenv";
 import {
   TOOL_DEFINITIONS, executeTool,
-  listAssessmentsAdmin, getAssessmentAdmin, createAssessmentAdmin, updateAssessmentAdmin, duplicateAssessmentAdmin,
+  listAssessmentsAdmin, getAssessmentAdmin, createAssessmentAdmin, updateAssessmentAdmin, duplicateAssessmentAdmin, archiveAssessmentAdmin,
+  addQuestionAdmin, updateQuestionAdmin, removeQuestionAdmin,
   listSessionsAdmin, getSessionAdmin, deleteSessionAdmin,
   exportSessionsAdmin, getStatsAdmin, getDimensionAveragesAdmin, getCompletionFunnelAdmin,
   listCompaniesAdmin, getCompanyDetailAdmin,
@@ -19,13 +20,13 @@ import {
   loadSessionFromDb, saveSessionToDb, deleteSessionFromDb,
   listAllSessions, listSessionsPaginated, listAllAssessments, lookupSessionsByEmail,
   loadInvitationByToken, loadInvitationById, updateInvitationStatus, findInvitationBySessionId,
-  loadAssessment,
+  loadAssessment, getProfileStats, getSupabase,
 } from "./supabase.js";
 import { isEmailEnabled, sendInvitationEmail, sendBatchInvitationEmails, sendCompletionEmail } from "./email.js";
 import { initGraphSchema, runQuery } from "./neo4j.js";
 import { getCompanyIntelligence, getAssessmentSummary, getCrossCompanyBenchmarks, getThemeMap, getGrowthTimeline, getNetworkGraph } from "./graph-queries.js";
 import { seedAllSessionsToGraph, extractAndSyncIntelligence } from "./graph-sync.js";
-import { runAdaptabilityAnalysis, generateAdaptabilityProfile } from "./adaptability-scoring.js";
+import { runAdaptabilityAnalysis, generateAdaptabilityProfile, convertStructuredToAdaptabilityResponses } from "./adaptability-scoring.js";
 import campaignRoutes from "./routes/campaigns.js";
 import contactRoutes from "./routes/contacts.js";
 import callRoutes from "./routes/calls.js";
@@ -38,6 +39,7 @@ import resumeRoutes from "./routes/resume.js";
 import compareRoutes from "./routes/compare.js";
 import reportPdfRoutes from "./routes/report-pdf.js";
 import { addSSEClient, emitAdminEvent } from "./admin-events.js";
+import { completeAssessment } from "./assessment-completion.js";
 
 dotenv.config();
 
@@ -1756,6 +1758,11 @@ app.post("/api/interview/analyze", async (req, res) => {
 
     const assessmentTypeId = (session.assessmentTypeId as string) || "ai-readiness";
 
+    // Detect if session has adaptability phase responses (for combined scoring)
+    const allResponses = session.responses as Array<{ questionId: string; questionText: string; answer: unknown; timestamp: string; durationMs?: number; aiFollowUps?: Array<{ question: string; answer: string; timestamp?: string }> }>;
+    const hasAdaptabilityResponses = allResponses.some((r) => r.questionId.startsWith("adapt_"));
+    const isCombined = assessmentTypeId !== "adaptability-index" && hasAdaptabilityResponses;
+
     if (assessmentTypeId === "adaptability-index") {
       // Run the adaptability-specific scoring engine
       const client = getAnthropicClient();
@@ -1763,6 +1770,40 @@ app.post("/api/interview/analyze", async (req, res) => {
       const participant = session.participant as { name: string; role: string; company: string; industry: string };
       const profile = await generateAdaptabilityProfile(client, adaptAnalysis, participant);
       session.analysis = { ...adaptAnalysis, profile } as unknown as Record<string, unknown>;
+      session.adaptabilityAnalysis = adaptAnalysis;
+    } else if (isCombined) {
+      // Combined assessment: run Cascade scoring on phases 1-4, then Adaptability scoring on phase 5
+      const client = getAnthropicClient();
+
+      // 1. Run standard Cascade analysis on all responses
+      const { assessment } = await getAssessmentQuestionBank(session);
+      const cascadeAnalysis = await runCascadeAnalysis(session as unknown as Record<string, unknown>, assessment);
+
+      // 2. Convert structured adaptability responses and run adaptability scoring
+      const adaptResponses = convertStructuredToAdaptabilityResponses(allResponses);
+      const adaptSession = {
+        id: session.id,
+        participant: session.participant as { name: string; role: string; company: string; industry: string; teamSize: string },
+        responses: adaptResponses,
+        conversationHistory: (session.conversationHistory || []) as Array<{ role: string; content: string; timestamp: string; questionId?: string }>,
+      };
+      const adaptAnalysis = await runAdaptabilityAnalysis(client, adaptSession);
+      const participant = session.participant as { name: string; role: string; company: string; industry: string };
+      const adaptProfile = await generateAdaptabilityProfile(client, adaptAnalysis, participant);
+
+      // 3. Merge into unified analysis object
+      session.analysis = {
+        ...cascadeAnalysis,
+        adaptabilityScores: {
+          learning_velocity: adaptAnalysis.pillar1.compositeScore,
+          unlearning_readiness: adaptAnalysis.pillar2.compositeScore,
+          adaptive_agency: adaptAnalysis.pillar3.compositeScore,
+          beginner_tolerance: adaptAnalysis.pillar4.compositeScore,
+          overall: adaptAnalysis.overallAdaptabilityScore,
+        },
+        adaptabilityAnalysis: adaptAnalysis,
+        adaptabilityProfile: adaptProfile,
+      };
       session.adaptabilityAnalysis = adaptAnalysis;
     } else {
       // Load assessment-specific config for analysis prompt
@@ -1774,28 +1815,29 @@ app.post("/api/interview/analyze", async (req, res) => {
     session.status = "analyzed";
     await saveSession(session);
 
-    // Notify admin dashboard + invalidate stats cache
+    // Invalidate stats cache
     invalidateCache("stats:");
-    const participant = session.participant as Record<string, unknown> | undefined;
-    emitAdminEvent({
-      type: "analysis_ready",
-      data: { sessionId, name: participant?.name || "Unknown", company: participant?.company || "" },
-      timestamp: new Date().toISOString(),
-    });
 
-    // Update linked invitation to completed
-    try {
-      const linkedInvitation = await findInvitationBySessionId(sessionId);
-      if (linkedInvitation) {
-        await updateInvitationStatus(linkedInvitation.token, "completed", {
-          completed_at: new Date().toISOString(),
-        });
-      }
-    } catch (invErr) {
-      console.error("Failed to update invitation status:", invErr);
+    // Run unified completion pipeline (profile, webhooks, email, SSE, graph, invitation)
+    const linkedInvitation = await findInvitationBySessionId(sessionId).catch(() => null);
+    let completionAssessmentType: "cascade" | "adaptability" | "combined";
+    if (assessmentTypeId === "adaptability-index") {
+      completionAssessmentType = "adaptability";
+    } else if (isCombined) {
+      completionAssessmentType = "combined";
+    } else {
+      completionAssessmentType = "cascade";
     }
 
-    res.json({ analysis });
+    completeAssessment({
+      session,
+      analysis: session.analysis as unknown as Record<string, unknown>,
+      assessmentType: completionAssessmentType,
+      invitationId: linkedInvitation?.id,
+      contactId: (session as unknown as Record<string, unknown>).contact_id as string | undefined,
+    }).catch((err) => console.error("[analyze] Completion pipeline error:", err));
+
+    res.json({ analysis: session.analysis });
   } catch (err) {
     console.error("Analysis error:", err);
     res.status(500).json({ error: "Analysis failed" });
@@ -2571,6 +2613,70 @@ app.post("/api/admin/assessments/:id/status", requireAdmin, async (req, res) => 
   } catch (err) { console.error("Admin status update error:", err); res.status(500).json({ error: "Failed to update status" }); }
 });
 
+// --- Archive assessment (DELETE maps to archive, not hard delete) ---
+app.delete("/api/admin/assessments/:id", requireAdmin, async (req, res) => {
+  try {
+    const result = await archiveAssessmentAdmin(String(req.params.id));
+    if (!result.ok) { res.status(404).json({ error: "Assessment not found" }); return; }
+    invalidateCache("assessments:");
+    res.json({ ok: true });
+  } catch (err) { console.error("Admin archive assessment error:", err); res.status(500).json({ error: "Failed to archive assessment" }); }
+});
+
+// --- Question Management ---
+
+app.post("/api/admin/assessments/:id/questions", requireAdmin, async (req, res) => {
+  try {
+    const { question } = req.body;
+    if (!question?.id || !question?.text) { res.status(400).json({ error: "question with id and text required" }); return; }
+    const result = await addQuestionAdmin(String(req.params.id), question);
+    if (!result.ok) { res.status(404).json({ error: "Assessment not found" }); return; }
+    invalidateCache("assessments:");
+    res.status(201).json({ ok: true });
+  } catch (err) { console.error("Admin add question error:", err); res.status(500).json({ error: "Failed to add question" }); }
+});
+
+app.put("/api/admin/assessments/:id/questions/:qid", requireAdmin, async (req, res) => {
+  try {
+    const { changes } = req.body;
+    if (!changes) { res.status(400).json({ error: "changes object required" }); return; }
+    const result = await updateQuestionAdmin(String(req.params.id), String(req.params.qid), changes);
+    if (!result.ok) { res.status(404).json({ error: "Assessment or question not found" }); return; }
+    invalidateCache("assessments:");
+    res.json({ ok: true });
+  } catch (err) { console.error("Admin update question error:", err); res.status(500).json({ error: "Failed to update question" }); }
+});
+
+app.delete("/api/admin/assessments/:id/questions/:qid", requireAdmin, async (req, res) => {
+  try {
+    const result = await removeQuestionAdmin(String(req.params.id), String(req.params.qid));
+    if (!result.ok) { res.status(404).json({ error: "Assessment or question not found" }); return; }
+    invalidateCache("assessments:");
+    res.json({ ok: true });
+  } catch (err) { console.error("Admin remove question error:", err); res.status(500).json({ error: "Failed to remove question" }); }
+});
+
+app.put("/api/admin/assessments/:id/questions/reorder", requireAdmin, async (req, res) => {
+  try {
+    const { questionIds } = req.body;
+    if (!Array.isArray(questionIds)) { res.status(400).json({ error: "questionIds array required" }); return; }
+    const assessment = await getAssessmentAdmin(String(req.params.id));
+    if (!assessment) { res.status(404).json({ error: "Assessment not found" }); return; }
+    // Reorder questions based on the provided ID order
+    const questionMap = new Map(assessment.questions.map((q) => [q.id, q]));
+    const reordered = questionIds.map((id: string) => questionMap.get(id)).filter(Boolean);
+    // Add any questions not in the reorder list at the end
+    const reorderedIds = new Set(questionIds);
+    for (const q of assessment.questions) {
+      if (!reorderedIds.has(q.id)) reordered.push(q);
+    }
+    const result = await updateAssessmentAdmin(String(req.params.id), { questions: reordered as typeof assessment.questions });
+    if (!result.ok) { res.status(404).json({ error: "Failed to reorder" }); return; }
+    invalidateCache("assessments:");
+    res.json({ ok: true });
+  } catch (err) { console.error("Admin reorder questions error:", err); res.status(500).json({ error: "Failed to reorder questions" }); }
+});
+
 app.get("/api/admin/funnel", requireAdmin, async (req, res) => {
   try {
     const filters = extractDashboardFilters(req.query as Record<string, unknown>);
@@ -2754,6 +2860,38 @@ app.get("/api/admin/companies", requireAdmin, async (req, res) => {
   try {
     const filters = extractDashboardFilters(req.query as Record<string, unknown>);
     const companies = await listCompaniesAdmin(filters);
+
+    // Enrich with profile aggregation per company
+    try {
+      const { data: profiles } = await getSupabase()
+        .from("cascade_profiles")
+        .select("participant_company, overall_score, archetype");
+      if (profiles && profiles.length > 0) {
+        const companyProfiles: Record<string, { scores: number[]; archetypes: Record<string, number>; count: number }> = {};
+        for (const p of profiles) {
+          const co = ((p.participant_company as string) || "").toLowerCase();
+          if (!co) continue;
+          if (!companyProfiles[co]) companyProfiles[co] = { scores: [], archetypes: {}, count: 0 };
+          companyProfiles[co].count++;
+          if (p.overall_score !== null) companyProfiles[co].scores.push(p.overall_score as number);
+          const arch = p.archetype as string;
+          if (arch) companyProfiles[co].archetypes[arch] = (companyProfiles[co].archetypes[arch] || 0) + 1;
+        }
+        for (const c of companies as unknown as Record<string, unknown>[]) {
+          const co = ((c.company as string) || "").toLowerCase();
+          const cp = companyProfiles[co];
+          if (cp) {
+            c.profileCount = cp.count;
+            c.profileAvgScore = cp.scores.length > 0 ? Math.round(cp.scores.reduce((a, b) => a + b, 0) / cp.scores.length) : null;
+            const sorted = Object.entries(cp.archetypes).sort(([, a], [, b]) => b - a);
+            c.dominantArchetype = sorted.length > 0 ? sorted[0][0] : null;
+          }
+        }
+      }
+    } catch {
+      // profiles table may not exist yet
+    }
+
     res.json({ companies });
   } catch (err) {
     console.error("Admin companies error:", err);
@@ -3218,6 +3356,14 @@ const TOOL_DISPLAY_NAMES: Record<string, string> = {
   list_companies: "Loading companies",
   get_company_detail: "Loading company details",
   lookup_company_logo: "Looking up company logo",
+  query_profiles: "Searching profiles",
+  compare_profiles: "Comparing profiles",
+  company_insights: "Analyzing company",
+  campaign_results: "Analyzing campaign",
+  suggest_next_actions: "Generating recommendations",
+  analyze_transcript: "Analyzing transcript",
+  gap_analysis: "Analyzing gap patterns",
+  export_report: "Generating report",
 };
 
 function getToolDisplayName(name: string, input: Record<string, unknown>): string {
@@ -3272,6 +3418,17 @@ function getToolSummary(name: string, input: Record<string, unknown>, result: un
       const lr = result as { found?: boolean } | undefined;
       return lr?.found ? `Found logo for ${input.domain}` : `No logo found for ${input.domain}`;
     }
+    case "query_profiles": {
+      const qr = result as Record<string, unknown>[] | undefined;
+      return `Found ${Array.isArray(qr) ? qr.length : 0} profiles`;
+    }
+    case "compare_profiles": return `Compared ${(input.sessionIds as string[])?.length || 0} profiles`;
+    case "company_insights": return `Analyzed ${input.company || "company"}`;
+    case "campaign_results": return `Analyzed campaign ${input.campaignId}`;
+    case "suggest_next_actions": return "Generated action recommendations";
+    case "analyze_transcript": return `Analyzed transcript for session ${input.sessionId}`;
+    case "gap_analysis": return "Completed gap pattern analysis";
+    case "export_report": return `Generated ${input.format} report`;
     default: return `Completed ${TOOL_DISPLAY_NAMES[name] || name}`;
   }
 }
@@ -3468,14 +3625,17 @@ Add a new question
 
 app.post("/api/admin/chat", requireAdmin, async (req, res) => {
   try {
-    const { messages, attachments } = req.body;
+    const { messages, attachments, pageContext } = req.body;
     if (!messages || !Array.isArray(messages)) {
       res.status(400).json({ error: "messages array required" });
       return;
     }
 
-    // Build system prompt with optional file attachments
+    // Build system prompt with page context and optional file attachments
     let systemPrompt = ADMIN_SYSTEM_PROMPT;
+    if (pageContext && typeof pageContext === "string") {
+      systemPrompt += `\n\nPAGE CONTEXT:\nThe admin is currently on the "${pageContext}" page.\n\nWhen on the dashboard: Summarize activity, highlight anomalies\nWhen on calls: Help analyze transcripts, review call outcomes\nWhen on contacts: Help prioritize outreach, suggest who to call next\nWhen on campaigns: Help analyze campaign results, predict outcomes\nWhen on analytics: Answer natural language data queries\nWhen on companies: Provide company-level insights\nWhen on search: Help find specific profiles or patterns\nWhen on sessions: Help review and analyze session data\nWhen on invitations: Help manage and track invitations\nWhen on assessments: Help design and refine assessments`;
+    }
     if (attachments && Array.isArray(attachments) && attachments.length > 0) {
       const fileContextParts = attachments
         .filter((a: { filename?: string; content?: string }) => a.filename && a.content)
@@ -3501,6 +3661,16 @@ app.post("/api/admin/chat", requireAdmin, async (req, res) => {
 
     sse.sendEvent("response", { text: finalText || "I completed the requested action.", toolCalls });
     sse.end();
+
+    // Log conversation asynchronously (fire-and-forget)
+    import("./supabase.js").then(({ logCopilotConversation }) => {
+      logCopilotConversation({
+        adminUser: "admin",
+        pageContext: pageContext || "unknown",
+        messages,
+        toolCalls: toolCalls.length > 0 ? toolCalls : undefined,
+      }).catch((e: unknown) => console.error("Copilot log failed:", e));
+    });
   } catch (err) {
     console.error("Admin chat error:", err);
     if (!res.headersSent) {
@@ -3509,6 +3679,48 @@ app.post("/api/admin/chat", requireAdmin, async (req, res) => {
       res.write(`event: error\ndata: ${JSON.stringify({ error: "Chat failed" })}\n\n`);
       res.end();
     }
+  }
+});
+
+// ============================================================
+// COPILOT INSIGHTS ENDPOINT
+// ============================================================
+
+app.get("/api/admin/copilot/insight", requireAdmin, async (req, res) => {
+  try {
+    const page = String(req.query.page || "dashboard");
+    const client = getAnthropicClient();
+
+    // Gather quick stats for context
+    const stats = await getProfileStats();
+    const sessions = await listAllSessions();
+    const recentCompleted = sessions.filter((s) => s.status === "completed" || s.status === "analyzed").length;
+    const inProgress = sessions.filter((s) => s.status === "in_progress").length;
+
+    const contextPrompt = `You are the HMN Cascade admin co-pilot generating a brief one-liner insight.
+Current data: ${stats.total} profiles, avg score ${stats.avgScore ? Math.round(stats.avgScore) : "N/A"}, ${recentCompleted} completed sessions, ${inProgress} in progress.
+Archetype distribution: ${JSON.stringify(stats.archetypeDistribution)}.
+The admin is on the "${page}" page.
+
+Generate a single concise insight (1-2 sentences max) relevant to the ${page} page. Be specific with numbers. Also suggest 1-2 brief actions.
+Respond in JSON format: { "insight": "...", "actions": ["...", "..."] }`;
+
+    const response = await client.messages.create({
+      model: MODEL_FAST,
+      max_tokens: 300,
+      messages: [{ role: "user", content: contextPrompt }],
+    });
+
+    const text = response.content[0]?.type === "text" ? response.content[0].text : "";
+    try {
+      const parsed = JSON.parse(text);
+      res.json({ insight: parsed.insight || text, actions: parsed.actions || [] });
+    } catch {
+      res.json({ insight: text, actions: [] });
+    }
+  } catch (err) {
+    console.error("Copilot insight error:", err);
+    res.status(500).json({ error: "Failed to generate insight" });
   }
 });
 
@@ -3940,6 +4152,81 @@ app.use("/api/admin/search", requireAdmin, searchRoutes);
 app.use("/api/admin/analytics", requireAdmin, analyticsRoutes);
 app.use("/api/admin/settings", requireAdmin, settingsRoutes);
 app.use("/api/admin/cron", requireAdmin, cleanupRoutes);
+
+// Profile stats endpoint
+app.get("/api/admin/profile-stats", requireAdmin, async (req, res) => {
+  try {
+    const { company, assessmentType, dateFrom, dateTo } = req.query as Record<string, string>;
+    const stats = await getProfileStats({
+      company: company || undefined,
+      assessmentType: assessmentType || undefined,
+      dateFrom: dateFrom || undefined,
+      dateTo: dateTo || undefined,
+    });
+
+    // Also fetch score distribution and top gaps from profiles
+    let scoreDistribution: { label: string; count: number }[] = [];
+    let topGaps: { gap: string; count: number }[] = [];
+    try {
+      let query = getSupabase()
+        .from("cascade_profiles")
+        .select("overall_score, gaps");
+      if (company) query = query.ilike("participant_company", `%${company}%`);
+      if (assessmentType) query = query.eq("assessment_type", assessmentType);
+      if (dateFrom) query = query.gte("created_at", dateFrom);
+      if (dateTo) query = query.lte("created_at", dateTo);
+
+      const { data: profiles } = await query;
+      const allProfiles = profiles || [];
+
+      // Score distribution
+      const scores = allProfiles
+        .map((p: Record<string, unknown>) => p.overall_score as number)
+        .filter((s): s is number => s !== null && s !== undefined);
+      const buckets = [
+        { label: "0-20", min: 0, max: 20 },
+        { label: "21-40", min: 21, max: 40 },
+        { label: "41-60", min: 41, max: 60 },
+        { label: "61-80", min: 61, max: 80 },
+        { label: "81-100", min: 81, max: 100 },
+      ];
+      scoreDistribution = buckets.map(({ label, min, max }) => ({
+        label,
+        count: scores.filter((s) => s >= min && s <= max).length,
+      }));
+
+      // Top gaps
+      const gapCounts: Record<string, number> = {};
+      allProfiles.forEach((p: Record<string, unknown>) => {
+        const gaps = p.gaps as Array<{ pattern?: string; gap?: string; title?: string }> | null;
+        if (Array.isArray(gaps)) {
+          gaps.forEach((g) => {
+            const label = g.pattern || g.gap || g.title || "Unknown";
+            gapCounts[label] = (gapCounts[label] || 0) + 1;
+          });
+        }
+      });
+      topGaps = Object.entries(gapCounts)
+        .map(([gap, count]) => ({ gap, count }))
+        .sort((a, b) => b.count - a.count);
+    } catch {
+      // profiles table may not exist yet
+    }
+
+    res.json({
+      total_profiles: stats.total,
+      avg_score: stats.avgScore !== null ? Math.round(stats.avgScore) : null,
+      archetype_counts: stats.archetypeDistribution,
+      assessment_type_counts: stats.assessmentTypeCounts,
+      score_distribution: scoreDistribution,
+      top_gaps: topGaps,
+    });
+  } catch (err) {
+    console.error("[profile-stats] error:", err);
+    res.status(500).json({ error: "Failed to load profile stats" });
+  }
+});
+
 // Health check
 app.get("/api/health", (_req, res) => { res.json({ status: "ok", timestamp: new Date().toISOString() }); });
 app.get("/live", (_req, res) => { res.status(200).send("OK"); });

@@ -1,5 +1,6 @@
-import { useEffect, useState, useCallback } from "react";
-import { fetchContacts as fetchContactsApi, createContact, deleteContact, callContacts } from "../lib/admin-api";
+import React, { useEffect, useState, useCallback } from "react";
+import { Link } from "react-router-dom";
+import { fetchContacts as fetchContactsApi, createContact, deleteContact, callContacts, fetchContactAssessments } from "../lib/admin-api";
 import StatusBadge from "../components/admin/StatusBadge";
 import ConfirmDialog from "../components/ui/ConfirmDialog";
 
@@ -47,6 +48,9 @@ export default function AdminContactsPage() {
   const [newContact, setNewContact] = useState({ name: "", phone: "", email: "", company: "", role: "", industry: "", team_size: "" });
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
+  const [expandedContact, setExpandedContact] = useState<string | null>(null);
+  const [contactAssessments, setContactAssessments] = useState<Record<string, unknown>[]>([]);
+  const [loadingAssessments, setLoadingAssessments] = useState(false);
 
   const showToast = (message: string, type: "success" | "error") => {
     setToast({ message, type });
@@ -104,6 +108,23 @@ export default function AdminContactsPage() {
       showToast("Contact added", "success");
       fetchContacts();
     } catch (err) { showToast("Failed to add contact", "error"); console.error("Failed to add contact:", err); }
+  };
+
+  const handleExpandContact = async (id: string) => {
+    if (expandedContact === id) {
+      setExpandedContact(null);
+      return;
+    }
+    setExpandedContact(id);
+    setLoadingAssessments(true);
+    try {
+      const data = await fetchContactAssessments(id);
+      setContactAssessments(data.assessments || []);
+    } catch {
+      setContactAssessments([]);
+    } finally {
+      setLoadingAssessments(false);
+    }
   };
 
   const handleDeleteContact = async (id: string) => {
@@ -177,20 +198,67 @@ export default function AdminContactsPage() {
               ) : contacts.length === 0 ? (
                 <tr><td colSpan={8} className="px-6 py-8 text-center text-muted-foreground text-sm">No contacts found. Add contacts manually.</td></tr>
               ) : contacts.map((contact) => (
-                <tr key={contact.id} className="border-b border-border hover:bg-muted transition-colors">
-                  <td className="px-4 py-3"><input type="checkbox" checked={selectedIds.has(contact.id)} onChange={() => toggleSelect(contact.id)} className="rounded border-border bg-muted" /></td>
+                <React.Fragment key={contact.id}>
+                <tr onClick={() => handleExpandContact(contact.id)} className="border-b border-border hover:bg-muted transition-colors cursor-pointer">
+                  <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}><input type="checkbox" checked={selectedIds.has(contact.id)} onChange={() => toggleSelect(contact.id)} className="rounded border-border bg-muted" /></td>
                   <td className="px-4 py-3"><p className="text-sm font-medium text-foreground">{contact.name}</p>{contact.role && <p className="text-xs text-muted-foreground">{contact.role}</p>}</td>
                   <td className="px-4 py-3 text-sm text-muted-foreground font-mono">{contact.phone}</td>
                   <td className="px-4 py-3 text-sm text-muted-foreground">{contact.company || "\u2014"}</td>
                   <td className="px-4 py-3"><StatusBadge status={contact.status} size="sm" /></td>
                   <td className="px-4 py-3"><div className="flex gap-1 flex-wrap">{(contact.tags || []).slice(0, 3).map((tag) => <span key={tag} className="px-1.5 py-0.5 text-[10px] bg-muted text-muted-foreground rounded">{tag}</span>)}</div></td>
                   <td className="px-4 py-3 text-sm text-muted-foreground">{formatDate(contact.created_at)}</td>
-                  <td className="px-4 py-3 text-right">
+                  <td className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
                     <button onClick={() => setDeleteTarget(contact.id)} title="Delete" className="p-1.5 text-muted-foreground hover:text-red-400 transition-colors rounded-lg hover:bg-muted">
                       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" /></svg>
                     </button>
                   </td>
                 </tr>
+                {expandedContact === contact.id && (
+                  <tr>
+                    <td colSpan={8} className="px-6 py-4 bg-muted border-b border-border">
+                      <div className="max-w-2xl">
+                        <h4 className="text-sm font-medium text-foreground/80 mb-3">Assessment History</h4>
+                        {loadingAssessments ? (
+                          <p className="text-xs text-muted-foreground">Loading assessments...</p>
+                        ) : contactAssessments.length === 0 ? (
+                          <p className="text-xs text-muted-foreground">No assessments found for this contact.</p>
+                        ) : (
+                          <div className="space-y-2">
+                            {contactAssessments.map((assessment) => (
+                              <div key={assessment.id as string} className="flex items-center gap-3 px-3 py-2 bg-muted rounded-lg border border-border">
+                                <span className="text-xs text-muted-foreground w-24 shrink-0">
+                                  {formatDate(assessment.created_at as string)}
+                                </span>
+                                {assessment.overall_score !== null && (
+                                  <span className={`text-sm font-semibold tabular-nums ${
+                                    (assessment.overall_score as number) >= 70 ? "text-green-400" : (assessment.overall_score as number) >= 45 ? "text-yellow-400" : "text-red-400"
+                                  }`}>
+                                    {Math.round(assessment.overall_score as number)}
+                                  </span>
+                                )}
+                                {assessment.archetype ? (
+                                  <span className="px-2 py-0.5 text-[10px] font-medium bg-blue-500/10 text-blue-300 rounded-full border border-blue-500/20">
+                                    {assessment.archetype as string}
+                                  </span>
+                                ) : null}
+                                <span className="text-[10px] text-muted-foreground">{assessment.assessment_type as string}</span>
+                                <div className="flex-1" />
+                                <Link
+                                  to={`/analysis/${assessment.session_id as string}`}
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="text-xs text-blue-400 hover:text-blue-300 underline underline-offset-2 transition-colors"
+                                >
+                                  View Analysis
+                                </Link>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                )}
+                </React.Fragment>
               ))}
             </tbody>
           </table>
