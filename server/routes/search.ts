@@ -45,20 +45,44 @@ router.get("/", async (req, res) => {
       const paged = filtered.slice(offset, offset + limitNum);
       const sessionIds = paged.map((s: Record<string, unknown>) => s.id as string);
 
-      let analyses: Record<string, unknown>[] = [];
+      // Try cascade_analyses first, fall back to cascade_profiles for score/archetype
+      let analysisMap = new Map<string, Record<string, unknown>>();
       if (sessionIds.length > 0) {
-        const { data: aData } = await getSupabase()
-          .from("cascade_analyses")
-          .select("session_id, overall_readiness_score, archetype")
-          .in("session_id", sessionIds);
-        analyses = aData || [];
+        try {
+          const { data: aData, error: aError } = await getSupabase()
+            .from("cascade_analyses")
+            .select("session_id, overall_readiness_score, archetype")
+            .in("session_id", sessionIds);
+          if (!aError && aData && aData.length > 0) {
+            analysisMap = new Map(aData.map((a: Record<string, unknown>) => [a.session_id, a]));
+          }
+        } catch {
+          // cascade_analyses may not exist — fall through to profiles
+        }
+
+        // Fallback: if cascade_analyses yielded nothing, try cascade_profiles
+        if (analysisMap.size === 0) {
+          try {
+            const { data: pData } = await getSupabase()
+              .from("cascade_profiles")
+              .select("session_id, overall_score, archetype")
+              .in("session_id", sessionIds);
+            if (pData && pData.length > 0) {
+              analysisMap = new Map(pData.map((p: Record<string, unknown>) => [
+                p.session_id,
+                { session_id: p.session_id, overall_readiness_score: p.overall_score, archetype: p.archetype },
+              ]));
+            }
+          } catch {
+            // cascade_profiles may not exist yet
+          }
+        }
       }
 
-      const analysisMap = new Map(analyses.map((a: Record<string, unknown>) => [a.session_id, a]));
       results.sessions = {
         results: paged.map((s: Record<string, unknown>) => {
           const p = (s.participant || {}) as Record<string, string>;
-          const a = analysisMap.get(s.id) as Record<string, unknown> | undefined;
+          const a = analysisMap.get(s.id as string) as Record<string, unknown> | undefined;
           return {
             id: s.id,
             participant_name: p.name || "",

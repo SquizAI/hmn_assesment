@@ -4103,6 +4103,25 @@ app.post("/api/vapi/webhook", async (req, res) => {
         rec.status = "completed";
         await saveSession(rec);
         console.log(`[VAPI Webhook] Session ${session.id} updated with call transcript`);
+
+        // Run unified completion pipeline (profile, webhooks, email, SSE, graph)
+        if (session.analysis) {
+          const linkedInvitation = await findInvitationBySessionId(session.id).catch(() => null);
+          const assessmentType: "cascade" | "adaptability" | "combined" =
+            (rec.assessmentType as string) === "adaptability" ? "adaptability"
+            : (rec.assessmentType as string) === "combined" ? "combined"
+            : "cascade";
+
+          completeAssessment({
+            session,
+            analysis: session.analysis as unknown as Record<string, unknown>,
+            assessmentType,
+            invitationId: linkedInvitation?.id,
+            contactId: rec.contact_id as string | undefined,
+          }).catch((err) => console.error("[VAPI Webhook] Completion pipeline error:", err));
+        } else {
+          console.warn(`[VAPI Webhook] Session ${session.id} has no analysis — skipping completion pipeline`);
+        }
       } else {
         console.warn(`[VAPI Webhook] No session found for vapiCallId ${vapiCallId}`);
       }
@@ -4157,12 +4176,19 @@ app.use("/api/admin/cron", requireAdmin, cleanupRoutes);
 app.get("/api/admin/profile-stats", requireAdmin, async (req, res) => {
   try {
     const { company, assessmentType, dateFrom, dateTo } = req.query as Record<string, string>;
-    const stats = await getProfileStats({
-      company: company || undefined,
-      assessmentType: assessmentType || undefined,
-      dateFrom: dateFrom || undefined,
-      dateTo: dateTo || undefined,
-    });
+
+    // Gracefully handle empty or missing cascade_profiles table
+    let stats = { total: 0, avgScore: null as number | null, archetypeDistribution: {} as Record<string, number>, assessmentTypeCounts: {} as Record<string, number> };
+    try {
+      stats = await getProfileStats({
+        company: company || undefined,
+        assessmentType: assessmentType || undefined,
+        dateFrom: dateFrom || undefined,
+        dateTo: dateTo || undefined,
+      });
+    } catch (statsErr) {
+      console.warn("[profile-stats] getProfileStats failed (table may not exist):", statsErr);
+    }
 
     // Also fetch score distribution and top gaps from profiles
     let scoreDistribution: { label: string; count: number }[] = [];

@@ -32,19 +32,23 @@ router.get("/", async (req, res) => {
     const completedSessions = allSessions.filter((s: Record<string, unknown>) => s.status === "analyzed" || s.status === "completed");
     const sessionIds = completedSessions.map((s: Record<string, unknown>) => s.id as string);
 
-    // Fetch analyses
+    // Fetch analyses (graceful fallback — cascade_analyses may be empty or missing columns)
     let analyses: Record<string, unknown>[] = [];
     if (sessionIds.length > 0) {
-      const { data: aData } = await getSupabase()
-        .from("cascade_analyses")
-        .select("*")
-        .in("session_id", sessionIds);
-      analyses = aData || [];
+      try {
+        const { data: aData, error: aError } = await getSupabase()
+          .from("cascade_analyses")
+          .select("*")
+          .in("session_id", sessionIds);
+        if (!aError) analyses = aData || [];
+      } catch {
+        // cascade_analyses table may not exist or may lack expected columns — skip gracefully
+      }
     }
 
-    // KPIs
-    const scores = analyses.map((a: Record<string, unknown>) => a.overall_readiness_score as number).filter(Boolean);
-    const avgScore = scores.length ? Math.round(scores.reduce((s, v) => s + v, 0) / scores.length) : 0;
+    // KPIs — prefer cascade_analyses data, but fall back to profiles data (populated below)
+    let scores = analyses.map((a: Record<string, unknown>) => a.overall_readiness_score as number).filter(Boolean);
+    let avgScore = scores.length ? Math.round(scores.reduce((s, v) => s + v, 0) / scores.length) : 0;
     const completionRate = allSessions.length ? Math.round((completedSessions.length / allSessions.length) * 100) : 0;
 
     // Fetch call durations
@@ -202,10 +206,23 @@ router.get("/", async (req, res) => {
       // profiles table may not exist yet — skip gracefully
     }
 
+    // Fallback: if cascade_analyses had no data, use cascade_profiles for KPIs
+    if (analyses.length === 0 && totalProfiles > 0) {
+      const pScores = profileScoreDistribution.flatMap(({ label, count }) => {
+        if (count === 0) return [];
+        const mid = parseInt(label.split("-")[0]) + 10;
+        return Array(count).fill(mid);
+      });
+      if (pScores.length > 0) {
+        scores = pScores;
+        avgScore = Math.round(pScores.reduce((s, v) => s + v, 0) / pScores.length);
+      }
+    }
+
     res.json({
       period,
       kpi: {
-        total_assessments: analyses.length,
+        total_assessments: analyses.length || totalProfiles,
         avg_score: avgScore,
         completion_rate: completionRate,
         avg_call_duration: avgDuration,
@@ -214,9 +231,9 @@ router.get("/", async (req, res) => {
       },
       assessments_over_time,
       dimension_averages,
-      archetype_distribution,
-      score_distribution,
-      top_gaps,
+      archetype_distribution: archetype_distribution.length > 0 ? archetype_distribution : profileArchetypes,
+      score_distribution: score_distribution.some((b) => b.count > 0) ? score_distribution : profileScoreDistribution,
+      top_gaps: top_gaps.length > 0 ? top_gaps : profileGapFrequency,
       industry_breakdown,
       // Profile-based aggregations
       profile_archetype_distribution: profileArchetypes,
