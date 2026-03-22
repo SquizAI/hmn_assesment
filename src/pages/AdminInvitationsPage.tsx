@@ -604,7 +604,7 @@ export default function AdminInvitationsPage() {
               filtered.map((inv) => (
                 <tr
                   key={inv.id}
-                  className="hover:bg-foreground/[0.04] cursor-pointer transition-colors border-t border-border"
+                  className={`hover:bg-foreground/[0.04] transition-colors border-t border-border ${inv.sessionId ? "cursor-pointer" : "cursor-default"}`}
                   onClick={() => {
                     if (inv.sessionId) {
                       setSelectedSessionId(inv.sessionId);
