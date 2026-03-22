@@ -258,7 +258,10 @@ export default function SessionDrawer({ sessionId, onClose, onDelete }: SessionD
               <div className="w-8 h-8 border-2 border-border border-t-white/60 rounded-full animate-spin" />
             </div>
           ) : !session ? (
-            <div className="text-center text-muted-foreground py-24">Session not found</div>
+            <div className="text-center py-24 space-y-2">
+              <p className="text-muted-foreground">Session not found</p>
+              <p className="text-muted-foreground/60 text-xs">This session may have been deleted or not yet started.</p>
+            </div>
           ) : (
             <div className="px-4 sm:px-6 py-6 space-y-6">
               {/* Details Tab */}
