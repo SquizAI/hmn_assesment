@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import SessionDrawer from "../components/admin/SessionDrawer";
 import StatusBadge from "../components/admin/StatusBadge";
 import {
   fetchInvitations,
@@ -152,8 +152,6 @@ function StatPill({
 // ---------------------------------------------------------------------------
 
 export default function AdminInvitationsPage() {
-  const navigate = useNavigate();
-
   // ---- Data state ----
   const [invitations, setInvitations] = useState<InvitationSummary[]>([]);
   const [assessments, setAssessments] = useState<AssessmentSummary[]>([]);
@@ -189,6 +187,9 @@ export default function AdminInvitationsPage() {
   // ---- Delete confirmation ----
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+
+  // ---- Session drawer ----
+  const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
 
   // ---- Timestamp display mode ----
   const [useRelativeTime, setUseRelativeTime] = useState(true);
@@ -606,10 +607,10 @@ export default function AdminInvitationsPage() {
                   className="hover:bg-foreground/[0.04] cursor-pointer transition-colors border-t border-border"
                   onClick={() => {
                     if (inv.sessionId) {
-                      navigate(`/analysis/${inv.sessionId}`);
+                      setSelectedSessionId(inv.sessionId);
                     }
                   }}
-                  title={inv.sessionId ? "View session analysis" : "No session started yet"}
+                  title={inv.sessionId ? "View session details" : "No session started yet"}
                 >
                   <td className="px-3 md:px-4 py-3">
                     <div className="font-medium text-foreground text-sm">
@@ -1011,6 +1012,17 @@ export default function AdminInvitationsPage() {
           assessments={activeAssessments}
           onClose={() => setShowCsvModal(false)}
           onComplete={() => loadInvitations()}
+        />
+      )}
+
+      {/* ================================================================== */}
+      {/* SESSION DRAWER                                                     */}
+      {/* ================================================================== */}
+      {selectedSessionId && (
+        <SessionDrawer
+          sessionId={selectedSessionId}
+          onClose={() => setSelectedSessionId(null)}
+          onDelete={() => { setSelectedSessionId(null); loadInvitations(); }}
         />
       )}
 
