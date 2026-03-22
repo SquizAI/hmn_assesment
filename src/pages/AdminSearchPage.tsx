@@ -113,7 +113,7 @@ export default function AdminSearchPage() {
               <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">Contacts <span className="ml-2 text-muted-foreground font-normal normal-case">({data.contacts.total})</span></h2>
               <div className="space-y-2">
                 {data.contacts.results.map((c) => (
-                  <div key={c.id} className="bg-muted border border-border rounded-xl p-4">
+                  <Link key={c.id} to="/admin/contacts" className="block bg-muted border border-border rounded-xl p-4 hover:bg-foreground/[0.08] transition-all">
                     <div className="flex items-center gap-4">
                       <div className="flex-1 min-w-0">
                         <span className="text-sm font-medium text-foreground">{c.name}</span>
@@ -123,7 +123,7 @@ export default function AdminSearchPage() {
                       <StatusBadge status={c.status} size="sm" />
                       <span className="text-xs text-muted-foreground">{formatDate(c.created_at)}</span>
                     </div>
-                  </div>
+                  </Link>
                 ))}
               </div>
             </div>

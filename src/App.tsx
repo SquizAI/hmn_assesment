@@ -1,4 +1,4 @@
-import { Component, lazy, Suspense } from "react";
+import { lazy, Suspense } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ToastProvider } from "./components/ui/Toast";
 import HomePage from "./pages/HomePage";
@@ -39,29 +39,6 @@ function LazyFallback() {
 }
 
 
-class AdminErrorBoundary extends Component<{ children: React.ReactNode }, { hasError: boolean }> {
-  constructor(props: { children: React.ReactNode }) {
-    super(props);
-    this.state = { hasError: false };
-  }
-  static getDerivedStateFromError() {
-    return { hasError: true };
-  }
-  render() {
-    if (this.state.hasError) {
-      return (
-        <div className="min-h-screen flex items-center justify-center">
-          <div className="text-center space-y-4">
-            <h1 className="text-xl font-semibold text-foreground/90">Something went wrong</h1>
-            <p className="text-muted-foreground text-sm">An error occurred in the admin panel.</p>
-            <a href="/admin/dashboard" className="text-blue-400 hover:text-blue-300 text-sm">Return to Dashboard</a>
-          </div>
-        </div>
-      );
-    }
-    return this.props.children;
-  }
-}
 
 export default function App() {
   return (
@@ -77,7 +54,7 @@ export default function App() {
         <Route path="/resume/:token" element={<Suspense fallback={<LazyFallback />}><ResumePage /></Suspense>} />
         <Route path="/compare" element={<Suspense fallback={<LazyFallback />}><ComparePage /></Suspense>} />
         <Route path="/admin" element={<AdminLoginPage />} />
-        <Route element={<AdminErrorBoundary><AdminLayout /></AdminErrorBoundary>}>
+        <Route element={<AdminLayout />}>
           <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
           <Route path="/admin/sessions" element={<AdminSessionsPage />} />
           <Route path="/admin/invitations" element={<AdminInvitationsPage />} />

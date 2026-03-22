@@ -1,8 +1,47 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, Component } from "react";
 import { Outlet, useNavigate, useLocation, Link } from "react-router-dom";
 import { API_BASE } from "../../lib/api";
 import { fetchSessions, fetchInvitations, fetchCompanies, fetchAssessments } from "../../lib/admin-api";
 import AdminChatDrawer from "./AdminChatDrawer";
+
+/* ── Page-level error boundary — wraps only the content area, NOT the sidebar ── */
+class PageErrorBoundary extends Component<
+  { children: React.ReactNode; resetKey: string },
+  { hasError: boolean }
+> {
+  constructor(props: { children: React.ReactNode; resetKey: string }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+  componentDidUpdate(prevProps: { resetKey: string }) {
+    // Reset error state when the route changes so users can navigate away
+    if (prevProps.resetKey !== this.props.resetKey && this.state.hasError) {
+      this.setState({ hasError: false });
+    }
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="text-center space-y-4">
+            <h1 className="text-xl font-semibold text-foreground/90">Something went wrong</h1>
+            <p className="text-muted-foreground text-sm">An error occurred loading this page.</p>
+            <button
+              onClick={() => this.setState({ hasError: false })}
+              className="text-blue-400 hover:text-blue-300 text-sm"
+            >
+              Try again
+            </button>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 import { ThemeToggle } from "../ui/ThemeToggle";
 
 /* ── SVG icon components ── */
@@ -262,21 +301,22 @@ export default function AdminLayout() {
 
         {/* Content */}
         <main className="flex-1 overflow-y-auto overflow-x-hidden">
-          <Outlet />
+          <PageErrorBoundary resetKey={location.pathname}>
+            <Outlet />
+          </PageErrorBoundary>
         </main>
       </div>
 
-      {/* Floating AI Chat button — hidden on mobile (sidebar has it), visible on desktop */}
+      {/* Floating AI Chat button — hidden on mobile and when drawer is open */}
       <button
         onClick={() => setChatOpen((o) => !o)}
         className={`
-          hidden md:flex fixed bottom-6 right-6 z-30 w-14 h-14 rounded-full
+          ${chatOpen ? "hidden" : "hidden md:flex"} fixed bottom-6 right-6 z-30 w-14 h-14 rounded-full
           bg-gradient-to-br from-blue-600 to-cyan-600
           text-foreground shadow-lg shadow-blue-900/30
           hover:shadow-xl hover:shadow-blue-900/40 hover:scale-105
           active:scale-95 transition-all duration-200
           items-center justify-center
-          ${chatOpen ? "ring-2 ring-blue-400/50 ring-offset-2 ring-offset-[#0a0a12]" : ""}
         `}
         title="AI Assistant"
       >

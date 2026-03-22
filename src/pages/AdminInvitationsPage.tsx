@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import StatusBadge from "../components/admin/StatusBadge";
 import {
   fetchInvitations,
@@ -151,6 +152,8 @@ function StatPill({
 // ---------------------------------------------------------------------------
 
 export default function AdminInvitationsPage() {
+  const navigate = useNavigate();
+
   // ---- Data state ----
   const [invitations, setInvitations] = useState<InvitationSummary[]>([]);
   const [assessments, setAssessments] = useState<AssessmentSummary[]>([]);
@@ -601,6 +604,12 @@ export default function AdminInvitationsPage() {
                 <tr
                   key={inv.id}
                   className="hover:bg-foreground/[0.04] cursor-pointer transition-colors border-t border-border"
+                  onClick={() => {
+                    if (inv.sessionId) {
+                      navigate(`/analysis/${inv.sessionId}`);
+                    }
+                  }}
+                  title={inv.sessionId ? "View session analysis" : "No session started yet"}
                 >
                   <td className="px-3 md:px-4 py-3">
                     <div className="font-medium text-foreground text-sm">
