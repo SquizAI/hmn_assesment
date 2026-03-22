@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef, Component } from "react";
 import { useNavigate } from "react-router-dom";
 import StatCard from "../components/admin/StatCard";
 import { API_BASE } from "../lib/api";
@@ -18,6 +18,30 @@ import DimensionRadar from "../components/admin/DimensionRadar";
 import InsightCards from "../components/admin/InsightCards";
 import RiskSignals from "../components/admin/RiskSignals";
 import FilterBar from "../components/admin/FilterBar";
+
+// ============================================================
+// Graph Error Boundary — prevents WebGL crashes from taking down the whole page
+// ============================================================
+
+class GraphErrorBoundary extends Component<{ children: React.ReactNode }, { hasError: boolean }> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="rounded-xl border border-border bg-card p-8 text-center">
+          <p className="text-muted-foreground text-sm">3D graph visualization unavailable (WebGL required)</p>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 // ============================================================
 // Local Types
@@ -479,7 +503,9 @@ export default function AdminDashboardPage() {
       {/* ============================================ */}
       {/* ROW 3: Interactive Graph Visualization       */}
       {/* ============================================ */}
-      <GraphVisualization nodes={graphNodes} edges={graphEdges} loading={graphLoading} />
+      <GraphErrorBoundary>
+        <GraphVisualization nodes={graphNodes} edges={graphEdges} loading={graphLoading} />
+      </GraphErrorBoundary>
 
       {/* ============================================ */}
       {/* ROW 4: Dimension Radar + Archetypes + Risk   */}
