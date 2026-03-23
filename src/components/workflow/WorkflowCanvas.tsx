@@ -24,6 +24,7 @@ import {
   applyDagreLayout,
   type BuilderPhase,
 } from "../../lib/graph-layout";
+import { Icon } from "../admin/Icons";
 
 // ============================================================
 // Props
@@ -84,7 +85,7 @@ function BuilderStepNode({ data }: NodeProps) {
       <Handle type="source" position={Position.Bottom} id="bottom" className="!bg-blue-500/30 !w-2 !h-2 !border-0" />
 
       <div className="flex items-center gap-2">
-        <span className="text-base">{icon}</span>
+        <span className="text-muted-foreground"><Icon name={icon} size={16} /></span>
         <span className="text-xs font-medium text-foreground/90 truncate">{label}</span>
       </div>
 
@@ -392,7 +393,7 @@ function WorkflowCanvasInner({
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
           <div className="text-center space-y-3 px-8">
             <div className="w-12 h-12 rounded-xl bg-foreground/[0.04] border border-border flex items-center justify-center mx-auto">
-              <span className="text-xl opacity-30">{"\uD83D\uDDFA\uFE0F"}</span>
+              <span className="text-muted-foreground opacity-30"><Icon name="compass" size={24} /></span>
             </div>
             <p className="text-sm text-muted-foreground max-w-xs leading-relaxed">
               Start a conversation to begin building your assessment

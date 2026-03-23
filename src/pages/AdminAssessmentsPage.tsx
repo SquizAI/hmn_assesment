@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import StatusBadge from "../components/admin/StatusBadge";
 import AssessmentDrawer from "../components/admin/AssessmentDrawer";
-import { Icon, PencilIcon, CheckCircleIcon, ArchiveIcon, ClipboardIcon } from "../components/admin/Icons";
+import { Icon, PencilIcon, CheckCircleIcon, ArchiveIcon, ClipboardIcon, AlertTriangleIcon } from "../components/admin/Icons";
 import {
   fetchAssessments,
   updateAssessmentStatus,
@@ -415,7 +415,7 @@ export default function AdminAssessmentsPage() {
   if (error && assessments.length === 0) {
     return (
       <div className="px-4 md:px-6 py-6 flex flex-col items-center justify-center min-h-[500px] gap-4">
-        <div className="text-4xl opacity-30">⚠</div>
+        <div className="text-muted-foreground opacity-30"><AlertTriangleIcon size={36} /></div>
         <p className="text-muted-foreground text-sm">{error}</p>
         <button
           onClick={loadAssessments}

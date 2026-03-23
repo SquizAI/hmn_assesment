@@ -52,11 +52,11 @@ interface DimensionNodeData {
 // ============================================================
 
 const BUILDER_STEPS: { id: BuilderPhase; label: string; icon: string }[] = [
-  { id: "purpose", label: "Purpose & Context", icon: "\uD83C\uDFAF" },
-  { id: "framework", label: "Framework", icon: "\uD83C\uDFD7" },
-  { id: "questions", label: "Question Design", icon: "\uD83D\uDCAC" },
-  { id: "scoring", label: "Scoring & Calibration", icon: "\u2696\uFE0F" },
-  { id: "review", label: "Review & Activate", icon: "\u2705" },
+  { id: "purpose", label: "Purpose & Context", icon: "target" },
+  { id: "framework", label: "Framework", icon: "wrench" },
+  { id: "questions", label: "Question Design", icon: "chat-bubble" },
+  { id: "scoring", label: "Scoring & Calibration", icon: "scale" },
+  { id: "review", label: "Review & Activate", icon: "check-circle" },
 ];
 
 const PHASE_ORDER: BuilderPhase[] = ["purpose", "framework", "questions", "scoring", "review"];
