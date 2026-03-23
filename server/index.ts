@@ -20,7 +20,7 @@ import {
   loadSessionFromDb, saveSessionToDb, deleteSessionFromDb,
   listAllSessions, listSessionsPaginated, listAllAssessments, lookupSessionsByEmail,
   loadInvitationByToken, loadInvitationById, updateInvitationStatus, findInvitationBySessionId,
-  loadAssessment, getProfileStats, getSupabase,
+  loadAssessment, getProfileStats, getSupabase, findSessionByVapiCallId,
 } from "./supabase.js";
 import { isEmailEnabled, sendInvitationEmail, sendBatchInvitationEmails, sendCompletionEmail } from "./email.js";
 import { initGraphSchema, runQuery } from "./neo4j.js";
@@ -4086,11 +4086,8 @@ app.post("/api/vapi/webhook", async (req, res) => {
 
       console.log(`[VAPI Webhook] End-of-call for ${vapiCallId}, duration: ${durationSeconds}s, transcript length: ${transcript.length}`);
 
-      // Find the session linked to this VAPI call
-      const allSessions = await listAllSessions();
-      const session = allSessions.find(
-        (s) => (s as unknown as Record<string, unknown>).vapiCallId === vapiCallId
-      );
+      // Find the session linked to this VAPI call (direct DB lookup by indexed column)
+      const session = vapiCallId ? await findSessionByVapiCallId(vapiCallId) : null;
 
       if (session) {
         // Store transcript and recording on the session

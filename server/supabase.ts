@@ -160,6 +160,37 @@ export async function deleteSessionFromDb(id: string): Promise<boolean> {
   return !error;
 }
 
+export async function findSessionByVapiCallId(vapiCallId: string): Promise<InterviewSession | null> {
+  const { data, error } = await getSupabase()
+    .from("cascade_sessions")
+    .select("*")
+    .eq("vapi_call_id", vapiCallId)
+    .single();
+
+  if (error || !data) return null;
+
+  // Load full session with responses, conversation history, and analysis
+  const { data: responses } = await getSupabase()
+    .from("cascade_responses")
+    .select("*")
+    .eq("session_id", data.id)
+    .order("created_at", { ascending: true });
+
+  const { data: convoHistory } = await getSupabase()
+    .from("cascade_conversation_history")
+    .select("*")
+    .eq("session_id", data.id)
+    .order("created_at", { ascending: true });
+
+  const { data: analysisRow } = await getSupabase()
+    .from("cascade_analyses")
+    .select("*")
+    .eq("session_id", data.id)
+    .single();
+
+  return dbRowToSession(data, responses || [], convoHistory || [], analysisRow);
+}
+
 export async function listAllSessions(): Promise<InterviewSession[]> {
   const { data, error } = await getSupabase()
     .from("cascade_sessions")
@@ -344,6 +375,17 @@ function dbRowToSession(
     session.analysis = dbRowToAnalysis(analysisRow);
   }
 
+  // Restore VAPI call fields
+  const s = session as unknown as Record<string, unknown>;
+  if (row.vapi_call_id) s.vapiCallId = row.vapi_call_id;
+  if (row.call_phone) s.callPhone = row.call_phone;
+  if (row.call_status) s.callStatus = row.call_status;
+  if (row.call_initiated_at) s.callInitiatedAt = row.call_initiated_at;
+  if (row.call_completed_at) s.callCompletedAt = row.call_completed_at;
+  if (row.call_duration) s.callDuration = row.call_duration;
+  if (row.call_recording_url) s.callRecordingUrl = row.call_recording_url;
+  if (row.call_transcript) s.callTranscript = row.call_transcript;
+
   return session;
 }
 
@@ -364,6 +406,15 @@ function sessionToDbRow(s: InterviewSession): Record<string, unknown> {
     research: (s as unknown as Record<string, unknown>).research || null,
     research_confirmed: (s as unknown as Record<string, unknown>).researchConfirmed || false,
     research_corrections: (s as unknown as Record<string, unknown>).researchCorrections || null,
+    // VAPI call fields
+    vapi_call_id: (s as unknown as Record<string, unknown>).vapiCallId || null,
+    call_phone: (s as unknown as Record<string, unknown>).callPhone || null,
+    call_status: (s as unknown as Record<string, unknown>).callStatus || null,
+    call_initiated_at: (s as unknown as Record<string, unknown>).callInitiatedAt || null,
+    call_completed_at: (s as unknown as Record<string, unknown>).callCompletedAt || null,
+    call_duration: (s as unknown as Record<string, unknown>).callDuration || null,
+    call_recording_url: (s as unknown as Record<string, unknown>).callRecordingUrl || null,
+    call_transcript: (s as unknown as Record<string, unknown>).callTranscript || null,
   };
 }
 
