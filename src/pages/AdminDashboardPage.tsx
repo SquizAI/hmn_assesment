@@ -18,6 +18,8 @@ import DimensionRadar from "../components/admin/DimensionRadar";
 import InsightCards from "../components/admin/InsightCards";
 import RiskSignals from "../components/admin/RiskSignals";
 import FilterBar from "../components/admin/FilterBar";
+import CompanyDrawerContent from "../components/admin/CompanyDrawerContent";
+import { useDetailDrawer } from "../components/admin/DetailDrawer";
 
 // ============================================================
 // Graph Error Boundary — prevents WebGL crashes from taking down the whole page
@@ -170,6 +172,7 @@ const FUNNEL_LABELS: Record<string, string> = {
 
 export default function AdminDashboardPage() {
   const navigate = useNavigate();
+  const { openDrawer, closeDrawer } = useDetailDrawer();
 
   // Filters
   const [filters, setFilters] = useState<DashboardFilters>({});
@@ -630,7 +633,7 @@ export default function AdminDashboardPage() {
               {companies.slice(0, 10).map((company, idx) => (
                 <div
                   key={company.company}
-                  onClick={() => navigate(`/admin/companies/${encodeURIComponent(company.company)}`)}
+                  onClick={() => openDrawer(<CompanyDrawerContent companyName={company.company} onClose={closeDrawer} />)}
                   className="flex items-center gap-2 px-2.5 py-2 rounded-xl hover:bg-muted cursor-pointer transition-colors"
                 >
                   {/* Rank */}

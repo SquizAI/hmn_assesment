@@ -1,8 +1,10 @@
 import { useEffect, useState, useCallback, useRef } from "react";
-import { Link, useSearchParams, useNavigate } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { adminSearch } from "../lib/admin-api";
 import StatusBadge from "../components/admin/StatusBadge";
 import { SessionDrawerContent } from "../components/admin/SessionDrawer";
+import ContactDrawerContent from "../components/admin/ContactDrawerContent";
+import CallDrawerContent from "../components/admin/CallDrawerContent";
 import { useDetailDrawer } from "../components/admin/DetailDrawer";
 
 interface SessionResult { id: string; participant_name: string; participant_company: string; participant_email: string | null; status: string; overall_score: number | null; archetype: string | null; created_at: string; }
@@ -116,7 +118,7 @@ export default function AdminSearchPage() {
               <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">Contacts <span className="ml-2 text-muted-foreground font-normal normal-case">({data.contacts.total})</span></h2>
               <div className="space-y-2">
                 {data.contacts.results.map((c) => (
-                  <Link key={c.id} to="/admin/contacts" className="block bg-muted border border-border rounded-xl p-4 hover:bg-foreground/[0.08] transition-all">
+                  <div key={c.id} onClick={() => openDrawer(<ContactDrawerContent contact={{ id: c.id, name: c.name, phone: c.phone, email: c.email, company: c.company, role: null, industry: null, team_size: null, status: c.status, tags: [], created_at: c.created_at }} onClose={closeDrawer} />)} className="block bg-muted border border-border rounded-xl p-4 hover:bg-foreground/[0.08] transition-all cursor-pointer">
                     <div className="flex items-center gap-4">
                       <div className="flex-1 min-w-0">
                         <span className="text-sm font-medium text-foreground">{c.name}</span>
@@ -126,7 +128,7 @@ export default function AdminSearchPage() {
                       <StatusBadge status={c.status} size="sm" />
                       <span className="text-xs text-muted-foreground">{formatDate(c.created_at)}</span>
                     </div>
-                  </Link>
+                  </div>
                 ))}
               </div>
             </div>
@@ -136,7 +138,7 @@ export default function AdminSearchPage() {
               <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">Calls <span className="ml-2 text-muted-foreground font-normal normal-case">({data.calls.total})</span></h2>
               <div className="space-y-2">
                 {data.calls.results.map((call) => (
-                  <Link key={call.id} to="/admin/calls" className="block bg-muted border border-border rounded-xl p-4 hover:bg-foreground/[0.08] transition-all">
+                  <div key={call.id} onClick={() => openDrawer(<CallDrawerContent call={{ id: call.id, contact_id: "", session_id: null, status: call.status, duration_seconds: call.duration_seconds, recording_url: null, transcript: null, transcript_messages: null, analysis_status: "pending", created_at: call.created_at, contact: call.contact_name ? { id: "", name: call.contact_name, phone: "", company: call.contact_company } : null, profile_score: null, profile_archetype: null }} onClose={closeDrawer} />)} className="block bg-muted border border-border rounded-xl p-4 hover:bg-foreground/[0.08] transition-all cursor-pointer">
                     <div className="flex items-center gap-4">
                       <div className="flex-1 min-w-0">
                         <span className="text-sm font-medium text-foreground">{call.contact_name || "Unknown"}</span>
@@ -146,7 +148,7 @@ export default function AdminSearchPage() {
                       <span className="text-xs text-muted-foreground font-mono">{formatDuration(call.duration_seconds)}</span>
                       <span className="text-xs text-muted-foreground">{formatDate(call.created_at)}</span>
                     </div>
-                  </Link>
+                  </div>
                 ))}
               </div>
             </div>

@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import StatusBadge from "./StatusBadge";
 import { SessionDrawerContent } from "./SessionDrawer";
 import { useDetailDrawer } from "./DetailDrawer";
-import { fetchCompanyDetail } from "../../lib/admin-api";
+import { fetchCompanyDetail, removeCompany } from "../../lib/admin-api";
 
 interface SessionSummary {
   id: string;
@@ -70,6 +70,8 @@ export default function CompanyDrawerContent({ companyName, onClose }: Props) {
   const { openDrawer, closeDrawer } = useDetailDrawer();
   const [detail, setDetail] = useState<CompanyDetail | null>(null);
   const [loading, setLoading] = useState(true);
+  const [deleteConfirm, setDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     setLoading(true);
@@ -78,6 +80,22 @@ export default function CompanyDrawerContent({ companyName, onClose }: Props) {
       .catch(() => setDetail(null))
       .finally(() => setLoading(false));
   }, [companyName]);
+
+  const handleDelete = async () => {
+    if (!deleteConfirm) {
+      setDeleteConfirm(true);
+      return;
+    }
+    setDeleting(true);
+    try {
+      await removeCompany(companyName);
+      onClose();
+    } catch {
+      setDeleteConfirm(false);
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   const handleSessionClick = (sessionId: string) => {
     openDrawer(
@@ -220,6 +238,21 @@ export default function CompanyDrawerContent({ companyName, onClose }: Props) {
         >
           View Full Company Detail
         </button>
+
+        {/* Delete Company */}
+        <div className="pt-4 border-t border-border">
+          <button
+            onClick={handleDelete}
+            disabled={deleting}
+            className={`w-full rounded-lg px-4 py-2.5 text-sm font-medium transition-colors disabled:opacity-50 ${
+              deleteConfirm
+                ? "bg-red-600 text-foreground hover:bg-red-700"
+                : "bg-muted text-red-400 border border-red-500/20 hover:bg-red-500/10"
+            }`}
+          >
+            {deleting ? "Deleting..." : deleteConfirm ? "Confirm? (removes all company sessions)" : "Delete Company"}
+          </button>
+        </div>
       </div>
     </div>
   );

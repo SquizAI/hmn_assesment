@@ -228,17 +228,6 @@ export default function AdminAnalyticsPage() {
     }
   };
 
-  // Sorted/filtered dimensions
-  const sortedDimensions = useMemo(() => {
-    if (!data) return [];
-    const dims = [...data.dimension_averages];
-    dims.sort((a, b) => {
-      if (dimSortBy === "score") return dimSortDir === "desc" ? b.average - a.average : a.average - b.average;
-      return dimSortDir === "desc" ? b.label.localeCompare(a.label) : a.label.localeCompare(b.label);
-    });
-    return dims;
-  }, [data, dimSortBy, dimSortDir]);
-
   // Active filter count
   const activeFilterCount = useMemo(() => {
     let c = 0;
@@ -247,6 +236,55 @@ export default function AdminAnalyticsPage() {
     if (scoreRange[0] !== 0 || scoreRange[1] !== 100) c++;
     return c;
   }, [selectedArchetype, selectedIndustry, scoreRange]);
+
+  // Client-side filtered data
+  const filteredData = useMemo(() => {
+    if (!data) return null;
+    if (activeFilterCount === 0) return data;
+
+    let archetypeDist = data.archetype_distribution;
+    let scoreDist = data.score_distribution;
+    let industryBreakdown = data.industry_breakdown;
+
+    if (selectedArchetype) {
+      archetypeDist = archetypeDist.filter((a) => a.archetype === selectedArchetype);
+    }
+    if (selectedIndustry) {
+      industryBreakdown = industryBreakdown.filter((i) => i.industry === selectedIndustry);
+    }
+    if (scoreRange[0] !== 0 || scoreRange[1] !== 100) {
+      scoreDist = scoreDist.filter((item) => {
+        const parts = item.label.split("-");
+        const lo = parseInt(parts[0]);
+        const hi = parseInt(parts[1] || "100");
+        return lo >= scoreRange[0] && hi <= scoreRange[1];
+      });
+    }
+
+    const filteredTotal = archetypeDist.reduce((s, a) => s + a.count, 0);
+
+    return {
+      ...data,
+      archetype_distribution: archetypeDist,
+      score_distribution: scoreDist,
+      industry_breakdown: industryBreakdown,
+      kpi: {
+        ...data.kpi,
+        total_assessments: selectedArchetype ? filteredTotal : data.kpi.total_assessments,
+      },
+    };
+  }, [data, activeFilterCount, selectedArchetype, selectedIndustry, scoreRange]);
+
+  // Sorted/filtered dimensions
+  const sortedDimensions = useMemo(() => {
+    if (!filteredData) return [];
+    const dims = [...filteredData.dimension_averages];
+    dims.sort((a, b) => {
+      if (dimSortBy === "score") return dimSortDir === "desc" ? b.average - a.average : a.average - b.average;
+      return dimSortDir === "desc" ? b.label.localeCompare(a.label) : a.label.localeCompare(b.label);
+    });
+    return dims;
+  }, [filteredData, dimSortBy, dimSortDir]);
 
   const clearFilters = useCallback(() => {
     setSelectedArchetype(null);
@@ -366,7 +404,7 @@ export default function AdminAnalyticsPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <KPICard
                   label="Total Assessments"
-                  value={data.kpi.total_assessments}
+                  value={filteredData!.kpi.total_assessments}
                   sub={`${data.kpi.completed_sessions} of ${data.kpi.total_sessions} completed`}
                 />
                 <KPICard
@@ -391,12 +429,12 @@ export default function AdminAnalyticsPage() {
                 </div>
                 <div className="bg-muted border border-border rounded-2xl p-6">
                   <h3 className="text-base font-semibold text-foreground mb-5">Score Distribution</h3>
-                  {data.score_distribution.length === 0 ? (
+                  {filteredData!.score_distribution.length === 0 ? (
                     <p className="text-sm text-muted-foreground">No data</p>
                   ) : (
                     <div className="flex items-end gap-2 h-32">
-                      {data.score_distribution.map((item, i) => {
-                        const max = Math.max(...data.score_distribution.map((d) => d.count), 1);
+                      {filteredData!.score_distribution.map((item, i) => {
+                        const max = Math.max(...filteredData!.score_distribution.map((d) => d.count), 1);
                         return (
                           <div key={i} className="flex-1 flex flex-col items-center justify-end h-full group relative">
                             <span className="text-xs text-muted-foreground mb-1">{item.count}</span>
@@ -424,12 +462,12 @@ export default function AdminAnalyticsPage() {
                       View details &rarr;
                     </button>
                   </div>
-                  {data.archetype_distribution.length === 0 ? (
+                  {filteredData!.archetype_distribution.length === 0 ? (
                     <p className="text-sm text-muted-foreground">No data</p>
                   ) : (
                     <HBarChart
-                      items={data.archetype_distribution.slice(0, 5).map((d) => ({ label: d.archetype, value: d.count }))}
-                      maxValue={Math.max(...data.archetype_distribution.map((d) => d.count), 1)}
+                      items={filteredData!.archetype_distribution.slice(0, 5).map((d) => ({ label: d.archetype, value: d.count }))}
+                      maxValue={Math.max(...filteredData!.archetype_distribution.map((d) => d.count), 1)}
                     />
                   )}
                 </div>
@@ -519,7 +557,7 @@ export default function AdminAnalyticsPage() {
               <div className="bg-muted border border-border rounded-2xl p-6">
                 <h3 className="text-base font-semibold text-foreground mb-5">Dimension Comparison</h3>
                 <div className="space-y-2">
-                  {[...data.dimension_averages].sort((a, b) => b.average - a.average).map((dim) => (
+                  {[...filteredData!.dimension_averages].sort((a, b) => b.average - a.average).map((dim) => (
                     <div key={dim.dimension} className="flex items-center gap-3">
                       <span className="text-xs text-muted-foreground w-40 truncate shrink-0">{dim.label}</span>
                       <div className="flex-1 h-6 bg-muted rounded-md overflow-hidden relative">
@@ -602,19 +640,19 @@ export default function AdminAnalyticsPage() {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div className="bg-muted border border-border rounded-2xl p-6">
                   <h3 className="text-base font-semibold text-foreground mb-5">Archetype Distribution</h3>
-                  {data.archetype_distribution.length === 0 ? (
+                  {filteredData!.archetype_distribution.length === 0 ? (
                     <p className="text-sm text-muted-foreground">No data</p>
                   ) : (
                     <>
                       <HBarChart
-                        items={data.archetype_distribution.map((d) => ({ label: d.archetype, value: d.count }))}
-                        maxValue={Math.max(...data.archetype_distribution.map((d) => d.count), 1)}
+                        items={filteredData!.archetype_distribution.map((d) => ({ label: d.archetype, value: d.count }))}
+                        maxValue={Math.max(...filteredData!.archetype_distribution.map((d) => d.count), 1)}
                       />
                       {/* Donut-style percentages */}
                       <div className="mt-5 pt-4 border-t border-border">
                         <div className="flex flex-wrap gap-3">
-                          {data.archetype_distribution.map((a) => {
-                            const pct = data.kpi.total_assessments ? Math.round((a.count / data.kpi.total_assessments) * 100) : 0;
+                          {filteredData!.archetype_distribution.map((a) => {
+                            const pct = filteredData!.kpi.total_assessments ? Math.round((a.count / filteredData!.kpi.total_assessments) * 100) : 0;
                             return (
                               <div
                                 key={a.archetype}
@@ -634,12 +672,12 @@ export default function AdminAnalyticsPage() {
                 </div>
                 <div className="bg-muted border border-border rounded-2xl p-6">
                   <h3 className="text-base font-semibold text-foreground mb-5">Score Distribution</h3>
-                  {data.score_distribution.length === 0 ? (
+                  {filteredData!.score_distribution.length === 0 ? (
                     <p className="text-sm text-muted-foreground">No data</p>
                   ) : (
                     <div className="flex items-end gap-3 h-48">
-                      {data.score_distribution.map((item, i) => {
-                        const max = Math.max(...data.score_distribution.map((d) => d.count), 1);
+                      {filteredData!.score_distribution.map((item, i) => {
+                        const max = Math.max(...filteredData!.score_distribution.map((d) => d.count), 1);
                         const isInRange =
                           parseInt(item.label.split("-")[0]) >= scoreRange[0] &&
                           parseInt(item.label.split("-")[1] || "100") <= scoreRange[1];
@@ -794,7 +832,7 @@ export default function AdminAnalyticsPage() {
                 <div className="bg-muted border border-border rounded-2xl p-6">
                   <h3 className="text-base font-semibold text-foreground mb-5">Company Breakdown</h3>
                   <RankedList
-                    items={data.industry_breakdown.slice(0, 15).map((ind) => ({ name: ind.industry, value: ind.count }))}
+                    items={filteredData!.industry_breakdown.slice(0, 15).map((ind) => ({ name: ind.industry, value: ind.count }))}
                   />
                 </div>
               </div>

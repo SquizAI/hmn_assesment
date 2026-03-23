@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, Fragment } from "react";
 import { Link } from "react-router-dom";
 import { fetchCalls as fetchCallsApi } from "../lib/admin-api";
 import StatusBadge from "../components/admin/StatusBadge";
@@ -95,8 +95,8 @@ export default function AdminCallsPage() {
               ) : calls.length === 0 ? (
                 <tr><td colSpan={8} className="px-6 py-8 text-center text-muted-foreground text-sm">No calls found.</td></tr>
               ) : calls.map((call) => (
-                <>
-                  <tr key={call.id} onClick={() => openDrawer(
+                <Fragment key={call.id}>
+                  <tr onClick={() => openDrawer(
                     <CallDrawerContent call={call} onClose={closeDrawer} />
                   )} className="border-b border-border hover:bg-muted cursor-pointer transition-all">
                     <td className="px-6 py-4">
@@ -141,7 +141,7 @@ export default function AdminCallsPage() {
                     <td className="px-6 py-4 text-sm text-muted-foreground">{formatDate(call.created_at)}</td>
                   </tr>
                   {/* Call detail now opens in the push DetailDrawer */}
-                </>
+                </Fragment>
               ))}
             </tbody>
           </table>

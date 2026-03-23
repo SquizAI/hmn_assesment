@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import StatusBadge from "./StatusBadge";
 import { SessionDrawerContent } from "./SessionDrawer";
 import { useDetailDrawer } from "./DetailDrawer";
-import { fetchContactAssessments } from "../../lib/admin-api";
+import { fetchContactAssessments, callContacts } from "../../lib/admin-api";
 
 interface Contact {
   id: string;
@@ -46,6 +46,8 @@ export default function ContactDrawerContent({ contact, onClose }: Props) {
   const { openDrawer, closeDrawer } = useDetailDrawer();
   const [assessments, setAssessments] = useState<Assessment[]>([]);
   const [loading, setLoading] = useState(true);
+  const [calling, setCalling] = useState(false);
+  const [callResult, setCallResult] = useState<{ success: boolean; message: string } | null>(null);
 
   useEffect(() => {
     setLoading(true);
@@ -54,6 +56,23 @@ export default function ContactDrawerContent({ contact, onClose }: Props) {
       .catch(() => setAssessments([]))
       .finally(() => setLoading(false));
   }, [contact.id]);
+
+  const handleCallContact = async () => {
+    setCalling(true);
+    setCallResult(null);
+    try {
+      const res = await callContacts([contact.id]);
+      if (res.results?.[0]?.success) {
+        setCallResult({ success: true, message: "Call initiated successfully" });
+      } else {
+        setCallResult({ success: false, message: res.results?.[0]?.error || "Call failed" });
+      }
+    } catch {
+      setCallResult({ success: false, message: "Failed to initiate call" });
+    } finally {
+      setCalling(false);
+    }
+  };
 
   const handleViewSession = (sessionId: string) => {
     openDrawer(
@@ -129,6 +148,27 @@ export default function ContactDrawerContent({ contact, onClose }: Props) {
           <div className="text-xs text-muted-foreground pt-1">
             Added {formatDate(contact.created_at)}
           </div>
+        </div>
+
+        {/* Call Contact */}
+        <div className="space-y-2">
+          <button
+            onClick={handleCallContact}
+            disabled={calling || !contact.phone}
+            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-300 text-sm font-medium hover:bg-blue-500/20 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            {calling ? (
+              <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" /></svg>
+            ) : (
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>
+            )}
+            Call Contact
+          </button>
+          {callResult && (
+            <p className={`text-xs text-center ${callResult.success ? "text-green-400" : "text-red-400"}`}>
+              {callResult.message}
+            </p>
+          )}
         </div>
 
         {/* Assessment History */}

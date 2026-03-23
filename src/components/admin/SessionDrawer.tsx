@@ -115,6 +115,7 @@ export function SessionDrawerContent({ sessionId, onClose, onDelete }: SessionDr
     callRecordingUrl: string | null;
     hasTranscript: boolean;
   } | null>(null);
+  const [transcriptOpen, setTranscriptOpen] = useState(false);
 
   const loadSession = async () => {
     setLoading(true);
@@ -133,6 +134,7 @@ export function SessionDrawerContent({ sessionId, onClose, onDelete }: SessionDr
     getCallStatus(sessionId).then(setCallStatus).catch(() => {});
     setActiveTab("details");
     setDeleteConfirm(false);
+    setTranscriptOpen(false);
   }, [sessionId]);
 
   const handleDelete = async () => {
@@ -305,10 +307,21 @@ export function SessionDrawerContent({ sessionId, onClose, onDelete }: SessionDr
                         </a>
                       )}
                       {callStatus.hasTranscript && (
-                        <span className="inline-flex items-center gap-1 text-xs text-green-400/70">
-                          <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
-                          Transcript saved
-                        </span>
+                        <div>
+                          <button
+                            onClick={() => setTranscriptOpen((o) => !o)}
+                            className="inline-flex items-center gap-1 text-xs text-green-400/70 hover:text-green-300 transition-colors"
+                          >
+                            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
+                            Transcript saved
+                            <svg className={`w-3 h-3 transition-transform ${transcriptOpen ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
+                          </button>
+                          {transcriptOpen && (session as any).callTranscript && (
+                            <div className="mt-2 max-h-48 overflow-y-auto bg-muted rounded-lg p-3 text-xs text-foreground/80 font-mono whitespace-pre-wrap border border-border">
+                              {(session as any).callTranscript}
+                            </div>
+                          )}
+                        </div>
                       )}
                       <button
                         onClick={() => { setCallStatus(null); setCallPhone(""); }}
@@ -343,7 +356,7 @@ export function SessionDrawerContent({ sessionId, onClose, onDelete }: SessionDr
                       {callError && (
                         <p className="text-red-400 text-xs">{callError}</p>
                       )}
-                      <p className="text-muted-foreground text-xs">Vappy will call and run the full assessment via voice</p>
+                      <p className="text-muted-foreground text-xs">Vapi will call and run the full assessment via voice</p>
                     </div>
                   )}
                 </div>
