@@ -74,7 +74,7 @@ export default function CompanyDrawerContent({ companyName, onClose }: Props) {
   useEffect(() => {
     setLoading(true);
     fetchCompanyDetail(companyName)
-      .then((data) => setDetail(data))
+      .then((data) => setDetail(data?.company ?? data))
       .catch(() => setDetail(null))
       .finally(() => setLoading(false));
   }, [companyName]);
