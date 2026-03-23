@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, type JSX } from "react";
 import type { ToolEvent } from "../../lib/types";
 
 interface Props {

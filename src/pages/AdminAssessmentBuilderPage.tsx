@@ -145,7 +145,7 @@ export default function AdminAssessmentBuilderPage() {
               ...q,
               scoringDimensions: Array.isArray(q.scoringDimensions) ? q.scoringDimensions : [],
               options: Array.isArray(q.options) ? q.options : [],
-              followUps: Array.isArray(q.followUps) ? q.followUps : [],
+              followUpTrigger: q.followUpTrigger ?? undefined,
             }))
           : [];
         setAssessment(a);
