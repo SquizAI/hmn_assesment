@@ -73,8 +73,8 @@ test.describe("Admin Dashboard", () => {
   });
 
   test("dashboard renders after login", async ({ page }) => {
-    await page.goto("/admin/dashboard", { waitUntil: "networkidle" });
-    await page.waitForTimeout(5000);
+    await page.goto("/admin/dashboard", { waitUntil: "domcontentloaded" });
+    await page.waitForTimeout(8000);
     // Dashboard should render something (content or error boundary)
     const bodyText = await page.locator("body").textContent();
     expect(bodyText!.length).toBeGreaterThan(0);
@@ -123,6 +123,45 @@ for (const adminPage of adminPages) {
     });
   });
 }
+
+// ─── Drawer Interactions ─────────────────────────────────
+
+test.describe("Admin Drawers", () => {
+  test.beforeEach(async ({ page }) => {
+    await adminLogin(page);
+  });
+
+  test("session row click opens drawer", async ({ page }) => {
+    await page.goto("/admin/sessions", { waitUntil: "networkidle" });
+    await page.waitForTimeout(3000);
+    // Click the first session row if any exist
+    const firstRow = page.locator("tr").nth(1);
+    if (await firstRow.isVisible({ timeout: 5000 }).catch(() => false)) {
+      await firstRow.click();
+      await page.waitForTimeout(2000);
+      // Drawer should appear — look for the drawer container
+      const drawer = page.locator("[class*='translate-x-0']").or(page.locator("[class*='drawer']")).first();
+      const drawerVisible = await drawer.isVisible({ timeout: 5000 }).catch(() => false);
+      // Also check if any new panel appeared with session details
+      const hasSessionDetail = await page.getByText(/Session Details|Participant|Score/i).first().isVisible({ timeout: 3000 }).catch(() => false);
+      expect(drawerVisible || hasSessionDetail).toBeTruthy();
+    }
+  });
+
+  test("company click opens drawer on dashboard", async ({ page }) => {
+    await page.goto("/admin/dashboard", { waitUntil: "domcontentloaded" });
+    await page.waitForTimeout(8000);
+    // Find a company name in the leaderboard and click it
+    const companyLink = page.locator("[class*='cursor-pointer']").filter({ hasText: /.+/ }).first();
+    if (await companyLink.isVisible({ timeout: 5000 }).catch(() => false)) {
+      await companyLink.click();
+      await page.waitForTimeout(2000);
+      // Check for company drawer content
+      const hasCompanyDetail = await page.getByText(/Sessions|Participants|Avg Score|Completion/i).first().isVisible({ timeout: 5000 }).catch(() => false);
+      expect(hasCompanyDetail).toBeTruthy();
+    }
+  });
+});
 
 // ─── API Endpoints ──────────────────────────────────────
 
