@@ -748,17 +748,15 @@ export default function AdminInvitationsPage() {
                       >
                         {copiedId === inv.id ? "Copied!" : "Copy"}
                       </button>
-                      {inv.status !== "sent" && (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleResend(inv);
-                          }}
-                          className="px-2.5 py-1 text-xs rounded-lg border transition-colors bg-sky-500/10 border-sky-500/25 text-sky-400 hover:bg-sky-500/20"
-                        >
-                          Resend
-                        </button>
-                      )}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleResend(inv);
+                        }}
+                        className="px-2.5 py-1 text-xs rounded-lg border transition-colors bg-sky-500/10 border-sky-500/25 text-sky-400 hover:bg-sky-500/20"
+                      >
+                        Resend
+                      </button>
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
