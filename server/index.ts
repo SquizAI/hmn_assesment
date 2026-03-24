@@ -2315,16 +2315,21 @@ Return ONLY valid JSON with: overallReadinessScore, dimensionScores, archetype, 
 
   const response = await client.messages.create({
     model: MODEL,
-    max_tokens: 4000,
+    max_tokens: 8000,
     system: systemPrompt,
     messages: [{ role: "user", content: `Analyze:\n\n${allResponses}` }],
   });
 
   const text = response.content[0].type === "text" ? response.content[0].text : "{}";
   try {
-    const cleaned = text.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
-    return JSON.parse(cleaned);
-  } catch {
+    // Strip markdown fences, then extract the outermost JSON object
+    const stripped = text.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
+    const start = stripped.indexOf("{");
+    const end = stripped.lastIndexOf("}");
+    const jsonStr = start !== -1 && end !== -1 ? stripped.slice(start, end + 1) : stripped;
+    return JSON.parse(jsonStr);
+  } catch (parseErr) {
+    console.error("[cascade] JSON parse failed, raw length:", text.length, String(parseErr).slice(0, 200));
     return {
       overallReadinessScore: 50, dimensionScores: [],
       archetype: "the_explorer", archetypeConfidence: 0.3,
