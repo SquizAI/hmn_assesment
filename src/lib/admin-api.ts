@@ -325,6 +325,15 @@ export async function triggerResearch(sessionId: string) {
   return res.json();
 }
 
+export async function analyzeSession(sessionId: string) {
+  const res = await fetch("/api/interview/analyze", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ sessionId }),
+  });
+  return res.json();
+}
+
 export async function createPreviewSession(assessmentId: string): Promise<{ session: { id: string } }> {
   const res = await adminFetch("/api/sessions/preview", {
     method: "POST",

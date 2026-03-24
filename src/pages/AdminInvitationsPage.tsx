@@ -186,9 +186,14 @@ export default function AdminInvitationsPage() {
   // ---- Copy link feedback ----
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
-  // ---- Delete confirmation ----
+  // ---- Delete confirmation (modal) ----
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+
+  // ---- Shift+delete state ----
+  const [shiftHeld, setShiftHeld] = useState(false);
+  const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set());
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
   // ---- Detail drawer ----
   const { openDrawer, closeDrawer } = useDetailDrawer();
@@ -234,6 +239,21 @@ export default function AdminInvitationsPage() {
     const timer = setTimeout(() => setToast(null), 3000);
     return () => clearTimeout(timer);
   }, [toast]);
+
+  // ---- Shift key tracking ----
+  useEffect(() => {
+    const down = (e: KeyboardEvent) => { if (e.key === "Shift") setShiftHeld(true); };
+    const up = (e: KeyboardEvent) => { if (e.key === "Shift") { setShiftHeld(false); setPendingDeleteId(null); } };
+    const blur = () => { setShiftHeld(false); setPendingDeleteId(null); };
+    window.addEventListener("keydown", down);
+    window.addEventListener("keyup", up);
+    window.addEventListener("blur", blur);
+    return () => {
+      window.removeEventListener("keydown", down);
+      window.removeEventListener("keyup", up);
+      window.removeEventListener("blur", blur);
+    };
+  }, []);
 
   // ---- Computed: counts per status ----
   const counts = useMemo(() => {
@@ -348,6 +368,32 @@ export default function AdminInvitationsPage() {
       }
     },
     [loadInvitations]
+  );
+
+  const handleShiftDelete = useCallback(
+    async (id: string) => {
+      if (pendingDeleteId !== id) {
+        setPendingDeleteId(id);
+        setTimeout(() => setPendingDeleteId((prev) => (prev === id ? null : prev)), 3000);
+        return;
+      }
+      setPendingDeleteId(null);
+      setDeletingIds((prev) => new Set(prev).add(id));
+      try {
+        await removeInvitation(id);
+        setInvitations((prev) => prev.filter((inv) => inv.id !== id));
+        setToast("Invitation deleted");
+      } catch {
+        setToast("Failed to delete invitation");
+      } finally {
+        setDeletingIds((prev) => {
+          const next = new Set(prev);
+          next.delete(id);
+          return next;
+        });
+      }
+    },
+    [pendingDeleteId]
   );
 
   const handleCreateSubmit = useCallback(
@@ -564,6 +610,12 @@ export default function AdminInvitationsPage() {
       {/* ================================================================== */}
       {/* INVITATIONS TABLE                                                  */}
       {/* ================================================================== */}
+      {shiftHeld && (
+        <div className="mb-3 text-xs text-red-400/60 flex items-center gap-1.5">
+          <span className="inline-block w-1.5 h-1.5 rounded-full bg-red-400/60" />
+          Delete mode — click Delete once to stage, again to confirm
+        </div>
+      )}
       <div className="bg-muted rounded-2xl border border-border overflow-x-auto">
         <table className="w-full min-w-0">
           <thead>
@@ -591,12 +643,17 @@ export default function AdminInvitationsPage() {
               <th className="text-left text-xs text-muted-foreground uppercase tracking-wider px-3 md:px-4 py-3">
                 Actions
               </th>
+              {shiftHeld && (
+                <th className="text-left text-xs text-red-400/50 uppercase tracking-wider px-3 md:px-4 py-3 w-[90px]">
+                  Delete
+                </th>
+              )}
             </tr>
           </thead>
           <tbody>
             {filtered.length === 0 ? (
               <tr>
-                <td colSpan={3} className="text-center text-muted-foreground py-12">
+                <td colSpan={shiftHeld ? 7 : 6} className="text-center text-muted-foreground py-12">
                   {invitations.length === 0
                     ? "No invitations yet \u2014 create one to get started."
                     : "No invitations match your filters."}
@@ -713,6 +770,21 @@ export default function AdminInvitationsPage() {
                       </button>
                     </div>
                   </td>
+                  {shiftHeld && (
+                    <td className="px-3 md:px-4 py-3" onClick={(e) => e.stopPropagation()}>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleShiftDelete(inv.id); }}
+                        disabled={deletingIds.has(inv.id)}
+                        className={`px-2.5 py-1 text-xs rounded-lg border transition-all disabled:opacity-40 ${
+                          pendingDeleteId === inv.id
+                            ? "bg-red-500/30 border-red-500/50 text-red-200 scale-105"
+                            : "bg-red-500/10 border-red-500/30 text-red-400 hover:bg-red-500/20 hover:text-red-300"
+                        }`}
+                      >
+                        {deletingIds.has(inv.id) ? "..." : pendingDeleteId === inv.id ? "Confirm?" : "Delete"}
+                      </button>
+                    </td>
+                  )}
                 </tr>
               ))
             )}

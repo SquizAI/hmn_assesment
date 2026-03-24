@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import StatusBadge from "./StatusBadge";
 import ResearchCard from "./ResearchCard";
 import AdaptabilitySessionView from "./AdaptabilitySessionView";
-import { fetchSession, removeSession, triggerResearch, initiateCall, getCallStatus } from "../../lib/admin-api";
+import { fetchSession, removeSession, triggerResearch, initiateCall, getCallStatus, analyzeSession } from "../../lib/admin-api";
 import type { ResearchData, AdaptabilityAnalysis } from "../../lib/types";
 
 interface Participant {
@@ -38,9 +38,16 @@ interface Analysis {
   overallReadinessScore: number;
   archetype: string;
   archetypeDescription: string;
+  archetypeConfidence?: number;
   dimensionScores: DimensionScore[];
   redFlags: RedFlag[];
   greenLights: GreenLight[];
+  gaps?: string[];
+  executiveSummary?: string;
+  detailedNarrative?: string;
+  serviceRecommendations?: string[];
+  prioritizedActions?: string[];
+  contradictions?: string[];
 }
 
 interface InterviewSession {
@@ -104,6 +111,7 @@ export function SessionDrawerContent({ sessionId, onClose, onDelete }: SessionDr
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [activeTab, setActiveTab] = useState<TabId>("details");
   const [researchLoading, setResearchLoading] = useState(false);
+  const [analysisLoading, setAnalysisLoading] = useState(false);
   const [callPhone, setCallPhone] = useState("");
   const [callLoading, setCallLoading] = useState(false);
   const [callError, setCallError] = useState<string | null>(null);
@@ -163,6 +171,18 @@ export function SessionDrawerContent({ sessionId, onClose, onDelete }: SessionDr
     }
   };
 
+  const handleAnalyze = async () => {
+    setAnalysisLoading(true);
+    try {
+      await analyzeSession(sessionId);
+      await loadSession();
+    } catch {
+      // failed
+    } finally {
+      setAnalysisLoading(false);
+    }
+  };
+
   const handleInitiateCall = async () => {
     if (!callPhone.trim()) { setCallError("Enter a phone number"); return; }
     setCallLoading(true);
@@ -217,6 +237,9 @@ export function SessionDrawerContent({ sessionId, onClose, onDelete }: SessionDr
               {tab.label}
               {tab.id === "research" && session.research && (
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 absolute top-2 -right-0.5" />
+              )}
+              {tab.id === "analysis" && (session.analysis || session.adaptabilityAnalysis) && (
+                <span className="w-1.5 h-1.5 rounded-full bg-blue-400 absolute top-2 -right-0.5" />
               )}
               {activeTab === tab.id && (
                 <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500 rounded-t" />
@@ -383,6 +406,23 @@ export function SessionDrawerContent({ sessionId, onClose, onDelete }: SessionDr
                 {session.assessmentTypeId === "adaptability-index" ? (
                   session.adaptabilityAnalysis ? (
                     <AdaptabilitySessionView analysis={session.adaptabilityAnalysis} />
+                  ) : session.responses.length >= 5 ? (
+                    <div className="text-center py-12 space-y-4">
+                      <p className="text-muted-foreground">No adaptability analysis yet</p>
+                      <button
+                        onClick={handleAnalyze}
+                        disabled={analysisLoading}
+                        className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white transition-colors disabled:opacity-40"
+                      >
+                        {analysisLoading && (
+                          <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                          </svg>
+                        )}
+                        {analysisLoading ? "Analyzing..." : "Analyze Now"}
+                      </button>
+                    </div>
                   ) : (
                     <div className="text-center py-12 text-muted-foreground">
                       <p>No adaptability analysis available yet</p>
@@ -391,49 +431,78 @@ export function SessionDrawerContent({ sessionId, onClose, onDelete }: SessionDr
                   )
                 ) : session.analysis ? (
                   <div className="space-y-4">
-                    {/* Overall Score */}
+                    {/* Overall Score + Archetype */}
                     <div className="bg-muted rounded-xl p-4 flex items-center gap-4">
                       <div
-                        className={`text-4xl font-bold ${scoreColor(
+                        className={`text-4xl font-bold tabular-nums ${scoreColor(
                           session.analysis.overallReadinessScore
                         )}`}
                       >
                         {session.analysis.overallReadinessScore}
                       </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground">Overall Readiness Score</p>
-                        <p className="text-foreground font-medium">
+                      <div className="min-w-0">
+                        <p className="text-xs text-muted-foreground uppercase tracking-wider">Overall Readiness</p>
+                        <p className="text-foreground font-semibold truncate">
                           {session.analysis.archetype}
                         </p>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {session.analysis.archetypeDescription}
-                        </p>
+                        {session.analysis.archetypeDescription && (
+                          <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                            {session.analysis.archetypeDescription}
+                          </p>
+                        )}
                       </div>
                     </div>
 
+                    {/* Executive Summary */}
+                    {session.analysis.executiveSummary && (
+                      <div className="bg-muted rounded-xl p-4 space-y-2">
+                        <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Executive Summary</p>
+                        <p className="text-sm text-foreground/80 leading-relaxed whitespace-pre-wrap">
+                          {session.analysis.executiveSummary}
+                        </p>
+                      </div>
+                    )}
+
                     {/* Dimension Scores */}
-                    <div className="bg-muted rounded-xl p-4 space-y-3">
-                      <p className="text-sm text-muted-foreground font-medium">Dimension Scores</p>
-                      {session.analysis.dimensionScores.map((ds) => (
-                        <div key={ds.dimension}>
-                          <div className="flex justify-between text-xs mb-1">
-                            <span className="text-muted-foreground">{ds.dimension}</span>
-                            <span className="text-muted-foreground">{ds.score}</span>
+                    {session.analysis.dimensionScores.length > 0 && (
+                      <div className="bg-muted rounded-xl p-4 space-y-3">
+                        <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Dimension Scores</p>
+                        {session.analysis.dimensionScores.map((ds) => (
+                          <div key={ds.dimension}>
+                            <div className="flex justify-between text-xs mb-1">
+                              <span className="text-muted-foreground">{ds.dimension}</span>
+                              <span className={scoreColor(ds.score)}>{ds.score}</span>
+                            </div>
+                            <div className="w-full h-1.5 bg-foreground/10 rounded-full overflow-hidden">
+                              <div
+                                className={`h-full rounded-full transition-all ${scoreBarColor(ds.score)}`}
+                                style={{ width: `${ds.score}%` }}
+                              />
+                            </div>
                           </div>
-                          <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
-                            <div
-                              className={`h-full rounded-full transition-all ${scoreBarColor(ds.score)}`}
-                              style={{ width: `${ds.score}%` }}
-                            />
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Gaps */}
+                    {session.analysis.gaps && session.analysis.gaps.length > 0 && (
+                      <div className="space-y-2">
+                        <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Gaps</p>
+                        {session.analysis.gaps.map((gap, i) => (
+                          <div
+                            key={i}
+                            className="bg-amber-500/10 border border-amber-500/20 rounded-lg px-3 py-2 text-sm text-amber-300"
+                          >
+                            {typeof gap === "string" ? gap : (gap as any).description ?? JSON.stringify(gap)}
                           </div>
-                        </div>
-                      ))}
-                    </div>
+                        ))}
+                      </div>
+                    )}
 
                     {/* Red Flags */}
                     {session.analysis.redFlags.length > 0 && (
                       <div className="space-y-2">
-                        <p className="text-sm text-muted-foreground font-medium">Red Flags</p>
+                        <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Red Flags</p>
                         {session.analysis.redFlags.map((flag, i) => (
                           <div
                             key={i}
@@ -448,7 +517,7 @@ export function SessionDrawerContent({ sessionId, onClose, onDelete }: SessionDr
                     {/* Green Lights */}
                     {session.analysis.greenLights.length > 0 && (
                       <div className="space-y-2">
-                        <p className="text-sm text-muted-foreground font-medium">Green Lights</p>
+                        <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Green Lights</p>
                         {session.analysis.greenLights.map((light, i) => (
                           <div
                             key={i}
@@ -459,6 +528,57 @@ export function SessionDrawerContent({ sessionId, onClose, onDelete }: SessionDr
                         ))}
                       </div>
                     )}
+
+                    {/* Service Recommendations */}
+                    {session.analysis.serviceRecommendations && session.analysis.serviceRecommendations.length > 0 && (
+                      <div className="space-y-2">
+                        <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Service Recommendations</p>
+                        {session.analysis.serviceRecommendations.map((rec, i) => (
+                          <div
+                            key={i}
+                            className="bg-blue-500/10 border border-blue-500/20 rounded-lg px-3 py-2 text-sm text-blue-300"
+                          >
+                            {typeof rec === "string" ? rec : (rec as any).description ?? JSON.stringify(rec)}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Prioritized Actions */}
+                    {session.analysis.prioritizedActions && session.analysis.prioritizedActions.length > 0 && (
+                      <div className="space-y-2">
+                        <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Prioritized Actions</p>
+                        <div className="bg-muted rounded-xl p-4 space-y-2">
+                          {session.analysis.prioritizedActions.map((action, i) => (
+                            <div key={i} className="flex items-start gap-3">
+                              <span className="shrink-0 w-5 h-5 rounded-full bg-foreground/10 text-xs text-muted-foreground flex items-center justify-center font-medium">
+                                {i + 1}
+                              </span>
+                              <p className="text-sm text-foreground/80 leading-relaxed">
+                                {typeof action === "string" ? action : (action as any).description ?? JSON.stringify(action)}
+                              </p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : session.responses.length >= 5 ? (
+                  <div className="text-center py-12 space-y-4">
+                    <p className="text-muted-foreground">No analysis yet</p>
+                    <button
+                      onClick={handleAnalyze}
+                      disabled={analysisLoading}
+                      className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white transition-colors disabled:opacity-40"
+                    >
+                      {analysisLoading && (
+                        <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                        </svg>
+                      )}
+                      {analysisLoading ? "Analyzing..." : "Analyze Now"}
+                    </button>
                   </div>
                 ) : (
                   <div className="text-center py-12 text-muted-foreground">
