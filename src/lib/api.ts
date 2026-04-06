@@ -87,12 +87,24 @@ export async function skipQuestion(sessionId: string, questionId: string) {
 }
 
 export async function analyzeSession(sessionId: string) {
-  const res = await publicFetch("/api/interview/analyze", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ sessionId }),
-  });
-  return res.json();
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 180000); // 3 minute timeout for analysis
+  try {
+    const res = await publicFetch("/api/interview/analyze", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ sessionId }),
+      signal: controller.signal,
+    });
+    return res.json();
+  } catch (err) {
+    if ((err as Error).name === "AbortError") {
+      throw new Error("Analysis is taking longer than expected. Please try again.");
+    }
+    throw err;
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 // --- Research API ---

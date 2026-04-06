@@ -49,10 +49,12 @@ export default function InterviewPage() {
   // Dynamic assessment metadata (populated from server for non-default assessments)
   const [assessmentMeta, setAssessmentMeta] = useState<AssessmentMeta | null>(null);
 
-  // Scroll to top when a new question loads
+  // Scroll to top when a new question loads (slight delay to let new content render first)
   useEffect(() => {
     if (currentQuestion) {
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      requestAnimationFrame(() => {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      });
     }
   }, [currentQuestion?.id]);
 
@@ -288,13 +290,19 @@ export default function InterviewPage() {
     finally { setIsSubmitting(false); }
   };
 
+  const [analysisError, setAnalysisError] = useState<string | null>(null);
+
   const handleAnalyze = async () => {
     setIsAnalyzing(true);
+    setAnalysisError(null);
     try {
       await analyzeSession(sessionId!);
       navigate(`/analysis/${sessionId}`);
-    } catch { setError("Analysis failed."); }
-    finally { setIsAnalyzing(false); }
+    } catch (err) {
+      setAnalysisError((err as Error).message || "Analysis failed. Please try again.");
+    } finally {
+      setIsAnalyzing(false);
+    }
   };
 
   if (isStarting) return (
@@ -336,7 +344,10 @@ export default function InterviewPage() {
                 <p className="text-muted-foreground">Ready to generate your personalized AI readiness analysis.</p>
               </div>
               <div className="space-y-3">
-                <Button onClick={handleAnalyze} loading={isAnalyzing} size="lg">{isAnalyzing ? "Analyzing..." : "Generate My Analysis"}</Button>
+                <Button onClick={handleAnalyze} loading={isAnalyzing} size="lg">{isAnalyzing ? "Analyzing — this may take a minute..." : "Generate My Analysis"}</Button>
+                {analysisError && (
+                  <p className="text-red-400 text-sm text-center">{analysisError}</p>
+                )}
                 <button onClick={handleBackFromComplete} className="flex items-center gap-1.5 mx-auto text-sm text-muted-foreground hover:text-muted-foreground transition-colors">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
                   Back to review answers
@@ -469,7 +480,7 @@ export default function InterviewPage() {
         </div>
       )}
 
-      <main className="flex-1 px-6 pt-6 pb-12">
+      <main className="flex-1 px-6 pt-6 pb-12 min-h-[60vh]">
         {editingQuestion ? (
           <QuestionCard
             key={`edit-${editingQuestion.question.id}`}

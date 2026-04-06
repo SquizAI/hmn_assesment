@@ -48,6 +48,7 @@ export default function QuestionCard({ question, sessionId, onSubmit, onConversa
   const [callStatus, setCallStatus] = useState<"idle" | "calling" | "completed">("idle");
   const [callError, setCallError] = useState<string | null>(null);
   const [conversationError, setConversationError] = useState<string | null>(null);
+  const [conversationComplete, setConversationComplete] = useState(false);
   const lastMessageRef = useRef<string | null>(null);
   const suppressTranscriptionRef = useRef(false);
   const stopRecordingRef = useRef<(() => void) | null>(null);
@@ -69,6 +70,7 @@ export default function QuestionCard({ question, sessionId, onSubmit, onConversa
     // Restore previous conversation if navigating back to an AI conversation question
     setConversationHistory(initialConversationHistory || []);
     setIsAiThinking(false);
+    setConversationComplete(false);
 
     if (initialAnswer !== undefined) {
       // Pre-fill from previous answer for editing
@@ -85,7 +87,13 @@ export default function QuestionCard({ question, sessionId, onSubmit, onConversa
       }
     } else {
       setTextValue("");
-      setSliderValue(null);
+      // Auto-select slider midpoint so "Continue" is immediately clickable
+      if (question.inputType === "slider") {
+        const mid = Math.floor(((question.sliderMin ?? 0) + (question.sliderMax ?? 10)) / 2);
+        setSliderValue(mid);
+      } else {
+        setSliderValue(null);
+      }
       setButtonValue(null);
     }
   }, [question.id, initialAnswer, initialConversationHistory]);
@@ -187,14 +195,18 @@ export default function QuestionCard({ question, sessionId, onSubmit, onConversa
               if (!event.isComplete) {
                 // Still in conversation — update with server's history
                 setConversationHistory(event.conversationHistory);
-              } else if (event.responseType === "complete" && onConversationComplete) {
-                onConversationComplete(event);
-              } else if (event.responseType === "next_question" && onConversationComplete) {
-                onConversationComplete({ type: "next_question", ...event });
-              } else if (onConversationComplete) {
-                onConversationComplete(event);
               } else {
-                onSubmit(text, event.conversationHistory);
+                // Conversation complete — hide input immediately
+                setConversationComplete(true);
+                if (event.responseType === "complete" && onConversationComplete) {
+                  onConversationComplete(event);
+                } else if (event.responseType === "next_question" && onConversationComplete) {
+                  onConversationComplete({ type: "next_question", ...event });
+                } else if (onConversationComplete) {
+                  onConversationComplete(event);
+                } else {
+                  onSubmit(text, event.conversationHistory);
+                }
               }
             } else if (event.type === "error") {
               setConversationError(event.message);
@@ -382,6 +394,9 @@ export default function QuestionCard({ question, sessionId, onSubmit, onConversa
                   Return to current question
                 </button>
               </div>
+            ) : conversationComplete && question.inputType === "ai_conversation" ? (
+              /* Hide input after conversation completes — next question will load momentarily */
+              null
             ) : (
               <>
                 {/* Editable textarea — type directly or review voice transcription */}

@@ -996,9 +996,7 @@ app.post("/api/interview/conversation-stream", async (req, res) => {
     history.push({ role: "user", content: String(answer), timestamp: new Date().toISOString(), questionId });
 
     const userTurns = history.filter((m: { role: string }) => m.role === "user").length;
-    // Use shorter turn limits for surveys/short assessments
-    const estimatedMinutes = (assessment as Record<string, unknown>)?.estimatedMinutes as number | undefined;
-    const MAX_CONVERSATION_TURNS = estimatedMinutes && estimatedMinutes <= 15 ? 3 : 5;
+    const MAX_CONVERSATION_TURNS = 3;
 
     // Set up SSE headers
     res.setHeader("Content-Type", "text/event-stream");
@@ -1023,7 +1021,7 @@ app.post("/api/interview/conversation-stream", async (req, res) => {
     const isFarewellComplete = !isExplicitComplete && farewellPatterns.test(aiResponse) && userTurns >= 2;
     const isComplete = isExplicitComplete || isFarewellComplete;
 
-    const cleanResponse = aiResponse.replace("[QUESTION_COMPLETE]", "").replace(/\*\*\[.*?\]\*\*\s*/g, "").trim();
+    const cleanResponse = aiResponse.replace(/\[QUESTION_COMPLETE\]/g, "").replace(/\*\*\[.*?\]\*\*\s*/g, "").trim();
 
     if (!isComplete) {
       history.push({ role: "assistant", content: cleanResponse, timestamp: new Date().toISOString(), questionId });
@@ -1199,8 +1197,7 @@ app.post("/api/interview/respond", async (req, res) => {
 
       // Count user turns — force completion after max turns to prevent infinite loops
       const userTurns = history.filter((m: { role: string }) => m.role === "user").length;
-      const estimatedMinutesRespond = (assessment as Record<string, unknown>)?.estimatedMinutes as number | undefined;
-      const MAX_CONVERSATION_TURNS = estimatedMinutesRespond && estimatedMinutesRespond <= 15 ? 3 : 5;
+      const MAX_CONVERSATION_TURNS = 3;
 
       let aiResponse: string;
       if (userTurns >= MAX_CONVERSATION_TURNS) {
@@ -1220,7 +1217,7 @@ app.post("/api/interview/respond", async (req, res) => {
       }
       // Strip [QUESTION_COMPLETE] marker and internal annotations like **[capturing: ...]** or **[RED FLAG: ...]**
       const cleanResponse = aiResponse
-        .replace("[QUESTION_COMPLETE]", "")
+        .replace(/\[QUESTION_COMPLETE\]/g, "")
         .replace(/\*\*\[.*?\]\*\*\s*/g, "")
         .trim();
 
@@ -1972,21 +1969,24 @@ async function streamFollowUp(
   const assessmentInterviewPrompt = assessment?.interviewSystemPrompt as string | undefined;
   const defaultInterviewRole = `YOUR ROLE:
 - Warm, professional, genuinely curious
-- Ask ONE follow-up at a time
+- Ask exactly ONE follow-up question per response. NEVER ask multiple questions, sub-questions, or compound questions. One question mark per response, maximum.
 - Dig deeper based on what they actually said
 - Reference specific things you know about them/their company when relevant
-- Keep responses concise (2-3 sentences before your follow-up)
+- Keep responses concise (2-3 sentences of acknowledgment, then your single follow-up question)
 - When this topic feels complete (usually 2-3 exchanges), say: [QUESTION_COMPLETE]
 - Never break character. You are a human interviewer.
 - Do NOT include internal annotations, bracketed notes, or markdown formatting.
 - IMPORTANT: Stay on the current topic ONLY. Do NOT ask about other survey topics, do NOT ask numeric rating/scale questions, and do NOT introduce new questions — those are handled by other parts of the assessment.
-- Do NOT repeat or rephrase questions that appear in PRIOR RESPONSES below.`;
+- Do NOT repeat or rephrase questions that appear in PRIOR RESPONSES below.
+- When referencing AI tools, use specific names: ChatGPT, Claude, Gemini, Copilot, or other AI tools.
+- Use professional, neutral language. Avoid colloquialisms like "dumped on", "tall poppy", "drinking the Kool-Aid", or culturally specific idioms that may not translate well.
+- Do NOT lead the participant toward a particular answer. Ask open, neutral questions like "If so, why do you think that is?" rather than suggesting reasons.`;
 
   // Build turn-aware completion guidance
   const turns = userTurns ?? conversationHistory.filter((m) => m.role === "user").length;
   let completionUrgency = "";
   if (turns >= 2) {
-    completionUrgency = `\n\nCRITICAL: This is user turn ${turns}. You MUST wrap up this question NOW. Acknowledge their response briefly (1 sentence max), then end your response with the exact marker [QUESTION_COMPLETE]. Do NOT ask another follow-up question. Do NOT introduce new topics. Do NOT ask for ratings or scales.`;
+    completionUrgency = `\n\nCRITICAL: This is user turn ${turns} of max 3. You MUST wrap up this question NOW. Acknowledge their response briefly (1 sentence max), then end your response with the exact marker [QUESTION_COMPLETE] on its own line. Do NOT ask another follow-up question. Do NOT introduce new topics. Do NOT ask for ratings or scales. Your response must end with [QUESTION_COMPLETE].`;
   }
 
   const systemPrompt = `${assessmentInterviewPrompt || `You are an expert interviewer for HMN (Human Machine Network), conducting an AI readiness assessment.`}
@@ -2106,21 +2106,24 @@ async function generateFollowUp(
 
   const defaultInterviewRole = `YOUR ROLE:
 - Warm, professional, genuinely curious
-- Ask ONE follow-up at a time
+- Ask exactly ONE follow-up question per response. NEVER ask multiple questions, sub-questions, or compound questions. One question mark per response, maximum.
 - Dig deeper based on what they actually said
 - Reference specific things you know about them/their company when relevant
-- Keep responses concise (2-3 sentences before your follow-up)
+- Keep responses concise (2-3 sentences of acknowledgment, then your single follow-up question)
 - When this topic feels complete (usually 2-3 exchanges), say: [QUESTION_COMPLETE]
 - Never break character. You are a human interviewer.
 - Do NOT include internal annotations, bracketed notes, or markdown formatting.
 - IMPORTANT: Stay on the current topic ONLY. Do NOT ask about other survey topics, do NOT ask numeric rating/scale questions, and do NOT introduce new questions — those are handled by other parts of the assessment.
-- Do NOT repeat or rephrase questions that appear in PRIOR RESPONSES below.`;
+- Do NOT repeat or rephrase questions that appear in PRIOR RESPONSES below.
+- When referencing AI tools, use specific names: ChatGPT, Claude, Gemini, Copilot, or other AI tools.
+- Use professional, neutral language. Avoid colloquialisms like "dumped on", "tall poppy", "drinking the Kool-Aid", or culturally specific idioms that may not translate well.
+- Do NOT lead the participant toward a particular answer. Ask open, neutral questions like "If so, why do you think that is?" rather than suggesting reasons.`;
 
   // Build turn-aware completion guidance
   const turns = userTurns ?? conversationHistory.filter((m) => m.role === "user").length;
   let completionUrgency = "";
   if (turns >= 2) {
-    completionUrgency = `\n\nCRITICAL: This is user turn ${turns}. You MUST wrap up this question NOW. Acknowledge their response briefly (1 sentence max), then end your response with the exact marker [QUESTION_COMPLETE]. Do NOT ask another follow-up question. Do NOT introduce new topics. Do NOT ask for ratings or scales.`;
+    completionUrgency = `\n\nCRITICAL: This is user turn ${turns} of max 3. You MUST wrap up this question NOW. Acknowledge their response briefly (1 sentence max), then end your response with the exact marker [QUESTION_COMPLETE] on its own line. Do NOT ask another follow-up question. Do NOT introduce new topics. Do NOT ask for ratings or scales. Your response must end with [QUESTION_COMPLETE].`;
   }
 
   const systemPrompt = `${assessmentInterviewPrompt || `You are an expert interviewer for HMN (Human Machine Network), conducting an AI readiness assessment.`}
@@ -2318,7 +2321,7 @@ Return ONLY valid JSON with: overallReadinessScore, dimensionScores, archetype, 
     max_tokens: 8000,
     system: systemPrompt,
     messages: [{ role: "user", content: `Analyze:\n\n${allResponses}` }],
-  });
+  }, { timeout: 120000 }); // 2 minute timeout for analysis
 
   const text = response.content[0].type === "text" ? response.content[0].text : "{}";
   try {
