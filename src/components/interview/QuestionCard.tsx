@@ -34,9 +34,10 @@ interface Props {
   onSkip?: () => void;
   canGoBack?: boolean;
   showPhoneOption?: boolean;
+  sliderFollowUp?: { questionId: string; originalAnswer: string | number; answerDisplay: string; aiFollowUp: string } | null;
 }
 
-export default function QuestionCard({ question, sessionId, onSubmit, onConversationComplete, isSubmitting, initialAnswer, initialConversationHistory, isEditing, onCancelEdit, onBack, onSkip, canGoBack, showPhoneOption = true }: Props) {
+export default function QuestionCard({ question, sessionId, onSubmit, onConversationComplete, isSubmitting, initialAnswer, initialConversationHistory, isEditing, onCancelEdit, onBack, onSkip, canGoBack, showPhoneOption = true, sliderFollowUp }: Props) {
   const [textValue, setTextValue] = useState("");
   const [sliderValue, setSliderValue] = useState<number | null>(null);
   const [buttonValue, setButtonValue] = useState<string | string[] | null>(null);
@@ -54,6 +55,21 @@ export default function QuestionCard({ question, sessionId, onSubmit, onConversa
   const stopRecordingRef = useRef<(() => void) | null>(null);
   const conversationEndRef = useRef<HTMLDivElement>(null);
   const pageBottomRef = useRef<HTMLDivElement>(null);
+
+  const isSliderFollowUp = sliderFollowUp?.questionId === question.id;
+
+  // Initialize conversation from slider/button follow-up AI message
+  useEffect(() => {
+    if (isSliderFollowUp && sliderFollowUp?.aiFollowUp && conversationHistory.length === 0) {
+      setConversationHistory([{
+        role: "assistant" as const,
+        content: sliderFollowUp.aiFollowUp,
+        timestamp: new Date().toISOString(),
+        questionId: question.id,
+      }]);
+      setConversationComplete(false);
+    }
+  }, [sliderFollowUp?.questionId]);
 
   // Auto-scroll conversation container when new messages arrive or AI is thinking
   useEffect(() => {
@@ -229,6 +245,86 @@ export default function QuestionCard({ question, sessionId, onSubmit, onConversa
     }
   };
 
+  const handleSliderFollowUpSubmit = async () => {
+    if (!textValue.trim() || !sliderFollowUp) return;
+    const text = textValue.trim();
+    setIsAiThinking(true);
+    setTextValue("");
+
+    const userMsg: ConversationMessage = { role: "user", content: text, timestamp: new Date().toISOString(), questionId: question.id };
+    const historyWithUser = [...conversationHistory, userMsg];
+    setConversationHistory(historyWithUser);
+
+    try {
+      setConversationError(null);
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 120000);
+
+      const res = await fetch(`${API_BASE}/api/interview/conversation-stream`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sessionId,
+          questionId: question.id,
+          answer: text,
+          conversationHistory,
+          sliderFollowUpContext: {
+            originalAnswer: sliderFollowUp.originalAnswer,
+            answerDisplay: sliderFollowUp.answerDisplay,
+          },
+        }),
+        signal: controller.signal,
+      });
+      clearTimeout(timeout);
+      if (!res.ok) throw new Error(`Server error: ${res.status}`);
+
+      const reader = res.body?.getReader();
+      if (!reader) throw new Error("No response body");
+      const decoder = new TextDecoder();
+      let streamedText = "";
+      let buffer = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() || "";
+
+        for (const line of lines) {
+          if (!line.startsWith("data: ")) continue;
+          try {
+            const event = JSON.parse(line.slice(6));
+            if (event.type === "token") {
+              streamedText += event.text;
+              const displayText = streamedText.replace(/\[QUESTION_COMPLETE\]/g, "").trim();
+              setConversationHistory([
+                ...historyWithUser,
+                { role: "assistant" as const, content: displayText, timestamp: new Date().toISOString(), questionId: question.id },
+              ]);
+            } else if (event.type === "done") {
+              setIsAiThinking(false);
+              if (!event.isComplete) {
+                setConversationHistory(event.conversationHistory);
+              } else {
+                setConversationComplete(true);
+                if (onConversationComplete) onConversationComplete(event);
+              }
+            } else if (event.type === "error") {
+              setConversationError(event.message);
+            }
+          } catch { /* skip malformed */ }
+        }
+      }
+    } catch (err) {
+      const message = (err as Error).name === "AbortError" ? "Response took too long." : "Something went wrong.";
+      setConversationError(message);
+      setConversationHistory(historyWithUser);
+    } finally {
+      setIsAiThinking(false);
+    }
+  };
+
   // Voice transcription always goes into textarea for review — never auto-submits
   const handleVoiceTranscription = (text: string) => {
     if (suppressTranscriptionRef.current) return;
@@ -365,23 +461,117 @@ export default function QuestionCard({ question, sessionId, onSubmit, onConversa
       {/* Inputs */}
       <div className="space-y-4">
         {question.inputType === "slider" && (
-          <div className="space-y-6">
-            <SliderInput min={question.sliderMin ?? 0} max={question.sliderMax ?? 10} minLabel={question.sliderLabels?.min} maxLabel={question.sliderLabels?.max} value={sliderValue ?? undefined} onChange={setSliderValue} />
-            <div className="flex gap-3">
-              {isEditing && <button onClick={onCancelEdit} className="px-6 py-2.5 rounded-xl text-sm text-muted-foreground hover:text-muted-foreground hover:bg-muted transition-all">Cancel</button>}
-              <Button onClick={() => sliderValue !== null && onSubmit(sliderValue)} disabled={sliderValue === null} loading={isSubmitting} size="lg" className={isEditing ? "flex-1" : "w-full"}>{submitLabel}</Button>
+          isSliderFollowUp ? (
+            <div className="space-y-4">
+              <div className="px-4 py-3 rounded-xl bg-blue-500/10 border border-blue-500/20 text-sm text-foreground/80">
+                You rated: <span className="font-semibold text-foreground">{sliderFollowUp?.answerDisplay}</span>
+              </div>
+              {conversationHistory.filter(m => m.role !== "system").map((msg, i, arr) => {
+                const isUser = msg.role === "user";
+                const prevMsg = arr[i - 1];
+                const sameSpeaker = prevMsg && prevMsg.role === msg.role;
+                return (
+                  <div key={i} className={sameSpeaker ? "!mt-1.5" : ""}>
+                    {isUser ? (
+                      <div className="flex flex-col items-end">
+                        {!sameSpeaker && <span className="text-[10px] font-medium uppercase tracking-wider mb-1.5 px-1 text-blue-400/50">You</span>}
+                        <div className="max-w-[85%] px-4 py-3 text-sm leading-relaxed bg-blue-500/15 text-foreground/90 border border-blue-500/20 rounded-2xl rounded-br-md">{msg.content}</div>
+                      </div>
+                    ) : (
+                      <div className="text-sm leading-relaxed text-foreground/90">{formatAiMessage(msg.content)}</div>
+                    )}
+                  </div>
+                );
+              })}
+              {isAiThinking && (
+                <div className="flex gap-1.5 py-1">
+                  <span className="w-2 h-2 bg-blue-400/50 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+                  <span className="w-2 h-2 bg-blue-400/50 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+                  <span className="w-2 h-2 bg-blue-400/50 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+                </div>
+              )}
+              {conversationError && (
+                <div className="px-3 py-2 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center justify-between gap-3">
+                  <span className="text-red-300 text-sm">{conversationError}</span>
+                </div>
+              )}
+              {!conversationComplete && !isAiThinking && (
+                <>
+                  <textarea value={textValue} onChange={(e) => setTextValue(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSliderFollowUpSubmit(); } }}
+                    placeholder="Share your thoughts..." rows={3}
+                    className="w-full border rounded-xl px-4 py-3 text-foreground text-sm placeholder:text-muted-foreground focus:outline-none bg-muted border-border focus:border-border focus:bg-foreground/[0.08] transition-all resize-none" />
+                  <Button onClick={handleSliderFollowUpSubmit} disabled={!textValue.trim() || isAiThinking} loading={isAiThinking} size="lg" className="w-full">Send</Button>
+                </>
+              )}
+              <div ref={conversationEndRef} />
             </div>
-          </div>
+          ) : (
+            <div className="space-y-6">
+              <SliderInput min={question.sliderMin ?? 0} max={question.sliderMax ?? 10} minLabel={question.sliderLabels?.min} maxLabel={question.sliderLabels?.max} value={sliderValue ?? undefined} onChange={setSliderValue} />
+              <div className="flex gap-3">
+                {isEditing && <button onClick={onCancelEdit} className="px-6 py-2.5 rounded-xl text-sm text-muted-foreground hover:text-muted-foreground hover:bg-muted transition-all">Cancel</button>}
+                <Button onClick={() => sliderValue !== null && onSubmit(sliderValue)} disabled={sliderValue === null} loading={isSubmitting} size="lg" className={isEditing ? "flex-1" : "w-full"}>{submitLabel}</Button>
+              </div>
+            </div>
+          )
         )}
 
         {(question.inputType === "buttons" || question.inputType === "multi_select") && (
-          <div className="space-y-4">
-            <ButtonSelect options={question.options || []} multiSelect={question.inputType === "multi_select"} onChange={(v) => setButtonValue(v)} initialValue={initialAnswer as string | string[] | undefined} />
-            <div className="flex gap-3">
-              {isEditing && <button onClick={onCancelEdit} className="px-6 py-2.5 rounded-xl text-sm text-muted-foreground hover:text-muted-foreground hover:bg-muted transition-all">Cancel</button>}
-              <Button onClick={() => buttonValue !== null && onSubmit(buttonValue)} disabled={buttonValue === null} loading={isSubmitting} size="lg" className={isEditing ? "flex-1" : "w-full"}>{submitLabel}</Button>
+          isSliderFollowUp ? (
+            <div className="space-y-4">
+              <div className="px-4 py-3 rounded-xl bg-blue-500/10 border border-blue-500/20 text-sm text-foreground/80">
+                You selected: <span className="font-semibold text-foreground">{sliderFollowUp?.answerDisplay}</span>
+              </div>
+              {conversationHistory.filter(m => m.role !== "system").map((msg, i, arr) => {
+                const isUser = msg.role === "user";
+                const prevMsg = arr[i - 1];
+                const sameSpeaker = prevMsg && prevMsg.role === msg.role;
+                return (
+                  <div key={i} className={sameSpeaker ? "!mt-1.5" : ""}>
+                    {isUser ? (
+                      <div className="flex flex-col items-end">
+                        {!sameSpeaker && <span className="text-[10px] font-medium uppercase tracking-wider mb-1.5 px-1 text-blue-400/50">You</span>}
+                        <div className="max-w-[85%] px-4 py-3 text-sm leading-relaxed bg-blue-500/15 text-foreground/90 border border-blue-500/20 rounded-2xl rounded-br-md">{msg.content}</div>
+                      </div>
+                    ) : (
+                      <div className="text-sm leading-relaxed text-foreground/90">{formatAiMessage(msg.content)}</div>
+                    )}
+                  </div>
+                );
+              })}
+              {isAiThinking && (
+                <div className="flex gap-1.5 py-1">
+                  <span className="w-2 h-2 bg-blue-400/50 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+                  <span className="w-2 h-2 bg-blue-400/50 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+                  <span className="w-2 h-2 bg-blue-400/50 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+                </div>
+              )}
+              {conversationError && (
+                <div className="px-3 py-2 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center justify-between gap-3">
+                  <span className="text-red-300 text-sm">{conversationError}</span>
+                </div>
+              )}
+              {!conversationComplete && !isAiThinking && (
+                <>
+                  <textarea value={textValue} onChange={(e) => setTextValue(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSliderFollowUpSubmit(); } }}
+                    placeholder="Share your thoughts..." rows={3}
+                    className="w-full border rounded-xl px-4 py-3 text-foreground text-sm placeholder:text-muted-foreground focus:outline-none bg-muted border-border focus:border-border focus:bg-foreground/[0.08] transition-all resize-none" />
+                  <Button onClick={handleSliderFollowUpSubmit} disabled={!textValue.trim() || isAiThinking} loading={isAiThinking} size="lg" className="w-full">Send</Button>
+                </>
+              )}
+              <div ref={conversationEndRef} />
             </div>
-          </div>
+          ) : (
+            <div className="space-y-4">
+              <ButtonSelect options={question.options || []} multiSelect={question.inputType === "multi_select"} onChange={(v) => setButtonValue(v)} initialValue={initialAnswer as string | string[] | undefined} />
+              <div className="flex gap-3">
+                {isEditing && <button onClick={onCancelEdit} className="px-6 py-2.5 rounded-xl text-sm text-muted-foreground hover:text-muted-foreground hover:bg-muted transition-all">Cancel</button>}
+                <Button onClick={() => buttonValue !== null && onSubmit(buttonValue)} disabled={buttonValue === null} loading={isSubmitting} size="lg" className={isEditing ? "flex-1" : "w-full"}>{submitLabel}</Button>
+              </div>
+            </div>
+          )
         )}
 
         {(question.inputType === "open_text" || question.inputType === "voice" || question.inputType === "ai_conversation") && (

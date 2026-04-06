@@ -30,6 +30,19 @@ export default function SliderInput({ min, max, minLabel, maxLabel, value: initi
   // Show clickable number labels when range is small enough (e.g. 1-5, 1-10)
   const range = max - min;
   const showNumbers = range <= 10;
+  const isPercentage = max === 100 && min === 0;
+  const isLargeRange = range > 10;
+
+  const handleNumericInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = e.target.value;
+    if (raw === "") return;
+    const parsed = parseInt(raw, 10);
+    if (isNaN(parsed)) return;
+    const clamped = Math.min(max, Math.max(min, parsed));
+    handleClick(clamped);
+  };
+
+  const percentageSteps = [0, 25, 50, 75, 100];
 
   return (
     <div className="w-full space-y-4">
@@ -64,6 +77,43 @@ export default function SliderInput({ min, max, minLabel, maxLabel, value: initi
               {n}
             </button>
           ))}
+        </div>
+      ) : isLargeRange ? (
+        <div className="space-y-3">
+          {isPercentage && (
+            <div className="flex justify-center gap-2 px-2">
+              {percentageSteps.map((step) => (
+                <button
+                  key={step}
+                  type="button"
+                  onClick={() => handleClick(step)}
+                  className={`min-w-[3rem] px-2 h-8 rounded-full text-xs font-medium transition-all duration-150 cursor-pointer
+                    ${step === value
+                      ? "bg-white text-black shadow-lg scale-110"
+                      : "bg-muted text-muted-foreground hover:bg-muted hover:text-foreground"
+                    }`}
+                >
+                  {step}%
+                </button>
+              ))}
+            </div>
+          )}
+          <div className="flex justify-center">
+            <input
+              type="number"
+              min={min}
+              max={max}
+              value={value}
+              onChange={handleNumericInput}
+              className="w-20 h-9 bg-muted border border-border text-foreground rounded-xl text-center text-sm font-medium
+                appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none
+                [-moz-appearance:textfield] focus:outline-none focus:ring-2 focus:ring-white/20"
+            />
+          </div>
+          <div className="flex justify-between text-xs text-muted-foreground px-2">
+            <span>{minLabel || min}</span>
+            <span>{maxLabel || max}</span>
+          </div>
         </div>
       ) : (
         <div className="flex justify-between text-xs text-muted-foreground px-2">

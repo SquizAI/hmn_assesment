@@ -534,11 +534,24 @@ function buildDeductionContext(session: Record<string, unknown>): string {
   return parts.join("\n");
 }
 
-function filterDeducibleQuestions(available: Array<Record<string, unknown>>, session: Record<string, unknown>): Array<Record<string, unknown>> {
+function filterDeducibleQuestions(available: Array<Record<string, unknown>>, session: Record<string, unknown>, bankQuestions?: Array<Record<string, unknown>>): Array<Record<string, unknown>> {
   const participant = session.participant as { role: string; teamSize: string };
   const r = participant.role?.toLowerCase() || "";
   const size = participant.teamSize || "";
-  const responses = session.responses as Array<{ questionId: string; answer: unknown }>;
+  const responses = session.responses as Array<{ questionId: string; skipped?: boolean; answer: unknown }>;
+
+  // Pre-compute dimension counts for saturation strategy
+  const dimCounts: Record<string, number> = {};
+  if (bankQuestions) {
+    for (const resp of responses) {
+      if ((resp as Record<string, unknown>).skipped) continue;
+      const respQ = bankQuestions.find(bq => bq.id === resp.questionId);
+      if (!respQ) continue;
+      for (const d of ((respQ.scoringDimensions as string[]) || [])) {
+        dimCounts[d] = (dimCounts[d] || 0) + 1;
+      }
+    }
+  }
 
   return available.filter((q) => {
     // Skip direct reports for tiny teams — it's obvious
@@ -563,8 +576,60 @@ function filterDeducibleQuestions(available: Array<Record<string, unknown>>, ses
       }
     }
 
+    // Strategy A: Scoring dimension saturation — skip low-weight questions
+    // whose dimensions already have 2+ answered questions
+    if (bankQuestions) {
+      const qDims = (q.scoringDimensions as string[]) || [];
+      const qWeight = (q.weight as number) || 0;
+      if (qDims.length > 0 && qWeight < 0.8 && qDims.every(d => (dimCounts[d] || 0) >= 2)) {
+        return false;
+      }
+    }
+
+    // Strategy B: Business process cluster cap (max 4) — skip low-weight
+    // business_process questions once 4 have been answered
+    if (bankQuestions && q.section === 'business_process') {
+      const processAnswered = responses.filter(r => {
+        if ((r as Record<string, unknown>).skipped) return false;
+        const bq = bankQuestions.find(b => b.id === r.questionId);
+        return bq && bq.section === 'business_process';
+      }).length;
+      if (processAnswered >= 4 && ((q.weight as number) || 0) < 0.9) {
+        return false;
+      }
+    }
+
+    // Strategy C: Section AI conversation cap — skip low-weight ai_conversation
+    // questions once 2 have been answered in the same section
+    if (bankQuestions && q.inputType === 'ai_conversation' && ((q.weight as number) || 0) < 0.7) {
+      const sectionAiCount = responses.filter(r => {
+        if ((r as Record<string, unknown>).skipped) return false;
+        const bq = bankQuestions.find(b => b.id === r.questionId);
+        return bq && bq.section === q.section && bq.inputType === 'ai_conversation';
+      }).length;
+      if (sectionAiCount >= 2) {
+        return false;
+      }
+    }
+
     return true;
   });
+}
+
+function shouldTriggerFollowUp(question: Record<string, unknown>, answer: string | number): boolean {
+  const trigger = question.followUpTrigger as { condition: string; threshold?: number } | undefined;
+  if (!trigger) return false;
+  if (question.inputType === 'ai_conversation') return false;
+
+  const condition = trigger.condition;
+  if (condition === 'always') return true;
+  if (condition === 'low_score' && typeof answer === 'number' && trigger.threshold !== undefined) {
+    return answer <= trigger.threshold;
+  }
+  if (condition === 'high_score' && typeof answer === 'number' && trigger.threshold !== undefined) {
+    return answer >= trigger.threshold;
+  }
+  return false;
 }
 
 // ============================================================
@@ -826,7 +891,7 @@ app.post("/api/interview/start", async (req, res) => {
   if (hasProgress) {
     const answeredIds = new Set(existingResponses.map((r) => r.questionId));
     const remaining = bankQuestions.filter((q) => !answeredIds.has(q.id as string));
-    const smartRemaining = filterDeducibleQuestions(remaining, session as unknown as Record<string, unknown>);
+    const smartRemaining = filterDeducibleQuestions(remaining, session as unknown as Record<string, unknown>, bankQuestions);
     const filteredOutIds = remaining.filter((q) => !smartRemaining.some((sq) => sq.id === q.id)).map((q) => q.id as string);
 
     // Resume at the current question or first remaining
@@ -921,7 +986,7 @@ app.post("/api/interview/start", async (req, res) => {
 
   // Find first non-auto-populated, non-deducible question
   const remaining = bankQuestions.filter((q) => !answeredIds.has(q.id as string));
-  const smartRemaining = filterDeducibleQuestions(remaining, session);
+  const smartRemaining = filterDeducibleQuestions(remaining, session, bankQuestions);
   const filteredOutIds = remaining.filter((q) => !smartRemaining.some((sq) => sq.id === q.id)).map((q) => q.id as string);
   const firstQuestion = (smartRemaining.length > 0 ? smartRemaining : remaining)[0];
 
@@ -983,7 +1048,7 @@ app.post("/api/interview/start", async (req, res) => {
 
 app.post("/api/interview/conversation-stream", async (req, res) => {
   try {
-    const { sessionId, questionId, answer, conversationHistory: clientHistory } = req.body;
+    const { sessionId, questionId, answer, conversationHistory: clientHistory, sliderFollowUpContext } = req.body;
 
     const session = await loadSession(sessionId);
     if (!session) { res.status(404).json({ error: "Session not found" }); return; }
@@ -996,7 +1061,11 @@ app.post("/api/interview/conversation-stream", async (req, res) => {
     history.push({ role: "user", content: String(answer), timestamp: new Date().toISOString(), questionId });
 
     const userTurns = history.filter((m: { role: string }) => m.role === "user").length;
-    const MAX_CONVERSATION_TURNS = 3;
+    const MAX_CONVERSATION_TURNS = sliderFollowUpContext ? 2 : 3;
+
+    if (sliderFollowUpContext && userTurns === 1) {
+      history.unshift({ role: "system" as const, content: `The participant rated this question ${sliderFollowUpContext.answerDisplay}. Use the follow-up guidance to ask about their rating.`, timestamp: new Date().toISOString(), questionId });
+    }
 
     // Set up SSE headers
     res.setHeader("Content-Type", "text/event-stream");
@@ -1041,7 +1110,7 @@ app.post("/api/interview/conversation-stream", async (req, res) => {
     const answeredIds = new Set(session.responses.map((r: { questionId: string }) => r.questionId));
     answeredIds.add(questionId); // include this one
     const remaining = bankQuestions.filter((q) => !answeredIds.has(q.id as string));
-    const smartRemaining = filterDeducibleQuestions(remaining, session);
+    const smartRemaining = filterDeducibleQuestions(remaining, session, bankQuestions);
 
     // For custom assessments (non-default), use sequential ordering to avoid skipping questions
     const useSequentialOrder = !!assessment;
@@ -1051,21 +1120,37 @@ app.post("/api/interview/conversation-stream", async (req, res) => {
       (!useSequentialOrder && smartRemaining.length > 0) ? selectNextQuestion(smartRemaining, session as unknown as Record<string, unknown>).catch(() => null) : Promise.resolve(null),
     ]);
 
-    session.responses.push({
-      questionId,
-      questionText: currentQuestion.text,
-      inputType: currentQuestion.inputType,
-      answer: fullAnswer,
-      timestamp: new Date().toISOString(),
-      aiFollowUps: history
-        .filter((m: { role: string }) => m.role === "assistant")
-        .map((m: { content: string; timestamp: string }, i: number) => ({
-          question: m.content,
-          answer: history.filter((c: { role: string }) => c.role === "user")[i + 1]?.content || "",
-          timestamp: m.timestamp,
-        })),
-      confidenceIndicators: confidence,
-    });
+    if (sliderFollowUpContext) {
+      // Update existing slider/button response with follow-up data instead of creating new response
+      const existingSliderIdx = (session.responses as Array<{ questionId: string }>).findIndex(r => r.questionId === questionId);
+      if (existingSliderIdx !== -1) {
+        const existing = session.responses[existingSliderIdx] as Record<string, unknown>;
+        existing.aiFollowUps = history
+          .filter((m: { role: string }) => m.role === 'assistant')
+          .map((m: { content: string; timestamp: string }, i: number) => ({
+            question: m.content,
+            answer: history.filter((c: { role: string }) => c.role === 'user')[i]?.content || '',
+            timestamp: m.timestamp,
+          }));
+        existing.confidenceIndicators = confidence;
+      }
+    } else {
+      session.responses.push({
+        questionId,
+        questionText: currentQuestion.text,
+        inputType: currentQuestion.inputType,
+        answer: fullAnswer,
+        timestamp: new Date().toISOString(),
+        aiFollowUps: history
+          .filter((m: { role: string }) => m.role === "assistant")
+          .map((m: { content: string; timestamp: string }, i: number) => ({
+            question: m.content,
+            answer: history.filter((c: { role: string }) => c.role === "user")[i + 1]?.content || "",
+            timestamp: m.timestamp,
+          })),
+        confidenceIndicators: confidence,
+      });
+    }
     session.conversationHistory.push(...history);
 
     if (remaining.length === 0 || smartRemaining.length === 0) {
@@ -1296,6 +1381,42 @@ app.post("/api/interview/respond", async (req, res) => {
       (session as unknown as Record<string, unknown>)._pendingConfidence = { promise: confidencePromise, responseIndex: session.responses.length - 1 };
     }
 
+    // --- Check followUpTrigger for slider/button questions ---
+    if (shouldTriggerFollowUp(currentQuestion, answer as string | number)) {
+      // Resolve pending confidence before saving
+      const pendingConf = (session as unknown as Record<string, unknown>)._pendingConfidence as { promise: Promise<unknown> | null; responseIndex: number } | undefined;
+      if (pendingConf?.promise) {
+        const conf = await pendingConf.promise;
+        (session.responses[pendingConf.responseIndex] as unknown as Record<string, unknown>).confidenceIndicators = conf;
+      }
+      delete (session as unknown as Record<string, unknown>)._pendingConfidence;
+      await saveSession(session);
+
+      const sliderMax = currentQuestion.sliderMax as number | undefined;
+      const answerDisplay = currentQuestion.inputType === 'slider'
+        ? `${answer}${sliderMax === 100 ? '%' : ` out of ${sliderMax ?? 10}`}`
+        : String(answer);
+
+      // Generate the initial AI follow-up question
+      const initialFollowUp = await generateFollowUp(
+        session as unknown as Record<string, unknown>,
+        currentQuestion,
+        [{ role: "user", content: `I rated this ${answerDisplay}`, timestamp: new Date().toISOString() }],
+        assessment,
+        1,
+      );
+      const cleanFollowUp = initialFollowUp.replace(/\[QUESTION_COMPLETE\]/g, "").replace(/\*\*\[.*?\]\*\*\s*/g, "").trim();
+
+      res.json({
+        type: 'slider_follow_up',
+        questionId,
+        originalAnswer: answer,
+        answerDisplay,
+        aiFollowUp: cleanFollowUp,
+      });
+      return;
+    }
+
     // --- Next Question ---
     const answeredIds = new Set(session.responses.map((r: { questionId: string }) => r.questionId));
     const remaining = bankQuestions.filter((q) => !answeredIds.has(q.id as string));
@@ -1338,7 +1459,7 @@ app.post("/api/interview/respond", async (req, res) => {
     }
 
     // Filter out questions that can be trivially deduced or whose showCondition is not met
-    const smartRemaining = filterDeducibleQuestions(remaining, session);
+    const smartRemaining = filterDeducibleQuestions(remaining, session, bankQuestions);
     const respondFilteredOutIds = remaining.filter((q) => !smartRemaining.some((sq) => sq.id === q.id)).map((q) => q.id as string);
 
     // If ALL remaining questions were filtered out (e.g. showCondition not met), survey is complete
@@ -1838,6 +1959,109 @@ app.post("/api/interview/analyze", async (req, res) => {
   } catch (err) {
     console.error("Analysis error:", err);
     res.status(500).json({ error: "Analysis failed" });
+  }
+});
+
+// --- Analyze (SSE streaming) ---
+
+app.post("/api/interview/analyze-stream", async (req, res) => {
+  try {
+    const { sessionId } = req.body;
+    const session = await loadSession(sessionId);
+    if (!session) { res.status(404).json({ error: "Session not found" }); return; }
+    if (session.responses.length < 5) { res.status(400).json({ error: "Not enough responses. Need at least 5." }); return; }
+
+    // SSE headers (same as conversation-stream)
+    res.setHeader("Content-Type", "text/event-stream");
+    res.setHeader("Cache-Control", "no-cache");
+    res.setHeader("Connection", "keep-alive");
+    res.setHeader("X-Accel-Buffering", "no");
+    res.flushHeaders();
+
+    res.write(`data: ${JSON.stringify({ type: "progress", stage: "Preparing analysis..." })}\n\n`);
+
+    const assessmentTypeId = (session.assessmentTypeId as string) || "ai-readiness";
+    const allResponses = session.responses as Array<{ questionId: string; questionText: string; answer: unknown; timestamp: string; durationMs?: number; aiFollowUps?: Array<{ question: string; answer: string; timestamp?: string }> }>;
+    const hasAdaptabilityResponses = allResponses.some((r) => r.questionId.startsWith("adapt_"));
+    const isCombined = assessmentTypeId !== "adaptability-index" && hasAdaptabilityResponses;
+
+    if (assessmentTypeId === "adaptability-index") {
+      res.write(`data: ${JSON.stringify({ type: "progress", stage: "Scoring adaptability dimensions..." })}\n\n`);
+      const client = getAnthropicClient();
+      const adaptAnalysis = await runAdaptabilityAnalysis(client, session);
+      const participant = session.participant as { name: string; role: string; company: string; industry: string };
+      const profile = await generateAdaptabilityProfile(client, adaptAnalysis, participant);
+      session.analysis = { ...adaptAnalysis, profile } as unknown as Record<string, unknown>;
+      session.adaptabilityAnalysis = adaptAnalysis;
+    } else if (isCombined) {
+      res.write(`data: ${JSON.stringify({ type: "progress", stage: "Analyzing AI readiness..." })}\n\n`);
+      const client = getAnthropicClient();
+      const { assessment } = await getAssessmentQuestionBank(session);
+      const cascadeAnalysis = await runCascadeAnalysis(session as unknown as Record<string, unknown>, assessment);
+
+      res.write(`data: ${JSON.stringify({ type: "progress", stage: "Scoring adaptability..." })}\n\n`);
+      const adaptResponses = convertStructuredToAdaptabilityResponses(allResponses);
+      const adaptSession = {
+        id: session.id,
+        participant: session.participant as { name: string; role: string; company: string; industry: string; teamSize: string },
+        responses: adaptResponses,
+        conversationHistory: (session.conversationHistory || []) as Array<{ role: string; content: string; timestamp: string; questionId?: string }>,
+      };
+      const adaptAnalysis = await runAdaptabilityAnalysis(client, adaptSession);
+      const participant = session.participant as { name: string; role: string; company: string; industry: string };
+      const adaptProfile = await generateAdaptabilityProfile(client, adaptAnalysis, participant);
+
+      session.analysis = {
+        ...cascadeAnalysis,
+        adaptabilityScores: {
+          learning_velocity: adaptAnalysis.pillar1.compositeScore,
+          unlearning_readiness: adaptAnalysis.pillar2.compositeScore,
+          adaptive_agency: adaptAnalysis.pillar3.compositeScore,
+          beginner_tolerance: adaptAnalysis.pillar4.compositeScore,
+          overall: adaptAnalysis.overallAdaptabilityScore,
+        },
+        adaptabilityAnalysis: adaptAnalysis,
+        adaptabilityProfile: adaptProfile,
+      };
+      session.adaptabilityAnalysis = adaptAnalysis;
+    } else {
+      res.write(`data: ${JSON.stringify({ type: "progress", stage: "Analyzing your responses..." })}\n\n`);
+      const { assessment } = await getAssessmentQuestionBank(session);
+      const analysis = await runCascadeAnalysis(session as unknown as Record<string, unknown>, assessment);
+      session.analysis = analysis;
+    }
+
+    res.write(`data: ${JSON.stringify({ type: "progress", stage: "Finalizing results..." })}\n\n`);
+
+    session.status = "analyzed";
+    await saveSession(session);
+    invalidateCache("stats:");
+
+    // Run completion pipeline (same as existing analyze endpoint)
+    const linkedInvitation = await findInvitationBySessionId(sessionId).catch(() => null);
+    let completionAssessmentType: "cascade" | "adaptability" | "combined";
+    if (assessmentTypeId === "adaptability-index") completionAssessmentType = "adaptability";
+    else if (isCombined) completionAssessmentType = "combined";
+    else completionAssessmentType = "cascade";
+
+    completeAssessment({
+      session,
+      analysis: session.analysis as unknown as Record<string, unknown>,
+      assessmentType: completionAssessmentType,
+      invitationId: linkedInvitation?.id,
+      contactId: (session as unknown as Record<string, unknown>).contact_id as string | undefined,
+    }).catch((err) => console.error("[analyze-stream] Completion pipeline error:", err));
+
+    res.write(`data: ${JSON.stringify({ type: "done", analysis: session.analysis })}\n\n`);
+    res.end();
+  } catch (err) {
+    console.error("Analysis stream error:", err);
+    try {
+      res.write(`data: ${JSON.stringify({ type: "error", message: "Analysis failed. Please try again." })}\n\n`);
+      res.end();
+    } catch {
+      // Headers may already be sent
+    }
   }
 });
 

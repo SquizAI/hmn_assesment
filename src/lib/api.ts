@@ -107,6 +107,67 @@ export async function analyzeSession(sessionId: string) {
   }
 }
 
+export async function analyzeSessionStream(
+  sessionId: string,
+  onProgress: (stage: string) => void,
+): Promise<{ analysis: unknown }> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 300000); // 5 minute timeout for streaming
+
+  try {
+    const res = await fetch(`${API_BASE}/api/interview/analyze-stream`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ sessionId }),
+      signal: controller.signal,
+    });
+
+    if (!res.ok) throw new Error(`Analysis failed: ${res.status}`);
+
+    const reader = res.body?.getReader();
+    if (!reader) throw new Error("No response body");
+
+    const decoder = new TextDecoder();
+    let buffer = "";
+    let result: { analysis: unknown } | null = null;
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split("\n");
+      buffer = lines.pop() || "";
+
+      for (const line of lines) {
+        if (!line.startsWith("data: ")) continue;
+        try {
+          const event = JSON.parse(line.slice(6));
+          if (event.type === "progress") {
+            onProgress(event.stage);
+          } else if (event.type === "done") {
+            result = { analysis: event.analysis };
+          } else if (event.type === "error") {
+            throw new Error(event.message);
+          }
+        } catch (e) {
+          if ((e as Error).message && !(e as Error).message.includes("JSON")) throw e;
+        }
+      }
+    }
+
+    if (!result) throw new Error("Analysis stream ended without result");
+    return result;
+  } catch (err) {
+    if ((err as Error).name === "AbortError") {
+      throw new Error("Analysis is taking longer than expected. Please try again.");
+    }
+    throw err;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
 // --- Research API ---
 
 export async function runResearch(sessionId: string) {

@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import type { Question, ConversationMessage } from "../lib/types";
-import { startInterview, submitAnswer, updateAnswer, skipQuestion, analyzeSession } from "../lib/api";
+import { startInterview, submitAnswer, updateAnswer, skipQuestion, analyzeSession, analyzeSessionStream } from "../lib/api";
 import { QUESTION_BANK } from "../data/question-bank";
 import QuestionCard from "../components/interview/QuestionCard";
 import ProgressBar from "../components/interview/ProgressBar";
@@ -45,6 +45,12 @@ export default function InterviewPage() {
   const [skippedQuestionIds, setSkippedQuestionIds] = useState<string[]>([]);
   const [conversationHistories, setConversationHistories] = useState<Record<string, ConversationMessage[]>>({});
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [sliderFollowUp, setSliderFollowUp] = useState<{
+    questionId: string;
+    originalAnswer: string | number;
+    answerDisplay: string;
+    aiFollowUp: string;
+  } | null>(null);
 
   // Dynamic assessment metadata (populated from server for non-default assessments)
   const [assessmentMeta, setAssessmentMeta] = useState<AssessmentMeta | null>(null);
@@ -160,6 +166,18 @@ export default function InterviewPage() {
       const data = await submitAnswer(sessionId!, currentQuestion.id, answer as string, conversationHistory);
       if (data.type === "follow_up") { setSaveStatus("idle"); return; } // QuestionCard handles this
 
+      if (data.type === 'slider_follow_up') {
+        setSliderFollowUp({
+          questionId: data.questionId,
+          originalAnswer: data.originalAnswer,
+          answerDisplay: data.answerDisplay,
+          aiFollowUp: data.aiFollowUp,
+        });
+        setSaveStatus('idle');
+        setIsSubmitting(false);
+        return;
+      }
+
       // Save conversation history if present (fallback path for AI conversations)
       if (data.conversationHistory) {
         setConversationHistories((prev) => ({ ...prev, [currentQuestion.id]: data.conversationHistory }));
@@ -186,6 +204,7 @@ export default function InterviewPage() {
 
   const handleConversationComplete = (serverData: { type: string; currentQuestion?: unknown; progress?: unknown; skippedQuestionIds?: string[]; session?: unknown; conversationHistory?: ConversationMessage[]; assessmentTypeId?: string; assessmentName?: string }) => {
     if (!currentQuestion) return;
+    if (sliderFollowUp) setSliderFollowUp(null);
     setSaveStatus("saved");
 
     // Save the conversation history for this question so it can be reviewed on back-nav
@@ -291,17 +310,22 @@ export default function InterviewPage() {
   };
 
   const [analysisError, setAnalysisError] = useState<string | null>(null);
+  const [analysisStage, setAnalysisStage] = useState<string | null>(null);
 
   const handleAnalyze = async () => {
     setIsAnalyzing(true);
     setAnalysisError(null);
+    setAnalysisStage("Preparing analysis...");
     try {
-      await analyzeSession(sessionId!);
+      await analyzeSessionStream(sessionId!, (stage) => {
+        setAnalysisStage(stage);
+      });
       navigate(`/analysis/${sessionId}`);
     } catch (err) {
       setAnalysisError((err as Error).message || "Analysis failed. Please try again.");
     } finally {
       setIsAnalyzing(false);
+      setAnalysisStage(null);
     }
   };
 
@@ -344,7 +368,7 @@ export default function InterviewPage() {
                 <p className="text-muted-foreground">Ready to generate your personalized AI readiness analysis.</p>
               </div>
               <div className="space-y-3">
-                <Button onClick={handleAnalyze} loading={isAnalyzing} size="lg">{isAnalyzing ? "Analyzing — this may take a minute..." : "Generate My Analysis"}</Button>
+                <Button onClick={handleAnalyze} loading={isAnalyzing} size="lg">{isAnalyzing ? (analysisStage || "Analyzing...") : "Generate My Analysis"}</Button>
                 {analysisError && (
                   <p className="text-red-400 text-sm text-center">{analysisError}</p>
                 )}
@@ -492,6 +516,7 @@ export default function InterviewPage() {
             initialConversationHistory={conversationHistories[editingQuestion.question.id]}
             isEditing={true}
             onCancelEdit={exitEditMode}
+            sliderFollowUp={sliderFollowUp}
           />
         ) : (
           currentQuestion && sessionId && (
@@ -506,6 +531,7 @@ export default function InterviewPage() {
               onSkip={handleSkip}
               canGoBack={visibleAnswered.length > 0}
               showPhoneOption={answeredQuestions.length === 0}
+              sliderFollowUp={sliderFollowUp}
             />
           )
         )}
