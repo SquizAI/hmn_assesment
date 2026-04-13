@@ -1102,9 +1102,10 @@ app.post("/api/interview/conversation-stream", async (req, res) => {
     // --- Conversation complete: finalize ---
     const fullAnswer = history.filter((m: { role: string }) => m.role === "user").map((m: { content: string }) => m.content).join("\n");
 
-    // Remove any existing response for this question
+    // Remove any existing response for this question — but NOT for slider follow-ups,
+    // which update the existing slider response in place below
     const existingIdx = (session.responses as Array<{ questionId: string }>).findIndex((r) => r.questionId === questionId);
-    if (existingIdx !== -1) session.responses.splice(existingIdx, 1);
+    if (existingIdx !== -1 && !sliderFollowUpContext) session.responses.splice(existingIdx, 1);
 
     // Run confidence + next question in PARALLEL
     const answeredIds = new Set(session.responses.map((r: { questionId: string }) => r.questionId));

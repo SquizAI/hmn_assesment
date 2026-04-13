@@ -50,6 +50,7 @@ export default function QuestionCard({ question, sessionId, onSubmit, onConversa
   const [callError, setCallError] = useState<string | null>(null);
   const [conversationError, setConversationError] = useState<string | null>(null);
   const [conversationComplete, setConversationComplete] = useState(false);
+  const [pendingCompletion, setPendingCompletion] = useState<Record<string, unknown> | null>(null);
   const lastMessageRef = useRef<string | null>(null);
   const suppressTranscriptionRef = useRef(false);
   const stopRecordingRef = useRef<(() => void) | null>(null);
@@ -76,10 +77,6 @@ export default function QuestionCard({ question, sessionId, onSubmit, onConversa
     if (conversationEndRef.current) {
       conversationEndRef.current.scrollIntoView({ behavior: "smooth", block: "end" });
     }
-    // Also scroll the whole page down so the input stays visible
-    if (pageBottomRef.current) {
-      pageBottomRef.current.scrollIntoView({ behavior: "smooth", block: "end" });
-    }
   }, [conversationHistory, isAiThinking]);
 
   useEffect(() => {
@@ -87,6 +84,7 @@ export default function QuestionCard({ question, sessionId, onSubmit, onConversa
     setConversationHistory(initialConversationHistory || []);
     setIsAiThinking(false);
     setConversationComplete(false);
+    setPendingCompletion(null);
 
     if (initialAnswer !== undefined) {
       // Pre-fill from previous answer for editing
@@ -212,17 +210,12 @@ export default function QuestionCard({ question, sessionId, onSubmit, onConversa
                 // Still in conversation — update with server's history
                 setConversationHistory(event.conversationHistory);
               } else {
-                // Conversation complete — hide input immediately
+                // Conversation complete — show final message with Continue button
                 setConversationComplete(true);
-                if (event.responseType === "complete" && onConversationComplete) {
-                  onConversationComplete(event);
-                } else if (event.responseType === "next_question" && onConversationComplete) {
-                  onConversationComplete({ type: "next_question", ...event });
-                } else if (onConversationComplete) {
-                  onConversationComplete(event);
-                } else {
-                  onSubmit(text, event.conversationHistory);
-                }
+                const completionEvent = event.responseType === "next_question"
+                  ? { type: "next_question", ...event }
+                  : event;
+                setPendingCompletion(completionEvent);
               }
             } else if (event.type === "error") {
               setConversationError(event.message);
@@ -308,7 +301,7 @@ export default function QuestionCard({ question, sessionId, onSubmit, onConversa
                 setConversationHistory(event.conversationHistory);
               } else {
                 setConversationComplete(true);
-                if (onConversationComplete) onConversationComplete(event);
+                setPendingCompletion(event);
               }
             } else if (event.type === "error") {
               setConversationError(event.message);
@@ -497,12 +490,16 @@ export default function QuestionCard({ question, sessionId, onSubmit, onConversa
               )}
               {!conversationComplete && !isAiThinking && (
                 <>
-                  <textarea value={textValue} onChange={(e) => setTextValue(e.target.value)}
+                  <textarea value={textValue} onChange={(e) => { if (!isRecording) setTextValue(e.target.value); }}
                     onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSliderFollowUpSubmit(); } }}
-                    placeholder="Share your thoughts..." rows={3}
-                    className="w-full border rounded-xl px-4 py-3 text-foreground text-sm placeholder:text-muted-foreground focus:outline-none bg-muted border-border focus:border-border focus:bg-foreground/[0.08] transition-all resize-none" />
+                    placeholder={isRecording ? "Listening..." : "Share your thoughts..."} rows={3}
+                    className={`w-full border rounded-xl px-4 py-3 text-foreground text-sm placeholder:text-muted-foreground focus:outline-none transition-all resize-none ${isRecording ? "bg-primary/10 border-primary/30 cursor-default" : "bg-muted border-border focus:border-border focus:bg-foreground/[0.08]"}`} />
+                  <VoiceRecorder onTranscription={handleVoiceTranscription} onPartialTranscription={handlePartialTranscription} onRecordingStateChange={handleRecordingStateChange} stopRef={stopRecordingRef} hideIdleStatus hideTranscriptionPreview />
                   <Button onClick={handleSliderFollowUpSubmit} disabled={!textValue.trim() || isAiThinking} loading={isAiThinking} size="lg" className="w-full">Send</Button>
                 </>
+              )}
+              {conversationComplete && pendingCompletion && (
+                <Button onClick={() => { if (onConversationComplete) onConversationComplete(pendingCompletion as Parameters<NonNullable<typeof onConversationComplete>>[0]); else onSubmit("(conversation)"); setPendingCompletion(null); }} size="lg" className="w-full">Continue</Button>
               )}
               <div ref={conversationEndRef} />
             </div>
@@ -554,12 +551,16 @@ export default function QuestionCard({ question, sessionId, onSubmit, onConversa
               )}
               {!conversationComplete && !isAiThinking && (
                 <>
-                  <textarea value={textValue} onChange={(e) => setTextValue(e.target.value)}
+                  <textarea value={textValue} onChange={(e) => { if (!isRecording) setTextValue(e.target.value); }}
                     onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSliderFollowUpSubmit(); } }}
-                    placeholder="Share your thoughts..." rows={3}
-                    className="w-full border rounded-xl px-4 py-3 text-foreground text-sm placeholder:text-muted-foreground focus:outline-none bg-muted border-border focus:border-border focus:bg-foreground/[0.08] transition-all resize-none" />
+                    placeholder={isRecording ? "Listening..." : "Share your thoughts..."} rows={3}
+                    className={`w-full border rounded-xl px-4 py-3 text-foreground text-sm placeholder:text-muted-foreground focus:outline-none transition-all resize-none ${isRecording ? "bg-primary/10 border-primary/30 cursor-default" : "bg-muted border-border focus:border-border focus:bg-foreground/[0.08]"}`} />
+                  <VoiceRecorder onTranscription={handleVoiceTranscription} onPartialTranscription={handlePartialTranscription} onRecordingStateChange={handleRecordingStateChange} stopRef={stopRecordingRef} hideIdleStatus hideTranscriptionPreview />
                   <Button onClick={handleSliderFollowUpSubmit} disabled={!textValue.trim() || isAiThinking} loading={isAiThinking} size="lg" className="w-full">Send</Button>
                 </>
+              )}
+              {conversationComplete && pendingCompletion && (
+                <Button onClick={() => { if (onConversationComplete) onConversationComplete(pendingCompletion as Parameters<NonNullable<typeof onConversationComplete>>[0]); else onSubmit("(conversation)"); setPendingCompletion(null); }} size="lg" className="w-full">Continue</Button>
               )}
               <div ref={conversationEndRef} />
             </div>
@@ -584,9 +585,21 @@ export default function QuestionCard({ question, sessionId, onSubmit, onConversa
                   Return to current question
                 </button>
               </div>
-            ) : conversationComplete && question.inputType === "ai_conversation" ? (
-              /* Hide input after conversation completes — next question will load momentarily */
-              null
+            ) : conversationComplete && pendingCompletion ? (
+              <Button
+                onClick={() => {
+                  if (onConversationComplete) {
+                    onConversationComplete(pendingCompletion as Parameters<NonNullable<typeof onConversationComplete>>[0]);
+                  } else {
+                    onSubmit("(conversation)");
+                  }
+                  setPendingCompletion(null);
+                }}
+                size="lg"
+                className="w-full"
+              >
+                Continue
+              </Button>
             ) : (
               <>
                 {/* Editable textarea — type directly or review voice transcription */}
@@ -682,9 +695,7 @@ export default function QuestionCard({ question, sessionId, onSubmit, onConversa
 
                     {/* Hint */}
                     <p className="text-center text-muted-foreground text-xs">
-                      {question.inputType === "ai_conversation"
-                        ? "Enter your phone number for a voice assessment, or type / dictate your responses"
-                        : "Tap the mic or press Space to speak \u00B7 Live transcription as you talk"}
+                      Tap the mic or press Space to speak · Live transcription as you talk
                     </p>
                   </div>
                 )}

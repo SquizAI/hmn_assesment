@@ -530,7 +530,7 @@ export default function InterviewPage() {
               onBack={handleGoBack}
               onSkip={handleSkip}
               canGoBack={visibleAnswered.length > 0}
-              showPhoneOption={answeredQuestions.length === 0}
+              showPhoneOption={false}
               sliderFollowUp={sliderFollowUp}
             />
           )
