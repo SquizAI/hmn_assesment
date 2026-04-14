@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { fetchRetentionSettings, saveRetentionSettings, previewCleanup, runCleanup } from "../lib/admin-api";
+import { fetchRetentionSettings, saveRetentionSettings, previewCleanup, runCleanup, fetchPhoneSettings, savePhoneSettings } from "../lib/admin-api";
 import ConfirmDialog from "../components/ui/ConfirmDialog";
 
 interface RetentionSettings {
@@ -26,16 +26,20 @@ export default function AdminSettingsPage() {
   const [preview, setPreview] = useState<{ count: number; oldest: string | null } | null>(null);
   const [showCleanupConfirm, setShowCleanupConfirm] = useState(false);
 
+  // Phone / voice call feature flag
+  const [phoneEnabled, setPhoneEnabled] = useState(false);
+  const [savingPhone, setSavingPhone] = useState(false);
+
   const showToast = (message: string, type: "success" | "error") => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 4000);
   };
 
   useEffect(() => {
-    fetchRetentionSettings()
-      .then((data) => { if (data) setSettings(data); })
-      .catch(() => {})
-      .finally(() => setLoading(false));
+    Promise.all([
+      fetchRetentionSettings().then((data) => { if (data) setSettings(data); }).catch(() => {}),
+      fetchPhoneSettings().then((data) => setPhoneEnabled(data.phone_enabled ?? false)).catch(() => {}),
+    ]).finally(() => setLoading(false));
   }, []);
 
   const handleSave = async () => {
@@ -63,6 +67,16 @@ export default function AdminSettingsPage() {
       showToast(`Cleanup complete. ${data.deleted || 0} sessions removed.`, "success");
     } catch { showToast("Cleanup failed", "error"); }
     finally { setCleaning(false); }
+  };
+
+  const handlePhoneToggle = async (enabled: boolean) => {
+    setSavingPhone(true);
+    try {
+      await savePhoneSettings(enabled);
+      setPhoneEnabled(enabled);
+      showToast(`Phone assessment ${enabled ? "enabled" : "disabled"}`, "success");
+    } catch { showToast("Failed to save phone setting", "error"); }
+    finally { setSavingPhone(false); }
   };
 
   if (loading) return <div className="flex items-center justify-center h-full min-h-[60vh]"><div className="text-muted-foreground text-sm">Loading settings...</div></div>;
@@ -123,6 +137,32 @@ export default function AdminSettingsPage() {
         <div className="flex items-center gap-3 pt-4 border-t border-border">
           <button onClick={handleSave} disabled={saving} className="px-5 py-2.5 text-sm font-medium rounded-lg bg-gradient-to-r from-blue-600 to-cyan-600 text-white disabled:opacity-50 transition-all">{saving ? "Saving..." : "Save Settings"}</button>
           <button onClick={() => setShowCleanupConfirm(true)} disabled={cleaning || !settings.retention_days} className="px-4 py-2.5 text-sm font-medium rounded-lg bg-muted text-foreground hover:bg-muted border border-border disabled:opacity-50 transition-colors">{cleaning ? "Cleaning..." : "Run Cleanup Now"}</button>
+        </div>
+      </div>
+
+      {/* Features */}
+      <div className="bg-muted border border-border rounded-2xl p-6 space-y-6 mt-6">
+        <div>
+          <h2 className="text-lg font-semibold text-foreground mb-1">Features</h2>
+          <p className="text-sm text-muted-foreground">Enable or disable platform capabilities</p>
+        </div>
+
+        <div className="flex items-start gap-4">
+          <button
+            type="button"
+            disabled={savingPhone}
+            onClick={() => handlePhoneToggle(!phoneEnabled)}
+            className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors disabled:opacity-50 ${phoneEnabled ? "bg-blue-600" : "bg-muted border border-border"}`}
+          >
+            <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${phoneEnabled ? "translate-x-6" : "translate-x-1"}`} />
+          </button>
+          <div>
+            <p className="text-sm text-foreground font-medium">Phone Assessment</p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Show a "Call me" option during assessments. Requires Twilio/Vapi to be connected.
+              {!phoneEnabled && <span className="ml-1 text-amber-400/80">Currently disabled — connect Twilio/Vapi before enabling.</span>}
+            </p>
+          </div>
         </div>
       </div>
 

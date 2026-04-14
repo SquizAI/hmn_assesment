@@ -551,6 +551,20 @@ export async function saveRetentionSettings(settings: { retention_days: number |
   return res.json();
 }
 
+export async function fetchPhoneSettings(): Promise<{ phone_enabled: boolean }> {
+  const res = await adminFetch("/api/admin/settings/phone");
+  return res.json();
+}
+
+export async function savePhoneSettings(phone_enabled: boolean): Promise<{ enabled: boolean }> {
+  const res = await adminFetch("/api/admin/settings/phone", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ phone_enabled }),
+  });
+  return res.json();
+}
+
 export async function previewCleanup(days: number) {
   const res = await adminFetch(`/api/admin/settings/retention/preview?days=${days}`);
   return res.json();

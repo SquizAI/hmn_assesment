@@ -872,10 +872,33 @@ app.post("/api/research/:sessionId/confirm", async (req, res) => {
 
 // --- Interview Start ---
 
+// Helper: resolve voiceCallEnabled = VAPI env present AND admin DB flag on
+async function resolveVoiceCallEnabled(): Promise<boolean> {
+  if (!process.env.VAPI_PRIVATE_KEY) return false;
+  try {
+    const cacheKey = "settings:phone_enabled";
+    const cached = getCached<boolean>(cacheKey);
+    if (cached !== null) return cached;
+    const { data } = await getSupabase()
+      .from("cascade_settings")
+      .select("value")
+      .eq("key", "phone_enabled")
+      .single();
+    const enabled = !!(data?.value?.enabled);
+    setCache(cacheKey, enabled, 60_000); // cache 60s
+    return enabled;
+  } catch {
+    return false;
+  }
+}
+
 app.post("/api/interview/start", async (req, res) => {
   try {
   const { sessionId } = req.body;
-  const session = await loadSession(sessionId);
+  const [session, voiceCallEnabled] = await Promise.all([
+    loadSession(sessionId),
+    resolveVoiceCallEnabled(),
+  ]);
   if (!session) {
     res.status(404).json({ error: "Session not found" });
     return;
@@ -967,6 +990,7 @@ app.post("/api/interview/start", async (req, res) => {
       assessmentSections: assessment?.sections || null,
       assessmentPhases: assessment?.phases || null,
       assessmentScoringDimensions: assessment?.scoringDimensions || null,
+      voiceCallEnabled,
       progress: {
         questionNumber: bankAnswered - skippedQuestionIds.filter((id) => bankIdSet.has(id)).length + 1,
         totalQuestions: effectiveTotal,
@@ -1030,6 +1054,7 @@ app.post("/api/interview/start", async (req, res) => {
     assessmentSections: assessment?.sections || null,
     assessmentPhases: assessment?.phases || null,
     assessmentScoringDimensions: assessment?.scoringDimensions || null,
+    voiceCallEnabled,
     progress: {
       questionNumber: 1,
       totalQuestions: freshEffectiveTotal,
@@ -1087,7 +1112,7 @@ app.post("/api/interview/conversation-stream", async (req, res) => {
     // Check completion
     const farewellPatterns = /\b(goodbye|good\s*bye|take care|talk soon|thanks for (?:sharing|being|your time)|appreciate you|that['']s (?:all|everything)|we['']re (?:all )?done)\b/i;
     const isExplicitComplete = aiResponse.includes("[QUESTION_COMPLETE]");
-    const isFarewellComplete = !isExplicitComplete && farewellPatterns.test(aiResponse) && userTurns >= 2;
+    const isFarewellComplete = !isExplicitComplete && farewellPatterns.test(aiResponse) && userTurns >= 3;
     const isComplete = isExplicitComplete || isFarewellComplete;
 
     const cleanResponse = aiResponse.replace(/\[QUESTION_COMPLETE\]/g, "").replace(/\*\*\[.*?\]\*\*\s*/g, "").trim();
@@ -1296,7 +1321,7 @@ app.post("/api/interview/respond", async (req, res) => {
       // Detect conversation completion: explicit marker OR farewell-like response
       const farewellPatterns = /\b(goodbye|good\s*bye|take care|talk soon|thanks for (?:sharing|being|your time)|appreciate you|that['']s (?:all|everything)|we['']re (?:all )?done)\b/i;
       const isExplicitComplete = aiResponse.includes("[QUESTION_COMPLETE]");
-      const isFarewellComplete = !isExplicitComplete && farewellPatterns.test(aiResponse) && userTurns >= 2;
+      const isFarewellComplete = !isExplicitComplete && farewellPatterns.test(aiResponse) && userTurns >= 3;
       const isComplete = isExplicitComplete || isFarewellComplete;
       if (isFarewellComplete) {
         console.log(`[INTERVIEW] Auto-completing conversation for ${questionId} — farewell detected after ${userTurns} turns`);
@@ -2210,8 +2235,10 @@ async function streamFollowUp(
   // Build turn-aware completion guidance
   const turns = userTurns ?? conversationHistory.filter((m) => m.role === "user").length;
   let completionUrgency = "";
-  if (turns >= 2) {
+  if (turns >= 3) {
     completionUrgency = `\n\nCRITICAL: This is user turn ${turns} of max 3. You MUST wrap up this question NOW. Acknowledge their response briefly (1 sentence max), then end your response with the exact marker [QUESTION_COMPLETE] on its own line. Do NOT ask another follow-up question. Do NOT introduce new topics. Do NOT ask for ratings or scales. Your response must end with [QUESTION_COMPLETE].`;
+  } else if (turns === 2) {
+    completionUrgency = `\n\nThis is user turn ${turns}. You have one more follow-up remaining after this. Continue probing deeper on this topic — ask a meaningful follow-up that builds on what they just shared. Do NOT wrap up yet. Do NOT use [QUESTION_COMPLETE]. Only end with [QUESTION_COMPLETE] if the participant has given an exceptionally thorough answer and there is genuinely nothing more to explore.`;
   }
 
   const systemPrompt = `${assessmentInterviewPrompt || `You are an expert interviewer for HMN (Human Machine Network), conducting an AI readiness assessment.`}
@@ -2347,8 +2374,10 @@ async function generateFollowUp(
   // Build turn-aware completion guidance
   const turns = userTurns ?? conversationHistory.filter((m) => m.role === "user").length;
   let completionUrgency = "";
-  if (turns >= 2) {
+  if (turns >= 3) {
     completionUrgency = `\n\nCRITICAL: This is user turn ${turns} of max 3. You MUST wrap up this question NOW. Acknowledge their response briefly (1 sentence max), then end your response with the exact marker [QUESTION_COMPLETE] on its own line. Do NOT ask another follow-up question. Do NOT introduce new topics. Do NOT ask for ratings or scales. Your response must end with [QUESTION_COMPLETE].`;
+  } else if (turns === 2) {
+    completionUrgency = `\n\nThis is user turn ${turns}. You have one more follow-up remaining after this. Continue probing deeper on this topic — ask a meaningful follow-up that builds on what they just shared. Do NOT wrap up yet. Do NOT use [QUESTION_COMPLETE]. Only end with [QUESTION_COMPLETE] if the participant has given an exceptionally thorough answer and there is genuinely nothing more to explore.`;
   }
 
   const systemPrompt = `${assessmentInterviewPrompt || `You are an expert interviewer for HMN (Human Machine Network), conducting an AI readiness assessment.`}

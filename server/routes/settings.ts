@@ -80,4 +80,43 @@ router.get("/retention/preview", async (req, res) => {
   }
 });
 
+// ============================================================
+// Phone / Voice Call Feature Flag
+// ============================================================
+
+const PHONE_KEY = "phone_enabled";
+
+// GET phone_enabled setting
+router.get("/phone", async (_req, res) => {
+  try {
+    const { data } = await getSupabase()
+      .from("cascade_settings")
+      .select("*")
+      .eq("key", PHONE_KEY)
+      .single();
+
+    res.json({ phone_enabled: data?.value?.enabled ?? false });
+  } catch {
+    res.json({ phone_enabled: false });
+  }
+});
+
+// PUT phone_enabled setting
+router.put("/phone", async (req, res) => {
+  try {
+    const { phone_enabled } = req.body;
+    const value = { enabled: !!phone_enabled };
+
+    const { error } = await getSupabase()
+      .from("cascade_settings")
+      .upsert({ key: PHONE_KEY, value, updated_at: new Date().toISOString() }, { onConflict: "key" });
+
+    if (error) throw error;
+    res.json(value);
+  } catch (err) {
+    console.error("[settings] phone save error:", err);
+    res.status(500).json({ error: "Failed to save phone setting" });
+  }
+});
+
 export default router;

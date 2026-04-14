@@ -45,6 +45,8 @@ export default function InterviewPage() {
   const [skippedQuestionIds, setSkippedQuestionIds] = useState<string[]>([]);
   const [conversationHistories, setConversationHistories] = useState<Record<string, ConversationMessage[]>>({});
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [voiceCallEnabled, setVoiceCallEnabled] = useState(false);
+
   const [sliderFollowUp, setSliderFollowUp] = useState<{
     questionId: string;
     originalAnswer: string | number;
@@ -86,6 +88,7 @@ export default function InterviewPage() {
         const data = await startInterview(sessionId!);
         setCurrentQuestion(data.currentQuestion);
         setProgress({ ...data.progress, completedPercentage: 0 });
+        if (typeof data.voiceCallEnabled === "boolean") setVoiceCallEnabled(data.voiceCallEnabled);
 
         // Store assessment metadata for dynamic question banks
         if (data.assessmentQuestions) {
@@ -530,7 +533,7 @@ export default function InterviewPage() {
               onBack={handleGoBack}
               onSkip={handleSkip}
               canGoBack={visibleAnswered.length > 0}
-              showPhoneOption={false}
+              showPhoneOption={voiceCallEnabled}
               sliderFollowUp={sliderFollowUp}
             />
           )
