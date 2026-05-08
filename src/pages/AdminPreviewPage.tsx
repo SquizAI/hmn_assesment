@@ -47,6 +47,12 @@ export default function AdminPreviewPage() {
   const [skippedQuestionIds, setSkippedQuestionIds] = useState<string[]>([]);
   const [mode, setMode] = useState<PreviewMode>("manual");
   const [analysisResult, setAnalysisResult] = useState<Record<string, unknown> | null>(null);
+  const [sliderFollowUp, setSliderFollowUp] = useState<{
+    questionId: string;
+    originalAnswer: string | number;
+    answerDisplay: string;
+    aiFollowUp: string;
+  } | null>(null);
 
   // Dynamic assessment metadata
   const [assessmentMeta, setAssessmentMeta] = useState<AssessmentMeta | null>(null);
@@ -126,6 +132,17 @@ export default function AdminPreviewPage() {
       const data = await submitAnswer(sessionId, currentQuestion.id, answer as string, conversationHistory);
       if (data.type === "follow_up") return;
 
+      if (data.type === "slider_follow_up") {
+        setSliderFollowUp({
+          questionId: data.questionId,
+          originalAnswer: data.originalAnswer,
+          answerDisplay: data.answerDisplay,
+          aiFollowUp: data.aiFollowUp,
+        });
+        setIsSubmitting(false);
+        return;
+      }
+
       setAnsweredQuestions((prev) => [
         ...prev,
         { questionId: currentQuestion.id, questionText: currentQuestion.text, answer, inputType: currentQuestion.inputType },
@@ -136,6 +153,24 @@ export default function AdminPreviewPage() {
       else if (data.type === "next_question") { setCurrentQuestion(data.currentQuestion); setProgress(data.progress); }
     } catch { setError("Something went wrong."); }
     finally { setIsSubmitting(false); }
+  };
+
+  const handleConversationComplete = (serverData: { type: string; currentQuestion?: unknown; progress?: unknown; skippedQuestionIds?: string[] }) => {
+    if (!currentQuestion) return;
+    if (sliderFollowUp) setSliderFollowUp(null);
+
+    setAnsweredQuestions((prev) => [
+      ...prev,
+      { questionId: currentQuestion.id, questionText: currentQuestion.text, answer: "(conversation)", inputType: currentQuestion.inputType },
+    ]);
+    if (serverData.skippedQuestionIds) setSkippedQuestionIds(serverData.skippedQuestionIds);
+
+    const resolvedType = serverData.type === "done" ? (serverData as Record<string, unknown>).responseType as string : serverData.type;
+    if (resolvedType === "complete") setIsComplete(true);
+    else if (resolvedType === "next_question") {
+      setCurrentQuestion(serverData.currentQuestion as Question);
+      setProgress(serverData.progress as Progress);
+    }
   };
 
   // Auto-pilot: submit a generic answer
@@ -416,7 +451,9 @@ export default function AdminPreviewPage() {
               question={currentQuestion}
               sessionId={sessionId}
               onSubmit={handleSubmit}
+              onConversationComplete={handleConversationComplete}
               isSubmitting={isSubmitting}
+              sliderFollowUp={sliderFollowUp}
             />
 
             {/* Auto-pilot button */}
