@@ -993,7 +993,7 @@ app.post("/api/interview/start", async (req, res) => {
       assessmentSections: assessment?.sections || null,
       assessmentPhases: assessment?.phases || null,
       assessmentScoringDimensions: assessment?.scoringDimensions || null,
-      voiceCallEnabled,
+      voiceCallEnabled: assessment?.disablePhoneOption ? false : voiceCallEnabled,
       progress: {
         questionNumber: bankAnswered - skippedQuestionIds.filter((id) => bankIdSet.has(id)).length + 1,
         totalQuestions: effectiveTotal,

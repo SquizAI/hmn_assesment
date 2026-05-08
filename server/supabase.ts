@@ -316,6 +316,7 @@ function dbRowToAssessment(row: Record<string, unknown>): AssessmentType {
     analysisSystemPrompt: (settings.analysisSystemPrompt as string) || undefined,
     intakeFields: (settings.intakeFields as AssessmentType["intakeFields"]) || undefined,
     intakeNotice: (settings.intakeNotice as string) || undefined,
+    disablePhoneOption: (settings.disablePhoneOption as boolean) || undefined,
     createdAt: (row.created_at as string) || new Date().toISOString(),
     updatedAt: (row.updated_at as string) || new Date().toISOString(),
   };
@@ -339,6 +340,7 @@ function assessmentToDbRow(a: AssessmentType): Record<string, unknown> {
       analysisSystemPrompt: a.analysisSystemPrompt || null,
       intakeFields: a.intakeFields || null,
       intakeNotice: a.intakeNotice || null,
+      disablePhoneOption: a.disablePhoneOption || null,
     },
     updated_at: new Date().toISOString(),
   };

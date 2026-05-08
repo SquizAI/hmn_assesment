@@ -6,6 +6,7 @@
   "estimatedMinutes": 28,
   "status": "draft",
   "intakeNotice": "Confidential — your principal will see aggregated themes, not your name and not your direct quotes.",
+  "disablePhoneOption": true,
   "intakeFields": [
     {
       "field": "principal_of_record",

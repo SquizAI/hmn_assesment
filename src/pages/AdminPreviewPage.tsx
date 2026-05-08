@@ -53,6 +53,7 @@ export default function AdminPreviewPage() {
     answerDisplay: string;
     aiFollowUp: string;
   } | null>(null);
+  const [voiceCallEnabled, setVoiceCallEnabled] = useState(false);
 
   // Dynamic assessment metadata
   const [assessmentMeta, setAssessmentMeta] = useState<AssessmentMeta | null>(null);
@@ -71,6 +72,7 @@ export default function AdminPreviewPage() {
         const data = await startInterview(session.id);
         setCurrentQuestion(data.currentQuestion);
         setProgress({ ...data.progress, completedPercentage: 0 });
+        if (typeof data.voiceCallEnabled === "boolean") setVoiceCallEnabled(data.voiceCallEnabled);
 
         // Store assessment metadata for dynamic question banks
         if (data.assessmentQuestions) {
@@ -454,6 +456,7 @@ export default function AdminPreviewPage() {
               onConversationComplete={handleConversationComplete}
               isSubmitting={isSubmitting}
               sliderFollowUp={sliderFollowUp}
+              showPhoneOption={voiceCallEnabled}
             />
 
             {/* Auto-pilot button */}

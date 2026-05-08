@@ -151,6 +151,7 @@ export interface AssessmentType {
     options?: { value: string; label: string }[];
   }[];
   intakeNotice?: string;
+  disablePhoneOption?: boolean;
   createdAt: string;
   updatedAt: string;
 }
