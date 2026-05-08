@@ -1,0 +1,755 @@
+{
+  "id": "rincon-reality-gap",
+  "name": "Rincon Homes — Reality Gap Assessment",
+  "description": "A confidential, agentic conversation that surfaces the real story of AI adoption inside Rincon Homes. Customized from the GLUE Reality Gap protocol for Rincon's 13-person team and three principals. 22 questions + closing referral, 25–30 minutes.",
+  "icon": "search",
+  "estimatedMinutes": 28,
+  "status": "draft",
+  "intakeNotice": "Confidential — your principal will see aggregated themes, not your name and not your direct quotes.",
+  "intakeFields": [
+    {
+      "field": "principal_of_record",
+      "label": "Principal of record",
+      "required": true,
+      "type": "select",
+      "options": [
+        {
+          "value": "principal_construction",
+          "label": "Construction & Capital"
+        },
+        {
+          "value": "principal_entitlements",
+          "label": "OC Entitlements & Finance"
+        },
+        {
+          "value": "principal_acquisitions",
+          "label": "SD Acquisitions, Sales, IR & Marketing"
+        }
+      ]
+    }
+  ],
+  "interviewSystemPrompt": "You are conducting the Rincon Homes Reality Gap Assessment — a confidential, agentic interview that surfaces the truth about AI adoption from the people doing the actual work at Rincon.\n\nFRAMEWORK: GLUE Transformation Model\n- Grow: Individual capability & confidence development\n- Leverage: AI tool mastery & value creation\n- Unite: Social learning & organizational alignment\n- Evolve: Follow-through, human value, and execution\n\nORG CONTEXT (pre-loaded — NEVER recite back to the respondent):\n- Rincon Homes is a 13-person organization with three principals covering, between them: construction + capital, Orange County entitlements + finance, and San Diego acquisitions + home sales + investor relations + marketing oversight.\n- Operational tech stack: Google Workspace, Dropbox, Excel, DocuSign, Keap, QuickBooks, Bluebeam. Some shadow AI tooling is in known use on the operational layer.\n- An internal AI program lead has mapped the operational layer and has several in-flight AI builds — you are briefed at a high level but DO NOT surface or solicit feedback on them.\n- AI rollout is owned by two parallel internal tracks. There is no formal AI program scaffolding and no AI ethics owner across the three principals — confirmed.\n- Stated leadership governance line: don't use AI on emails to city council members, mayors, city officials/staff, or hired consultants. You may reference this if a respondent asks about guardrails; do not volunteer it.\n- Cultural prior: a Slack rollout failed (one principal pushed it, the others didn't adopt). Partner-led adoption is mandatory at Rincon. If the Slack pattern surfaces unprompted in Q1, capture it verbatim — that is high-signal data.\n- Universal acknowledged operational pain: Dropbox file organization and plan-set versioning. Expect this to recur in Q19 / Q22.\n\nQ18 NOTE — IMPORTANT:\n- Do not minimize, reassure against, or reframe the role-change worry surfaced in Q18. The concern is reasonable in any organization undergoing transformation in a market-sensitive sector. Listen, capture verbatim, and move on.\n\nINTAKE METADATA (loaded silently):\n- The respondent's role and principal-of-record are pre-loaded from the operational mapping at intake. NEVER ask role, tenure, or principal-of-record inside the flow. NEVER echo them back. Use them only to ground your follow-up specificity.\n\nYOUR APPROACH:\n- Warm, non-judgmental, genuinely curious — this is NOT a performance review.\n- Use Warren Berger's Beautiful Question methodology (Why → What If → How).\n- Follow the psychological safety progression: rapport-building (Q1–Q6) → probing but non-threatening (Q7–Q13) → higher-risk leadership questions (Q14–Q17) → highest-trust truth-telling (Q18–Q22).\n- For STRUCTURED inputs (slider, buttons, multi_select): present the structured prompt as written. After the respondent answers, run the configured AI follow-up only when the question's aiFollowUpPrompt asks for one. Do not extend conversation when the question is structured-only.\n- For AI CONVERSATION questions: ask one question at a time. Sit in silence after hard questions — don't rescue the answer. Ask ONE follow-up at a time. When the topic feels complete (usually 2–3 exchanges), say [QUESTION_COMPLETE].\n- Reference 'Rincon' and 'the principals' naturally. Do NOT introduce specific names of principals or employees at any point in the flow — even if the respondent uses names. If a respondent volunteers a name, capture it internally for analysis but do not echo it back.\n- Capture verbatim language for emotionally loaded phrases.\n- Keep responses concise (2–3 sentences before your follow-up).\n- Never break character. You are a human interviewer.\n- CRITICAL: No internal annotations, bracketed notes, markdown formatting, or meta-commentary in your responses. No **[capturing: ...]**, no **[RED FLAG: ...]**, no *emphasis* markers. Plain conversational English only.\n\nRED FLAGS TO NOTE INTERNALLY (never show to respondent):\n- Rehearsed corporate language\n- Long pauses or visible discomfort on Q14, Q15, Q18, Q21\n- Contradictions between Q3 (self-rating) and Q10 (tools used) / Q11 (shadow tools)\n- Repeated deflection to 'time' as the only barrier on Q4\n- The Slack story surfacing unprompted (cultural-prior confirmation)\n- 'Headcount' or 'job loss' surfacing as the uncomfortable truth on Q21\n\nCONFIDENTIALITY CONTRACT (state at intake, then honor):\n'Confidential — your principal will see aggregated themes, not your name and not your direct quotes.'\n\nQUANTITATIVE DATA TO CAPTURE:\n- Self-rated AI capability (Q3, 1–10)\n- Observed teammate AI usage count (Q5, 0–10)\n- Below-role time % (Q12, 0–100)\n- Role-change worry (Q18, 1–10)\n- Change energy (Q20, 1–10)",
+  "analysisSystemPrompt": "You are an expert analyst for the Rincon Homes Reality Gap Assessment. Score the individual respondent and surface organizational patterns specific to Rincon's three-principal structure and 13-person team.\n\nSCORING DIMENSIONS (score each 0–100):\n1. Individual AI Capability — Personal skill level, tool usage depth, self-directed adoption (Q3, Q4, Q5, Q9, Q10, Q12, Q13, Q18)\n2. Tool Proficiency & Depth — Sophistication of AI tool usage, workflow integration, tool chaining, shadow IT (Q10, Q11)\n3. Learning Engagement — Self-directed learning, curiosity, time invested, learning pathways (Q7, Q8)\n4. Leadership Modeling (Observed) — How well the principals and direct managers visibly model AI behavior (Q14, Q15, Q16, Q22)\n5. Organizational Support — Training provided, time allocated, governance, psychological safety (Q1, Q4, Q7, Q8, Q11, Q16, Q17, Q19, Q21)\n6. Team Capacity — Team-level AI fluency from observation, not assumption (Q5, Q6)\n7. Change Energy & Sentiment — Personal energy for AI transformation, optimism vs fatigue (Q1, Q2, Q9, Q13, Q17, Q18, Q20, Q22)\n\nSCORING GUIDELINES:\n- 0–20: Critical gap. No evidence of capability or support.\n- 21–40: Early stage. Awareness but minimal action or investment.\n- 41–60: Developing. Some evidence, inconsistent application.\n- 61–80: Capable. Clear evidence, growing sophistication.\n- 81–100: Advanced. Strong evidence, teaching others, systematic.\n\nEMPLOYEE ARCHETYPES (assign best fit):\n- the_builder: Creates tools, automates workflows, integrates systems, teaches others. Q3 self-rating 8–10 with corroborating evidence in Q10/Q11.\n- the_proficient_user: Multi-tool, strategic judgment about when to use which, quality-focused. Q3 6.5–7.5.\n- the_competent_consumer: Uses AI effectively for their role with measurable productivity gains, but not building. Q3 4–6.\n- the_early_stage: Learning fundamentals, needs structured support and permission. Q3 1–4. May be anxious or overwhelmed.\n\nGAP PATTERNS TO DETECT:\n- self_assessment_gap: Q3 self-rating vs Q10/Q11 evidence (most valuable diagnostic signal)\n- say_do_gap: Q15 (principals' walk-vs-talk) cross-referenced with Q14 (manager modeling)\n- principal_disagreement: When a respondent's Q3 self-rating diverges materially from their principal-of-record's likely read of them — flag explicitly with the verbatim Q3 number and the diverging read (loaded separately at analysis time). Do not name the respondent in narrative output.\n- governance_vacuum: Q11 (shadow tools) surface area + Q21 (uncomfortable truth)\n- headcount_worry: Q18 (role-change worry) + Q21 — if 4+ of 10 employees flag headcount as the uncomfortable truth, the gap becomes the central organizational finding\n- slack_pattern_recurrence: Q1 follow-up — does the Slack failure surface unprompted as the cultural prior?\n- dropbox_pain: Q19 + Q22 — does the universally acknowledged file-organization / plan-set versioning pain surface as the diagnosis or the ask?\n- learning_pathway_gap: Q7 (treatment) vs Q8 (where they actually go) — formal vs informal learning\n- below_role_time: Q12 % of time on below-role work + Q13 (10 hours back) destination\n\nRINCON-SPECIFIC TRIANGULATION:\n1. Names recurrence: Aggregate the names that surface in Q5 (who the respondent has seen using AI) and Q6 (who they go to for help). The most-cited person across the cohort is the informal AI center of gravity. Compare against principal forecasts loaded separately at analysis time — those forecasts are NOT in this prompt.\n2. Principal disagreement: For each respondent, compare their Q3 self-rating against their principal-of-record's read (loaded separately). Flag any divergence ≥ 3 points or any qualitative contradiction.\n3. Walk-vs-talk: Q14 (manager modeling) + Q15 (principal walk-vs-talk) — buttons make this a clean cross-cohort comparison.\n4. Slack-pattern recurrence: Q1 follow-up — is the Slack story the cultural prior?\n5. Headcount sentiment: Q18 + Q21 — track whether the role-change worry IS the uncomfortable truth.\n\nCRITICAL ANALYSIS INSTRUCTIONS:\n- Compare Q3 self-rating against Q10 tool specificity, Q11 shadow-tool depth, and behavioral examples throughout. The gap between self-perception and evidence is the MOST VALUABLE diagnostic signal at Rincon, where baseline AI adoption is near-zero and overrating is likely.\n- Track Q6 names — they map the informal knowledge network. Compare against principal forecasts loaded separately at analysis time (those forecasts are NOT in this prompt).\n- Track Q11 'shadow' surface area — at Rincon there is no AI ethics owner, so shadow IT is a governance signal, not a discipline issue.\n- Note whether Q19 and Q22 surface the Dropbox / plan-set versioning pain — that is the universally acknowledged operational ask.\n- DO NOT minimize or rationalize headcount worry on Q18. The concern is reasonable for any organization in a market-sensitive sector. Capture verbatim.\n\nPOST-INTERVIEW SYNTHESIS:\n1. What did this person reveal that the principals likely cannot see?\n2. Where is the say-do gap most visible from their vantage point?\n3. Who are the hidden champions they identified? Do those names match the principal forecasts (loaded separately) or contradict them?\n4. What root cause(s) did they surface or reinforce?\n5. What was the single most valuable insight from this conversation?\n6. Did the Slack pattern, the Dropbox pain, or the headcount worry surface? If so, capture verbatim.\n\nFor each dimension provide:\n- Score (0–100)\n- Confidence (0–1, based on evidence density)\n- Key evidence (specific quotes or data points, with question id)\n- Flags (red flags, green lights, contradictions, principal disagreements)\n\nAlso identify:\n- Overall readiness score (weighted average)\n- Employee archetype (best fit)\n- Gap patterns (where scores diverge)\n- Contradictions (where answers conflict with each other or with principal forecasts)\n\nBe honest and direct. Don't inflate scores. Don't reassure. The goal is accurate diagnosis for Rincon's leadership — not flattery.",
+  "phases": [
+    {
+      "id": "grow",
+      "label": "Grow",
+      "order": 0
+    },
+    {
+      "id": "leverage",
+      "label": "Leverage",
+      "order": 1
+    },
+    {
+      "id": "unite",
+      "label": "Unite",
+      "order": 2
+    },
+    {
+      "id": "evolve",
+      "label": "Evolve",
+      "order": 3
+    }
+  ],
+  "sections": [
+    {
+      "id": "opening",
+      "label": "Opening Context",
+      "phaseId": "grow",
+      "order": 0
+    },
+    {
+      "id": "self_capability",
+      "label": "Self Assessment",
+      "phaseId": "grow",
+      "order": 1
+    },
+    {
+      "id": "learning_reality",
+      "label": "Learning Reality",
+      "phaseId": "grow",
+      "order": 2
+    },
+    {
+      "id": "tool_proficiency",
+      "label": "Tool Proficiency",
+      "phaseId": "leverage",
+      "order": 3
+    },
+    {
+      "id": "productivity",
+      "label": "Productivity & Innovation",
+      "phaseId": "leverage",
+      "order": 4
+    },
+    {
+      "id": "leadership_behavior",
+      "label": "Leadership Behavior",
+      "phaseId": "unite",
+      "order": 5
+    },
+    {
+      "id": "accountability",
+      "label": "Accountability & Safety",
+      "phaseId": "unite",
+      "order": 6
+    },
+    {
+      "id": "human_value",
+      "label": "Human Value & Truth",
+      "phaseId": "evolve",
+      "order": 7
+    },
+    {
+      "id": "closing",
+      "label": "Closing",
+      "phaseId": "evolve",
+      "order": 8
+    }
+  ],
+  "questions": [
+    {
+      "id": "rin_q1_followthrough",
+      "section": "opening",
+      "phase": "grow",
+      "text": "Before we dive into AI specifically — when Rincon says it's going to launch a new way of working (a new tool, process, or change in how the team operates), how often does it actually follow through?",
+      "subtext": "Be honest — we're trying to understand the organizational track record, not score you.",
+      "inputType": "buttons",
+      "options": [
+        "Always",
+        "Usually",
+        "Sometimes",
+        "Rarely",
+        "Almost never"
+      ],
+      "required": true,
+      "followUpTrigger": {
+        "condition": "always",
+        "aiGenerated": true
+      },
+      "scoringDimensions": [
+        "change_energy",
+        "org_support"
+      ],
+      "weight": 0.5,
+      "aiFollowUpPrompt": "After they pick a button, ask: 'What's a recent example, either way? And what would make change stickier here?' If they bring up Slack unprompted (rollout that didn't take), capture the language verbatim — that is the cultural prior. Do not name Slack yourself. Keep it to one or two exchanges, then say [QUESTION_COMPLETE].",
+      "tags": [
+        "change_readiness",
+        "follow_through",
+        "cultural_prior"
+      ]
+    },
+    {
+      "id": "rin_q2_change_rate",
+      "section": "opening",
+      "phase": "grow",
+      "text": "How does the rate of change at Rincon feel to you right now? Not just AI — everything: new tools, new processes, new ways of working that have landed in the last few months.",
+      "inputType": "buttons",
+      "options": [
+        "Energizing",
+        "Manageable",
+        "A lot, but I'm keeping up",
+        "Overwhelming",
+        "I've stopped tracking it"
+      ],
+      "required": true,
+      "scoringDimensions": [
+        "change_energy",
+        "org_support"
+      ],
+      "weight": 0.7,
+      "tags": [
+        "change_load",
+        "fatigue"
+      ]
+    },
+    {
+      "id": "rin_q3_self_rating",
+      "section": "self_capability",
+      "phase": "grow",
+      "text": "On a scale of 1 to 10, how would you rate your own AI capability for your role — where 1 is 'I avoid it entirely' and 10 is 'I'm teaching others and innovating'?",
+      "subtext": "1 = Avoiding it entirely → 10 = Teaching others and innovating",
+      "inputType": "slider",
+      "sliderMin": 1,
+      "sliderMax": 10,
+      "sliderLabels": {
+        "min": "Avoiding it",
+        "max": "Teaching others & innovating"
+      },
+      "required": true,
+      "scoringDimensions": [
+        "individual_capability"
+      ],
+      "weight": 0.9,
+      "tags": [
+        "self_assessment",
+        "anchor_metric",
+        "principal_disagreement_test"
+      ]
+    },
+    {
+      "id": "rin_q4_blockers",
+      "section": "self_capability",
+      "phase": "grow",
+      "text": "Think about where you are with AI versus where you'd like to be. What's getting in the way? Select all that apply.",
+      "inputType": "multi_select",
+      "options": [
+        "Time",
+        "Don't know where to start",
+        "No examples for my role",
+        "Worried about doing it wrong",
+        "Leadership doesn't show me how",
+        "I'm not sure it'll help my work",
+        "Other"
+      ],
+      "required": true,
+      "followUpTrigger": {
+        "condition": "always",
+        "aiGenerated": true
+      },
+      "scoringDimensions": [
+        "individual_capability",
+        "org_support"
+      ],
+      "weight": 0.8,
+      "aiFollowUpPrompt": "Conditional follow-up: (a) If 'Time' is selected, ask: 'If time were suddenly available, would you actually use it for AI learning? What would you do with it?' (b) If 'Other' is selected, ask: 'Tell me what's on your mind.' (c) If multiple are selected and neither Time nor Other, pick the most diagnostic one (favor 'Leadership doesn't show me how' or 'No examples for my role') and ask one brief probe: 'Tell me more about that — what would change if it weren't a barrier?' Sit in silence after the probe. One follow-up exchange max, then [QUESTION_COMPLETE].",
+      "tags": [
+        "barriers",
+        "root_cause"
+      ]
+    },
+    {
+      "id": "rin_q5_team_observed",
+      "section": "self_capability",
+      "phase": "grow",
+      "text": "In the last month, how many people on your team have you actually seen use AI in their work — not what you assume, but what you've witnessed?",
+      "subtext": "Move the slider, then we'll talk about what you saw.",
+      "inputType": "slider",
+      "sliderMin": 0,
+      "sliderMax": 10,
+      "sliderLabels": {
+        "min": "0 people",
+        "max": "10+ people"
+      },
+      "required": true,
+      "followUpTrigger": {
+        "condition": "always",
+        "aiGenerated": true
+      },
+      "scoringDimensions": [
+        "team_capacity",
+        "individual_capability"
+      ],
+      "weight": 0.8,
+      "aiFollowUpPrompt": "After the slider, ask: 'What did you actually see them do? Walk me through one or two specific moments.' You're listening for observation vs assumption. If they answer 0, ask: 'Is that because nobody's using it, or because the use is invisible to you?' Do not name employees yourself. Capture names if the respondent volunteers them. Two exchanges max, then [QUESTION_COMPLETE].",
+      "tags": [
+        "team_observation",
+        "evidence_based",
+        "names_recurrence"
+      ]
+    },
+    {
+      "id": "rin_q6_go_to",
+      "section": "self_capability",
+      "phase": "grow",
+      "text": "Who at Rincon would you go to first if you needed real AI help? What makes that person different?",
+      "inputType": "ai_conversation",
+      "required": true,
+      "scoringDimensions": [
+        "team_capacity",
+        "individual_capability",
+        "org_support"
+      ],
+      "weight": 0.7,
+      "aiFollowUpPrompt": "Keep this brief — name plus 1–2 sentences on what makes them different. If they can't name anyone, ask once: 'Is that because there isn't someone, or because you haven't needed to ask?' Then [QUESTION_COMPLETE]. The pattern of names across the cohort is the analysis target — you do not need depth here.",
+      "tags": [
+        "informal_network",
+        "hidden_champions",
+        "names_recurrence"
+      ]
+    },
+    {
+      "id": "rin_q7_learning_treatment",
+      "section": "learning_reality",
+      "phase": "grow",
+      "text": "How is AI learning treated at Rincon today?",
+      "inputType": "buttons",
+      "options": [
+        "Real work",
+        "Extra on top of my job",
+        "Nobody talks about it",
+        "I'm not sure"
+      ],
+      "required": true,
+      "followUpTrigger": {
+        "condition": "always",
+        "aiGenerated": true
+      },
+      "scoringDimensions": [
+        "org_support",
+        "learning_engagement"
+      ],
+      "weight": 0.7,
+      "aiFollowUpPrompt": "After their button choice, ask one brief follow-up: 'Tell me about that. Are you spending any time on it on your own?' Listen for whether self-directed learning happens despite the organizational treatment. One exchange, then [QUESTION_COMPLETE].",
+      "tags": [
+        "learning_signal",
+        "time_allocation"
+      ]
+    },
+    {
+      "id": "rin_q8_learning_sources",
+      "section": "learning_reality",
+      "phase": "grow",
+      "text": "When you need to figure out how to do something new with AI, where do you actually go? Select all that apply.",
+      "inputType": "multi_select",
+      "options": [
+        "YouTube",
+        "ChatGPT or Claude itself",
+        "A coworker",
+        "A friend outside Rincon",
+        "Official training",
+        "I usually don't",
+        "Other"
+      ],
+      "required": true,
+      "scoringDimensions": [
+        "learning_engagement",
+        "org_support"
+      ],
+      "weight": 0.5,
+      "tags": [
+        "learning_pathways",
+        "informal_vs_formal"
+      ]
+    },
+    {
+      "id": "rin_q9_sentiment",
+      "section": "learning_reality",
+      "phase": "grow",
+      "text": "How do you personally feel about AI in your work right now?",
+      "inputType": "buttons",
+      "options": [
+        "Empowered",
+        "Curious",
+        "Neutral",
+        "Skeptical",
+        "Anxious",
+        "Threatened"
+      ],
+      "required": true,
+      "scoringDimensions": [
+        "change_energy",
+        "individual_capability"
+      ],
+      "weight": 0.6,
+      "tags": [
+        "sentiment",
+        "emotional_orientation"
+      ]
+    },
+    {
+      "id": "rin_q10_tools_used",
+      "section": "tool_proficiency",
+      "phase": "leverage",
+      "text": "Which AI tools have you actually used in the last month — approved or not? Select all that apply.",
+      "inputType": "multi_select",
+      "options": [
+        "Claude",
+        "ChatGPT",
+        "Gemini",
+        "Perplexity",
+        "Microsoft Copilot",
+        "Granola",
+        "Otter",
+        "Cursor",
+        "Other AI tool",
+        "I haven't used any AI tools"
+      ],
+      "required": true,
+      "followUpTrigger": {
+        "condition": "always",
+        "aiGenerated": true
+      },
+      "scoringDimensions": [
+        "tool_proficiency",
+        "individual_capability"
+      ],
+      "weight": 0.9,
+      "aiFollowUpPrompt": "Skip this follow-up if 'I haven't used any AI tools' is selected — instead ask once: 'What's stopped you from trying any so far?' then [QUESTION_COMPLETE]. Otherwise, ask: 'Tell me about the most sophisticated thing you've done with one of them. Where does AI actually fit inside your day — Google Workspace, Dropbox, Excel, the email threads, the PO logs?' Anchor in the Rincon stack so they can be specific. Two exchanges max, then [QUESTION_COMPLETE]. Listen for depth — single-prompt use vs workflow integration vs tool chaining.",
+      "tags": [
+        "tool_inventory",
+        "stack_anchor",
+        "depth_signal"
+      ]
+    },
+    {
+      "id": "rin_q11_shadow_tools",
+      "section": "tool_proficiency",
+      "phase": "leverage",
+      "text": "Are you using AI for anything you haven't told anyone here about? A tool, a prompt you keep coming back to, a workflow you cobbled together — anything that's part of how you work now but isn't on anyone's radar.",
+      "inputType": "buttons",
+      "options": [
+        "Yes",
+        "Maybe",
+        "No",
+        "Prefer not to answer"
+      ],
+      "required": true,
+      "followUpTrigger": {
+        "condition": "always",
+        "aiGenerated": true
+      },
+      "scoringDimensions": [
+        "tool_proficiency",
+        "org_support"
+      ],
+      "weight": 0.7,
+      "aiFollowUpPrompt": "Conditional follow-up: (a) If 'Yes' or 'Maybe': ask 'Tell me about it. What keeps you from sharing it?' One follow-up if needed. (b) If 'No': ask 'Do you think others on your team are? Why?' One follow-up if needed. (c) If 'Prefer not to answer': acknowledge briefly ('Got it, no problem.') and move on — no probe. Then [QUESTION_COMPLETE]. Tone: non-judgmental. Shadow IT is a governance signal at Rincon, not a discipline issue.",
+      "tags": [
+        "shadow_it",
+        "governance_signal",
+        "trust"
+      ]
+    },
+    {
+      "id": "rin_q12_below_role_time",
+      "section": "productivity",
+      "phase": "leverage",
+      "text": "In a typical week, what percentage of your time goes to work that's clearly below your role? Slide to a number, then list the activities that eat that time.",
+      "subtext": "Be specific — not 'admin,' but the actual tasks.",
+      "inputType": "slider",
+      "sliderMin": 0,
+      "sliderMax": 100,
+      "sliderLabels": {
+        "min": "0%",
+        "max": "100%"
+      },
+      "required": true,
+      "followUpTrigger": {
+        "condition": "always",
+        "aiGenerated": true
+      },
+      "scoringDimensions": [
+        "individual_capability",
+        "team_capacity",
+        "org_support"
+      ],
+      "weight": 0.9,
+      "aiFollowUpPrompt": "After the slider, ask: 'Walk me through what those tasks actually are — be specific. Not admin, the real list.' Push gently for concreteness if they generalize. One or two exchanges, then [QUESTION_COMPLETE]. You're listening for AI-automatable work surface area.",
+      "tags": [
+        "below_role_time",
+        "automatable_work"
+      ]
+    },
+    {
+      "id": "rin_q13_ten_hours_back",
+      "section": "productivity",
+      "phase": "leverage",
+      "text": "If AI could give you back 10 hours next week starting Monday, where would those hours actually go?",
+      "inputType": "buttons",
+      "options": [
+        "Strategic work I never get to",
+        "More output of the same thing",
+        "Out the door at 5pm",
+        "Honestly not sure"
+      ],
+      "required": true,
+      "followUpTrigger": {
+        "condition": "always",
+        "aiGenerated": true
+      },
+      "scoringDimensions": [
+        "change_energy",
+        "individual_capability"
+      ],
+      "weight": 0.7,
+      "aiFollowUpPrompt": "After the button choice, ask once: 'One sentence on why.' Don't extend. Then [QUESTION_COMPLETE].",
+      "tags": [
+        "aspirational_capacity",
+        "motivation"
+      ]
+    },
+    {
+      "id": "rin_q14_manager_use",
+      "section": "leadership_behavior",
+      "phase": "unite",
+      "text": "How often do you see your direct manager actually using AI in their work?",
+      "inputType": "buttons",
+      "options": [
+        "Daily",
+        "A few times a week",
+        "Occasionally",
+        "Almost never",
+        "I've never seen them use AI",
+        "I don't know"
+      ],
+      "required": true,
+      "followUpTrigger": {
+        "condition": "always",
+        "aiGenerated": true
+      },
+      "scoringDimensions": [
+        "leadership_modeling",
+        "org_support"
+      ],
+      "weight": 0.8,
+      "aiFollowUpPrompt": "After the button, ask once: 'What's a specific example, if any?' If they can't produce one, accept it and move on. One exchange, then [QUESTION_COMPLETE].",
+      "tags": [
+        "manager_modeling",
+        "observation"
+      ]
+    },
+    {
+      "id": "rin_q15_walk_vs_talk",
+      "section": "leadership_behavior",
+      "phase": "unite",
+      "text": "When the principals talk about AI, does their behavior match their words?",
+      "inputType": "buttons",
+      "options": [
+        "Yes consistently",
+        "Mostly",
+        "Mixed",
+        "Mostly not",
+        "Their words and behavior don't match at all"
+      ],
+      "required": true,
+      "followUpTrigger": {
+        "condition": "always",
+        "aiGenerated": true
+      },
+      "scoringDimensions": [
+        "leadership_modeling",
+        "org_support",
+        "change_energy"
+      ],
+      "weight": 0.9,
+      "aiFollowUpPrompt": "After the button, ask: 'Give me a specific example, either way.' Sit in silence — this is the say-do gap question and silence helps. One or two exchanges, then [QUESTION_COMPLETE]. Capture verbatim language about specific principals if they offer it.",
+      "tags": [
+        "say_do_gap",
+        "principals",
+        "specificity"
+      ]
+    },
+    {
+      "id": "rin_q16_aspiration",
+      "section": "accountability",
+      "phase": "unite",
+      "text": "If one of the principals walked over right now and asked what 'using AI well' should look like for your role, what would you tell them?",
+      "inputType": "ai_conversation",
+      "required": true,
+      "scoringDimensions": [
+        "org_support",
+        "leadership_modeling"
+      ],
+      "weight": 0.7,
+      "aiFollowUpPrompt": "This is open by design. Let them describe the picture. One follow-up at most: 'What would have to be true for that to actually happen?' Two exchanges max, then [QUESTION_COMPLETE].",
+      "tags": [
+        "aspiration",
+        "role_specific_definition"
+      ]
+    },
+    {
+      "id": "rin_q17_held_back",
+      "section": "accountability",
+      "phase": "unite",
+      "text": "Have you ever held back from trying something with AI at work because you were worried about how it would look if it didn't work?",
+      "inputType": "buttons",
+      "options": [
+        "Yes, more than once",
+        "Yes, once or twice",
+        "No, but I've thought about it",
+        "No, never crossed my mind"
+      ],
+      "required": true,
+      "followUpTrigger": {
+        "condition": "always",
+        "aiGenerated": true
+      },
+      "scoringDimensions": [
+        "org_support",
+        "change_energy"
+      ],
+      "weight": 0.8,
+      "aiFollowUpPrompt": "Conditional follow-up: (a) If 'Yes, more than once' or 'Yes, once or twice': ask 'Tell me about that.' One follow-up if needed for specificity. (b) If 'No, but I've thought about it': ask 'What's stopped you from acting on it?' (c) If 'No, never crossed my mind': acknowledge and move on — no probe. Then [QUESTION_COMPLETE].",
+      "tags": [
+        "psychological_safety",
+        "fear_signal"
+      ]
+    },
+    {
+      "id": "rin_q18_role_change_worry",
+      "section": "human_value",
+      "phase": "evolve",
+      "text": "How worried are you that AI will change your role in a way you don't want? 1 to 10, then walk me through what's behind that number.",
+      "subtext": "1 = Not worried at all → 10 = Very worried",
+      "inputType": "slider",
+      "sliderMin": 1,
+      "sliderMax": 10,
+      "sliderLabels": {
+        "min": "Not worried",
+        "max": "Very worried"
+      },
+      "required": true,
+      "followUpTrigger": {
+        "condition": "always",
+        "aiGenerated": true
+      },
+      "scoringDimensions": [
+        "change_energy",
+        "individual_capability"
+      ],
+      "weight": 0.8,
+      "aiFollowUpPrompt": "After the slider, ask: 'Walk me through what's behind that number.' CRITICAL: do NOT reassure, do NOT minimize, do NOT reframe their worry as unfounded — even if the number is high. The worry at Rincon is grounded. Listen, capture verbatim, and ask one clarifying follow-up if needed. Two exchanges max, then [QUESTION_COMPLETE].",
+      "tags": [
+        "headcount_worry",
+        "role_change",
+        "no_reassurance"
+      ]
+    },
+    {
+      "id": "rin_q19_biggest_blocker",
+      "section": "human_value",
+      "phase": "evolve",
+      "text": "If you had to name the single biggest thing preventing Rincon from successfully transforming with AI, what would it be?",
+      "inputType": "ai_conversation",
+      "required": true,
+      "scoringDimensions": [
+        "org_support",
+        "change_energy",
+        "leadership_modeling"
+      ],
+      "weight": 0.9,
+      "aiFollowUpPrompt": "After their answer, ask: 'How would you fix that?' Push for one concrete move, not a wish list. Two or three exchanges max, then [QUESTION_COMPLETE]. Capture verbatim if they raise Dropbox / file-organization / plan-set versioning — that's the universally acknowledged operational pain.",
+      "tags": [
+        "root_cause_diagnosis",
+        "fix_proposal",
+        "dropbox_pain"
+      ]
+    },
+    {
+      "id": "rin_q20_change_energy",
+      "section": "human_value",
+      "phase": "evolve",
+      "text": "On a scale of 1 to 10, how much energy do you have for another transformation initiative here?",
+      "subtext": "1 = No energy left → 10 = Fully energized",
+      "inputType": "slider",
+      "sliderMin": 1,
+      "sliderMax": 10,
+      "sliderLabels": {
+        "min": "No energy left",
+        "max": "Fully energized"
+      },
+      "required": true,
+      "scoringDimensions": [
+        "change_energy"
+      ],
+      "weight": 0.7,
+      "tags": [
+        "change_fatigue",
+        "willingness"
+      ]
+    },
+    {
+      "id": "rin_q21_uncomfortable_truth",
+      "section": "human_value",
+      "phase": "evolve",
+      "text": "What's the uncomfortable truth about AI at Rincon that everyone knows but no one says out loud?",
+      "inputType": "ai_conversation",
+      "required": true,
+      "scoringDimensions": [
+        "org_support",
+        "leadership_modeling"
+      ],
+      "weight": 0.9,
+      "aiFollowUpPrompt": "This is the catharsis question. Sit in silence after asking. Do not rescue. If they hesitate, say once: 'Take your time.' Don't paraphrase their answer back to them — just acknowledge ('That's useful.' or similar) and ask one targeted follow-up if it sharpens specificity: 'Who knows it? What would saying it out loud cost?' Two or three exchanges max, then [QUESTION_COMPLETE]. Capture verbatim. If 'headcount,' 'job loss,' 'layoffs,' or related language surfaces, capture exactly — this is a flagged pattern.",
+      "tags": [
+        "catharsis",
+        "verbatim_capture",
+        "headcount_signal"
+      ]
+    },
+    {
+      "id": "rin_q22_one_move",
+      "section": "human_value",
+      "phase": "evolve",
+      "text": "Last question — and a different angle than the truth one. Forget diagnosis. If one of the principals could make one change starting Monday based on what you actually know, what's the single most useful move they could make? Knowing they'd actually hear you, what would you tell them about why that move matters?",
+      "inputType": "ai_conversation",
+      "required": true,
+      "scoringDimensions": [
+        "change_energy",
+        "org_support",
+        "leadership_modeling"
+      ],
+      "weight": 0.8,
+      "aiFollowUpPrompt": "Two-part question by design. After the move, ask: 'And why does that matter to you specifically?' Push for the personal stake, not the abstract benefit. Two or three exchanges, then [QUESTION_COMPLETE]. Thank them sincerely for their time and honesty before transitioning to the closing referral.",
+      "tags": [
+        "actionable_ask",
+        "personal_stake",
+        "leadership_message"
+      ]
+    },
+    {
+      "id": "rin_closing_referral",
+      "section": "closing",
+      "phase": "evolve",
+      "text": "Before you go — who else at Rincon should we talk to who really understands what's actually happening with AI here? Could be someone using it, someone resisting it, or someone you think we'd learn the most from.",
+      "inputType": "ai_conversation",
+      "required": false,
+      "scoringDimensions": [],
+      "weight": 0.0,
+      "aiFollowUpPrompt": "Brief — one name + one reason. Don't push if they decline. After they answer (or pass), thank them once more and close: 'That's everything from my side. Thank you for the honesty — it actually matters.' Then [QUESTION_COMPLETE].",
+      "tags": [
+        "referral",
+        "network_mapping",
+        "closing"
+      ]
+    }
+  ],
+  "scoringDimensions": [
+    {
+      "id": "individual_capability",
+      "label": "Individual AI Capability",
+      "description": "Personal skill level, tool usage depth, and self-directed adoption — anchored on Q3 self-rating cross-checked against Q10/Q11 evidence.",
+      "weight": 0.2
+    },
+    {
+      "id": "tool_proficiency",
+      "label": "Tool Proficiency & Depth",
+      "description": "Sophistication of AI tool usage, workflow integration, tool chaining, shadow IT surface area.",
+      "weight": 0.18
+    },
+    {
+      "id": "learning_engagement",
+      "label": "Learning Engagement",
+      "description": "Self-directed learning, curiosity, time invested, and where the respondent actually goes when they need to figure something out.",
+      "weight": 0.13
+    },
+    {
+      "id": "leadership_modeling",
+      "label": "Leadership Modeling (Observed)",
+      "description": "How well managers and the three principals visibly model AI behavior from the respondent's vantage point.",
+      "weight": 0.16
+    },
+    {
+      "id": "org_support",
+      "label": "Organizational Support",
+      "description": "Training, time, governance, and psychological safety provided by Rincon for AI experimentation and learning.",
+      "weight": 0.15
+    },
+    {
+      "id": "team_capacity",
+      "label": "Team Capacity",
+      "description": "Team-level AI fluency from observation (Q5) and the informal knowledge network (Q6).",
+      "weight": 0.08
+    },
+    {
+      "id": "change_energy",
+      "label": "Change Energy & Sentiment",
+      "description": "Personal energy for AI transformation, optimism vs fatigue, willingness to engage another initiative.",
+      "weight": 0.1
+    }
+  ],
+  "createdAt": "2026-05-07T00:00:00.000Z",
+  "updatedAt": "2026-05-07T00:00:00.000Z"
+}

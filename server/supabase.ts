@@ -314,6 +314,8 @@ function dbRowToAssessment(row: Record<string, unknown>): AssessmentType {
     scoringDimensions: (row.scoring_dimensions as AssessmentType["scoringDimensions"]) || [],
     interviewSystemPrompt: (settings.interviewSystemPrompt as string) || undefined,
     analysisSystemPrompt: (settings.analysisSystemPrompt as string) || undefined,
+    intakeFields: (settings.intakeFields as AssessmentType["intakeFields"]) || undefined,
+    intakeNotice: (settings.intakeNotice as string) || undefined,
     createdAt: (row.created_at as string) || new Date().toISOString(),
     updatedAt: (row.updated_at as string) || new Date().toISOString(),
   };
@@ -335,6 +337,8 @@ function assessmentToDbRow(a: AssessmentType): Record<string, unknown> {
       estimatedMinutes: a.estimatedMinutes || 30,
       interviewSystemPrompt: a.interviewSystemPrompt || null,
       analysisSystemPrompt: a.analysisSystemPrompt || null,
+      intakeFields: a.intakeFields || null,
+      intakeNotice: a.intakeNotice || null,
     },
     updated_at: new Date().toISOString(),
   };
@@ -742,6 +746,110 @@ export async function getProfileStats(filters?: {
   }
 
   return { total: data.length, avgScore, archetypeDistribution, assessmentTypeCounts };
+}
+
+// ============================================================
+// RUNTIME CONTEXT (analysis-time private metadata)
+// ============================================================
+// Stores admin-only context (e.g., principal forecasts) that the
+// analysis pipeline prepends to the LLM system prompt at scoring time.
+// Lives separately from cascade_assessment_configs so sensitive content
+// never sits inside the public assessment JSON.
+
+export type RuntimeContextScope = "global" | "invitation" | "session" | "participant_email";
+
+export interface RuntimeContextLookup {
+  scope: RuntimeContextScope;
+  scopeKey: string;
+}
+
+export interface RuntimeContextRecord {
+  contextType: string;
+  scope: RuntimeContextScope;
+  scopeKey: string;
+  payload: unknown;
+}
+
+export async function loadRuntimeContexts(
+  assessmentId: string,
+  lookups: RuntimeContextLookup[],
+): Promise<RuntimeContextRecord[]> {
+  if (!assessmentId || lookups.length === 0) return [];
+
+  const filtered = lookups.filter((l) => l.scopeKey && l.scopeKey.length > 0);
+  if (filtered.length === 0) return [];
+
+  const sb = getSupabase();
+  const orClause = filtered
+    .map((l) => `and(scope.eq.${l.scope},scope_key.eq.${escapePostgrestValue(l.scopeKey)})`)
+    .join(",");
+
+  const { data, error } = await sb
+    .from("cascade_assessment_runtime_context")
+    .select("scope, scope_key, context_type, payload")
+    .eq("assessment_id", assessmentId)
+    .or(orClause);
+
+  if (error) {
+    console.error("[runtime_context] load failed:", error.message);
+    return [];
+  }
+  if (!data) return [];
+
+  return data.map((row) => ({
+    contextType: row.context_type as string,
+    scope: row.scope as RuntimeContextScope,
+    scopeKey: row.scope_key as string,
+    payload: row.payload,
+  }));
+}
+
+export async function saveRuntimeContext(params: {
+  assessmentId: string;
+  scope: RuntimeContextScope;
+  scopeKey: string;
+  contextType: string;
+  payload: unknown;
+}): Promise<void> {
+  const { error } = await getSupabase()
+    .from("cascade_assessment_runtime_context")
+    .upsert(
+      {
+        assessment_id: params.assessmentId,
+        scope: params.scope,
+        scope_key: params.scopeKey,
+        context_type: params.contextType,
+        payload: params.payload,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "assessment_id,scope,scope_key,context_type" },
+    );
+
+  if (error) throw new Error(`Failed to save runtime context: ${error.message}`);
+}
+
+export async function deleteRuntimeContext(params: {
+  assessmentId: string;
+  scope: RuntimeContextScope;
+  scopeKey: string;
+  contextType?: string;
+}): Promise<boolean> {
+  let query = getSupabase()
+    .from("cascade_assessment_runtime_context")
+    .delete()
+    .eq("assessment_id", params.assessmentId)
+    .eq("scope", params.scope)
+    .eq("scope_key", params.scopeKey);
+
+  if (params.contextType) query = query.eq("context_type", params.contextType);
+
+  const { error } = await query;
+  return !error;
+}
+
+// PostgREST .or() values must escape commas, parentheses, and quotes.
+function escapePostgrestValue(v: string): string {
+  return `"${v.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`;
 }
 
 // ============================================================

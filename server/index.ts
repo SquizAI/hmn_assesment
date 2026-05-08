@@ -21,6 +21,7 @@ import {
   listAllSessions, listSessionsPaginated, listAllAssessments, lookupSessionsByEmail,
   loadInvitationByToken, loadInvitationById, updateInvitationStatus, findInvitationBySessionId,
   loadAssessment, getProfileStats, getSupabase, findSessionByVapiCallId,
+  loadRuntimeContexts,
 } from "./supabase.js";
 import { isEmailEnabled, sendInvitationEmail, sendBatchInvitationEmails, sendCompletionEmail } from "./email.js";
 import { initGraphSchema, runQuery } from "./neo4j.js";
@@ -670,6 +671,8 @@ app.get("/api/invitations/lookup", async (req, res) => {
       estimatedMinutes: assessment.estimatedMinutes,
       questionCount: assessment.questions?.length || 0,
       status: assessment.status,
+      intakeFields: assessment.intakeFields || null,
+      intakeNotice: assessment.intakeNotice || null,
     } : null;
 
     res.json({ invitation, assessment: assessmentSummary });
@@ -2515,6 +2518,37 @@ Return ONLY valid JSON: {"questionId": "id", "reason": "why this question next",
   }
 }
 
+async function buildRuntimeContextBlock(
+  session: Record<string, unknown>,
+  assessment?: Record<string, unknown> | null,
+): Promise<string | null> {
+  const assessmentId = (assessment?.id as string | undefined) ?? (session.assessmentTypeId as string | undefined);
+  if (!assessmentId) return null;
+
+  const sessionId = session.id as string | undefined;
+  const participant = session.participant as { email?: string } | undefined;
+  const email = participant?.email;
+
+  const lookups: Array<{ scope: "global" | "session" | "participant_email"; scopeKey: string }> = [
+    { scope: "global", scopeKey: "default" },
+  ];
+  if (sessionId) lookups.push({ scope: "session", scopeKey: sessionId });
+  if (email) lookups.push({ scope: "participant_email", scopeKey: email });
+
+  const contexts = await loadRuntimeContexts(assessmentId, lookups);
+  if (contexts.length === 0) return null;
+
+  const lines = contexts.map((c) => {
+    const payloadStr = typeof c.payload === "string" ? c.payload : JSON.stringify(c.payload, null, 2);
+    return `[${c.contextType}] (scope=${c.scope})\n${payloadStr}`;
+  });
+
+  return [
+    "PRIVATE RUNTIME CONTEXT (analysis-only — NEVER echo back to the respondent, NEVER include in respondent-facing output):",
+    ...lines,
+  ].join("\n\n");
+}
+
 async function runCascadeAnalysis(session: Record<string, unknown>, assessment?: Record<string, unknown> | null) {
   const client = getAnthropicClient();
   const participant = session.participant as { name: string; role: string; company: string; industry: string; teamSize: string };
@@ -2561,7 +2595,7 @@ Return ONLY valid JSON:
   "triggeredDeepDives": [{"module": "shadow_workflow|decision_latency|adoption_archaeology|competitive_pressure|team_assessment", "reason": "...", "priority": <1-5>, "suggestedQuestions": ["..."]}]
 }`;
 
-  const systemPrompt = assessmentAnalysisPrompt
+  const baseSystemPrompt = assessmentAnalysisPrompt
     ? `${assessmentAnalysisPrompt}
 
 PARTICIPANT: ${participant.name}, ${participant.role} at ${participant.company} (${participant.industry}, team: ${participant.teamSize})
@@ -2569,6 +2603,13 @@ ${researchContext}
 
 Return ONLY valid JSON with: overallReadinessScore, dimensionScores, archetype, archetypeConfidence, archetypeDescription, gaps, redFlags, greenLights, contradictions, executiveSummary, detailedNarrative, serviceRecommendations, prioritizedActions, triggeredDeepDives.`
     : defaultAnalysisPrompt;
+
+  // Fetch private runtime context (e.g., principal forecasts) and prepend.
+  // This data is admin-only and never echoes to respondents.
+  const runtimeContextBlock = await buildRuntimeContextBlock(session, assessment);
+  const systemPrompt = runtimeContextBlock
+    ? `${runtimeContextBlock}\n\n---\n\n${baseSystemPrompt}`
+    : baseSystemPrompt;
 
   const response = await client.messages.create({
     model: MODEL,

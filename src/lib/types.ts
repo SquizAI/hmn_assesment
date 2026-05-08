@@ -143,7 +143,14 @@ export interface AssessmentType {
   scoringDimensions: { id: string; label: string; description: string; weight: number }[];
   interviewSystemPrompt?: string;
   analysisSystemPrompt?: string;
-  intakeFields?: { field: string; label: string; required: boolean }[];
+  intakeFields?: {
+    field: string;
+    label: string;
+    required: boolean;
+    type?: "text" | "select";
+    options?: { value: string; label: string }[];
+  }[];
+  intakeNotice?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -228,6 +235,7 @@ export interface ParticipantInfo {
   industry: string;
   teamSize: string;
   email?: string;
+  customFields?: Record<string, string>;
 }
 
 export interface QuestionResponse {

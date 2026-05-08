@@ -17,6 +17,15 @@ export default function HomePage() {
   const [showForm, setShowForm] = useState(false);
   const [assessmentName, setAssessmentName] = useState("");
   const [assessmentId, setAssessmentId] = useState("");
+  const [intakeNotice, setIntakeNotice] = useState<string>("");
+  const [intakeFields, setIntakeFields] = useState<Array<{
+    field: string;
+    label: string;
+    required: boolean;
+    type?: "text" | "select";
+    options?: { value: string; label: string }[];
+  }>>([]);
+  const [customFields, setCustomFields] = useState<Record<string, string>>({});
   const [name, setName] = useState("");
   const [role, setRole] = useState("");
   const [company, setCompany] = useState("");
@@ -57,6 +66,17 @@ export default function HomePage() {
         if (data.assessment) {
           setAssessmentName(data.assessment.name || "");
           setAssessmentId(data.assessment.id || "");
+          if (data.assessment.intakeNotice) {
+            setIntakeNotice(data.assessment.intakeNotice);
+          }
+          if (Array.isArray(data.assessment.intakeFields)) {
+            setIntakeFields(data.assessment.intakeFields);
+            const initial: Record<string, string> = {};
+            for (const f of data.assessment.intakeFields) {
+              initial[f.field] = "";
+            }
+            setCustomFields(initial);
+          }
         }
         setShowForm(true);
 
@@ -91,12 +111,26 @@ export default function HomePage() {
       });
   }, [searchParams]);
 
+  const missingCustomField = intakeFields.find((f) => f.required && !customFields[f.field]);
+
   const handleStart = async () => {
     if (!name || !company || !email || !inviteToken) return;
+    if (missingCustomField) return;
     setIsCreating(true);
     try {
+      const participantPayload: Record<string, string | Record<string, string>> = {
+        name,
+        role,
+        company,
+        industry,
+        teamSize,
+        email,
+      };
+      if (intakeFields.length > 0) {
+        participantPayload.customFields = customFields;
+      }
       const data = await createSession(
-        { name, role, company, industry, teamSize, email },
+        participantPayload as unknown as Record<string, string>,
         assessmentId || "ai-readiness",
         inviteToken,
       );
@@ -293,6 +327,11 @@ export default function HomePage() {
               )}
               <p className="text-muted-foreground text-xs">Please confirm your details and begin.</p>
             </div>
+            {intakeNotice && (
+              <div className="bg-white/[0.03] rounded-2xl border border-white/10 px-4 py-3 text-sm text-muted-foreground leading-relaxed">
+                {intakeNotice}
+              </div>
+            )}
             <div className="space-y-4">
               {([
                 { label: "Your Name", value: name, set: setName, ph: "e.g. Frankie Grundler", req: true },
@@ -315,10 +354,38 @@ export default function HomePage() {
                   />
                 </div>
               ))}
+              {intakeFields.map((f) => (
+                <div key={f.field}>
+                  <label className="block text-sm text-muted-foreground mb-1.5">
+                    {f.label} {f.required && <span className="text-red-400">*</span>}
+                  </label>
+                  {f.type === "select" && f.options ? (
+                    <select
+                      value={customFields[f.field] || ""}
+                      onChange={(e) => setCustomFields((prev) => ({ ...prev, [f.field]: e.target.value }))}
+                      className="w-full bg-background/50 backdrop-blur-md border border-border rounded-xl px-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-transparent transition-all shadow-sm"
+                    >
+                      <option value="">Select an option</option>
+                      {f.options.map((opt) => (
+                        <option key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input
+                      type="text"
+                      value={customFields[f.field] || ""}
+                      onChange={(e) => setCustomFields((prev) => ({ ...prev, [f.field]: e.target.value }))}
+                      className="w-full bg-background/50 backdrop-blur-md border border-border rounded-xl px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-transparent transition-all shadow-sm"
+                    />
+                  )}
+                </div>
+              ))}
             </div>
             <Button
               onClick={handleStart}
-              disabled={!name || !company || !email}
+              disabled={!name || !company || !email || !!missingCustomField}
               loading={isCreating}
               className="w-full"
               size="lg"
