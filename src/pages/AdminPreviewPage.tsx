@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import type { Question, ConversationMessage } from "../lib/types";
-import { startInterview, submitAnswer, analyzeSession, fetchSessionPublic } from "../lib/api";
+import { startInterview, submitAnswer, analyzeSession, analyzeSessionStream, fetchSessionPublic } from "../lib/api";
 import { createPreviewSession, deletePreviewSession } from "../lib/admin-api";
 import QuestionCard from "../components/interview/QuestionCard";
 import ProgressBar from "../components/interview/ProgressBar";
@@ -190,16 +190,36 @@ export default function AdminPreviewPage() {
     handleSubmit(answer);
   };
 
+  const [analyzeStage, setAnalyzeStage] = useState<string>("");
   const handleAnalyze = async () => {
     if (!sessionId) return;
     setIsAnalyzing(true);
+    setAnalyzeStage("Starting analysis...");
     try {
-      await analyzeSession(sessionId);
-      // Load the analysis result
-      const sessionData = await fetchSessionPublic(sessionId);
-      setAnalysisResult(sessionData.analysis || null);
-    } catch { setError("Analysis failed. The preview may not have enough responses."); }
-    finally { setIsAnalyzing(false); }
+      // Use streaming endpoint to keep the connection alive past Cloudflare's edge timeout.
+      // analyzeSessionStream pushes progress events so the UI never appears to hang.
+      const { analysis } = await analyzeSessionStream(sessionId, (stage) => setAnalyzeStage(stage));
+      if (analysis) {
+        setAnalysisResult(analysis as Record<string, unknown>);
+      } else {
+        // Fallback: streaming finished but didn't include the analysis payload — re-fetch.
+        const sessionData = await fetchSessionPublic(sessionId);
+        setAnalysisResult(sessionData.analysis || null);
+      }
+    } catch (err) {
+      console.error("[preview] analysis failed:", err);
+      // Last-ditch fallback to the non-streaming endpoint (e.g., if SSE is blocked).
+      try {
+        await analyzeSession(sessionId);
+        const sessionData = await fetchSessionPublic(sessionId);
+        setAnalysisResult(sessionData.analysis || null);
+      } catch {
+        setError("Analysis failed. The preview may not have enough responses, or the connection timed out.");
+      }
+    } finally {
+      setIsAnalyzing(false);
+      setAnalyzeStage("");
+    }
   };
 
   const handleExit = async () => {
@@ -372,7 +392,7 @@ export default function AdminPreviewPage() {
               disabled={isAnalyzing}
               className="px-6 py-3 rounded-xl text-sm font-medium bg-muted border border-foreground/15 text-foreground hover:bg-foreground/15 transition-colors disabled:opacity-50"
             >
-              {isAnalyzing ? "Analyzing..." : "Generate Analysis"}
+              {isAnalyzing ? (analyzeStage || "Analyzing...") : "Generate Analysis"}
             </button>
             <button
               onClick={handleExit}

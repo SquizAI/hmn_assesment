@@ -200,6 +200,7 @@
         "Don't know where to start",
         "No examples for my role",
         "Worried about doing it wrong",
+        "I don't know what AI use is OK here",
         "Leadership doesn't show me how",
         "I'm not sure it'll help my work",
         "Other"
@@ -362,6 +363,7 @@
         "Perplexity",
         "Microsoft Copilot",
         "Granola",
+        "NotebookLM",
         "Otter",
         "Cursor",
         "Other AI tool",
@@ -399,14 +401,15 @@
       "required": true,
       "followUpTrigger": {
         "condition": "always",
-        "aiGenerated": true
+        "aiGenerated": true,
+        "skipOnAnswers": ["Prefer not to answer"]
       },
       "scoringDimensions": [
         "tool_proficiency",
         "org_support"
       ],
       "weight": 0.7,
-      "aiFollowUpPrompt": "Conditional follow-up: (a) If 'Yes' or 'Maybe': ask 'Tell me about it. What keeps you from sharing it?' One follow-up if needed. (b) If 'No': ask 'Do you think others on your team are? Why?' One follow-up if needed. (c) If 'Prefer not to answer': acknowledge briefly ('Got it, no problem.') and move on — no probe. Then [QUESTION_COMPLETE]. Tone: non-judgmental. Shadow IT is a governance signal at Rincon, not a discipline issue.",
+      "aiFollowUpPrompt": "Conditional follow-up: (a) If 'Yes' or 'Maybe': ask 'Tell me about it. What keeps you from sharing it?' One follow-up if needed. (b) If 'No': ask 'Do you think others on your team are? Why?' One follow-up if needed. Then [QUESTION_COMPLETE]. ('Prefer not to answer' is server-skipped via skipOnAnswers — you will not be invoked for that branch.) Tone: non-judgmental. Shadow IT is a governance signal at Rincon, not a discipline issue.",
       "tags": [
         "shadow_it",
         "governance_signal",
@@ -565,14 +568,15 @@
       "required": true,
       "followUpTrigger": {
         "condition": "always",
-        "aiGenerated": true
+        "aiGenerated": true,
+        "skipOnAnswers": ["No, never crossed my mind"]
       },
       "scoringDimensions": [
         "org_support",
         "change_energy"
       ],
       "weight": 0.8,
-      "aiFollowUpPrompt": "Conditional follow-up: (a) If 'Yes, more than once' or 'Yes, once or twice': ask 'Tell me about that.' One follow-up if needed for specificity. (b) If 'No, but I've thought about it': ask 'What's stopped you from acting on it?' (c) If 'No, never crossed my mind': acknowledge and move on — no probe. Then [QUESTION_COMPLETE].",
+      "aiFollowUpPrompt": "Conditional follow-up: (a) If 'Yes, more than once' or 'Yes, once or twice': ask 'Tell me about that.' One follow-up if needed for specificity. (b) If 'No, but I've thought about it': ask 'What's stopped you from acting on it?' Then [QUESTION_COMPLETE]. ('No, never crossed my mind' is server-skipped via skipOnAnswers — you will not be invoked for that branch.)",
       "tags": [
         "psychological_safety",
         "fear_signal"

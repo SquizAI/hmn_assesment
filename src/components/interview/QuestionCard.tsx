@@ -613,9 +613,17 @@ export default function QuestionCard({ question, sessionId, onSubmit, onConversa
                       : "bg-muted border-border focus:border-border focus:bg-foreground/[0.08]"
                   }`} />
 
-                {/* Send button */}
+                {/* Send button + optional Skip for non-required ai_conversation questions */}
                 <div className="flex gap-3 items-center">
                   {isEditing && <button onClick={onCancelEdit} className="px-5 py-2.5 rounded-xl text-sm text-muted-foreground hover:text-muted-foreground hover:bg-muted transition-all">Cancel</button>}
+                  {!isEditing && question.required === false && onSkip && (
+                    <button
+                      onClick={onSkip}
+                      className="px-5 py-3 rounded-xl text-sm text-muted-foreground hover:text-foreground bg-muted hover:bg-muted border border-border transition-all whitespace-nowrap"
+                    >
+                      Skip
+                    </button>
+                  )}
                   <Button onClick={handleTextSubmit} disabled={!textValue.trim() || isAiThinking} loading={isSubmitting || isAiThinking} size="lg" className="w-full">
                     {submitLabel}
                   </Button>

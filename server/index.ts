@@ -618,9 +618,19 @@ function filterDeducibleQuestions(available: Array<Record<string, unknown>>, ses
 }
 
 function shouldTriggerFollowUp(question: Record<string, unknown>, answer: string | number): boolean {
-  const trigger = question.followUpTrigger as { condition: string; threshold?: number } | undefined;
+  const trigger = question.followUpTrigger as { condition: string; threshold?: number; skipOnAnswers?: string[] } | undefined;
   if (!trigger) return false;
   if (question.inputType === 'ai_conversation') return false;
+
+  // Per-question opt-out: questions with conditional follow-ups can list answer values
+  // that bypass the AI follow-up entirely (e.g., "Prefer not to answer", "Never crossed my mind").
+  // This prevents the agent from getting stuck in an acknowledgement loop or hallucinating new questions.
+  if (trigger.skipOnAnswers && Array.isArray(trigger.skipOnAnswers)) {
+    const answerStr = String(answer).trim().toLowerCase();
+    if (trigger.skipOnAnswers.some((skip) => skip.trim().toLowerCase() === answerStr)) {
+      return false;
+    }
+  }
 
   const condition = trigger.condition;
   if (condition === 'always') return true;

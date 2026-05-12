@@ -115,7 +115,13 @@ export default function ButtonSelect({ options, multiSelect = false, onChange, i
     emitChange(next, text);
   };
 
-  const allOptions = [...normalizedOptions, { label: "Other", value: OTHER_VALUE }];
+  // Don't double-render "Other" if the assessment JSON already includes it as an option.
+  const hasOtherInSpec = normalizedOptions.some(
+    (o) => o.label?.trim().toLowerCase() === "other" || o.value === OTHER_VALUE,
+  );
+  const allOptions = hasOtherInSpec
+    ? normalizedOptions
+    : [...normalizedOptions, { label: "Other", value: OTHER_VALUE }];
 
   return (
     <div className="grid gap-3">
