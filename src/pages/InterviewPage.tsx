@@ -25,7 +25,10 @@ interface AnsweredQuestion {
 }
 
 interface AssessmentMeta {
-  questions: Array<{ id: string; section: string; phase: string; text: string }>;
+  // Full Question shape from server — was slim-typed before, which dropped
+  // inputType/options/sliderMin on back-navigation lookups and left QuestionCard
+  // rendering nothing for dynamic assessments like rincon-reality-gap.
+  questions: Question[];
   sections: Array<{ id: string; label: string; phaseId: string; order: number }> | null;
   phases: Array<{ id: string; label: string; order: number }> | null;
 }
@@ -156,10 +159,15 @@ export default function InterviewPage() {
   );
 
   // Non-skipped answered questions (for pills display)
-  const visibleAnswered = useMemo(() =>
-    answeredQuestions.filter((q) => !skippedQuestionIds.includes(q.questionId)),
-    [answeredQuestions, skippedQuestionIds]
-  );
+  // Excludes auto-populated demographics (which don't appear in the assessment bank)
+  // so pill numbers stay aligned with the top "X of Y" counter.
+  const visibleAnswered = useMemo(() => {
+    const bankIds = new Set((assessmentMeta?.questions || []).map((q) => q.id));
+    return answeredQuestions.filter((q) =>
+      !skippedQuestionIds.includes(q.questionId) &&
+      (bankIds.size === 0 || bankIds.has(q.questionId))
+    );
+  }, [answeredQuestions, skippedQuestionIds, assessmentMeta]);
 
   const handleSubmit = async (answer: string | number | string[], conversationHistory?: ConversationMessage[]) => {
     if (!currentQuestion) return;

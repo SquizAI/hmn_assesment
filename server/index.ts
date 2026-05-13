@@ -1125,7 +1125,19 @@ app.post("/api/interview/conversation-stream", async (req, res) => {
     // Check completion
     const farewellPatterns = /\b(goodbye|good\s*bye|take care|talk soon|thanks for (?:sharing|being|your time)|appreciate you|that['']s (?:all|everything)|we['']re (?:all )?done)\b/i;
     const isExplicitComplete = aiResponse.includes("[QUESTION_COMPLETE]");
-    const isFarewellComplete = !isExplicitComplete && farewellPatterns.test(aiResponse) && userTurns >= 3;
+    // Strip the [QUESTION_COMPLETE] marker before checking trailing punctuation so
+    // "Thanks for that. What would change? [QUESTION_COMPLETE]" doesn't accidentally
+    // hide the trailing "?" from the heuristic below.
+    const responseForHeuristic = aiResponse.replace(/\[QUESTION_COMPLETE\]/g, "").trim();
+    // Farewell-only auto-complete: must look like a farewell AND not still be asking
+    // a follow-up question. If the response ends with "?", the agent is still probing,
+    // even if the message contains a phrase like "thanks for sharing".
+    const endsWithQuestion = /\?\s*$/.test(responseForHeuristic);
+    const isFarewellComplete =
+      !isExplicitComplete &&
+      farewellPatterns.test(aiResponse) &&
+      userTurns >= 3 &&
+      !endsWithQuestion;
     const isComplete = isExplicitComplete || isFarewellComplete;
 
     const cleanResponse = aiResponse.replace(/\[QUESTION_COMPLETE\]/g, "").replace(/\*\*\[.*?\]\*\*\s*/g, "").trim();
@@ -1331,10 +1343,18 @@ app.post("/api/interview/respond", async (req, res) => {
         aiResponse = await generateFollowUp(session as unknown as Record<string, unknown>, currentQuestion, history, assessment, userTurns);
       }
 
-      // Detect conversation completion: explicit marker OR farewell-like response
+      // Detect conversation completion: explicit marker OR farewell-like response.
+      // Farewell auto-complete is suppressed when the response still ends with "?"
+      // (agent is asking another follow-up).
       const farewellPatterns = /\b(goodbye|good\s*bye|take care|talk soon|thanks for (?:sharing|being|your time)|appreciate you|that['']s (?:all|everything)|we['']re (?:all )?done)\b/i;
       const isExplicitComplete = aiResponse.includes("[QUESTION_COMPLETE]");
-      const isFarewellComplete = !isExplicitComplete && farewellPatterns.test(aiResponse) && userTurns >= 3;
+      const responseForHeuristic = aiResponse.replace(/\[QUESTION_COMPLETE\]/g, "").trim();
+      const endsWithQuestion = /\?\s*$/.test(responseForHeuristic);
+      const isFarewellComplete =
+        !isExplicitComplete &&
+        farewellPatterns.test(aiResponse) &&
+        userTurns >= 3 &&
+        !endsWithQuestion;
       const isComplete = isExplicitComplete || isFarewellComplete;
       if (isFarewellComplete) {
         console.log(`[INTERVIEW] Auto-completing conversation for ${questionId} — farewell detected after ${userTurns} turns`);

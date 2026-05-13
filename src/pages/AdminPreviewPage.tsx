@@ -17,7 +17,7 @@ interface Progress {
 }
 
 interface AssessmentMeta {
-  questions: Array<{ id: string; section: string; phase: string; text: string }>;
+  questions: Question[];
   sections: Array<{ id: string; label: string; phaseId: string; order: number }> | null;
   phases: Array<{ id: string; label: string; order: number }> | null;
 }
@@ -123,8 +123,12 @@ export default function AdminPreviewPage() {
   );
 
   const visibleAnswered = useMemo(() =>
-    answeredQuestions.filter((q) => !skippedQuestionIds.includes(q.questionId)),
-    [answeredQuestions, skippedQuestionIds]
+    answeredQuestions.filter((q) => {
+      if (skippedQuestionIds.includes(q.questionId)) return false;
+      const bankIds = new Set((assessmentMeta?.questions || []).map((bq) => bq.id));
+      return bankIds.size === 0 || bankIds.has(q.questionId);
+    }),
+    [answeredQuestions, skippedQuestionIds, assessmentMeta]
   );
 
   const handleSubmit = async (answer: string | number | string[], conversationHistory?: ConversationMessage[]) => {
