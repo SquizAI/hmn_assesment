@@ -234,6 +234,7 @@
         "min": "0 people",
         "max": "10+ people"
       },
+      "sliderUnit": "people",
       "required": true,
       "followUpTrigger": {
         "condition": "always",
@@ -395,21 +396,19 @@
       "options": [
         "Yes",
         "Maybe",
-        "No",
-        "Prefer not to answer"
+        "No"
       ],
       "required": true,
       "followUpTrigger": {
         "condition": "always",
-        "aiGenerated": true,
-        "skipOnAnswers": ["Prefer not to answer"]
+        "aiGenerated": true
       },
       "scoringDimensions": [
         "tool_proficiency",
         "org_support"
       ],
       "weight": 0.7,
-      "aiFollowUpPrompt": "Conditional follow-up: (a) If 'Yes' or 'Maybe': ask 'Tell me about it. What keeps you from sharing it?' One follow-up if needed. (b) If 'No': ask 'Do you think others on your team are? Why?' One follow-up if needed. Then [QUESTION_COMPLETE]. ('Prefer not to answer' is server-skipped via skipOnAnswers — you will not be invoked for that branch.) Tone: non-judgmental. Shadow IT is a governance signal at Rincon, not a discipline issue.",
+      "aiFollowUpPrompt": "Conditional follow-up: (a) If 'Yes' or 'Maybe': ask 'Tell me about it. What keeps you from sharing it?' One follow-up if needed. (b) If 'No': ask 'Do you think others on your team are? Why?' One follow-up if needed. Then [QUESTION_COMPLETE]. Tone: non-judgmental. Shadow IT is a governance signal at Rincon, not a discipline issue.",
       "tags": [
         "shadow_it",
         "governance_signal",
@@ -420,7 +419,7 @@
       "id": "rin_q12_below_role_time",
       "section": "productivity",
       "phase": "leverage",
-      "text": "In a typical week, what percentage of your time goes to work that's clearly below your role? Slide to a number, then list the activities that eat that time.",
+      "text": "In a typical week, what percentage of your time goes to redundant busy work, or work that's below your skill level? Slide to a number, then list the activities that eat that time.",
       "subtext": "Be specific — not 'admin,' but the actual tasks.",
       "inputType": "slider",
       "sliderMin": 0,
@@ -455,7 +454,7 @@
       "options": [
         "Strategic work I never get to",
         "More output of the same thing",
-        "Out the door at 5pm",
+        "More time with friends and family",
         "Honestly not sure"
       ],
       "required": true,
@@ -586,14 +585,14 @@
       "id": "rin_q18_role_change_worry",
       "section": "human_value",
       "phase": "evolve",
-      "text": "How worried are you that AI will change your role in a way you don't want? 1 to 10, then walk me through what's behind that number.",
-      "subtext": "1 = Not worried at all → 10 = Very worried",
+      "text": "On a scale of 1 to 10 — where 1 is completely excited and 10 is deeply concerned — how do you feel about AI's potential impact on your role? What's driving that number for you?",
+      "subtext": "1 = Completely excited → 10 = Deeply concerned",
       "inputType": "slider",
       "sliderMin": 1,
       "sliderMax": 10,
       "sliderLabels": {
-        "min": "Not worried",
-        "max": "Very worried"
+        "min": "Completely excited",
+        "max": "Deeply concerned"
       },
       "required": true,
       "followUpTrigger": {
@@ -659,7 +658,7 @@
       "id": "rin_q21_uncomfortable_truth",
       "section": "human_value",
       "phase": "evolve",
-      "text": "What's the uncomfortable truth about AI at Rincon that everyone knows but no one says out loud?",
+      "text": "What's the uncomfortable truth about AI in our industry that everyone knows but no one says out loud?",
       "inputType": "ai_conversation",
       "required": true,
       "scoringDimensions": [
@@ -687,7 +686,7 @@
         "leadership_modeling"
       ],
       "weight": 0.8,
-      "aiFollowUpPrompt": "Two-part question by design. After the move, ask: 'And why does that matter to you specifically?' Push for the personal stake, not the abstract benefit. Two or three exchanges, then [QUESTION_COMPLETE]. Thank them sincerely for their time and honesty before transitioning to the closing referral.",
+      "aiFollowUpPrompt": "Two-part question by design. After the move, ask: 'And why does that matter to you specifically?' Push gently for the personal stake, not the abstract benefit. Two or three exchanges, then [QUESTION_COMPLETE]. Thank them sincerely for their time and honesty before transitioning to the closing referral.\n\nCRITICAL — DO NOT LEAD THE WITNESS:\n- If the respondent answers 'idk', 'not sure', 'no idea', 'pass', or anything similarly minimal: accept it cleanly with 'That's totally fair.' and immediately say [QUESTION_COMPLETE]. Do NOT rephrase the question. Do NOT offer hypothetical scenarios ('think back to a moment when...'). Do NOT pivot to a related but different question.\n- A non-answer is data. Capture it as-is and move on.\n- Never put words or feelings in their mouth. Never suggest what they 'might' think. Mirror only what they actually said.",
       "tags": [
         "actionable_ask",
         "personal_stake",

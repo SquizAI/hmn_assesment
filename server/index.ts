@@ -1432,8 +1432,14 @@ app.post("/api/interview/respond", async (req, res) => {
       await saveSession(session);
 
       const sliderMax = currentQuestion.sliderMax as number | undefined;
+      // Per-question slider display: questions can override the default "X out of N" framing
+      // (which makes count questions like "how many people" read weirdly) by setting
+      // sliderUnit on the question — e.g., sliderUnit: "people" → "3 people".
+      const sliderUnit = currentQuestion.sliderUnit as string | undefined;
       const answerDisplay = currentQuestion.inputType === 'slider'
-        ? `${answer}${sliderMax === 100 ? '%' : ` out of ${sliderMax ?? 10}`}`
+        ? (sliderUnit
+            ? `${answer} ${sliderUnit}`
+            : `${answer}${sliderMax === 100 ? '%' : ` out of ${sliderMax ?? 10}`}`)
         : String(answer);
 
       // Generate the initial AI follow-up question
