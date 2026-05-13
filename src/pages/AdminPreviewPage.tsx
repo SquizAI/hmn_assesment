@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import type { Question, ConversationMessage } from "../lib/types";
-import { startInterview, submitAnswer, analyzeSession, analyzeSessionStream, fetchSessionPublic } from "../lib/api";
+import { startInterview, submitAnswer, skipQuestion, analyzeSession, analyzeSessionStream, fetchSessionPublic } from "../lib/api";
 import { createPreviewSession, deletePreviewSession } from "../lib/admin-api";
 import QuestionCard from "../components/interview/QuestionCard";
 import ProgressBar from "../components/interview/ProgressBar";
@@ -151,6 +151,19 @@ export default function AdminPreviewPage() {
       ]);
       if (data.skippedQuestionIds) setSkippedQuestionIds(data.skippedQuestionIds);
 
+      if (data.type === "complete") setIsComplete(true);
+      else if (data.type === "next_question") { setCurrentQuestion(data.currentQuestion); setProgress(data.progress); }
+    } catch { setError("Something went wrong."); }
+    finally { setIsSubmitting(false); }
+  };
+
+  const handleSkip = async () => {
+    if (!currentQuestion || !sessionId) return;
+    setIsSubmitting(true);
+    try {
+      const data = await skipQuestion(sessionId, currentQuestion.id);
+      setSkippedQuestionIds((prev) => [...prev, currentQuestion.id]);
+      if (data.skippedQuestionIds) setSkippedQuestionIds(data.skippedQuestionIds);
       if (data.type === "complete") setIsComplete(true);
       else if (data.type === "next_question") { setCurrentQuestion(data.currentQuestion); setProgress(data.progress); }
     } catch { setError("Something went wrong."); }
@@ -474,6 +487,7 @@ export default function AdminPreviewPage() {
               sessionId={sessionId}
               onSubmit={handleSubmit}
               onConversationComplete={handleConversationComplete}
+              onSkip={handleSkip}
               isSubmitting={isSubmitting}
               sliderFollowUp={sliderFollowUp}
               showPhoneOption={voiceCallEnabled}
